@@ -1,0 +1,16 @@
+{
+  "name": "pocket-dj",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A GitHub Pages hosted Spotify-reactive pixel DJ room using browser PKCE, with no local backend.",
+  "scripts": {
+    "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "vite": "latest",
+    "typescript": "latest"
+  },
+  "devDependencies": {}
+}
