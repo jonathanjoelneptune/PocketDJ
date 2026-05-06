@@ -5,12 +5,13 @@ export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
     <main class="stage">
       <section class="room" aria-label="Pocket DJ room">
+        <img class="room-bg" src="./assets/room/dj-room.png" alt="" />
         <div class="album-wash" id="albumWash"></div>
-        <div class="stars"></div>
-        <div class="booth-glow"></div>
-        <div class="speaker speaker-left"><span></span></div>
-        <div class="speaker speaker-right"><span></span></div>
-        <div class="marquee" aria-live="polite"><span id="marqueeText">Loading Pocket DJ...</span></div>
+
+        <div class="marquee" aria-live="polite">
+          <span id="marqueeText">Loading Pocket DJ...</span>
+        </div>
+
         <div class="dj-wrap">
           <div id="djSprite" class="dj-sprite pose-idle-center" role="img" aria-label="Pocket DJ idle"></div>
           <div class="deck deck-left"></div>
@@ -89,10 +90,12 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
     art.style.backgroundImage = `url(${track.albumArtUrl})`;
     art.innerHTML = "";
     wash.style.backgroundImage = `url(${track.albumArtUrl})`;
+    wash.style.opacity = "0.11";
   } else {
     art.style.backgroundImage = "";
     art.innerHTML = "<span>♪</span>";
     wash.style.backgroundImage = "";
+    wash.style.opacity = "0";
   }
 
   const debug = qs<HTMLPreElement>("#debugPanel");
