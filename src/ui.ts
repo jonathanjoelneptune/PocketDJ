@@ -20,13 +20,23 @@ export function renderShell(state: AppState): void {
         </div>
       </section>
 
-      <aside class="control-card">
+      <button id="panelToggle" class="panel-toggle" type="button" aria-label="Show Pocket DJ controls" title="Show controls">♪</button>
+
+      <aside id="controlCard" class="control-card control-card-open">
         <div class="brand-row">
           <div>
             <p class="eyebrow">Spotify-reactive room</p>
             <h1>Pocket DJ</h1>
           </div>
-          <div class="mode-pill" id="modePill">IDLE</div>
+          <div class="brand-actions">
+            <div class="mode-pill" id="modePill">IDLE</div>
+            <button id="hidePanel" class="panel-close" type="button" aria-label="Hide controls">×</button>
+          </div>
+        </div>
+
+        <div id="connectionBanner" class="connection-banner disconnected">
+          <strong>Spotify is not connected</strong>
+          <span>Paste your Client ID, then connect Spotify from this hosted GitHub Pages URL.</span>
         </div>
 
         <div class="now-card">
@@ -75,9 +85,15 @@ export function renderShell(state: AppState): void {
 }
 
 export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): void {
-  qs("#trackTitle").textContent = track.title;
-  qs("#trackArtist").textContent = track.artist;
-  qs("#marqueeText").textContent = `${track.title}  •  ${track.artist}`;
+  setTextIfChanged(qs("#trackTitle"), track.title);
+  setTextIfChanged(qs("#trackArtist"), track.artist);
+
+  const marqueeText = track.isAuthenticated || track.source === "demo"
+    ? `${track.title}  •  ${track.artist}`
+    : "CONNECT SPOTIFY  •  POCKET DJ WAITING FOR THE NEXT RECORD";
+  setTextIfChanged(qs("#marqueeText"), marqueeText);
+
+  updateConnectionBanner(track);
   qs("#progressNow").textContent = formatMs(getEstimatedProgress(track));
   qs("#progressEnd").textContent = formatMs(track.durationMs);
 
@@ -101,6 +117,39 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
   const debug = qs<HTMLPreElement>("#debugPanel");
   debug.hidden = !debugOpen;
   if (debugOpen) debug.textContent = JSON.stringify(track, null, 2);
+}
+
+export function setControlPanelOpen(open: boolean): void {
+  const card = qs<HTMLElement>("#controlCard");
+  const toggle = qs<HTMLButtonElement>("#panelToggle");
+
+  card.classList.toggle("control-card-open", open);
+  card.classList.toggle("control-card-hidden", !open);
+  toggle.classList.toggle("panel-toggle-visible", !open);
+  toggle.setAttribute("aria-expanded", String(open));
+}
+
+function updateConnectionBanner(track: NormalizedTrack): void {
+  const banner = qs<HTMLDivElement>("#connectionBanner");
+
+  if (track.source === "demo") {
+    banner.className = "connection-banner demo";
+    banner.innerHTML = "<strong>Demo mode is running</strong><span>Spotify is not connected. The room is using sample playback data.</span>";
+    return;
+  }
+
+  if (track.isAuthenticated) {
+    banner.className = "connection-banner connected";
+    banner.innerHTML = "<strong>Spotify connected</strong><span>The control panel is hidden automatically so the room stays clean.</span>";
+    return;
+  }
+
+  banner.className = "connection-banner disconnected";
+  banner.innerHTML = "<strong>Spotify is not connected</strong><span>Paste your Client ID, then connect Spotify from this hosted GitHub Pages URL.</span>";
+}
+
+function setTextIfChanged(element: Element, value: string): void {
+  if (element.textContent !== value) element.textContent = value;
 }
 
 function getEstimatedProgress(track: NormalizedTrack): number {

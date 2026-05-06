@@ -5,7 +5,7 @@ import { emptyTrack, type AppState } from "./state/types";
 import { disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, handleSpotifyCallback, startSpotifyLogin } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import { qs } from "./utils/dom";
-import { renderShell, updatePlaybackUi } from "./ui";
+import { renderShell, setControlPanelOpen, updatePlaybackUi } from "./ui";
 
 const state: AppState = {
   spotifyClientId: loadClientId(),
@@ -19,6 +19,7 @@ let useDemo = false;
 let pollTimer: number | null = null;
 let dj: DjController;
 let lastPollError = "";
+let panelAutoHiddenAfterConnect = false;
 
 async function boot(): Promise<void> {
   renderShell(state);
@@ -45,6 +46,14 @@ async function boot(): Promise<void> {
 }
 
 function bindControls(): void {
+  qs<HTMLButtonElement>("#panelToggle").addEventListener("click", () => {
+    setControlPanelOpen(true);
+  });
+
+  qs<HTMLButtonElement>("#hidePanel").addEventListener("click", () => {
+    setControlPanelOpen(false);
+  });
+
   qs<HTMLButtonElement>("#connectSpotify").addEventListener("click", async () => {
     const clientId = qs<HTMLInputElement>("#clientIdInput").value.trim();
     await startSpotifyLogin(clientId, state.redirectUri);
@@ -55,6 +64,8 @@ function bindControls(): void {
     stopDemo();
     useDemo = false;
     state.playback = emptyTrack();
+    panelAutoHiddenAfterConnect = false;
+    setControlPanelOpen(true);
     updatePlaybackUi(state.playback, state.debugOpen);
   });
 
@@ -62,6 +73,7 @@ function bindControls(): void {
     useDemo = toggleDemo();
     if (useDemo && pollTimer) window.clearTimeout(pollTimer);
     state.playback = getDemoTrack();
+    panelAutoHiddenAfterConnect = false;
     updatePlaybackUi(state.playback, state.debugOpen);
   });
 
@@ -89,6 +101,11 @@ async function pollSpotifyNow(): Promise<void> {
     lastPollError = "";
     state.playback = await getCurrentlyPlaying(state.spotifyClientId);
     updatePlaybackUi(state.playback, state.debugOpen);
+
+    if (state.playback.isAuthenticated && !panelAutoHiddenAfterConnect) {
+      panelAutoHiddenAfterConnect = true;
+      window.setTimeout(() => setControlPanelOpen(false), 900);
+    }
   } catch (error) {
     lastPollError = error instanceof Error ? error.message : String(error);
     console.warn(lastPollError);

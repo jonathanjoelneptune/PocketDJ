@@ -359,3 +359,162 @@ button:hover { transform: translateY(-1px); filter: brightness(1.07); }
     top: 8%;
   }
 }
+
+/* ===========================================================
+   v1.3 room UI polish: clean marquee + collapsible Spotify panel
+   =========================================================== */
+
+.marquee {
+  top: 6.35%;
+  width: min(42vw, 700px);
+  height: clamp(48px, 5.8vw, 72px);
+  border: 4px solid rgba(31, 17, 8, 0.94);
+  background:
+    linear-gradient(180deg, rgba(8, 7, 6, 0.92), rgba(0, 0, 0, 0.78)),
+    radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.13), transparent 62%);
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.5),
+    inset 0 0 18px rgba(0, 0, 0, 0.86),
+    inset 0 0 22px rgba(245, 158, 11, 0.18),
+    0 0 20px rgba(245, 158, 11, 0.22);
+}
+
+.marquee span {
+  left: 0;
+  top: 50%;
+  min-width: max-content;
+  padding-left: 100%;
+  padding-right: 72px;
+  font-size: clamp(11px, 1.2vw, 19px);
+  letter-spacing: 0.04em;
+  animation: marqueeMove 22s linear infinite;
+}
+
+.control-card {
+  transition:
+    transform 260ms ease,
+    opacity 200ms ease,
+    visibility 200ms ease;
+}
+
+.control-card-hidden {
+  transform: translateX(calc(100% + 42px));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.panel-toggle {
+  position: absolute;
+  right: clamp(14px, 2.3vw, 32px);
+  top: clamp(14px, 2.3vh, 28px);
+  z-index: 6;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fde68a;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(253, 224, 71, 0.28), transparent 34%),
+    rgba(8, 6, 12, 0.78);
+  border: 1px solid rgba(251, 191, 36, 0.38);
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.42),
+    0 0 18px rgba(251, 191, 36, 0.22),
+    inset 0 0 18px rgba(255, 255, 255, 0.06);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(0.88);
+  transition: transform 160ms ease, opacity 160ms ease, visibility 160ms ease, filter 160ms ease;
+}
+
+.panel-toggle-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.panel-toggle:hover {
+  filter: brightness(1.14);
+  transform: scale(1.04);
+}
+
+.brand-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.connection-banner {
+  display: grid;
+  gap: 5px;
+  padding: 13px 14px;
+  border-radius: 18px;
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.connection-banner strong {
+  font-size: 0.86rem;
+}
+
+.connection-banner span {
+  color: var(--muted);
+}
+
+.connection-banner.disconnected {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.connection-banner.disconnected strong {
+  color: #fde68a;
+}
+
+.connection-banner.connected {
+  background: rgba(52, 211, 153, 0.09);
+  border: 1px solid rgba(52, 211, 153, 0.23);
+}
+
+.connection-banner.connected strong {
+  color: #bbf7d0;
+}
+
+.connection-banner.demo {
+  background: rgba(125, 211, 252, 0.09);
+  border: 1px solid rgba(125, 211, 252, 0.23);
+}
+
+.connection-banner.demo strong {
+  color: #bae6fd;
+}
+
+@keyframes marqueeMove {
+  from { transform: translate(0, -50%); }
+  to { transform: translate(calc(-100% - 72px), -50%); }
+}
+
+@media (max-width: 980px) {
+  .control-card-hidden {
+    transform: translateY(calc(100% + 42px));
+  }
+  .panel-toggle {
+    top: auto;
+    bottom: 18px;
+  }
+}
