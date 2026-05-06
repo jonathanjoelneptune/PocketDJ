@@ -689,3 +689,57 @@ html, body, #app {
     justify-items: center;
   }
 }
+
+
+/* ===========================================================
+   v1.5 full-bleed background fill: keep the 16:9 room centered
+   and fully visible while a second covered background layer
+   fills any extra viewport space without black bars.
+   =========================================================== */
+
+.stage {
+  position: relative;
+  background: #02040c;
+}
+
+.room-fill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.room-fill-bg {
+  position: absolute;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  object-fit: cover;
+  object-position: center center;
+  transform: scale(1.035);
+  filter: blur(10px) saturate(1.06) brightness(0.72);
+  opacity: 1;
+  user-select: none;
+}
+
+.room-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.06), transparent 40%),
+    linear-gradient(180deg, rgba(2, 4, 12, 0.08), rgba(2, 4, 12, 0.34));
+}
+
+.room {
+  z-index: 1;
+}
+
+.room::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.035);
+}
