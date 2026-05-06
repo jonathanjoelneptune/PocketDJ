@@ -34,18 +34,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Show versions
         run: |
           node --version
-          npm --version
+          corepack --version
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.9 --activate
+          pnpm --version
 
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build site
-        run: npm run build
+        run: pnpm run build
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
