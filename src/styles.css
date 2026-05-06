@@ -1013,3 +1013,43 @@ html, body, #app {
 .fill-right::after {
   background: linear-gradient(270deg, rgba(7, 16, 31, 0), rgba(7, 16, 31, 0.12));
 }
+
+
+/* ===========================================================
+   v1.10 seam-blend polish.
+   New room core has more breathing room at the edges. The fill zones
+   now overlap slightly behind the core room so seams are hidden.
+   =========================================================== */
+
+.stage {
+  --seam-overlap: 8px;
+}
+
+.fill-top {
+  height: max(0px, calc(var(--scene-top) + var(--seam-overlap)));
+}
+
+.fill-top .fill-img {
+  bottom: calc(-1 * var(--seam-overlap));
+}
+
+.fill-bottom {
+  height: max(0px, calc(100vh - var(--scene-bottom) + var(--seam-overlap)));
+}
+
+.fill-bottom .fill-img {
+  top: calc(-1 * var(--seam-overlap));
+}
+
+.fill-left,
+.fill-right {
+  width: max(0px, calc(var(--scene-left) + var(--seam-overlap)));
+}
+
+.fill-left .fill-img {
+  right: calc(-1 * var(--seam-overlap));
+}
+
+.fill-right .fill-img {
+  left: calc(-1 * var(--seam-overlap));
+}
