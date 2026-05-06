@@ -856,3 +856,160 @@ html, body, #app {
   background:
     radial-gradient(circle at 50% 50%, transparent 0 42%, rgba(0, 0, 0, 0.06) 68%, rgba(0, 0, 0, 0.18) 100%);
 }
+
+
+/* ===========================================================
+   v1.8 extension lock fix.
+   The modular fill art no longer stretches across the core room.
+   Side fills anchor to the seam edge at full scene height, while
+   top and bottom fills occupy only the bar space above/below the
+   center scene. Extra unused space falls back to simple wall/floor
+   colors so there are no duplicated shelves or upside-down floor.
+   =========================================================== */
+
+.stage {
+  --scene-w: min(100vw, calc(100vh * 16 / 9));
+  --scene-h: min(100vh, calc(100vw * 9 / 16));
+  --scene-left: calc((100vw - var(--scene-w)) / 2);
+  --scene-top: calc((100vh - var(--scene-h)) / 2);
+  --scene-right: calc(var(--scene-left) + var(--scene-w));
+  --scene-bottom: calc(var(--scene-top) + var(--scene-h));
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #07101f;
+}
+
+.room {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--scene-w);
+  height: var(--scene-h);
+  aspect-ratio: 16 / 9;
+  z-index: 2;
+  overflow: hidden;
+  background: #030712;
+  box-shadow: 0 0 70px rgba(0, 0, 0, 0.38);
+}
+
+.room-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.room-extensions {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.fill-zone {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fill-img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  image-rendering: pixelated;
+  user-select: none;
+}
+
+.fill-top {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: max(0px, var(--scene-top));
+  background: #08152c;
+}
+
+.fill-top .fill-img {
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: max(100vw, var(--scene-w));
+  height: auto;
+}
+
+.fill-bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: max(0px, calc(100vh - var(--scene-bottom)));
+  background: #180d10;
+}
+
+.fill-bottom .fill-img {
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: max(100vw, var(--scene-w));
+  height: auto;
+}
+
+.fill-left,
+.fill-right {
+  top: var(--scene-top);
+  width: max(0px, var(--scene-left));
+  height: var(--scene-h);
+}
+
+.fill-left {
+  left: 0;
+  background: linear-gradient(180deg, #0a1831 0%, #0a1730 72%, #24160d 100%);
+}
+
+.fill-right {
+  right: 0;
+  background: linear-gradient(180deg, #0a1831 0%, #0a1730 72%, #24160d 100%);
+}
+
+.fill-left .fill-img,
+.fill-right .fill-img {
+  top: 0;
+  height: 100%;
+  width: auto;
+}
+
+.fill-left .fill-img { right: 0; }
+.fill-right .fill-img { left: 0; }
+
+.fill-top::after,
+.fill-bottom::after,
+.fill-left::after,
+.fill-right::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fill-top::after {
+  background: linear-gradient(180deg, rgba(7, 16, 31, 0.1), rgba(7, 16, 31, 0));
+}
+
+.fill-bottom::after {
+  background: linear-gradient(180deg, rgba(24, 13, 16, 0), rgba(24, 13, 16, 0.1));
+}
+
+.fill-left::after {
+  background: linear-gradient(90deg, rgba(7, 16, 31, 0), rgba(7, 16, 31, 0.12));
+}
+
+.fill-right::after {
+  background: linear-gradient(270deg, rgba(7, 16, 31, 0), rgba(7, 16, 31, 0.12));
+}

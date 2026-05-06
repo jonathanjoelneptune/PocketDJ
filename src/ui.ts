@@ -5,10 +5,10 @@ export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
     <main class="stage">
       <div class="room-extensions" aria-hidden="true">
-        <img class="room-fill room-fill-top" src="./assets/room/room-fill-top.png" alt="" />
-        <img class="room-fill room-fill-bottom" src="./assets/room/room-fill-bottom.png" alt="" />
-        <img class="room-fill room-fill-left" src="./assets/room/room-fill-left.png" alt="" />
-        <img class="room-fill room-fill-right" src="./assets/room/room-fill-right.png" alt="" />
+        <div class="fill-zone fill-top"><img class="fill-img" src="./assets/room/room-fill-top.png" alt="" /></div>
+        <div class="fill-zone fill-bottom"><img class="fill-img" src="./assets/room/room-fill-bottom.png" alt="" /></div>
+        <div class="fill-zone fill-left"><img class="fill-img" src="./assets/room/room-fill-left.png" alt="" /></div>
+        <div class="fill-zone fill-right"><img class="fill-img" src="./assets/room/room-fill-right.png" alt="" /></div>
       </div>
 
       <section class="room" aria-label="Pocket DJ room">
