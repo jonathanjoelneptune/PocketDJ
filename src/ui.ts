@@ -4,12 +4,15 @@ import { formatMs, qs } from "./utils/dom";
 export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
     <main class="stage">
-      <div class="room-fill" aria-hidden="true">
-        <img class="room-fill-bg" src="./assets/room/dj-room-extended.png" alt="" />
+      <div class="room-extensions" aria-hidden="true">
+        <img class="room-fill room-fill-top" src="./assets/room/room-fill-top.png" alt="" />
+        <img class="room-fill room-fill-bottom" src="./assets/room/room-fill-bottom.png" alt="" />
+        <img class="room-fill room-fill-left" src="./assets/room/room-fill-left.png" alt="" />
+        <img class="room-fill room-fill-right" src="./assets/room/room-fill-right.png" alt="" />
       </div>
 
       <section class="room" aria-label="Pocket DJ room">
-        <img class="room-bg" src="./assets/room/dj-room.png" alt="" />
+        <img class="room-bg" src="./assets/room/room-core.png" alt="" />
         <div class="album-wash" id="albumWash"></div>
 
         <div class="marquee" aria-live="polite">
