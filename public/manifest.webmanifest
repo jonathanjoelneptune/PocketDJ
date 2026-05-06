@@ -1,9 +1,0 @@
-{
-  "name": "Pocket DJ",
-  "short_name": "Pocket DJ",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#050816",
-  "theme_color": "#111827",
-  "description": "A Spotify-reactive pixel DJ room hosted on GitHub Pages."
-}
