@@ -5,7 +5,7 @@ export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
     <main class="stage">
       <div class="room-fill" aria-hidden="true">
-        <img class="room-fill-bg" src="./assets/room/dj-room.png" alt="" />
+        <img class="room-fill-bg" src="./assets/room/dj-room-extended.png" alt="" />
       </div>
 
       <section class="room" aria-label="Pocket DJ room">
