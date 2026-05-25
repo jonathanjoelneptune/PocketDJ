@@ -4,26 +4,24 @@ import { formatMs, qs } from "./utils/dom";
 export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
     <main class="stage">
-      <div class="room-extensions" aria-hidden="true">
-        <div class="fill-zone fill-top"><img class="fill-img" src="./assets/room/room-fill-top.png" alt="" /></div>
-        <div class="fill-zone fill-bottom"><img class="fill-img" src="./assets/room/room-fill-bottom.png" alt="" /></div>
-        <div class="fill-zone fill-left"><img class="fill-img" src="./assets/room/room-fill-left.png" alt="" /></div>
-        <div class="fill-zone fill-right"><img class="fill-img" src="./assets/room/room-fill-right.png" alt="" /></div>
-      </div>
-
       <section class="room" aria-label="Pocket DJ room">
-        <img class="room-bg" src="./assets/room/room-core.png" alt="" />
+        <div class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\')" aria-hidden="true"></div>
         <div class="album-wash" id="albumWash"></div>
 
         <div class="marquee" aria-live="polite">
-          <span id="marqueeText">Loading Pocket DJ...</span>
+          <div class="marquee-viewport">
+            <span id="marqueeText">Nothing is currently playing • Start Spotify and Pocket DJ will wake up</span>
+          </div>
         </div>
 
         <div class="dj-wrap">
-          <div id="djSprite" class="dj-sprite pose-idle-center" role="img" aria-label="Pocket DJ idle"></div>
-          <div class="deck deck-left"></div>
-          <div class="deck deck-right"></div>
-          <div class="mixer"></div>
+          <img
+            id="djSprite"
+            class="dj-frame-img"
+            src="./assets/poses/final/a1.png"
+            alt="Pocket DJ"
+            draggable="false"
+          />
         </div>
       </section>
 
@@ -95,9 +93,10 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
   setTextIfChanged(qs("#trackTitle"), track.title);
   setTextIfChanged(qs("#trackArtist"), track.artist);
 
-  const marqueeText = track.isAuthenticated || track.source === "demo"
-    ? `${track.title}  •  ${track.artist}`
-    : "CONNECT SPOTIFY  •  POCKET DJ WAITING FOR THE NEXT RECORD";
+  const marqueeText = buildMarqueeText(track);
+  const marqueeEl = qs<HTMLElement>(".marquee");
+  marqueeEl.classList.toggle("marquee-paused", !!track.trackId && !track.isPlaying);
+  marqueeEl.classList.toggle("marquee-empty", !track.trackId && track.source !== "demo");
   setTextIfChanged(qs("#marqueeText"), marqueeText);
 
   updateConnectionBanner(track);
@@ -113,7 +112,7 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
     art.style.backgroundImage = `url(${track.albumArtUrl})`;
     art.innerHTML = "";
     wash.style.backgroundImage = `url(${track.albumArtUrl})`;
-    wash.style.opacity = "0.11";
+    wash.style.opacity = "0.10";
   } else {
     art.style.backgroundImage = "";
     art.innerHTML = "<span>♪</span>";
@@ -134,6 +133,19 @@ export function setControlPanelOpen(open: boolean): void {
   card.classList.toggle("control-card-hidden", !open);
   toggle.classList.toggle("panel-toggle-visible", !open);
   toggle.setAttribute("aria-expanded", String(open));
+}
+
+function buildMarqueeText(track: NormalizedTrack): string {
+  if (track.source === "demo") {
+    return track.isPlaying
+      ? `${track.title} • ${track.artist}`
+      : `Paused • ${track.title} • ${track.artist}`;
+  }
+
+  if (!track.isAuthenticated) return "Nothing is currently playing • Start Spotify and Pocket DJ will wake up";
+  if (!track.trackId) return "Nothing is currently playing • Start Spotify and Pocket DJ will wake up";
+  if (!track.isPlaying) return `Paused • ${track.title} • ${track.artist}`;
+  return `${track.title} • ${track.artist}`;
 }
 
 function updateConnectionBanner(track: NormalizedTrack): void {
