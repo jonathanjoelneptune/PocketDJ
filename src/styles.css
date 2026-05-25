@@ -527,3 +527,29 @@ button:hover {
   .setup-notes { display: none; }
   .button-grid { grid-template-columns: 1fr; }
 }
+
+/* Phase 3 marquee behavior */
+.marquee-swap {
+  animation: marqueeFlash 520ms ease;
+}
+
+.marquee-text-changing {
+  opacity: 0;
+  filter: blur(1px);
+  transition: opacity 110ms ease, filter 110ms ease;
+}
+
+.marquee-empty span {
+  opacity: 0.92;
+}
+
+html[data-dj-mode="audition"] .dj-wrap,
+html[data-dj-mode="cinematic"] .dj-wrap {
+  animation: djBob 1.25s ease-in-out infinite;
+}
+
+@keyframes marqueeFlash {
+  0% { filter: brightness(1); }
+  40% { filter: brightness(1.22); }
+  100% { filter: brightness(1); }
+}

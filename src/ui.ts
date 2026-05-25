@@ -1,6 +1,17 @@
 import type { AppState, NormalizedTrack } from "./state/types";
 import { formatMs, qs } from "./utils/dom";
 
+type MarqueeState = "empty" | "paused" | "playing";
+
+type MarqueePayload = {
+  text: string;
+  state: MarqueeState;
+  key: string;
+};
+
+let lastMarqueeKey = "";
+let marqueeSwapTimer: number | null = null;
+
 export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
     <main class="stage">
@@ -92,14 +103,9 @@ export function renderShell(state: AppState): void {
 export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): void {
   setTextIfChanged(qs("#trackTitle"), track.title);
   setTextIfChanged(qs("#trackArtist"), track.artist);
-
-  const marqueeText = buildMarqueeText(track);
-  const marqueeEl = qs<HTMLElement>(".marquee");
-  marqueeEl.classList.toggle("marquee-paused", !!track.trackId && !track.isPlaying);
-  marqueeEl.classList.toggle("marquee-empty", !track.trackId && track.source !== "demo");
-  setTextIfChanged(qs("#marqueeText"), marqueeText);
-
+  updateMarquee(track);
   updateConnectionBanner(track);
+
   qs("#progressNow").textContent = formatMs(getEstimatedProgress(track));
   qs("#progressEnd").textContent = formatMs(track.durationMs);
 
@@ -135,17 +141,61 @@ export function setControlPanelOpen(open: boolean): void {
   toggle.setAttribute("aria-expanded", String(open));
 }
 
-function buildMarqueeText(track: NormalizedTrack): string {
+function updateMarquee(track: NormalizedTrack): void {
+  const marquee = qs<HTMLElement>(".marquee");
+  const textElement = qs<HTMLElement>("#marqueeText");
+  const payload = buildMarqueePayload(track);
+
+  marquee.classList.toggle("marquee-paused", payload.state === "paused");
+  marquee.classList.toggle("marquee-empty", payload.state === "empty");
+
+  if (payload.key === lastMarqueeKey) return;
+  lastMarqueeKey = payload.key;
+
+  textElement.classList.add("marquee-text-changing");
+  marquee.classList.remove("marquee-swap");
+  void marquee.offsetWidth;
+  marquee.classList.add("marquee-swap");
+
+  window.setTimeout(() => {
+    textElement.style.animation = "none";
+    textElement.textContent = payload.text;
+    void textElement.offsetWidth;
+    textElement.style.animation = "";
+    textElement.classList.remove("marquee-text-changing");
+  }, 110);
+
+  if (marqueeSwapTimer) window.clearTimeout(marqueeSwapTimer);
+  marqueeSwapTimer = window.setTimeout(() => {
+    marquee.classList.remove("marquee-swap");
+  }, 520);
+}
+
+function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
+  let text: string;
+  let state: MarqueeState;
+
   if (track.source === "demo") {
-    return track.isPlaying
+    state = track.isPlaying ? "playing" : "paused";
+    text = track.isPlaying
       ? `${track.title} • ${track.artist}`
       : `Paused • ${track.title} • ${track.artist}`;
+  } else if (!track.isAuthenticated || !track.trackId) {
+    state = "empty";
+    text = "Nothing is currently playing • Start Spotify and Pocket DJ will wake up";
+  } else if (!track.isPlaying) {
+    state = "paused";
+    text = `Paused • ${track.title} • ${track.artist}`;
+  } else {
+    state = "playing";
+    text = `${track.title} • ${track.artist}`;
   }
 
-  if (!track.isAuthenticated) return "Nothing is currently playing • Start Spotify and Pocket DJ will wake up";
-  if (!track.trackId) return "Nothing is currently playing • Start Spotify and Pocket DJ will wake up";
-  if (!track.isPlaying) return `Paused • ${track.title} • ${track.artist}`;
-  return `${track.title} • ${track.artist}`;
+  return {
+    text,
+    state,
+    key: `${state}::${text.toUpperCase()}`
+  };
 }
 
 function updateConnectionBanner(track: NormalizedTrack): void {
