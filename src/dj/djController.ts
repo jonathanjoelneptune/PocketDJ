@@ -12,6 +12,8 @@ type AnimationLoop = {
   maxFrameMs: number;
   endPauseMinMs: number;
   endPauseMaxMs: number;
+  minLoopMs: number;
+  maxLoopMs: number;
 };
 
 const POSE_BASE = "./assets/poses/final/";
@@ -19,15 +21,18 @@ const CINEMATIC_TRIGGER_MS = 30_000;
 
 /*
  * Important split:
- * - active/playing/demo uses a calm, scratch-focused subset of a*.png poses
+ * - active/playing/demo lives mainly in calm scratch loops that can dwell for short or long organic stretches
  * - the A11/A11m cinematic record moves are reserved for near-song-change triggers
  * - idle/no-track uses only the approved calm idle poses: i6, i7, i8, i9, i1, i10, i11, i12
  * - paused uses the same calm pose family by default so the DJ clearly stops performing
  */
 const quickLoops: AnimationLoop[] = [
-  makeLoop("left-scratch", "Left deck scratch", ["a10.png", "a10-2.png"], "quick", 760, 1350, 450, 1100),
-  makeLoop("record-touch", "Record touch", ["a4.png", "a4-2.png"], "quick", 850, 1500, 600, 1200),
-  makeLoop("center-calm-mix", "Center calm mix", ["a1.png", "a2.png", "a3.png"], "quick", 900, 1600, 700, 1300)
+  makeLoop("left-scratch", "Left deck scratch", ["a10.png", "a10-2.png"], "quick", 120, 520, 0, 420, 4_000, 24_000),
+  makeLoop("record-touch", "Record touch", ["a4.png", "a4-2.png"], "quick", 120, 520, 0, 420, 4_000, 22_000),
+  makeLoop("low-hands-scratch", "Low hands scratch", ["a14.png", "a14-2.png"], "quick", 160, 620, 0, 520, 4_000, 20_000),
+  makeLoop("two-hand-scratch-a", "Two-hand scratch A", ["a44.png", "a44-2.png", "a44-3.png", "a44-2.png"], "quick", 140, 640, 0, 650, 7_000, 34_000),
+  makeLoop("two-hand-scratch-b", "Two-hand scratch B", ["a47.png", "a47-2.png", "a47-3.png", "a47-2.png"], "quick", 140, 640, 0, 650, 7_000, 34_000),
+  makeLoop("two-hand-scratch-c", "Two-hand scratch C", ["a48.png", "a48-2.png", "a48-3.png", "a48-2.png"], "quick", 140, 640, 0, 650, 7_000, 34_000)
 ];
 
 const cinematicLoops: AnimationLoop[] = [
@@ -262,7 +267,9 @@ export class DjController {
   }
 
   private loopDurationForMode(mode: DjMode): number {
-    if (mode === "playing" || mode === "demo" || mode === "burst") return randomInt(4_500, 9_000);
+    if (mode === "playing" || mode === "demo" || mode === "burst") {
+      return randomInt(this.currentLoop.minLoopMs, this.currentLoop.maxLoopMs);
+    }
     if (mode === "paused") return randomInt(25_000, 50_000);
     return randomInt(30_000, 60_000);
   }
@@ -342,7 +349,8 @@ export class DjController {
       `loop: ${this.currentLoop.id}`,
       `loop label: ${this.currentLoop.label}`,
       `control: ${this.controlMode}`,
-      `cinematic: ${cinematicState}`
+      `cinematic: ${cinematicState}`,
+      `loop dwell: ${this.currentLoop.minLoopMs}-${this.currentLoop.maxLoopMs} ms`
     ].join("\n");
   }
 
@@ -411,9 +419,11 @@ function makeLoop(
   minFrameMs = 420,
   maxFrameMs = 780,
   endPauseMinMs = 180,
-  endPauseMaxMs = 520
+  endPauseMaxMs = 520,
+  minLoopMs = 4_500,
+  maxLoopMs = 9_000
 ): AnimationLoop {
-  return { id, label, frames, kind, minFrameMs, maxFrameMs, endPauseMinMs, endPauseMaxMs };
+  return { id, label, frames, kind, minFrameMs, maxFrameMs, endPauseMinMs, endPauseMaxMs, minLoopMs, maxLoopMs };
 }
 
 function randomInt(min: number, max: number): number {
