@@ -42,6 +42,7 @@ type RoomUtilitySettings = {
   speakerPulseX: number;
   speakerPulseY: number;
   speakerPulseSize: number;
+  speakerWarpOpacity: number;
   sceneFilter: SceneFilter;
   filterStrength: number;
   vignetteStrength: number;
@@ -59,6 +60,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   speakerPulseX: 53.0,
   speakerPulseY: 50.4,
   speakerPulseSize: 48.2,
+  speakerWarpOpacity: 0.92,
   sceneFilter: "neon-purple",
   filterStrength: 0.20,
   vignetteStrength: 0.20,
@@ -165,6 +167,7 @@ function bindRoomUtilityControls(): void {
     ["speakerPulseX", "speakerPulseXValue"],
     ["speakerPulseY", "speakerPulseYValue"],
     ["speakerPulseSize", "speakerPulseSizeValue"],
+    ["speakerWarpOpacity", "speakerWarpOpacityValue"],
     ["filterStrength", "filterStrengthValue"],
     ["vignetteStrength", "vignetteStrengthValue"],
     ["shadowOpacity", "shadowOpacityValue"],
@@ -220,6 +223,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--speaker-pulse-x", `${roomUtility.speakerPulseX}%`);
   root.style.setProperty("--speaker-pulse-y", `${roomUtility.speakerPulseY}%`);
   root.style.setProperty("--speaker-pulse-size", `${roomUtility.speakerPulseSize}%`);
+  root.style.setProperty("--speaker-warp-opacity", String(roomUtility.speakerWarpOpacity));
   root.style.setProperty("--scene-filter-strength", String(roomUtility.filterStrength));
   root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength));
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));

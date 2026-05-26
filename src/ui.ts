@@ -146,6 +146,9 @@ export function renderShell(state: AppState): void {
             <label>Speaker pulse size % <span id="speakerPulseSizeValue">48.2</span>
               <input id="speakerPulseSize" type="range" min="12" max="80" step="0.1" value="48.2" />
             </label>
+            <label>Driver warp opacity <span id="speakerWarpOpacityValue">0.92</span>
+              <input id="speakerWarpOpacity" type="range" min="0" max="1" step="0.01" value="0.92" />
+            </label>
           </div>
 
           <div class="utility-grid">

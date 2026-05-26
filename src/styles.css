@@ -39,6 +39,7 @@
   --speaker-pulse-x: 53%;
   --speaker-pulse-y: 50.4%;
   --speaker-pulse-size: 48.2%;
+  --speaker-warp-opacity: 0.92;
   --scene-filter-strength: 0.20;
   --scene-vignette-strength: 0.20;
   --shadow-opacity: 1.00;
@@ -361,11 +362,11 @@ button {
 
 @keyframes speakerConeWarp {
   from {
-    opacity: 0.68;
+    opacity: calc(var(--speaker-warp-opacity) * 0.74);
     transform: scale(0.992);
   }
   to {
-    opacity: 0.92;
+    opacity: var(--speaker-warp-opacity);
     transform: scale(calc(1 + (var(--speaker-pulse) * 0.045)));
   }
 }
