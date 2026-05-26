@@ -30,6 +30,17 @@
   --marquee-width: 45.8%;
   --marquee-height: 8.8%;
 
+  --speaker-left-x: 33.5%;
+  --speaker-right-x: 66.5%;
+  --speaker-y: 70.5%;
+  --speaker-scale: 0.72;
+  --speaker-opacity: 0.78;
+  --speaker-pulse: 0.45;
+  --scene-filter-strength: 0.16;
+  --scene-vignette-strength: 0.20;
+  --shadow-opacity: 0.72;
+  --table-shadow-scale: 1.00;
+
   color: var(--text);
   background: var(--bg);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -204,6 +215,192 @@ button {
   image-rendering: auto;
   filter: drop-shadow(0 28px 32px rgba(0,0,0,0.42));
   z-index: 1;
+}
+
+
+
+/* Organic grounding shadows for the DJ/table on the rug */
+.floor-shadow {
+  position: absolute;
+  left: var(--rug-center-x);
+  bottom: calc(var(--rug-bottom) - 0.8%);
+  transform: translateX(-50%);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.table-floor-shadow {
+  opacity: var(--shadow-opacity);
+  width: calc(var(--rug-width) * 0.90);
+  height: calc(var(--rug-height) * 0.22);
+  transform: translateX(-50%) scale(var(--table-shadow-scale));
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(0,0,0,0.42) 0%,
+      rgba(0,0,0,0.20) 48%,
+      rgba(0,0,0,0) 76%);
+  filter: blur(13px);
+  z-index: 3;
+}
+
+.dj-feet-shadow {
+  opacity: var(--shadow-opacity);
+  width: calc(var(--rug-width) * 0.42);
+  height: calc(var(--rug-height) * 0.13);
+  bottom: calc(var(--rug-bottom) + 1.0%);
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(0,0,0,0.36) 0%,
+      rgba(0,0,0,0.16) 50%,
+      rgba(0,0,0,0) 78%);
+  filter: blur(10px);
+  z-index: 3;
+}
+
+/* Tunable DJ speakers */
+.room-speaker {
+  position: absolute;
+  top: var(--speaker-y);
+  width: clamp(42px, 5.0%, 96px);
+  aspect-ratio: 0.64;
+  border-radius: 10%;
+  background:
+    linear-gradient(180deg, rgba(38,40,46,0.96) 0%, rgba(11,12,16,0.98) 100%);
+  border: 1px solid rgba(255,255,255,0.09);
+  box-shadow:
+    inset 0 0 16px rgba(255,255,255,0.03),
+    inset 0 -18px 28px rgba(0,0,0,0.46),
+    0 16px 30px rgba(0,0,0,0.42);
+  opacity: var(--speaker-opacity);
+  transform: translate(-50%, -50%) scale(var(--speaker-scale));
+  transform-origin: center bottom;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.room-speaker-left { left: var(--speaker-left-x); }
+.room-speaker-right { left: var(--speaker-right-x); }
+
+.speaker-driver {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 45% 38%, rgba(90,96,108,0.78) 0 8%, transparent 9%),
+    radial-gradient(circle at center, #1c2028 0 16%, #0b0d12 45%, #030405 100%);
+  border: 2px solid rgba(64,72,86,0.82);
+  box-shadow:
+    inset 0 0 12px rgba(255,255,255,0.04),
+    0 0 0 1px rgba(0,0,0,0.70);
+}
+
+.speaker-driver-small {
+  width: 44%;
+  aspect-ratio: 1;
+  top: 13%;
+}
+
+.speaker-driver-large {
+  width: 65%;
+  aspect-ratio: 1;
+  bottom: 12%;
+}
+
+.speaker-pulse {
+  position: absolute;
+  inset: -18%;
+  border-radius: 16%;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(255,188,85,0.38), transparent 34%),
+    radial-gradient(circle at 50% 72%, rgba(255,188,85,0.34), transparent 40%);
+  filter: blur(10px);
+}
+
+.room-speaker.playing .speaker-driver-large {
+  animation: speakerDriverPulse 520ms ease-in-out infinite alternate;
+}
+
+.room-speaker.playing .speaker-driver-small {
+  animation: speakerDriverPulse 720ms ease-in-out infinite alternate;
+}
+
+.room-speaker.playing .speaker-pulse {
+  animation: pulseGlow 820ms ease-in-out infinite;
+}
+
+@keyframes speakerDriverPulse {
+  from { scale: 1; filter: brightness(1); }
+  to { scale: 1.045; filter: brightness(1.16); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.18; scale: 0.96; }
+  50% { opacity: var(--speaker-pulse); scale: 1.05; }
+}
+
+/* Global room vibe filter */
+.room-filter-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  opacity: var(--scene-filter-strength);
+  mix-blend-mode: soft-light;
+}
+
+.room-filter-overlay::before,
+.room-filter-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.room-filter-overlay::after {
+  background:
+    radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,var(--scene-vignette-strength)) 100%);
+  mix-blend-mode: multiply;
+}
+
+.room-filter-overlay.none::before {
+  background: transparent;
+}
+
+.room-filter-overlay.warm-club::before {
+  background: rgba(255, 156, 66, 1);
+}
+
+.room-filter-overlay.dreamy-blue::before {
+  background: rgba(72, 128, 255, 1);
+}
+
+.room-filter-overlay.deep-night::before {
+  background: rgba(18, 35, 96, 1);
+}
+
+.room-filter-overlay.retro-vhs::before {
+  background:
+    linear-gradient(180deg,
+      rgba(255, 100, 80, 0.65),
+      rgba(80, 160, 255, 0.85));
+  filter: saturate(0.94) contrast(1.06);
+}
+
+.room-filter-overlay.neon-purple::before {
+  background: rgba(173, 75, 255, 1);
+}
+
+.room-filter-overlay.cinematic-amber::before {
+  background: rgba(255, 184, 78, 1);
+}
+
+.room-filter-overlay.moody-lowlight::before {
+  background: rgba(0, 0, 0, 1);
+  mix-blend-mode: multiply;
 }
 
 
@@ -499,8 +696,52 @@ button:hover {
 }
 
 
+
+.room-utility-controls {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(255,255,255,0.09);
+}
+
+.room-utility-controls summary {
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.utility-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.utility-grid label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.25;
+}
+
+.utility-grid span {
+  color: #fde68a;
+  font-weight: 800;
+}
+
+.utility-grid input[type="range"] {
+  accent-color: #fbbf24;
+}
+
+.utility-buttons {
+  margin-top: 4px;
+}
+
 @media (max-width: 980px) {
-  .control-card {
+  
+.control-card {
     top: auto;
     right: 12px;
     left: 12px;

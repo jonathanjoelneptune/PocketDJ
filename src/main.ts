@@ -21,10 +21,56 @@ let dj: DjController;
 let lastPollError = "";
 let panelAutoHiddenAfterConnect = false;
 
+
+type SceneFilter =
+  | "none"
+  | "warm-club"
+  | "dreamy-blue"
+  | "deep-night"
+  | "retro-vhs"
+  | "neon-purple"
+  | "cinematic-amber"
+  | "moody-lowlight";
+
+type RoomUtilitySettings = {
+  speakerLeftX: number;
+  speakerRightX: number;
+  speakerY: number;
+  speakerScale: number;
+  speakerOpacity: number;
+  speakerPulse: number;
+  sceneFilter: SceneFilter;
+  filterStrength: number;
+  vignetteStrength: number;
+  shadowOpacity: number;
+  tableShadowScale: number;
+};
+
+const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
+  speakerLeftX: 33.5,
+  speakerRightX: 66.5,
+  speakerY: 70.5,
+  speakerScale: 0.72,
+  speakerOpacity: 0.78,
+  speakerPulse: 0.45,
+  sceneFilter: "warm-club",
+  filterStrength: 0.16,
+  vignetteStrength: 0.20,
+  shadowOpacity: 0.72,
+  tableShadowScale: 1.00
+};
+
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v1";
+let roomUtility = loadRoomUtilitySettings();
+
+
+
 async function boot(): Promise<void> {
   renderShell(state);
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
   bindControls();
+  bindRoomUtilityControls();
+  applyRoomUtilitySettings();
 
   if (state.spotifyClientId) {
     try {
@@ -98,6 +144,106 @@ function bindControls(): void {
   });
 }
 
+
+function bindRoomUtilityControls(): void {
+  const sceneFilter = qs<HTMLSelectElement>("#sceneFilterSelect");
+  sceneFilter.value = roomUtility.sceneFilter;
+
+  const controls = [
+    ["speakerLeftX", "speakerLeftXValue"],
+    ["speakerRightX", "speakerRightXValue"],
+    ["speakerY", "speakerYValue"],
+    ["speakerScale", "speakerScaleValue"],
+    ["speakerOpacity", "speakerOpacityValue"],
+    ["speakerPulse", "speakerPulseValue"],
+    ["filterStrength", "filterStrengthValue"],
+    ["vignetteStrength", "vignetteStrengthValue"],
+    ["shadowOpacity", "shadowOpacityValue"],
+    ["tableShadowScale", "tableShadowScaleValue"]
+  ] as const;
+
+  controls.forEach(([inputId, labelId]) => {
+    const input = qs<HTMLInputElement>(`#${inputId}`);
+    const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter">;
+    input.value = String(roomUtility[key]);
+    setUtilityLabel(labelId, Number(input.value));
+
+    input.addEventListener("input", () => {
+      roomUtility = { ...roomUtility, [key]: Number(input.value) };
+      setUtilityLabel(labelId, Number(input.value));
+      applyRoomUtilitySettings();
+    });
+  });
+
+  sceneFilter.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, sceneFilter: sceneFilter.value as SceneFilter };
+    applyRoomUtilitySettings();
+  });
+
+  qs<HTMLButtonElement>("#saveRoomUtility").addEventListener("click", () => {
+    saveRoomUtilitySettings();
+    applyRoomUtilitySettings();
+  });
+
+  qs<HTMLButtonElement>("#resetRoomUtility").addEventListener("click", () => {
+    roomUtility = { ...DEFAULT_ROOM_UTILITY };
+    sceneFilter.value = roomUtility.sceneFilter;
+    controls.forEach(([inputId, labelId]) => {
+      const input = qs<HTMLInputElement>(`#${inputId}`);
+      const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter">;
+      input.value = String(roomUtility[key]);
+      setUtilityLabel(labelId, Number(input.value));
+    });
+    saveRoomUtilitySettings();
+    applyRoomUtilitySettings();
+  });
+}
+
+function applyRoomUtilitySettings(): void {
+  const root = document.documentElement;
+
+  root.style.setProperty("--speaker-left-x", `${roomUtility.speakerLeftX}%`);
+  root.style.setProperty("--speaker-right-x", `${roomUtility.speakerRightX}%`);
+  root.style.setProperty("--speaker-y", `${roomUtility.speakerY}%`);
+  root.style.setProperty("--speaker-scale", String(roomUtility.speakerScale));
+  root.style.setProperty("--speaker-opacity", String(roomUtility.speakerOpacity));
+  root.style.setProperty("--speaker-pulse", String(roomUtility.speakerPulse));
+  root.style.setProperty("--scene-filter-strength", String(roomUtility.filterStrength));
+  root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength));
+  root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
+  root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
+
+  const overlay = qs<HTMLElement>("#roomFilterOverlay");
+  overlay.className = `room-filter-overlay ${roomUtility.sceneFilter}`;
+}
+
+function updateSpeakerPulse(isPlaying: boolean): void {
+  const left = qs<HTMLElement>("#leftSpeaker");
+  const right = qs<HTMLElement>("#rightSpeaker");
+  left.classList.toggle("playing", isPlaying);
+  right.classList.toggle("playing", isPlaying);
+}
+
+function setUtilityLabel(id: string, value: number): void {
+  qs(`#${id}`).textContent = value.toFixed(id.includes("Scale") ? 2 : 1);
+}
+
+function loadRoomUtilitySettings(): RoomUtilitySettings {
+  try {
+    const raw = window.localStorage.getItem(ROOM_UTILITY_KEY);
+    if (!raw) return { ...DEFAULT_ROOM_UTILITY };
+    const parsed = JSON.parse(raw) as Partial<RoomUtilitySettings>;
+    return { ...DEFAULT_ROOM_UTILITY, ...parsed };
+  } catch {
+    return { ...DEFAULT_ROOM_UTILITY };
+  }
+}
+
+function saveRoomUtilitySettings(): void {
+  window.localStorage.setItem(ROOM_UTILITY_KEY, JSON.stringify(roomUtility));
+}
+
+
 async function pollSpotifyNow(): Promise<void> {
   if (useDemo) return;
   if (!state.spotifyClientId) return;
@@ -133,6 +279,7 @@ function tick(): void {
     state.playback = getDemoTrack();
   }
   state.djMode = dj.update(state.playback);
+  updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
   updatePlaybackUi(state.playback, state.debugOpen);
   requestAnimationFrame(tick);
 }

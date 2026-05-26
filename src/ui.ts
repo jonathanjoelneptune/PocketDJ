@@ -18,6 +18,21 @@ export function renderShell(state: AppState): void {
       <section class="room" aria-label="Pocket DJ room">
         <div class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\')" aria-hidden="true"></div>
         <div class="album-wash" id="albumWash"></div>
+        <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
+
+        <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
+          <div class="speaker-pulse"></div>
+          <div class="speaker-driver speaker-driver-small"></div>
+          <div class="speaker-driver speaker-driver-large"></div>
+        </div>
+        <div class="room-speaker room-speaker-right" id="rightSpeaker" aria-hidden="true">
+          <div class="speaker-pulse"></div>
+          <div class="speaker-driver speaker-driver-small"></div>
+          <div class="speaker-driver speaker-driver-large"></div>
+        </div>
+
+        <div class="floor-shadow table-floor-shadow" aria-hidden="true"></div>
+        <div class="floor-shadow dj-feet-shadow" aria-hidden="true"></div>
 
         <div class="marquee" aria-live="polite">
           <div class="marquee-viewport">
@@ -86,6 +101,64 @@ export function renderShell(state: AppState): void {
           <button id="demoButton" class="secondary">Demo Mode</button>
           <button id="debugButton" class="secondary">Debug</button>
         </div>
+
+
+        <details class="room-utility-controls" open>
+          <summary>Room utility controls</summary>
+
+          <label class="field-label" for="sceneFilterSelect">Scene filter</label>
+          <select id="sceneFilterSelect" class="text-input">
+            <option value="none">None</option>
+            <option value="warm-club">Warm club</option>
+            <option value="dreamy-blue">Dreamy blue</option>
+            <option value="deep-night">Deep night</option>
+            <option value="retro-vhs">Retro VHS</option>
+            <option value="neon-purple">Neon purple</option>
+            <option value="cinematic-amber">Cinematic amber</option>
+            <option value="moody-lowlight">Moody lowlight</option>
+          </select>
+
+          <div class="utility-grid">
+            <label>Left speaker X % <span id="speakerLeftXValue">33.5</span>
+              <input id="speakerLeftX" type="range" min="0" max="100" step="0.1" value="33.5" />
+            </label>
+            <label>Right speaker X % <span id="speakerRightXValue">66.5</span>
+              <input id="speakerRightX" type="range" min="0" max="100" step="0.1" value="66.5" />
+            </label>
+            <label>Speaker Y % <span id="speakerYValue">70.5</span>
+              <input id="speakerY" type="range" min="0" max="100" step="0.1" value="70.5" />
+            </label>
+            <label>Speaker scale <span id="speakerScaleValue">0.72</span>
+              <input id="speakerScale" type="range" min="0.25" max="1.8" step="0.01" value="0.72" />
+            </label>
+            <label>Speaker opacity <span id="speakerOpacityValue">0.78</span>
+              <input id="speakerOpacity" type="range" min="0" max="1" step="0.01" value="0.78" />
+            </label>
+            <label>Speaker pulse <span id="speakerPulseValue">0.45</span>
+              <input id="speakerPulse" type="range" min="0" max="1" step="0.01" value="0.45" />
+            </label>
+          </div>
+
+          <div class="utility-grid">
+            <label>Filter strength <span id="filterStrengthValue">0.16</span>
+              <input id="filterStrength" type="range" min="0" max="0.5" step="0.01" value="0.16" />
+            </label>
+            <label>Vignette strength <span id="vignetteStrengthValue">0.20</span>
+              <input id="vignetteStrength" type="range" min="0" max="0.55" step="0.01" value="0.20" />
+            </label>
+            <label>Shadow opacity <span id="shadowOpacityValue">0.72</span>
+              <input id="shadowOpacity" type="range" min="0" max="1" step="0.01" value="0.72" />
+            </label>
+            <label>Table shadow size <span id="tableShadowScaleValue">1.00</span>
+              <input id="tableShadowScale" type="range" min="0.4" max="1.8" step="0.01" value="1.00" />
+            </label>
+          </div>
+
+          <div class="button-grid utility-buttons">
+            <button id="saveRoomUtility" class="secondary" type="button">Save room utility</button>
+            <button id="resetRoomUtility" class="secondary" type="button">Reset utility</button>
+          </div>
+        </details>
 
         <details class="setup-notes">
           <summary>GitHub Pages setup</summary>
