@@ -39,6 +39,10 @@ type RoomUtilitySettings = {
   speakerScale: number;
   speakerOpacity: number;
   speakerPulse: number;
+  speakerDriverX: number;
+  speakerDriverY: number;
+  speakerDriverSize: number;
+  speakerDarkness: number;
   sceneFilter: SceneFilter;
   filterStrength: number;
   vignetteStrength: number;
@@ -53,6 +57,10 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   speakerScale: 1.15,
   speakerOpacity: 1.00,
   speakerPulse: 0.50,
+  speakerDriverX: 50.0,
+  speakerDriverY: 53.5,
+  speakerDriverSize: 42.0,
+  speakerDarkness: 0.48,
   sceneFilter: "neon-purple",
   filterStrength: 0.20,
   vignetteStrength: 0.20,
@@ -156,6 +164,10 @@ function bindRoomUtilityControls(): void {
     ["speakerScale", "speakerScaleValue"],
     ["speakerOpacity", "speakerOpacityValue"],
     ["speakerPulse", "speakerPulseValue"],
+    ["speakerDriverX", "speakerDriverXValue"],
+    ["speakerDriverY", "speakerDriverYValue"],
+    ["speakerDriverSize", "speakerDriverSizeValue"],
+    ["speakerDarkness", "speakerDarknessValue"],
     ["filterStrength", "filterStrengthValue"],
     ["vignetteStrength", "vignetteStrengthValue"],
     ["shadowOpacity", "shadowOpacityValue"],
@@ -208,6 +220,10 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--speaker-scale", String(roomUtility.speakerScale));
   root.style.setProperty("--speaker-opacity", String(roomUtility.speakerOpacity));
   root.style.setProperty("--speaker-pulse", String(roomUtility.speakerPulse));
+  root.style.setProperty("--speaker-driver-x", `${roomUtility.speakerDriverX}%`);
+  root.style.setProperty("--speaker-driver-y", `${roomUtility.speakerDriverY}%`);
+  root.style.setProperty("--speaker-driver-size", `${roomUtility.speakerDriverSize}%`);
+  root.style.setProperty("--speaker-darkness", String(roomUtility.speakerDarkness));
   root.style.setProperty("--scene-filter-strength", String(roomUtility.filterStrength));
   root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength));
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
