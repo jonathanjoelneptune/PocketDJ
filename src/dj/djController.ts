@@ -20,8 +20,8 @@ const CINEMATIC_TRIGGER_MS = 30_000;
 /*
  * Important split:
  * - active/playing/demo uses a*.png performance poses
- * - idle/no-track uses i*.png idle poses only
- * - paused uses calm i*.png poses by default so the DJ clearly stops performing
+ * - idle/no-track uses only the approved calm idle poses: i6, i7, i8, i9, i1, i10, i11, i12
+ * - paused uses the same calm pose family by default so the DJ clearly stops performing
  */
 const quickLoops: AnimationLoop[] = [
   makeLoop("left-scratch", "Left deck scratch", ["a10.png", "a10-2.png"], "quick"),
@@ -45,16 +45,25 @@ const cinematicLoops: AnimationLoop[] = [
 ];
 
 const idleLoops: AnimationLoop[] = [
-  makeLoop("idle-breathe", "Idle breathe", ["i1.png", "i2.png", "i3.png", "i4.png"], "idle", 1200, 2200, 900, 1700),
-  makeLoop("idle-look", "Idle look", ["i5.png", "i6.png", "i7.png"], "idle", 1200, 2400, 1000, 1900),
-  makeLoop("idle-wait", "Idle wait", ["i8.png", "i9.png", "i10.png"], "idle", 1300, 2500, 1200, 2200),
-  makeLoop("idle-soft", "Idle soft", ["i11.png", "i12.png", "i13.png"], "idle", 1400, 2600, 1400, 2400)
+  makeLoop("idle-i6", "Idle i6", ["i6.png"], "idle", 30_000, 60_000, 0, 0),
+  makeLoop("idle-i7", "Idle i7", ["i7.png"], "idle", 30_000, 60_000, 0, 0),
+  makeLoop("idle-i8", "Idle i8", ["i8.png"], "idle", 30_000, 60_000, 0, 0),
+  makeLoop("idle-i9", "Idle i9", ["i9.png"], "idle", 30_000, 60_000, 0, 0),
+  makeLoop("idle-i1", "Idle i1", ["i1.png"], "idle", 30_000, 60_000, 0, 0),
+  makeLoop("idle-i10", "Idle i10", ["i10.png"], "idle", 30_000, 60_000, 0, 0),
+  makeLoop("idle-i11", "Idle i11", ["i11.png"], "idle", 30_000, 60_000, 0, 0),
+  makeLoop("idle-i12", "Idle i12", ["i12.png"], "idle", 30_000, 60_000, 0, 0)
 ];
 
 const pausedLoops: AnimationLoop[] = [
-  makeLoop("paused-calm", "Paused calm", ["i1.png", "i2.png", "i3.png"], "paused", 1300, 2400, 1000, 1900),
-  makeLoop("paused-listen", "Paused listen", ["i5.png", "i6.png", "i7.png", "i8.png"], "paused", 1300, 2500, 1000, 2000),
-  makeLoop("paused-idle", "Paused idle", ["i9.png", "i10.png", "i11.png", "i12.png", "i13.png"], "paused", 1400, 2600, 1200, 2200)
+  makeLoop("paused-i6", "Paused i6", ["i6.png"], "paused", 25_000, 50_000, 0, 0),
+  makeLoop("paused-i7", "Paused i7", ["i7.png"], "paused", 25_000, 50_000, 0, 0),
+  makeLoop("paused-i8", "Paused i8", ["i8.png"], "paused", 25_000, 50_000, 0, 0),
+  makeLoop("paused-i9", "Paused i9", ["i9.png"], "paused", 25_000, 50_000, 0, 0),
+  makeLoop("paused-i1", "Paused i1", ["i1.png"], "paused", 25_000, 50_000, 0, 0),
+  makeLoop("paused-i10", "Paused i10", ["i10.png"], "paused", 25_000, 50_000, 0, 0),
+  makeLoop("paused-i11", "Paused i11", ["i11.png"], "paused", 25_000, 50_000, 0, 0),
+  makeLoop("paused-i12", "Paused i12", ["i12.png"], "paused", 25_000, 50_000, 0, 0)
 ];
 
 export class DjController {
@@ -68,7 +77,7 @@ export class DjController {
   private cinematicOnce = false;
   private auditionIndex = 0;
   private cinematicIndex = 0;
-  private normalLoopIndex = 0;
+  private normalLoopIndex = -1;
   private lastTrackId: string | null = null;
   private hasSeenFirstTrack = false;
   private cinematicFiredForTrack = false;
@@ -243,9 +252,13 @@ export class DjController {
     const pool = this.poolForMode(mode);
     if (!pool.length) return;
 
-    const index = mode === "playing" || mode === "demo"
-      ? randomInt(0, pool.length - 1)
-      : this.normalLoopIndex % pool.length;
+    let index: number;
+    if (mode === "playing" || mode === "demo") {
+      index = randomInt(0, pool.length - 1);
+    } else {
+      this.normalLoopIndex = wrapIndex(this.normalLoopIndex + 1, pool.length);
+      index = this.normalLoopIndex;
+    }
 
     this.currentLoop = pool[index];
     this.frameIndex = 0;
@@ -262,8 +275,8 @@ export class DjController {
 
   private loopDurationForMode(mode: DjMode): number {
     if (mode === "playing" || mode === "demo" || mode === "burst") return randomInt(4_500, 9_000);
-    if (mode === "paused") return randomInt(8_000, 13_000);
-    return randomInt(9_000, 15_000);
+    if (mode === "paused") return randomInt(25_000, 50_000);
+    return randomInt(30_000, 60_000);
   }
 
   private enterNormalMode(now: number): void {
@@ -328,11 +341,11 @@ export class DjController {
     if (id.endsWith(".png")) return id;
     const legacyMap: Record<string, string> = {
       "idle-center": "i1.png",
-      "idle-nod": "i2.png",
+      "idle-nod": "i7.png",
       "active-left": "a4.png",
       "active-right": "a5.png",
       "burst-hands": "a44.png",
-      "paused-lean": "i5.png"
+      "paused-lean": "i8.png"
     };
     return legacyMap[id] || "i1.png";
   }

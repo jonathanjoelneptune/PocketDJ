@@ -206,11 +206,6 @@ button {
   z-index: 1;
 }
 
-html[data-dj-mode="playing"] .dj-wrap,
-html[data-dj-mode="demo"] .dj-wrap,
-html[data-dj-mode="burst"] .dj-wrap {
-  animation: djBob 1.35s ease-in-out infinite;
-}
 
 .control-card {
   position: absolute;
@@ -503,10 +498,6 @@ button:hover {
   to { transform: translate(calc(-100% - 72px), -50%); }
 }
 
-@keyframes djBob {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -0.75%; }
-}
 
 @media (max-width: 980px) {
   .control-card {

@@ -110,7 +110,10 @@ async function pollSpotifyNow(): Promise<void> {
     lastPollError = error instanceof Error ? error.message : String(error);
     console.warn(lastPollError);
   } finally {
-    const interval = document.hidden ? 45_000 : state.playback.isPlaying ? 7_000 : 18_000;
+    // Keep visible-page polling fast so the DJ state changes quickly when Spotify starts,
+    // pauses, stops, or switches tracks. The previous 7s/18s visible intervals made
+    // idle-to-active and active-to-idle transitions feel delayed.
+    const interval = document.hidden ? 45_000 : 2_500;
     scheduleNextPoll(interval);
   }
 }
