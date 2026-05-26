@@ -29,7 +29,7 @@ export function renderShell(state: AppState): void {
           <img
             id="djSprite"
             class="dj-frame-img"
-            src="./assets/poses/final/a1.png"
+            src="./assets/poses/final/i1.png"
             alt="Pocket DJ"
             draggable="false"
           />

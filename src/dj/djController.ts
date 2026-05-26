@@ -1,7 +1,7 @@
 import type { DjMode, NormalizedTrack } from "../state/types";
 
 type ControlMode = "normal" | "audition" | "cinematic";
-type LoopKind = "quick" | "cinematic" | "idle";
+type LoopKind = "quick" | "cinematic" | "idle" | "paused";
 
 type AnimationLoop = {
   id: string;
@@ -17,6 +17,12 @@ type AnimationLoop = {
 const POSE_BASE = "./assets/poses/final/";
 const CINEMATIC_TRIGGER_MS = 30_000;
 
+/*
+ * Important split:
+ * - active/playing/demo uses a*.png performance poses
+ * - idle/no-track uses i*.png idle poses only
+ * - paused uses calm i*.png poses by default so the DJ clearly stops performing
+ */
 const quickLoops: AnimationLoop[] = [
   makeLoop("left-scratch", "Left deck scratch", ["a10.png", "a10-2.png"], "quick"),
   makeLoop("record-flip", "Record flip", ["a4.png", "a4-2.png"], "quick"),
@@ -39,16 +45,23 @@ const cinematicLoops: AnimationLoop[] = [
 ];
 
 const idleLoops: AnimationLoop[] = [
-  makeLoop("idle-center", "Idle center", ["a1.png", "a7.png", "a8.png", "a9.png"], "idle", 900, 1600, 600, 1300),
-  makeLoop("idle-listen", "Idle listen", ["a13.png", "a13-2.png", "a15.png", "a16.png"], "idle", 900, 1700, 700, 1500),
-  makeLoop("idle-soft-mix", "Idle soft mix", ["a10.png", "a10-2.png", "a1.png"], "idle", 850, 1500, 700, 1400)
+  makeLoop("idle-breathe", "Idle breathe", ["i1.png", "i2.png", "i3.png", "i4.png"], "idle", 1200, 2200, 900, 1700),
+  makeLoop("idle-look", "Idle look", ["i5.png", "i6.png", "i7.png"], "idle", 1200, 2400, 1000, 1900),
+  makeLoop("idle-wait", "Idle wait", ["i8.png", "i9.png", "i10.png"], "idle", 1300, 2500, 1200, 2200),
+  makeLoop("idle-soft", "Idle soft", ["i11.png", "i12.png", "i13.png"], "idle", 1400, 2600, 1400, 2400)
+];
+
+const pausedLoops: AnimationLoop[] = [
+  makeLoop("paused-calm", "Paused calm", ["i1.png", "i2.png", "i3.png"], "paused", 1300, 2400, 1000, 1900),
+  makeLoop("paused-listen", "Paused listen", ["i5.png", "i6.png", "i7.png", "i8.png"], "paused", 1300, 2500, 1000, 2000),
+  makeLoop("paused-idle", "Paused idle", ["i9.png", "i10.png", "i11.png", "i12.png", "i13.png"], "paused", 1400, 2600, 1200, 2200)
 ];
 
 export class DjController {
   private mode: DjMode = "idle";
   private controlMode: ControlMode = "normal";
   private currentLoop: AnimationLoop = idleLoops[0];
-  private currentFrame = "a1.png";
+  private currentFrame = idleLoops[0].frames[0];
   private frameIndex = 0;
   private nextFrameAt = 0;
   private loopEndsAt = 0;
@@ -67,11 +80,12 @@ export class DjController {
     this.preload();
     this.bindKeyboardControls();
     this.startNormalLoop("idle", Date.now());
+    this.currentFrame = this.currentLoop.frames[0] || "i1.png";
     this.paint();
   }
 
   update(playback: NormalizedTrack, now = Date.now()): DjMode {
-    const nextMode = this.resolveMode(playback, now);
+    const nextMode = this.resolveMode(playback);
     this.handleTrackTiming(playback, nextMode, now);
 
     if (this.controlMode !== "normal") {
@@ -121,8 +135,7 @@ export class DjController {
     };
   }
 
-  private resolveMode(playback: NormalizedTrack, now: number): DjMode {
-    void now;
+  private resolveMode(playback: NormalizedTrack): DjMode {
     if (playback.source === "demo") return playback.isPlaying ? "demo" : "paused";
     if (!playback.isAuthenticated) return "idle";
     if (!playback.trackId) return "idle";
@@ -229,22 +242,28 @@ export class DjController {
     this.cinematicOnce = false;
     const pool = this.poolForMode(mode);
     if (!pool.length) return;
-    const index = randomInt(0, pool.length - 1);
+
+    const index = mode === "playing" || mode === "demo"
+      ? randomInt(0, pool.length - 1)
+      : this.normalLoopIndex % pool.length;
+
     this.currentLoop = pool[index];
     this.frameIndex = 0;
-    this.nextFrameAt = now;
+    this.currentFrame = this.currentLoop.frames[0] || this.currentFrame;
+    this.nextFrameAt = now + this.frameDuration(this.currentLoop, 1);
     this.loopEndsAt = now + this.loopDurationForMode(mode);
   }
 
   private poolForMode(mode: DjMode): AnimationLoop[] {
     if (mode === "playing" || mode === "demo") return quickLoops;
-    if (mode === "paused" || mode === "idle" || mode === "empty") return idleLoops;
-    return quickLoops;
+    if (mode === "paused") return pausedLoops;
+    return idleLoops;
   }
 
   private loopDurationForMode(mode: DjMode): number {
     if (mode === "playing" || mode === "demo" || mode === "burst") return randomInt(4_500, 9_000);
-    return randomInt(7_000, 12_000);
+    if (mode === "paused") return randomInt(8_000, 13_000);
+    return randomInt(9_000, 15_000);
   }
 
   private enterNormalMode(now: number): void {
@@ -276,12 +295,15 @@ export class DjController {
       this.auditionIndex = wrapIndex(this.auditionIndex + delta, quickLoops.length);
       this.currentLoop = quickLoops[this.auditionIndex] || this.currentLoop;
     } else {
-      this.normalLoopIndex = wrapIndex(this.normalLoopIndex + delta, quickLoops.length);
-      this.currentLoop = quickLoops[this.normalLoopIndex] || this.currentLoop;
+      const pool = this.poolForMode(this.mode);
+      this.normalLoopIndex = wrapIndex(this.normalLoopIndex + delta, pool.length);
+      this.currentLoop = pool[this.normalLoopIndex] || this.currentLoop;
     }
     this.frameIndex = 0;
+    this.currentFrame = this.currentLoop.frames[0] || this.currentFrame;
     this.nextFrameAt = 0;
     this.loopEndsAt = Number.POSITIVE_INFINITY;
+    this.paint();
   }
 
   private paint(): void {
@@ -305,19 +327,19 @@ export class DjController {
   private frameForPoseId(id: string): string {
     if (id.endsWith(".png")) return id;
     const legacyMap: Record<string, string> = {
-      "idle-center": "a1.png",
-      "idle-nod": "a7.png",
+      "idle-center": "i1.png",
+      "idle-nod": "i2.png",
       "active-left": "a4.png",
       "active-right": "a5.png",
       "burst-hands": "a44.png",
-      "paused-lean": "a9.png"
+      "paused-lean": "i5.png"
     };
-    return legacyMap[id] || "a1.png";
+    return legacyMap[id] || "i1.png";
   }
 
   private preload(): void {
     const unique = new Set<string>();
-    [...quickLoops, ...cinematicLoops, ...idleLoops].forEach((loop) => {
+    [...quickLoops, ...cinematicLoops, ...idleLoops, ...pausedLoops].forEach((loop) => {
       loop.frames.forEach((frame) => unique.add(frame));
     });
     unique.forEach((frame) => {
