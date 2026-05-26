@@ -288,27 +288,7 @@ button {
   pointer-events: none;
   image-rendering: auto;
   transform-origin: center bottom;
-  filter:
-    saturate(0.62)
-    contrast(1.08)
-    brightness(0.64)
-    hue-rotate(-8deg);
-}
-
-/* Dark wash on the image only. This preserves Spotify/filter JS because no new controls are required. */
-.room-speaker::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  border-radius: 8px;
-  background:
-    linear-gradient(180deg,
-      rgba(2, 5, 12, 0.30),
-      rgba(0, 0, 0, 0.42)),
-    radial-gradient(circle at 50% 15%, rgba(255, 160, 70, 0.08), transparent 36%);
-  mix-blend-mode: multiply;
+  filter: none;
 }
 
 /* Contact shadow so the stand feels planted on the rug/floor. */
