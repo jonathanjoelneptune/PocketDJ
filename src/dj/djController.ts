@@ -19,29 +19,20 @@ const CINEMATIC_TRIGGER_MS = 30_000;
 
 /*
  * Important split:
- * - active/playing/demo uses a*.png performance poses
+ * - active/playing/demo uses a calm, scratch-focused subset of a*.png poses
+ * - the A11/A11m cinematic record moves are reserved for near-song-change triggers
  * - idle/no-track uses only the approved calm idle poses: i6, i7, i8, i9, i1, i10, i11, i12
  * - paused uses the same calm pose family by default so the DJ clearly stops performing
  */
 const quickLoops: AnimationLoop[] = [
-  makeLoop("left-scratch", "Left deck scratch", ["a10.png", "a10-2.png"], "quick"),
-  makeLoop("record-flip", "Record flip", ["a4.png", "a4-2.png"], "quick"),
-  makeLoop("hands-up", "Hands up pulse", ["a14.png", "a14-2.png"], "quick"),
-  makeLoop("crowd-wave", "Crowd wave", ["a44.png", "a44-2.png", "a44-3.png"], "quick"),
-  makeLoop("right-groove", "Right groove", ["a47.png", "a47-2.png", "a47-3.png"], "quick"),
-  makeLoop("headphone-groove", "Headphone groove", ["a48.png", "a48-2.png", "a48-3.png"], "quick"),
-  makeLoop("center-mix-a", "Center mix A", ["a1.png", "a2.png", "a3.png"], "quick"),
-  makeLoop("center-mix-b", "Center mix B", ["a5.png", "a6.png", "a7.png"], "quick"),
-  makeLoop("smile-mix", "Smile mix", ["a8.png", "a9.png", "a10.png"], "quick"),
-  makeLoop("right-hand-mix", "Right hand mix", ["a15.png", "a16.png", "a17.png", "a18.png"], "quick"),
-  makeLoop("build-up", "Build up", ["a30.png", "a31.png", "a32.png", "a33.png"], "quick"),
-  makeLoop("locked-in", "Locked in", ["a34.png", "a35.png", "a36.png", "a37.png", "a38.png", "a39.png"], "quick")
+  makeLoop("left-scratch", "Left deck scratch", ["a10.png", "a10-2.png"], "quick", 760, 1350, 450, 1100),
+  makeLoop("record-touch", "Record touch", ["a4.png", "a4-2.png"], "quick", 850, 1500, 600, 1200),
+  makeLoop("center-calm-mix", "Center calm mix", ["a1.png", "a2.png", "a3.png"], "quick", 900, 1600, 700, 1300)
 ];
 
 const cinematicLoops: AnimationLoop[] = [
-  makeLoop("place-record-right", "Place record right", ["a41.png", "a11.png", "a12.png", "a11-2.png"], "cinematic", 420, 780, 700, 1400),
-  makeLoop("place-record-left", "Place record left", ["a41.png", "a11m.png", "a12m.png", "a11-2m.png"], "cinematic", 420, 780, 700, 1400),
-  makeLoop("big-hype", "Big hype", ["a44.png", "a44-2.png", "a44-3.png", "a45.png", "a46.png"], "cinematic", 420, 760, 900, 1500)
+  makeLoop("place-record-right", "Near-change record move right", ["a41.png", "a11.png", "a12.png", "a11-2.png"], "cinematic", 420, 780, 700, 1400),
+  makeLoop("place-record-left", "Near-change record move left", ["a41.png", "a11m.png", "a12m.png", "a11-2m.png"], "cinematic", 420, 780, 700, 1400)
 ];
 
 const idleLoops: AnimationLoop[] = [
@@ -79,7 +70,6 @@ export class DjController {
   private cinematicIndex = 0;
   private normalLoopIndex = -1;
   private lastTrackId: string | null = null;
-  private hasSeenFirstTrack = false;
   private cinematicFiredForTrack = false;
   private cinematicForCurrentTrack = 0;
   private nextCinematicForNewTrack = 0;
@@ -162,10 +152,8 @@ export class DjController {
       this.cinematicForCurrentTrack = this.nextCinematicForNewTrack;
       this.nextCinematicForNewTrack = 1 - this.nextCinematicForNewTrack;
 
-      if (this.hasSeenFirstTrack && isActive && this.controlMode === "normal") {
-        this.triggerCinematicOnce(now);
-      }
-      this.hasSeenFirstTrack = true;
+      // Do not play the A11/A11m cinematic on every track change.
+      // Those cinematic record moves are reserved for the near-end-of-song trigger below.
     }
 
     if (!trackId || !playback.durationMs || !isActive) return;
@@ -334,7 +322,28 @@ export class DjController {
       this.poseElement.setAttribute("aria-label", `Pocket DJ ${label}: ${this.currentFrame}`);
       this.modeElement.textContent = label.toUpperCase();
       document.documentElement.dataset.djMode = label;
+      this.updateAnimationDebug(label);
     }
+  }
+
+  private updateAnimationDebug(label: string): void {
+    const panel = document.getElementById("animationDebugPanel");
+    if (!panel) return;
+
+    const cinematicState = this.cinematicOnce
+      ? "near-change cinematic active"
+      : this.controlMode === "cinematic"
+        ? "manual cinematic mode"
+        : "none";
+
+    panel.textContent = [
+      `frame: ${this.currentFrame}`,
+      `mode: ${label}`,
+      `loop: ${this.currentLoop.id}`,
+      `loop label: ${this.currentLoop.label}`,
+      `control: ${this.controlMode}`,
+      `cinematic: ${cinematicState}`
+    ].join("\n");
   }
 
   private frameForPoseId(id: string): string {

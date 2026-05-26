@@ -54,6 +54,11 @@ function bindControls(): void {
     setControlPanelOpen(false);
   });
 
+  qs<HTMLButtonElement>("#animationDebugToggle").addEventListener("click", () => {
+    const panel = qs<HTMLPreElement>("#animationDebugPanel");
+    panel.hidden = !panel.hidden;
+  });
+
   qs<HTMLButtonElement>("#connectSpotify").addEventListener("click", async () => {
     const clientId = qs<HTMLInputElement>("#clientIdInput").value.trim();
     await startSpotifyLogin(clientId, state.redirectUri);

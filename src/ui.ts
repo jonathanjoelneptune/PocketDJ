@@ -38,6 +38,9 @@ export function renderShell(state: AppState): void {
 
       <button id="panelToggle" class="panel-toggle" type="button" aria-label="Show Pocket DJ controls" title="Show controls">♪</button>
 
+      <button id="animationDebugToggle" class="animation-debug-toggle" type="button" aria-label="Show current animation frame" title="Show current animation frame">Frame</button>
+      <pre id="animationDebugPanel" class="animation-debug-panel" hidden>frame: loading</pre>
+
       <aside id="controlCard" class="control-card control-card-open">
         <div class="brand-row">
           <div>
