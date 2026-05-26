@@ -360,14 +360,6 @@ button {
       0 0 18px rgba(255, 170, 85, 0.28);
   }
 }
-  to {
-    opacity: var(--speaker-pulse);
-    scale: 1.10;
-    box-shadow:
-      inset 0 0 12px rgba(0,0,0,0.26),
-      0 0 18px rgba(255, 170, 85, 0.28);
-  }
-}
 
 
 /* Global room vibe filter */
