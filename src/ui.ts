@@ -21,12 +21,14 @@ export function renderShell(state: AppState): void {
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
-          <div class="speaker-pulse"></div>
           <img class="speaker-image" src="./assets/Speaker.png" alt="" draggable="false" />
+          <div class="speaker-driver-warp"></div>
+          <div class="speaker-pulse"></div>
         </div>
         <div class="room-speaker room-speaker-right" id="rightSpeaker" aria-hidden="true">
-          <div class="speaker-pulse"></div>
           <img class="speaker-image" src="./assets/Speaker.png" alt="" draggable="false" />
+          <div class="speaker-driver-warp"></div>
+          <div class="speaker-pulse"></div>
         </div>
 
         <div class="floor-shadow table-floor-shadow" aria-hidden="true"></div>
@@ -135,14 +137,14 @@ export function renderShell(state: AppState): void {
             <label>Speaker pulse <span id="speakerPulseValue">0.5</span>
               <input id="speakerPulse" type="range" min="0" max="1" step="0.01" value="0.5" />
             </label>
-            <label>Speaker pulse X % <span id="speakerPulseXValue">50.0</span>
-              <input id="speakerPulseX" type="range" min="20" max="80" step="0.1" value="50.0" />
+            <label>Speaker pulse X % <span id="speakerPulseXValue">53.0</span>
+              <input id="speakerPulseX" type="range" min="20" max="80" step="0.1" value="53.0" />
             </label>
-            <label>Speaker pulse Y % <span id="speakerPulseYValue">54.0</span>
-              <input id="speakerPulseY" type="range" min="20" max="85" step="0.1" value="54.0" />
+            <label>Speaker pulse Y % <span id="speakerPulseYValue">50.4</span>
+              <input id="speakerPulseY" type="range" min="20" max="85" step="0.1" value="50.4" />
             </label>
-            <label>Speaker pulse size % <span id="speakerPulseSizeValue">44.0</span>
-              <input id="speakerPulseSize" type="range" min="12" max="80" step="0.1" value="44.0" />
+            <label>Speaker pulse size % <span id="speakerPulseSizeValue">48.2</span>
+              <input id="speakerPulseSize" type="range" min="12" max="80" step="0.1" value="48.2" />
             </label>
           </div>
 
