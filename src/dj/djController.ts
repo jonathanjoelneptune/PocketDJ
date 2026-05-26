@@ -30,9 +30,9 @@ const quickLoops: AnimationLoop[] = [
   makeLoop("left-scratch", "Left deck scratch", ["a10.png", "a10-2.png"], "quick", 120, 520, 0, 420, 4_000, 24_000),
   makeLoop("record-touch", "Record touch", ["a4.png", "a4-2.png"], "quick", 120, 520, 0, 420, 4_000, 22_000),
   makeLoop("low-hands-scratch", "Low hands scratch", ["a14.png", "a14-2.png"], "quick", 160, 620, 0, 520, 4_000, 20_000),
-  makeLoop("two-hand-scratch-a", "Two-hand scratch A", ["a44.png", "a44-2.png", "a44-3.png", "a44-2.png"], "quick", 140, 640, 0, 650, 7_000, 34_000),
-  makeLoop("two-hand-scratch-b", "Two-hand scratch B", ["a47.png", "a47-2.png", "a47-3.png", "a47-2.png"], "quick", 140, 640, 0, 650, 7_000, 34_000),
-  makeLoop("two-hand-scratch-c", "Two-hand scratch C", ["a48.png", "a48-2.png", "a48-3.png", "a48-2.png"], "quick", 140, 640, 0, 650, 7_000, 34_000)
+  makeLoop("two-hand-scratch-a", "Two-hand scratch A", ["a44.png", "a44-2.png", "a44-3.png"], "quick", 140, 640, 0, 650, 7_000, 34_000),
+  makeLoop("two-hand-scratch-b", "Two-hand scratch B", ["a47.png", "a47-2.png", "a47-3.png"], "quick", 140, 640, 0, 650, 7_000, 34_000),
+  makeLoop("two-hand-scratch-c", "Two-hand scratch C", ["a48.png", "a48-2.png", "a48-3.png"], "quick", 140, 640, 0, 650, 7_000, 34_000)
 ];
 
 const cinematicLoops: AnimationLoop[] = [
@@ -79,6 +79,7 @@ export class DjController {
   private cinematicForCurrentTrack = 0;
   private nextCinematicForNewTrack = 0;
   private lastStatus = "";
+  private previousFrame = "";
 
   constructor(private readonly poseElement: HTMLElement, private readonly modeElement: HTMLElement) {
     this.preload();
@@ -227,9 +228,40 @@ export class DjController {
   private advanceFrame(now: number): void {
     const frames = this.currentLoop.frames;
     if (!frames.length) return;
-    this.currentFrame = frames[this.frameIndex % frames.length];
+
+    if (this.shouldUseOrganicScratchOrder(this.currentLoop)) {
+      this.currentFrame = this.pickOrganicScratchFrame(frames);
+    } else {
+      this.currentFrame = frames[this.frameIndex % frames.length];
+    }
+
     this.frameIndex += 1;
     this.nextFrameAt = now + this.frameDuration(this.currentLoop, this.frameIndex);
+  }
+
+  private shouldUseOrganicScratchOrder(loop: AnimationLoop): boolean {
+    return loop.kind === "quick" && loop.frames.length === 3;
+  }
+
+  private pickOrganicScratchFrame(frames: string[]): string {
+    if (frames.length < 3) return frames[0] || this.currentFrame;
+
+    const baseFrame = frames[0];
+    const accentFrames = frames.slice(1);
+    let candidates: string[];
+
+    // Bias back toward the base frame so the motion reads like a DJ hand returning to
+    // the record between varied scratch hits. This allows patterns such as:
+    // a44 -> a44-3 -> a44 -> a44-2 -> a44-3 -> a44
+    if (this.currentFrame === baseFrame) {
+      candidates = accentFrames;
+    } else {
+      candidates = Math.random() < 0.68 ? [baseFrame] : frames.filter((frame) => frame !== this.currentFrame);
+    }
+
+    const next = candidates[randomInt(0, candidates.length - 1)] || baseFrame;
+    this.previousFrame = this.currentFrame;
+    return next;
   }
 
   private frameDuration(loop: AnimationLoop, advancedIndex: number): number {
@@ -255,6 +287,7 @@ export class DjController {
 
     this.currentLoop = pool[index];
     this.frameIndex = 0;
+    this.previousFrame = "";
     this.currentFrame = this.currentLoop.frames[0] || this.currentFrame;
     this.nextFrameAt = now + this.frameDuration(this.currentLoop, 1);
     this.loopEndsAt = now + this.loopDurationForMode(mode);
@@ -308,6 +341,7 @@ export class DjController {
       this.currentLoop = pool[this.normalLoopIndex] || this.currentLoop;
     }
     this.frameIndex = 0;
+    this.previousFrame = "";
     this.currentFrame = this.currentLoop.frames[0] || this.currentFrame;
     this.nextFrameAt = 0;
     this.loopEndsAt = Number.POSITIVE_INFINITY;
@@ -350,7 +384,8 @@ export class DjController {
       `loop label: ${this.currentLoop.label}`,
       `control: ${this.controlMode}`,
       `cinematic: ${cinematicState}`,
-      `loop dwell: ${this.currentLoop.minLoopMs}-${this.currentLoop.maxLoopMs} ms`
+      `loop dwell: ${this.currentLoop.minLoopMs}-${this.currentLoop.maxLoopMs} ms`,
+      `order: ${this.shouldUseOrganicScratchOrder(this.currentLoop) ? "organic/random scratch" : "sequential"}`
     ].join("\n");
   }
 
