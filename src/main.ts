@@ -47,17 +47,17 @@ type RoomUtilitySettings = {
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
-  speakerLeftX: 33.5,
-  speakerRightX: 66.5,
+  speakerLeftX: 38.6,
+  speakerRightX: 63.1,
   speakerY: 70.5,
-  speakerScale: 0.72,
-  speakerOpacity: 0.78,
-  speakerPulse: 0.45,
-  sceneFilter: "warm-club",
-  filterStrength: 0.16,
+  speakerScale: 1.15,
+  speakerOpacity: 1.00,
+  speakerPulse: 0.50,
+  sceneFilter: "neon-purple",
+  filterStrength: 0.20,
   vignetteStrength: 0.20,
-  shadowOpacity: 0.72,
-  tableShadowScale: 1.00
+  shadowOpacity: 1.00,
+  tableShadowScale: 1.16
 };
 
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v1";

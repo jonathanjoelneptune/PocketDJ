@@ -113,44 +113,44 @@ export function renderShell(state: AppState): void {
             <option value="dreamy-blue">Dreamy blue</option>
             <option value="deep-night">Deep night</option>
             <option value="retro-vhs">Retro VHS</option>
-            <option value="neon-purple">Neon purple</option>
+            <option value="neon-purple" selected>Neon purple</option>
             <option value="cinematic-amber">Cinematic amber</option>
             <option value="moody-lowlight">Moody lowlight</option>
           </select>
 
           <div class="utility-grid">
-            <label>Left speaker X % <span id="speakerLeftXValue">33.5</span>
-              <input id="speakerLeftX" type="range" min="0" max="100" step="0.1" value="33.5" />
+            <label>Left speaker X % <span id="speakerLeftXValue">38.6</span>
+              <input id="speakerLeftX" type="range" min="0" max="100" step="0.1" value="38.6" />
             </label>
-            <label>Right speaker X % <span id="speakerRightXValue">66.5</span>
-              <input id="speakerRightX" type="range" min="0" max="100" step="0.1" value="66.5" />
+            <label>Right speaker X % <span id="speakerRightXValue">63.1</span>
+              <input id="speakerRightX" type="range" min="0" max="100" step="0.1" value="63.1" />
             </label>
             <label>Speaker Y % <span id="speakerYValue">70.5</span>
               <input id="speakerY" type="range" min="0" max="100" step="0.1" value="70.5" />
             </label>
-            <label>Speaker scale <span id="speakerScaleValue">0.72</span>
-              <input id="speakerScale" type="range" min="0.25" max="1.8" step="0.01" value="0.72" />
+            <label>Speaker scale <span id="speakerScaleValue">1.15</span>
+              <input id="speakerScale" type="range" min="0.25" max="1.8" step="0.01" value="1.15" />
             </label>
-            <label>Speaker opacity <span id="speakerOpacityValue">0.78</span>
-              <input id="speakerOpacity" type="range" min="0" max="1" step="0.01" value="0.78" />
+            <label>Speaker opacity <span id="speakerOpacityValue">1.0</span>
+              <input id="speakerOpacity" type="range" min="0" max="1" step="0.01" value="1.0" />
             </label>
-            <label>Speaker pulse <span id="speakerPulseValue">0.45</span>
-              <input id="speakerPulse" type="range" min="0" max="1" step="0.01" value="0.45" />
+            <label>Speaker pulse <span id="speakerPulseValue">0.5</span>
+              <input id="speakerPulse" type="range" min="0" max="1" step="0.01" value="0.5" />
             </label>
           </div>
 
           <div class="utility-grid">
-            <label>Filter strength <span id="filterStrengthValue">0.16</span>
-              <input id="filterStrength" type="range" min="0" max="0.5" step="0.01" value="0.16" />
+            <label>Filter strength <span id="filterStrengthValue">0.2</span>
+              <input id="filterStrength" type="range" min="0" max="0.5" step="0.01" value="0.2" />
             </label>
-            <label>Vignette strength <span id="vignetteStrengthValue">0.20</span>
-              <input id="vignetteStrength" type="range" min="0" max="0.55" step="0.01" value="0.20" />
+            <label>Vignette strength <span id="vignetteStrengthValue">0.2</span>
+              <input id="vignetteStrength" type="range" min="0" max="0.55" step="0.01" value="0.2" />
             </label>
-            <label>Shadow opacity <span id="shadowOpacityValue">0.72</span>
-              <input id="shadowOpacity" type="range" min="0" max="1" step="0.01" value="0.72" />
+            <label>Shadow opacity <span id="shadowOpacityValue">1.0</span>
+              <input id="shadowOpacity" type="range" min="0" max="1" step="0.01" value="1.0" />
             </label>
-            <label>Table shadow size <span id="tableShadowScaleValue">1.00</span>
-              <input id="tableShadowScale" type="range" min="0.4" max="1.8" step="0.01" value="1.00" />
+            <label>Table shadow size <span id="tableShadowScaleValue">1.16</span>
+              <input id="tableShadowScale" type="range" min="0.4" max="1.8" step="0.01" value="1.16" />
             </label>
           </div>
 
