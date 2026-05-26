@@ -117,17 +117,17 @@ export function renderShell(state: AppState): void {
           </select>
 
           <div class="utility-grid">
-            <label>Left speaker X % <span id="speakerLeftXValue">38.6</span>
-              <input id="speakerLeftX" type="range" min="0" max="100" step="0.1" value="38.6" />
+            <label>Left speaker X % <span id="speakerLeftXValue">36.9</span>
+              <input id="speakerLeftX" type="range" min="0" max="100" step="0.1" value="36.9" />
             </label>
-            <label>Right speaker X % <span id="speakerRightXValue">63.1</span>
-              <input id="speakerRightX" type="range" min="0" max="100" step="0.1" value="63.1" />
+            <label>Right speaker X % <span id="speakerRightXValue">64.38</span>
+              <input id="speakerRightX" type="range" min="0" max="100" step="0.1" value="64.38" />
             </label>
             <label>Speaker Y % <span id="speakerYValue">70.5</span>
               <input id="speakerY" type="range" min="0" max="100" step="0.1" value="70.5" />
             </label>
-            <label>Speaker scale <span id="speakerScaleValue">1.15</span>
-              <input id="speakerScale" type="range" min="0.25" max="1.8" step="0.01" value="1.15" />
+            <label>Speaker scale <span id="speakerScaleValue">1.47</span>
+              <input id="speakerScale" type="range" min="0.25" max="1.8" step="0.01" value="1.47" />
             </label>
             <label>Speaker opacity <span id="speakerOpacityValue">1.0</span>
               <input id="speakerOpacity" type="range" min="0" max="1" step="0.01" value="1.0" />

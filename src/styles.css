@@ -857,3 +857,19 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   white-space: pre-wrap;
   pointer-events: none;
 }
+
+
+.utility-grid {
+  align-items: start;
+}
+
+.utility-grid label {
+  min-width: 0;
+}
+
+@media (max-width: 1500px) {
+  .utility-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

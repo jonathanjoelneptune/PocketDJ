@@ -50,10 +50,10 @@ type RoomUtilitySettings = {
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
-  speakerLeftX: 38.6,
-  speakerRightX: 63.1,
+  speakerLeftX: 36.9,
+  speakerRightX: 64.38,
   speakerY: 70.5,
-  speakerScale: 1.15,
+  speakerScale: 1.47,
   speakerOpacity: 1.00,
   speakerPulse: 0.50,
   speakerPulseX: 50.0,
