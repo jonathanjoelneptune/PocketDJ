@@ -120,8 +120,8 @@ export function renderShell(state: AppState): void {
             <label>Left speaker X % <span id="speakerLeftXValue">36.9</span>
               <input id="speakerLeftX" type="range" min="0" max="100" step="0.1" value="36.9" />
             </label>
-            <label>Right speaker X % <span id="speakerRightXValue">64.38</span>
-              <input id="speakerRightX" type="range" min="0" max="100" step="0.1" value="64.38" />
+            <label>Right speaker X % <span id="speakerRightXValue">64.9</span>
+              <input id="speakerRightX" type="range" min="0" max="100" step="0.1" value="64.9" />
             </label>
             <label>Speaker Y % <span id="speakerYValue">70.5</span>
               <input id="speakerY" type="range" min="0" max="100" step="0.1" value="70.5" />
