@@ -248,7 +248,10 @@ function updateMarquee(track: NormalizedTrack): void {
   marquee.classList.toggle("marquee-title-short", !payload.titleLong);
   marquee.classList.toggle("marquee-artist-short", !payload.artistLong);
 
-  if (payload.key === lastMarqueeKey) return;
+  if (payload.key === lastMarqueeKey) {
+    updateMarqueeRowPan(marquee, titleEl, artistEl);
+    return;
+  }
   lastMarqueeKey = payload.key;
 
   if (marqueeSwapTimer) window.clearTimeout(marqueeSwapTimer);
@@ -261,6 +264,7 @@ function updateMarquee(track: NormalizedTrack): void {
   marqueeSwapTimer = window.setTimeout(() => {
     titleEl.textContent = payload.title;
     artistEl.textContent = payload.artist;
+    updateMarqueeRowPan(marquee, titleEl, artistEl);
 
     content.style.animation = "none";
     titleEl.style.animation = "none";
@@ -279,6 +283,19 @@ function updateMarquee(track: NormalizedTrack): void {
       marquee.classList.remove("marquee-swap");
     }, 5200);
   }, 2300);
+}
+
+function updateMarqueeRowPan(marquee: HTMLElement, titleEl: HTMLElement, artistEl: HTMLElement): void {
+  const titleOverflow = Math.max(0, titleEl.scrollWidth - titleEl.clientWidth + 24);
+  const artistOverflow = Math.max(0, artistEl.scrollWidth - artistEl.clientWidth + 24);
+
+  titleEl.style.setProperty("--marquee-title-pan", `${-titleOverflow}px`);
+  artistEl.style.setProperty("--marquee-artist-pan", `${-artistOverflow}px`);
+
+  marquee.classList.toggle("marquee-title-long", titleOverflow > 4);
+  marquee.classList.toggle("marquee-artist-long", artistOverflow > 4);
+  marquee.classList.toggle("marquee-title-short", titleOverflow <= 4);
+  marquee.classList.toggle("marquee-artist-short", artistOverflow <= 4);
 }
 
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {

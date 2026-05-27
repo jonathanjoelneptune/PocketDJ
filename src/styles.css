@@ -177,7 +177,7 @@ button {
   width: 100%;
   display: grid;
   place-items: center;
-  gap: clamp(1px, 0.22vw, 4px);
+  gap: clamp(5px, 0.55vw, 10px);
   opacity: 1;
   transform: translateX(0) translateY(-2px);
   transition: opacity 260ms ease, transform 260ms ease, filter 260ms ease;
@@ -201,7 +201,10 @@ button {
 
 .marquee-title,
 .marquee-artist {
+  --marquee-title-pan: 0px;
+  --marquee-artist-pan: 0px;
   max-width: 100%;
+  overflow: visible;
   white-space: nowrap;
   text-align: center;
   font-family: "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -244,7 +247,7 @@ button {
 
 .marquee-title-long .marquee-title {
   animation:
-    marqueeTitleCenterHold 18s cubic-bezier(.42,0,.2,1) infinite,
+    marqueeTitlePingPong 10s ease-in-out infinite,
     marqueeLedGlow 920ms ease-in-out infinite alternate;
 }
 
@@ -253,7 +256,9 @@ button {
 }
 
 .marquee-artist-long .marquee-artist {
-  animation: marqueeLedGlow 1150ms ease-in-out infinite alternate;
+  animation:
+    marqueeArtistPingPong 10s ease-in-out infinite,
+    marqueeLedGlow 1150ms ease-in-out infinite alternate;
 }
 
 .marquee-paused .marquee-title,
@@ -275,7 +280,31 @@ button {
 
 /* Song-change movement is handled by .marquee-exiting and .marquee-entering. */
 
-/* Title enters, centers, holds, then exits. Short titles remain centered. */
+@keyframes marqueeTitlePingPong {
+  0%, 18% {
+    transform: translateX(0);
+  }
+  48%, 64% {
+    transform: translateX(var(--marquee-title-pan));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes marqueeArtistPingPong {
+  0%, 18% {
+    transform: translateX(0);
+  }
+  48%, 64% {
+    transform: translateX(var(--marquee-artist-pan));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Long rows ping-pong to reveal overflow. */
 @keyframes marqueeTitleCenterHold {
   0% {
     transform: translateX(110%);
