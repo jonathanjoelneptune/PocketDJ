@@ -2085,3 +2085,147 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .dev-tools > summary {
   padding: 11px 2px;
 }
+
+
+/* Final right-edge room-relative utility panel placement */
+.control-card {
+  position: absolute !important;
+
+  /* Anchor panel to the room's right edge, not the browser viewport. */
+  right: calc((100vw - var(--room-w)) / 2) !important;
+  top: calc((100vh - var(--room-h)) / 2 + var(--room-h) * 0.032) !important;
+
+  /* Keep the panel a constant room-relative footprint. */
+  width: calc(var(--room-w) * 0.25) !important;
+  max-width: calc(var(--room-w) * 0.25) !important;
+  min-width: 0 !important;
+  max-height: calc(var(--room-h) * 0.90) !important;
+
+  padding: calc(var(--room-w) * 0.010) !important;
+  border-radius: calc(var(--room-w) * 0.014) !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transform: translateX(0) !important;
+}
+
+.control-card:not(.control-card-open) {
+  transform: translateX(calc(100% + 18px)) !important;
+}
+
+.compact-brand-row,
+.brand-row {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: calc(var(--room-w) * 0.006) !important;
+  margin-bottom: calc(var(--room-h) * 0.014) !important;
+}
+
+.mini-brand {
+  min-width: 0;
+  font-size: calc(var(--room-w) * 0.0048) !important;
+  line-height: 1.2 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brand-actions {
+  gap: calc(var(--room-w) * 0.0042) !important;
+}
+
+.mode-pill,
+.connect-pill {
+  height: calc(var(--room-h) * 0.038) !important;
+  min-height: 22px !important;
+  max-height: 32px !important;
+  min-width: calc(var(--room-w) * 0.038) !important;
+  padding: 0 calc(var(--room-w) * 0.006) !important;
+  font-size: calc(var(--room-w) * 0.0034) !important;
+}
+
+.panel-close {
+  width: calc(var(--room-h) * 0.038) !important;
+  height: calc(var(--room-h) * 0.038) !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+}
+
+.now-card-compact {
+  grid-template-columns: calc(var(--room-w) * 0.052) minmax(0, 1fr) !important;
+  gap: calc(var(--room-w) * 0.008) !important;
+  padding: calc(var(--room-w) * 0.009) !important;
+  border-radius: calc(var(--room-w) * 0.013) !important;
+  margin-top: calc(var(--room-h) * 0.006) !important;
+}
+
+.now-card-compact .art {
+  width: calc(var(--room-w) * 0.052) !important;
+  height: calc(var(--room-w) * 0.052) !important;
+  border-radius: calc(var(--room-w) * 0.010) !important;
+}
+
+.now-card-compact .track-title {
+  font-size: calc(var(--room-w) * 0.0075) !important;
+  line-height: 1.12 !important;
+}
+
+.now-card-compact .track-artist {
+  font-size: calc(var(--room-w) * 0.0060) !important;
+  line-height: 1.15 !important;
+}
+
+.now-card-compact .progress-row {
+  margin-top: calc(var(--room-h) * 0.007) !important;
+  gap: calc(var(--room-w) * 0.0055) !important;
+}
+
+.now-card-compact .progress-row span {
+  font-size: calc(var(--room-w) * 0.0046) !important;
+}
+
+.panel-playback-row {
+  margin-top: calc(var(--room-h) * 0.008) !important;
+  grid-template-columns: 0.85fr 0.85fr 1fr 0.85fr 0.85fr !important;
+  gap: calc(var(--room-w) * 0.0046) !important;
+}
+
+.panel-icon-button,
+.panel-play-button {
+  height: calc(var(--room-h) * 0.040) !important;
+  min-height: 22px !important;
+  max-height: 34px !important;
+}
+
+.panel-icon-button {
+  font-size: calc(var(--room-w) * 0.0066) !important;
+}
+
+.panel-play-button {
+  font-size: calc(var(--room-w) * 0.0084) !important;
+}
+
+.panel-volume-row {
+  margin-top: calc(var(--room-h) * 0.008) !important;
+  gap: calc(var(--room-w) * 0.0055) !important;
+  font-size: calc(var(--room-w) * 0.0048) !important;
+}
+
+.dev-tools {
+  margin-top: calc(var(--room-h) * 0.012) !important;
+  border-radius: calc(var(--room-w) * 0.012) !important;
+}
+
+.dev-tools > summary {
+  padding: calc(var(--room-h) * 0.012) 2px !important;
+  font-size: calc(var(--room-w) * 0.0050) !important;
+}
+
+/* On narrow browser windows, the panel still follows the room edge and room percent sizing. */
+@media (max-width: 900px) {
+  .control-card {
+    width: calc(var(--room-w) * 0.25) !important;
+    max-width: calc(var(--room-w) * 0.25) !important;
+    right: calc((100vw - var(--room-w)) / 2) !important;
+  }
+}
