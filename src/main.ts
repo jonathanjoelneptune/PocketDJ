@@ -22,6 +22,8 @@ let pollTimer: number | null = null;
 let dj: DjController;
 let lastPollError = "";
 let panelAutoHiddenAfterConnect = false;
+let sidePanelLocked = false;
+let sidePanelHideTimer: number | null = null;
 let floorControlsOpen = false;
 let floorControlsLocked = false;
 let floorControlsHideTimer: number | null = null;
@@ -86,6 +88,7 @@ async function boot(): Promise<void> {
   renderShell(state);
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
   bindControls();
+  updateSidePanelLockUi();
   bindRoomUtilityControls();
   applyRoomUtilitySettings();
 
@@ -110,11 +113,33 @@ async function boot(): Promise<void> {
 
 function bindControls(): void {
   qs<HTMLButtonElement>("#panelToggle").addEventListener("click", () => {
-    setControlPanelOpen(true);
+    openSidePanel(true);
   });
 
   qs<HTMLButtonElement>("#hidePanel").addEventListener("click", () => {
-    setControlPanelOpen(false);
+    sidePanelLocked = false;
+    updateSidePanelLockUi();
+    closeSidePanel();
+  });
+
+  qs<HTMLButtonElement>("#panelLockToggle").addEventListener("click", () => {
+    setSidePanelLocked(!sidePanelLocked);
+  });
+
+  const controlCard = qs<HTMLElement>("#controlCard");
+  controlCard.addEventListener("mouseenter", () => {
+    clearSidePanelHideTimer();
+  });
+  controlCard.addEventListener("mouseleave", () => {
+    scheduleSidePanelAutoHide();
+  });
+
+  const sideTab = qs<HTMLButtonElement>("#sidePanelTab");
+  sideTab.addEventListener("mouseenter", () => {
+    openSidePanel(false);
+  });
+  sideTab.addEventListener("click", () => {
+    openSidePanel(true);
   });
 
   bindFloorPlaybackControls();
@@ -137,7 +162,7 @@ function bindControls(): void {
     useDemo = false;
     state.playback = emptyTrack();
     panelAutoHiddenAfterConnect = false;
-    setControlPanelOpen(true);
+    openSidePanel(true);
     updatePlaybackUi(state.playback, state.debugOpen);
     qs<HTMLElement>("#connectDropdown").classList.remove("connect-dropdown-open");
   });
@@ -196,6 +221,60 @@ function bindControls(): void {
 
 
 
+
+function openSidePanel(userInitiated = false): void {
+  setControlPanelOpen(true);
+  clearSidePanelHideTimer();
+
+  if (userInitiated) {
+    scheduleSidePanelAutoHide();
+  }
+}
+
+function closeSidePanel(): void {
+  setControlPanelOpen(false);
+  clearSidePanelHideTimer();
+  qs<HTMLElement>("#connectDropdown").classList.remove("connect-dropdown-open");
+}
+
+function scheduleSidePanelAutoHide(): void {
+  if (sidePanelLocked) return;
+  clearSidePanelHideTimer();
+
+  sidePanelHideTimer = window.setTimeout(() => {
+    if (!sidePanelLocked) closeSidePanel();
+  }, 10_000);
+}
+
+function clearSidePanelHideTimer(): void {
+  if (sidePanelHideTimer) {
+    window.clearTimeout(sidePanelHideTimer);
+    sidePanelHideTimer = null;
+  }
+}
+
+function setSidePanelLocked(locked: boolean): void {
+  sidePanelLocked = locked;
+  updateSidePanelLockUi();
+
+  if (locked) {
+    openSidePanel(false);
+  } else {
+    scheduleSidePanelAutoHide();
+  }
+}
+
+function updateSidePanelLockUi(): void {
+  const lock = qs<HTMLButtonElement>("#panelLockToggle");
+  const panel = qs<HTMLElement>("#controlCard");
+
+  lock.classList.toggle("panel-lock-active", sidePanelLocked);
+  panel.classList.toggle("control-card-locked", sidePanelLocked);
+  lock.setAttribute("aria-pressed", String(sidePanelLocked));
+  lock.setAttribute("title", sidePanelLocked ? "Unlock side panel auto-hide" : "Lock side panel open");
+  lock.setAttribute("aria-label", sidePanelLocked ? "Unlock side panel auto-hide" : "Lock side panel open");
+}
+
 function bindFloorPlaybackControls(): void {
   const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
   const floor = qs<HTMLElement>("#floorPlayer");
@@ -243,7 +322,8 @@ function bindFloorPlaybackControls(): void {
   qs<HTMLButtonElement>("#floorMoreButton").addEventListener("click", () => {
     const panel = qs<HTMLElement>("#controlCard");
     const isPanelOpen = panel.classList.contains("control-card-open");
-    setControlPanelOpen(!isPanelOpen);
+    if (isPanelOpen && !sidePanelLocked) closeSidePanel();
+    else openSidePanel(true);
     setFloorControlsOpen(true, false);
   });
 

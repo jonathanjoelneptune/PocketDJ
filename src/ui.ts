@@ -99,6 +99,7 @@ export function renderShell(state: AppState): void {
                 <button id="disconnectSpotify" type="button">Disconnect</button>
               </div>
             </div>
+            <button id="panelLockToggle" class="panel-lock-toggle" type="button" aria-label="Lock side panel open" title="Lock side panel open">🔒</button>
             <button id="hidePanel" class="panel-close" type="button" aria-label="Hide controls">×</button>
           </div>
         </div>
@@ -222,6 +223,11 @@ export function renderShell(state: AppState): void {
           <pre id="debugPanel" class="debug-panel" hidden></pre>
         </details>
       </aside>
+
+      <button id="sidePanelTab" class="side-panel-tab" type="button" aria-label="Open Pocket DJ panel" title="Open Pocket DJ panel">
+        <span>♫</span>
+        <span class="side-panel-tab-arrow">‹</span>
+      </button>
     </main>
   `;
 }
@@ -262,10 +268,13 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
 export function setControlPanelOpen(open: boolean): void {
   const card = qs<HTMLElement>("#controlCard");
   const toggle = qs<HTMLButtonElement>("#panelToggle");
+  const tab = qs<HTMLButtonElement>("#sidePanelTab");
 
   card.classList.toggle("control-card-open", open);
   card.classList.toggle("control-card-hidden", !open);
   toggle.classList.toggle("panel-toggle-visible", !open);
+  tab.classList.toggle("side-panel-tab-visible", !open);
+  tab.setAttribute("aria-expanded", String(open));
   toggle.setAttribute("aria-expanded", String(open));
 }
 

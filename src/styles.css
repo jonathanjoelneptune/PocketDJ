@@ -2852,3 +2852,139 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     inset 0 0 8px rgba(0,0,0,0.42),
     0 0 10px rgba(125,211,252,0.12) !important;
 }
+
+
+/* Responsive side-panel sizing and auto-hide tab */
+.control-card {
+  /* Fullscreen stays close to 25% of the room. Small windows can grow to 50-75%. */
+  --side-panel-width: min(calc(var(--room-w) * 0.75), max(340px, calc(var(--room-w) * 0.25)));
+
+  position: absolute !important;
+  right: calc((100vw - var(--room-w)) / 2) !important;
+  top: calc((100vh - var(--room-h)) / 2 + var(--room-h) * 0.032) !important;
+  width: var(--side-panel-width) !important;
+  max-width: var(--side-panel-width) !important;
+  min-width: 0 !important;
+  max-height: calc(var(--room-h) * 0.90) !important;
+  transform: translateX(0) !important;
+}
+
+.control-card.control-card-hidden,
+.control-card:not(.control-card-open) {
+  transform: translateX(calc(100% + 18px)) !important;
+  pointer-events: none;
+}
+
+.side-panel-tab {
+  position: absolute;
+  right: calc((100vw - var(--room-w)) / 2);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 13;
+  width: clamp(32px, calc(var(--room-w) * 0.026), 46px);
+  height: clamp(72px, calc(var(--room-h) * 0.135), 118px);
+  border-radius: 18px 0 0 18px;
+  border: 1px solid rgba(255, 191, 71, 0.36);
+  border-right: 0;
+  color: #ffbf47;
+  background:
+    linear-gradient(180deg, rgba(17, 12, 23, 0.78), rgba(6, 8, 15, 0.72)),
+    radial-gradient(circle at 50% 35%, rgba(255,191,71,0.13), transparent 58%);
+  box-shadow:
+    -10px 0 30px rgba(0,0,0,0.26),
+    inset 0 0 18px rgba(255,191,71,0.055);
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+  backdrop-filter: blur(10px);
+  font-family: "Press Start 2P", monospace;
+}
+
+.side-panel-tab-visible {
+  opacity: 0.78;
+  pointer-events: auto;
+}
+
+.side-panel-tab:hover {
+  opacity: 1;
+  transform: translateY(-50%) translateX(-3px);
+  box-shadow:
+    -12px 0 34px rgba(0,0,0,0.30),
+    0 0 18px rgba(255,191,71,0.16),
+    inset 0 0 20px rgba(255,191,71,0.08);
+}
+
+.side-panel-tab span:first-child {
+  font-size: clamp(0.80rem, calc(var(--room-w) * 0.008), 1.05rem);
+  line-height: 1;
+}
+
+.side-panel-tab-arrow {
+  font-size: clamp(1.25rem, calc(var(--room-w) * 0.014), 1.8rem);
+  line-height: 0.9;
+}
+
+.panel-lock-toggle {
+  width: calc(var(--room-h) * 0.036) !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 191, 71, 0.18);
+  background: rgba(255,255,255,0.045);
+  color: rgba(255, 191, 71, 0.62);
+  font-size: 0 !important;
+}
+
+.panel-lock-toggle::before {
+  content: "🔒";
+  font-size: calc(var(--room-w) * 0.0048);
+  line-height: 1;
+  transform: translateY(-0.5px);
+}
+
+.panel-lock-active {
+  color: #ffd98a;
+  border-color: rgba(255, 191, 71, 0.48);
+  background: rgba(92, 59, 12, 0.26);
+  box-shadow: 0 0 14px rgba(255,191,71,0.14), inset 0 0 12px rgba(255,191,71,0.06);
+}
+
+/* Better centering for the bottom-left floor lock */
+.floor-lock-toggle {
+  display: inline-grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+.floor-lock-toggle::before {
+  display: block !important;
+  line-height: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Prevent the panel from becoming unreadable in very small windows. */
+@media (max-width: 760px) {
+  .control-card {
+    --side-panel-width: min(calc(var(--room-w) * 0.75), max(300px, calc(var(--room-w) * 0.25))) !important;
+  }
+
+  .side-panel-tab {
+    width: 34px;
+  }
+}
+
