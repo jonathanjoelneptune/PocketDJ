@@ -32,6 +32,7 @@
 
   --speaker-left-x: 36.9%;
   --speaker-right-x: 64.9%;
+  --speaker-base-width: 7.1%;
   --speaker-y: 70.5%;
   --speaker-scale: 1.47;
   --speaker-opacity: 1.00;
@@ -1118,17 +1119,17 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .floor-player {
   position: absolute;
   left: 50%;
-  bottom: 4.25%;
+  bottom: 4.55%;
 
   /* Room-relative sizing keeps the control deck the same floor footprint at every window size. */
-  width: 36%;
+  width: 33%;
   height: calc(var(--room-h) * 0.132);
 
   transform:
     translateX(-50%)
-    perspective(620px)
-    rotateX(58deg)
-    skewX(-8deg);
+    perspective(760px)
+    rotateX(63deg)
+    skewX(7deg);
   transform-origin: center bottom;
   display: grid;
   grid-template-columns: 1fr 1.15fr 1fr 0.62fr;
@@ -1152,9 +1153,9 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   transform:
     translateX(-50%)
     translateY(calc(var(--room-h) * 0.015))
-    perspective(620px)
-    rotateX(58deg)
-    skewX(-8deg);
+    perspective(760px)
+    rotateX(63deg)
+    skewX(7deg);
   filter: blur(2px) drop-shadow(0 18px 26px rgba(0,0,0,0.20));
 }
 
@@ -1209,7 +1210,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .floor-icon {
   display: block;
   font-family: "Press Start 2P", monospace;
-  font-size: calc(var(--room-w) * 0.0205);
+  font-size: calc(var(--room-w) * 0.022);
   line-height: 1;
   color: #ffbf47;
   text-shadow:
@@ -1219,7 +1220,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 .floor-control-play .floor-icon {
-  font-size: calc(var(--room-w) * 0.0235);
+  font-size: calc(var(--room-w) * 0.025);
   letter-spacing: -0.08em;
 }
 
@@ -1508,4 +1509,48 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 /* The pause state uses two clean vertical bars instead of the roman-numeral glyph. */
 .floor-control-play .floor-icon {
   letter-spacing: -0.08em;
+}
+
+
+/* Final room-scaled marquee text tuning */
+.marquee-title,
+.marquee-artist {
+  font-size: calc(var(--room-w) * 0.0096) !important;
+  line-height: 1.16 !important;
+  padding-top: calc(var(--room-h) * 0.0022) !important;
+  padding-bottom: calc(var(--room-h) * 0.0022) !important;
+}
+
+.marquee-content {
+  gap: calc(var(--room-h) * 0.0052) !important;
+  transform: translateX(0) translateY(0) !important;
+}
+
+.marquee-viewport {
+  inset: -2px 7.5% 0 7.5% !important;
+}
+
+/* Speaker sizing is room-local so it stays elbow-height consistent when fullscreen. */
+:root {
+  --speaker-base-width: 7.1%;
+}
+
+/* Floor controls perspective correction to better match the floor angle. */
+.floor-player {
+  width: 33% !important;
+  bottom: 4.55% !important;
+  transform:
+    translateX(-50%)
+    perspective(760px)
+    rotateX(63deg)
+    skewX(7deg) !important;
+}
+
+.floor-player.floor-player-hidden {
+  transform:
+    translateX(-50%)
+    translateY(calc(var(--room-h) * 0.015))
+    perspective(760px)
+    rotateX(63deg)
+    skewX(7deg) !important;
 }
