@@ -5,6 +5,7 @@ import type { NormalizedTrack } from "../state/types";
 export const spotifyScopes = [
   "user-read-currently-playing",
   "user-read-playback-state",
+  "user-modify-playback-state",
   "user-read-private"
 ];
 
@@ -111,6 +112,61 @@ async function getUsableToken(clientId: string): Promise<string | null> {
     tokens = await refreshAccessToken(clientId, tokens);
   }
   return tokens?.accessToken || null;
+}
+
+
+async function spotifyPlayerCommand(clientId: string, endpoint: string, options: RequestInit = {}): Promise<void> {
+  const token = await getUsableToken(clientId);
+  if (!token) {
+    clearTokens();
+    throw new Error("Spotify disconnected. Please connect again.");
+  }
+
+  const response = await fetch(`https://api.spotify.com/v1/me/player${endpoint}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(options.headers || {})
+    }
+  });
+
+  if (response.status === 401) {
+    clearTokens();
+    throw new Error("Spotify session expired. Please connect again.");
+  }
+
+  if (response.status === 403) {
+    throw new Error("Spotify playback control requires Premium and the playback-control permission. Reconnect Spotify if needed.");
+  }
+
+  if (response.status === 404) {
+    throw new Error("No active Spotify device found. Open Spotify on a device, start playback once, then try again.");
+  }
+
+  if (response.status === 429) {
+    const retryAfter = response.headers.get("Retry-After") || "30";
+    throw new Error(`Spotify rate limited playback controls. Retry after ${retryAfter} seconds.`);
+  }
+
+  if (!response.ok && response.status !== 204) {
+    throw new Error(`Spotify playback command failed (${response.status}).`);
+  }
+}
+
+export async function playSpotify(clientId: string): Promise<void> {
+  await spotifyPlayerCommand(clientId, "/play", { method: "PUT" });
+}
+
+export async function pauseSpotify(clientId: string): Promise<void> {
+  await spotifyPlayerCommand(clientId, "/pause", { method: "PUT" });
+}
+
+export async function nextSpotifyTrack(clientId: string): Promise<void> {
+  await spotifyPlayerCommand(clientId, "/next", { method: "POST" });
+}
+
+export async function previousSpotifyTrack(clientId: string): Promise<void> {
+  await spotifyPlayerCommand(clientId, "/previous", { method: "POST" });
 }
 
 export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedTrack> {

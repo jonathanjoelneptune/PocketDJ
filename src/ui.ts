@@ -58,11 +58,28 @@ export function renderShell(state: AppState): void {
             draggable="false"
           />
         </div>
+
+        <div class="floor-player floor-player-hidden" id="floorPlayer" aria-label="Spotify floor playback controls">
+          <button class="floor-control floor-control-prev" id="floorPrevButton" type="button" aria-label="Previous track" title="Previous track">
+            <span class="floor-icon">◀</span>
+          </button>
+          <button class="floor-control floor-control-play" id="floorPlayButton" type="button" aria-label="Play or pause" title="Play or pause">
+            <span class="floor-icon" id="floorPlayIcon">▶</span>
+          </button>
+          <button class="floor-control floor-control-next" id="floorNextButton" type="button" aria-label="Next track" title="Next track">
+            <span class="floor-icon">▶</span>
+          </button>
+          <button class="floor-control floor-control-more" id="floorMoreButton" type="button" aria-label="More Spotify controls" title="More Spotify controls">
+            <span class="floor-dot"></span>
+            <span class="floor-dot"></span>
+            <span class="floor-dot"></span>
+          </button>
+        </div>
       </section>
 
       <button id="panelToggle" class="panel-toggle" type="button" aria-label="Show Pocket DJ controls" title="Show controls">♪</button>
 
-      <button id="animationDebugToggle" class="animation-debug-toggle" type="button" aria-label="Show current animation frame" title="Show current animation frame">Frame</button>
+      <button id="floorControlsToggle" class="floor-controls-toggle" type="button" aria-label="Show floor playback controls" title="Show floor playback controls">Controls</button>
       <pre id="animationDebugPanel" class="animation-debug-panel" hidden>frame: loading</pre>
 
       <aside id="controlCard" class="control-card control-card-open">
@@ -202,6 +219,7 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
   setTextIfChanged(qs("#trackArtist"), track.artist);
   updateMarquee(track);
   updateConnectionBanner(track);
+  updateFloorControls(track);
 
   qs("#progressNow").textContent = formatMs(getEstimatedProgress(track));
   qs("#progressEnd").textContent = formatMs(track.durationMs);
@@ -236,6 +254,27 @@ export function setControlPanelOpen(open: boolean): void {
   card.classList.toggle("control-card-hidden", !open);
   toggle.classList.toggle("panel-toggle-visible", !open);
   toggle.setAttribute("aria-expanded", String(open));
+}
+
+
+function updateFloorControls(track: NormalizedTrack): void {
+  const floor = qs<HTMLElement>("#floorPlayer");
+  const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
+  const playButton = qs<HTMLButtonElement>("#floorPlayButton");
+  const playIcon = qs<HTMLElement>("#floorPlayIcon");
+  const prevButton = qs<HTMLButtonElement>("#floorPrevButton");
+  const nextButton = qs<HTMLButtonElement>("#floorNextButton");
+
+  const canControl = track.source === "spotify" && track.isAuthenticated;
+  floor.classList.toggle("floor-player-playing", track.isPlaying);
+  toggle.classList.toggle("floor-controls-toggle-playing", track.isPlaying);
+  playIcon.textContent = track.isPlaying ? "❚❚" : "▶";
+  playButton.setAttribute("aria-label", track.isPlaying ? "Pause Spotify" : "Play Spotify");
+
+  [playButton, prevButton, nextButton].forEach((button) => {
+    button.disabled = !canControl;
+    button.classList.toggle("floor-control-disabled", !canControl);
+  });
 }
 
 function updateMarquee(track: NormalizedTrack): void {
@@ -320,6 +359,27 @@ function prepareMarqueeRowsForEntry(marquee: HTMLElement, titleEl: HTMLElement, 
   const artistIsLong = artistEl.scrollWidth > availableWidth + 6;
   marquee.classList.toggle("marquee-artist-long", artistIsLong);
   marquee.classList.toggle("marquee-artist-short", !artistIsLong);
+}
+
+
+function updateFloorControls(track: NormalizedTrack): void {
+  const floor = qs<HTMLElement>("#floorPlayer");
+  const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
+  const playButton = qs<HTMLButtonElement>("#floorPlayButton");
+  const playIcon = qs<HTMLElement>("#floorPlayIcon");
+  const prevButton = qs<HTMLButtonElement>("#floorPrevButton");
+  const nextButton = qs<HTMLButtonElement>("#floorNextButton");
+
+  const canControl = track.source === "spotify" && track.isAuthenticated;
+  floor.classList.toggle("floor-player-playing", track.isPlaying);
+  toggle.classList.toggle("floor-controls-toggle-playing", track.isPlaying);
+  playIcon.textContent = track.isPlaying ? "❚❚" : "▶";
+  playButton.setAttribute("aria-label", track.isPlaying ? "Pause Spotify" : "Play Spotify");
+
+  [playButton, prevButton, nextButton].forEach((button) => {
+    button.disabled = !canControl;
+    button.classList.toggle("floor-control-disabled", !canControl);
+  });
 }
 
 function updateMarqueeRowPan(marquee: HTMLElement, titleEl: HTMLElement, artistEl: HTMLElement): void {

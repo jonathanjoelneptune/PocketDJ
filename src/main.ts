@@ -2,7 +2,7 @@ import "./styles.css";
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, handleSpotifyCallback, startSpotifyLogin } from "./spotify/spotifyClient";
+import { disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, previousSpotifyTrack, startSpotifyLogin } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import { qs } from "./utils/dom";
 import { renderShell, setControlPanelOpen, updatePlaybackUi } from "./ui";
@@ -20,6 +20,8 @@ let pollTimer: number | null = null;
 let dj: DjController;
 let lastPollError = "";
 let panelAutoHiddenAfterConnect = false;
+let floorControlsOpen = false;
+let floorControlsHideTimer: number | null = null;
 
 
 type SceneFilter =
@@ -108,10 +110,7 @@ function bindControls(): void {
     setControlPanelOpen(false);
   });
 
-  qs<HTMLButtonElement>("#animationDebugToggle").addEventListener("click", () => {
-    const panel = qs<HTMLPreElement>("#animationDebugPanel");
-    panel.hidden = !panel.hidden;
-  });
+  bindFloorPlaybackControls();
 
   qs<HTMLButtonElement>("#connectSpotify").addEventListener("click", async () => {
     const clientId = qs<HTMLInputElement>("#clientIdInput").value.trim();
@@ -152,6 +151,97 @@ function bindControls(): void {
   });
 }
 
+
+
+function bindFloorPlaybackControls(): void {
+  const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
+  const floor = qs<HTMLElement>("#floorPlayer");
+
+  toggle.addEventListener("click", () => {
+    setFloorControlsOpen(!floorControlsOpen);
+  });
+
+  floor.addEventListener("mouseenter", () => {
+    if (floorControlsHideTimer) window.clearTimeout(floorControlsHideTimer);
+  });
+
+  floor.addEventListener("mouseleave", () => {
+    scheduleFloorControlsAutoHide();
+  });
+
+  qs<HTMLButtonElement>("#floorPlayButton").addEventListener("click", () => {
+    void runSpotifyPlaybackCommand(async () => {
+      if (state.playback.isPlaying) await pauseSpotify(state.spotifyClientId);
+      else await playSpotify(state.spotifyClientId);
+    });
+  });
+
+  qs<HTMLButtonElement>("#floorNextButton").addEventListener("click", () => {
+    void runSpotifyPlaybackCommand(async () => {
+      await nextSpotifyTrack(state.spotifyClientId);
+    });
+  });
+
+  qs<HTMLButtonElement>("#floorPrevButton").addEventListener("click", () => {
+    void runSpotifyPlaybackCommand(async () => {
+      await previousSpotifyTrack(state.spotifyClientId);
+    });
+  });
+
+  qs<HTMLButtonElement>("#floorMoreButton").addEventListener("click", () => {
+    setControlPanelOpen(true);
+    setFloorControlsOpen(true, false);
+  });
+}
+
+function setFloorControlsOpen(open: boolean, autoHide = true): void {
+  floorControlsOpen = open;
+  const floor = qs<HTMLElement>("#floorPlayer");
+  const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
+
+  floor.classList.toggle("floor-player-hidden", !open);
+  floor.classList.toggle("floor-player-visible", open);
+  toggle.classList.toggle("floor-controls-toggle-open", open);
+  toggle.setAttribute("aria-expanded", String(open));
+
+  if (open && autoHide) scheduleFloorControlsAutoHide();
+  if (!open && floorControlsHideTimer) {
+    window.clearTimeout(floorControlsHideTimer);
+    floorControlsHideTimer = null;
+  }
+}
+
+function scheduleFloorControlsAutoHide(): void {
+  if (floorControlsHideTimer) window.clearTimeout(floorControlsHideTimer);
+  floorControlsHideTimer = window.setTimeout(() => {
+    setFloorControlsOpen(false);
+  }, 10_000);
+}
+
+async function runSpotifyPlaybackCommand(command: () => Promise<void>): Promise<void> {
+  if (useDemo) {
+    lastPollError = "Spotify controls are disabled in Demo Mode.";
+    updatePlaybackUi({ ...state.playback, artist: `${state.playback.artist} | ${lastPollError}` }, state.debugOpen);
+    return;
+  }
+
+  if (!state.spotifyClientId || !loadTokens()) {
+    lastPollError = "Connect Spotify before using playback controls.";
+    updatePlaybackUi({ ...state.playback, artist: `${state.playback.artist} | ${lastPollError}` }, state.debugOpen);
+    return;
+  }
+
+  try {
+    lastPollError = "";
+    await command();
+    await pollSpotifyNow();
+    setFloorControlsOpen(true);
+  } catch (error) {
+    lastPollError = error instanceof Error ? error.message : String(error);
+    console.warn(lastPollError);
+    updatePlaybackUi({ ...state.playback, artist: `${state.playback.artist} | ${lastPollError}` }, state.debugOpen);
+  }
+}
 
 function bindRoomUtilityControls(): void {
   const sceneFilter = qs<HTMLSelectElement>("#sceneFilterSelect");
