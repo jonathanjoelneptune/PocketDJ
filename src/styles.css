@@ -334,19 +334,21 @@ button {
 
 @keyframes marqueeArtistExitLeft {
   0% {
-    opacity: 0.88;
+    opacity: 0.92;
     transform: translateX(0);
     filter: blur(0) brightness(1);
   }
-  72% {
-    opacity: 0.88;
-    transform: translateX(calc(-34% - 24vw));
-    filter: blur(0) brightness(0.92);
+
+  88% {
+    opacity: 0.92;
+    transform: translateX(calc(-58% - 42vw));
+    filter: blur(0) brightness(0.90);
   }
+
   100% {
     opacity: 0;
-    transform: translateX(calc(-70% - 48vw));
-    filter: blur(1px) brightness(0.70);
+    transform: translateX(calc(-78% - 56vw));
+    filter: blur(1px) brightness(0.68);
   }
 }
 

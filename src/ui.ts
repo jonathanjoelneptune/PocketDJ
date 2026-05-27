@@ -286,22 +286,34 @@ function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
   let artist: string;
   let state: MarqueeState;
 
+  const artistRaw = cleanMarqueeText(track.artist || "Spotify");
+  const hasMultipleArtists =
+    artistRaw.includes(",") ||
+    artistRaw.includes("&") ||
+    artistRaw.includes(" feat.") ||
+    artistRaw.includes(" ft.") ||
+    artistRaw.includes(" x ");
+
+  const artistPrefix = hasMultipleArtists
+    ? "ARTISTS: "
+    : "ARTIST: ";
+
   if (track.source === "demo") {
     state = track.isPlaying ? "playing" : "paused";
-    title = track.isPlaying ? cleanMarqueeText(track.title) : `Paused: ${cleanMarqueeText(track.title)}`;
-    artist = cleanMarqueeText(track.artist || "Demo mode");
+    title = `TITLE: ${track.isPlaying ? cleanMarqueeText(track.title) : `Paused: ${cleanMarqueeText(track.title)}`}`;
+    artist = `${artistPrefix}${artistRaw || "Demo mode"}`;
   } else if (!track.isAuthenticated || !track.trackId) {
     state = "empty";
     title = "POCKET DJ";
     artist = idleMarqueePhrase();
   } else if (!track.isPlaying) {
     state = "paused";
-    title = `Paused: ${cleanMarqueeText(track.title)}`;
-    artist = cleanMarqueeText(track.artist || "Spotify");
+    title = `TITLE: Paused: ${cleanMarqueeText(track.title)}`;
+    artist = `${artistPrefix}${artistRaw}`;
   } else {
     state = "playing";
-    title = cleanMarqueeText(track.title);
-    artist = cleanMarqueeText(track.artist || "Spotify");
+    title = `TITLE: ${cleanMarqueeText(track.title)}`;
+    artist = `${artistPrefix}${artistRaw}`;
   }
 
   return {
