@@ -2,6 +2,9 @@ import type { LyricsPayload } from "./lyrics/lyricsClient";
 import type { AppState, NormalizedTrack } from "./state/types";
 import { formatMs, qs } from "./utils/dom";
 
+
+let lastLyricsRenderSignature = "";
+
 type MarqueeState = "empty" | "paused" | "playing";
 
 type MarqueePayload = {
