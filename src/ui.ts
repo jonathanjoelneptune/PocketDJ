@@ -225,7 +225,7 @@ export function renderShell(state: AppState): void {
       </aside>
 
       <button id="sidePanelTab" class="side-panel-tab" type="button" aria-label="Open Pocket DJ panel" title="Open Pocket DJ panel">
-        <span>♫</span>
+        <span class="side-panel-tab-note">♫</span>
         <span class="side-panel-tab-arrow">‹</span>
       </button>
     </main>

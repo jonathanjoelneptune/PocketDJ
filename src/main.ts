@@ -89,6 +89,7 @@ async function boot(): Promise<void> {
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
   bindControls();
   updateSidePanelLockUi();
+  scheduleSidePanelAutoHide();
   bindRoomUtilityControls();
   applyRoomUtilitySettings();
 
@@ -136,7 +137,7 @@ function bindControls(): void {
 
   const sideTab = qs<HTMLButtonElement>("#sidePanelTab");
   sideTab.addEventListener("mouseenter", () => {
-    openSidePanel(false);
+    openSidePanel(true);
   });
   sideTab.addEventListener("click", () => {
     openSidePanel(true);
@@ -222,11 +223,11 @@ function bindControls(): void {
 
 
 
-function openSidePanel(userInitiated = false): void {
+function openSidePanel(autoHide = true): void {
   setControlPanelOpen(true);
   clearSidePanelHideTimer();
 
-  if (userInitiated) {
+  if (autoHide && !sidePanelLocked) {
     scheduleSidePanelAutoHide();
   }
 }
