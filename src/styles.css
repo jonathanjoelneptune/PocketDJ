@@ -2532,3 +2532,180 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     font-size: calc(var(--room-w) * 0.0036) !important;
   }
 }
+
+
+/* Final side-panel button consistency pass */
+.control-card {
+  padding-top: calc(var(--room-w) * 0.008) !important;
+}
+
+/* Tighten the top row and reduce the dead space above the now-playing block. */
+.compact-brand-row,
+.brand-row {
+  min-height: calc(var(--room-h) * 0.033) !important;
+  margin-bottom: calc(var(--room-h) * 0.006) !important;
+  align-items: center !important;
+}
+
+.brand-actions {
+  min-height: calc(var(--room-h) * 0.033) !important;
+  align-items: center !important;
+}
+
+/* Shared side-panel button sizing.
+   This makes mode, connected, shuffle, repeat, close, and dev buttons feel like one system. */
+.mode-pill,
+.connect-pill,
+.panel-icon-button,
+.panel-play-button,
+.dev-tools button,
+.dev-button-grid button,
+.utility-buttons button,
+.connect-dropdown button {
+  min-height: 28px !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  max-height: 34px !important;
+  border-radius: 999px !important;
+  box-sizing: border-box !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+  font-family: "Press Start 2P", monospace !important;
+  font-size: calc(var(--room-w) * 0.00345) !important;
+  letter-spacing: 0.025em !important;
+  white-space: nowrap !important;
+  text-transform: uppercase !important;
+}
+
+/* Top row pills should fill their shape like SHUF/REP. */
+.mode-pill,
+.connect-pill {
+  min-width: calc(var(--room-w) * 0.051) !important;
+  padding: 0 calc(var(--room-w) * 0.0065) !important;
+  font-size: calc(var(--room-w) * 0.00345) !important;
+}
+
+/* Close button remains round, but matches the top-row height. */
+.panel-close {
+  width: calc(var(--room-h) * 0.036) !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+}
+
+/* Bring the track block up closer to the top row. */
+.now-card-compact {
+  margin-top: calc(var(--room-h) * 0.002) !important;
+  padding-top: calc(var(--room-w) * 0.0085) !important;
+  padding-bottom: calc(var(--room-w) * 0.0085) !important;
+}
+
+/* Make all five playback buttons uniform in height.
+   The play button can be visually emphasized by fill, not by awkward size. */
+.panel-playback-row {
+  margin-top: calc(var(--room-h) * 0.007) !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: calc(var(--room-w) * 0.0046) !important;
+}
+
+.panel-icon-button,
+.panel-play-button {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  min-height: 28px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+}
+
+/* Clean play/pause mark. Use the same button footprint, and draw only the icon inside it. */
+.panel-play-button #panelPlayIcon {
+  width: calc(var(--room-w) * 0.0105) !important;
+  height: calc(var(--room-w) * 0.0105) !important;
+  min-width: 12px !important;
+  min-height: 12px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+}
+
+.panel-play-button #panelPlayIcon::before,
+.panel-play-button #panelPlayIcon::after {
+  top: 8% !important;
+  bottom: 8% !important;
+  width: 24% !important;
+  border-radius: 1.5px !important;
+}
+
+.panel-play-button #panelPlayIcon::before {
+  left: 21% !important;
+}
+
+.panel-play-button #panelPlayIcon::after {
+  right: 21% !important;
+}
+
+.panel-play-button[aria-label="Play Spotify"] #panelPlayIcon::before {
+  left: 30% !important;
+  top: 12% !important;
+  border-left-width: calc(var(--room-w) * 0.0082) !important;
+  border-top-width: calc(var(--room-w) * 0.0054) !important;
+  border-bottom-width: calc(var(--room-w) * 0.0054) !important;
+}
+
+/* SHUF/REP labels define the button text scale. */
+.panel-shuffle::before,
+.panel-repeat::before {
+  font-size: calc(var(--room-w) * 0.00345) !important;
+  letter-spacing: 0.025em !important;
+  line-height: 1 !important;
+}
+
+/* Previous/next icon scale should match the SHUF/REP visual weight. */
+#panelPrevButton::before,
+#panelNextButton::before {
+  font-size: calc(var(--room-w) * 0.0054) !important;
+  letter-spacing: -0.12em !important;
+  line-height: 1 !important;
+}
+
+/* Dev tool buttons and room utility buttons match the compact side-panel button system. */
+.dev-button-grid,
+.utility-buttons,
+.button-grid {
+  gap: calc(var(--room-w) * 0.006) !important;
+}
+
+.dev-tools button,
+.dev-button-grid button,
+.utility-buttons button {
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 calc(var(--room-w) * 0.006) !important;
+}
+
+/* Dev tools header is compact and sits consistently under the player card. */
+.dev-tools {
+  margin-top: calc(var(--room-h) * 0.008) !important;
+}
+
+.dev-tools > summary {
+  padding: calc(var(--room-h) * 0.010) 2px !important;
+}
+
+/* Keep the connection dropdown button in the same family. */
+.connect-dropdown button {
+  width: 100% !important;
+  min-width: calc(var(--room-w) * 0.060) !important;
+  padding: 0 calc(var(--room-w) * 0.008) !important;
+}
+
+/* Keep volume close to the button row so the card feels like one compact module. */
+.panel-volume-row {
+  margin-top: calc(var(--room-h) * 0.006) !important;
+}
