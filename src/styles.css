@@ -251,7 +251,7 @@ button {
 .marquee-title-long .marquee-title {
   justify-self: start;
   animation:
-    marqueeTitlePingPong 10s ease-in-out infinite,
+    marqueeTitleRevealReset 18s ease-in-out infinite,
     marqueeLedGlow 920ms ease-in-out infinite alternate;
 }
 
@@ -263,7 +263,7 @@ button {
 .marquee-artist-long .marquee-artist {
   justify-self: start;
   animation:
-    marqueeArtistPingPong 10s ease-in-out infinite,
+    marqueeArtistRevealReset 21s ease-in-out 2s infinite,
     marqueeLedGlow 1150ms ease-in-out infinite alternate;
 }
 
@@ -286,31 +286,65 @@ button {
 
 /* Song-change movement is handled by .marquee-exiting and .marquee-entering. */
 
-@keyframes marqueeTitlePingPong {
-  0%, 16% {
+@keyframes marqueeTitleRevealReset {
+  0%, 22% {
     transform: translateX(0);
+    opacity: 1;
   }
-  48%, 64% {
+
+  62%, 78% {
     transform: translateX(var(--marquee-title-pan));
+    opacity: 1;
   }
+
+  84% {
+    transform: translateX(var(--marquee-title-pan));
+    opacity: 0;
+  }
+
+  85% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+
   100% {
     transform: translateX(0);
+    opacity: 1;
   }
 }
 
-@keyframes marqueeArtistPingPong {
-  0%, 16% {
+@keyframes marqueeArtistRevealReset {
+  0%, 24% {
     transform: translateX(0);
+    opacity: 0.82;
   }
-  48%, 64% {
+
+  64%, 79% {
     transform: translateX(var(--marquee-artist-pan));
+    opacity: 0.82;
   }
+
+  85% {
+    transform: translateX(var(--marquee-artist-pan));
+    opacity: 0;
+  }
+
+  86% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+
   100% {
     transform: translateX(0);
+    opacity: 0.82;
   }
 }
 
-/* Long rows ping-pong to reveal overflow. */
+
+
+
+
+/* Long rows reveal overflow, hold, fade-reset, then repeat. */
 @keyframes marqueeTitleCenterHold {
   0% {
     transform: translateX(110%);
