@@ -37,12 +37,11 @@ export function renderShell(state: AppState): void {
             <div class="lyrics-boundary-guide lyrics-boundary-guide-active"></div>
           </div>
           <div class="lyrics-ceiling-inner">
-            <div id="lyricsBlock" class="lyrics-block lyrics-empty">
-              <div class="lyrics-placeholder">Lyrics will appear on the ceiling</div>
-            </div>
+            <div id="pastLyricsBlock" class="lyrics-block lyrics-past-block lyrics-empty"></div>
+            <div id="futureLyricsBlock" class="lyrics-block lyrics-future-block lyrics-empty"></div>
           </div>
-          <div id="activeLyricsBlock" class="active-lyrics-block" aria-hidden="true"></div>
         </div>
+        <div id="activeLyricsBlock" class="active-lyrics-block" aria-hidden="true"></div>
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
           <img class="speaker-image" src="./assets/Speaker.png" alt="" draggable="false" />
@@ -317,11 +316,11 @@ export function renderShell(state: AppState): void {
               <label>Animation preset
                 <select id="lyricAnimationPreset">
                   <option value="focus-sweep">Focus sweep</option>
-                  <option value="vertical-marquee">Vertical marquee</option>
+                  <option value="vertical-marquee" selected>Vertical marquee</option>
                   <option value="active-horizontal-marquee">Active horizontal marquee</option>
                   <option value="soft-slide">Soft slide</option>
                   <option value="pulse-pop">Pulse pop</option>
-                  <option value="instant" selected>Instant</option>
+                  <option value="instant">Instant</option>
                 </select>
               </label>
               <label>Active lyric preset
@@ -759,7 +758,8 @@ export function updateLyricsCeiling(
   enabled = true,
 ): void {
   const ceiling = qs<HTMLElement>("#lyricsCeiling");
-  const block = qs<HTMLElement>("#lyricsBlock");
+  const pastBlock = qs<HTMLElement>("#pastLyricsBlock");
+  const futureBlock = qs<HTMLElement>("#futureLyricsBlock");
   const activeBlock = qs<HTMLElement>("#activeLyricsBlock");
 
   updateLyricsToggleUi(lyrics.status, enabled);
@@ -767,27 +767,30 @@ export function updateLyricsCeiling(
   ceiling.classList.toggle("lyrics-ceiling-hidden", !enabled);
   ceiling.classList.toggle("lyrics-ceiling-visible", enabled && lyrics.status === "found");
 
-  if (!enabled) {
+  const clearLyrics = () => {
     lastLyricsRenderSignature = "";
-    block.innerHTML = "";
+    pastBlock.innerHTML = "";
+    futureBlock.innerHTML = "";
     activeBlock.innerHTML = "";
+  };
+
+  if (!enabled) {
+    clearLyrics();
     return;
   }
 
-  block.classList.toggle("lyrics-empty", lyrics.status !== "found");
-  block.classList.toggle("lyrics-found", lyrics.status === "found");
+  pastBlock.classList.toggle("lyrics-empty", lyrics.status !== "found");
+  futureBlock.classList.toggle("lyrics-empty", lyrics.status !== "found");
+  pastBlock.classList.toggle("lyrics-found", lyrics.status === "found");
+  futureBlock.classList.toggle("lyrics-found", lyrics.status === "found");
 
   if (lyrics.status === "loading" || lyrics.status === "idle") {
-    lastLyricsRenderSignature = "";
-    block.innerHTML = "";
-    activeBlock.innerHTML = "";
+    clearLyrics();
     return;
   }
 
   if (lyrics.status === "instrumental" || lyrics.status === "not-found" || lyrics.status === "error") {
-    lastLyricsRenderSignature = "";
-    block.innerHTML = "";
-    activeBlock.innerHTML = "";
+    clearLyrics();
     return;
   }
 
@@ -797,12 +800,18 @@ export function updateLyricsCeiling(
       : lyrics.plainLyrics.split(/\r?\n/).map((text) => ({ timeMs: null, text }));
 
   const cleanLines = sourceLines.filter((line) => line.text.trim());
+  if (cleanLines.length === 0) {
+    clearLyrics();
+    return;
+  }
+
   const rootStyles = getComputedStyle(document.documentElement);
-  const requestedLineCount = Number(rootStyles.getPropertyValue("--lyrics-line-count")) || 7;
+  const requestedLineCount = Number(rootStyles.getPropertyValue("--lyrics-line-count")) || 9;
   const lineCount = Math.max(3, Math.min(15, Math.round(requestedLineCount)));
-  const halfWindow = Math.floor(lineCount / 2);
-  const centerIndex = activeIndex >= 0 ? activeIndex : 0;
-  const visibleSlots = Array.from({ length: lineCount }, (_, slotIndex) => slotIndex - halfWindow);
+  const pastCount = Math.max(1, Math.floor((lineCount - 1) / 2));
+  const futureCount = Math.max(1, lineCount - 1 - pastCount);
+  const centerIndex = Math.max(0, Math.min(cleanLines.length - 1, activeIndex >= 0 ? activeIndex : 0));
+
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const activeZoom = rootStyles.getPropertyValue("--lyrics-active-zoom").trim();
   const activeStroke = rootStyles.getPropertyValue("--lyrics-active-stroke").trim();
@@ -812,45 +821,74 @@ export function updateLyricsCeiling(
   const activeHeight = rootStyles.getPropertyValue("--lyrics-active-h").trim();
   const baseFontSize = rootStyles.getPropertyValue("--lyrics-base-font-size").trim();
   const rootClassSignature = document.documentElement.className;
-  const renderSignature = `${lyrics.trackKey}|${activeIndex}|${lineCount}|${animationRevision}|${activeZoom}|${activeStroke}|${activeBgOpacity}|${activeBgColor}|${activeWidth}|${activeHeight}|${baseFontSize}|${rootClassSignature}`;
+  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${lineCount}|${animationRevision}|${activeZoom}|${activeStroke}|${activeBgOpacity}|${activeBgColor}|${activeWidth}|${activeHeight}|${baseFontSize}|${rootClassSignature}`;
 
   if (renderSignature === lastLyricsRenderSignature) return;
   lastLyricsRenderSignature = renderSignature;
 
   const activeLine = cleanLines[centerIndex];
-  const activeTextLength = activeLine?.text.length ?? 0;
+  const activeTextLength = activeLine.text.length;
   const activeScale = getLyricLineScale(activeTextLength, true);
 
-  activeBlock.innerHTML = activeLine
-    ? `
-      <div
-        class="active-lyrics-line"
-        style="--lyrics-line-scale: ${activeScale};"
-        data-time="${activeLine.timeMs ?? ""}"
-      >
-        ${escapeHtml(activeLine.text)}
-      </div>
-    `
-    : "";
+  activeBlock.innerHTML = `
+    <div
+      class="active-lyrics-line"
+      style="--lyrics-line-scale: ${activeScale};"
+      data-time="${activeLine.timeMs ?? ""}"
+    >
+      ${escapeHtml(activeLine.text)}
+    </div>
+  `;
 
-  block.innerHTML = visibleSlots
-    .map((offset, slotIndex) => {
-      const absoluteIndex = centerIndex + offset;
-      const line = cleanLines[absoluteIndex];
-      const isCenterSlot = offset === 0;
-      const isPast = offset < 0;
-      const isFuture = offset > 0;
-      const isNear = Math.abs(offset) <= 2;
-      const textLength = line?.text.length ?? 0;
-      const lineScale = getLyricLineScale(textLength, false);
+  const pastLines = Array.from({ length: pastCount }, (_, i) => {
+    const lineIndex = centerIndex - pastCount + i;
+    return lineIndex >= 0 ? { line: cleanLines[lineIndex], slot: i, lineIndex } : null;
+  }).filter((item): item is { line: { timeMs: number | null; text: string }; slot: number; lineIndex: number } => Boolean(item));
 
+  const futureLines = Array.from({ length: futureCount }, (_, i) => {
+    const lineIndex = centerIndex + 1 + i;
+    return lineIndex < cleanLines.length ? { line: cleanLines[lineIndex], slot: i, lineIndex } : null;
+  }).filter((item): item is { line: { timeMs: number | null; text: string }; slot: number; lineIndex: number } => Boolean(item));
+
+  pastBlock.innerHTML = pastLines
+    .map(({ line, slot }) => {
+      const t = pastCount <= 1 ? 1 : slot / (pastCount - 1);
+      const scale = getLyricLineScale(line.text.length, false);
       return `
         <div
-          class="lyrics-line ${line ? "" : "lyrics-line-blank"} ${isCenterSlot ? "lyrics-line-center-hidden" : ""} ${isPast ? "lyrics-line-past" : ""} ${isFuture ? "lyrics-line-future" : ""} ${isNear ? "lyrics-line-near" : ""}"
-          style="left: var(--lyrics-slot-${slotIndex}-x); top: var(--lyrics-slot-${slotIndex}-y); width: var(--lyrics-slot-${slotIndex}-w); --lyrics-line-scale: ${lineScale};"
-          data-time="${line?.timeMs ?? ""}"
+          class="lyrics-line lyrics-line-past"
+          style="
+            left: var(--lyrics-past-slot-${slot}-x);
+            top: var(--lyrics-past-slot-${slot}-y);
+            width: var(--lyrics-past-slot-${slot}-w);
+            --lyrics-line-scale: ${scale};
+            --lyrics-section-t: ${t.toFixed(3)};
+          "
+          data-time="${line.timeMs ?? ""}"
         >
-          ${line ? escapeHtml(line.text) : ""}
+          ${escapeHtml(line.text)}
+        </div>
+      `;
+    })
+    .join("");
+
+  futureBlock.innerHTML = futureLines
+    .map(({ line, slot }) => {
+      const t = futureCount <= 1 ? 0 : slot / (futureCount - 1);
+      const scale = getLyricLineScale(line.text.length, false);
+      return `
+        <div
+          class="lyrics-line lyrics-line-future"
+          style="
+            left: var(--lyrics-future-slot-${slot}-x);
+            top: var(--lyrics-future-slot-${slot}-y);
+            width: var(--lyrics-future-slot-${slot}-w);
+            --lyrics-line-scale: ${scale};
+            --lyrics-section-t: ${t.toFixed(3)};
+          "
+          data-time="${line.timeMs ?? ""}"
+        >
+          ${escapeHtml(line.text)}
         </div>
       `;
     })

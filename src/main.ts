@@ -143,7 +143,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricActiveBgColor: "#000000",
   lyricGuideOpacity: 0.0,
   lyricLineCount: 9,
-  lyricAnimationPreset: "instant",
+  lyricAnimationPreset: "vertical-marquee",
   lyricActivePreset: "amber-crisp",
   lyricInactivePreset: "clean-readable",
   lyricBaseFontSize: 12,
@@ -151,7 +151,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPerspectiveMode: "ceiling-forward"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v6";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v7";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -892,7 +892,7 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
       return { ...DEFAULT_ROOM_UTILITY, ...parsed };
     }
 
-    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v5") ?? window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
+    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v6") ?? window.localStorage.getItem("pocketdj-room-utility-v5") ?? window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
     if (!oldRaw) return { ...DEFAULT_ROOM_UTILITY };
 
     const oldParsed = JSON.parse(oldRaw) as Partial<RoomUtilitySettings>;

@@ -5636,3 +5636,283 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   overflow: hidden !important;
   max-width: 100% !important;
 }
+
+
+/* THREE-LAYER LYRIC REBUILD
+   Past lyrics, active lyric, and future lyrics are now separate visual systems.
+   Active lyric is outside the ceiling blend, so black background and stroke work. */
+:root {
+  --lyrics-past-top-x: 881px;
+  --lyrics-past-top-y: 42px;
+  --lyrics-past-top-w: 1177px;
+  --lyrics-past-bottom-x: 882px;
+  --lyrics-past-bottom-y: 168px;
+  --lyrics-past-bottom-w: 920px;
+
+  --lyrics-active-x: 882px;
+  --lyrics-active-y: 88px;
+  --lyrics-active-w: 850px;
+  --lyrics-active-h: 25px;
+  --lyrics-active-zoom: 1.08;
+  --lyrics-active-stroke: 2px;
+  --lyrics-active-bg-opacity: 1;
+  --lyrics-active-bg-color: #000000;
+  --lyrics-active-bg-rgb: 0, 0, 0;
+
+  --lyrics-future-top-x: 932px;
+  --lyrics-future-top-y: 293px;
+  --lyrics-future-top-w: 860px;
+  --lyrics-future-bottom-x: 882px;
+  --lyrics-future-bottom-y: 397px;
+  --lyrics-future-bottom-w: 900px;
+
+  --lyrics-line-count: 9;
+  --lyrics-base-font-size: 12px;
+}
+
+/* Disable the old one-block 3D crawl behavior. The room perspective is now manual interpolation. */
+.lyrics-ceiling-inner {
+  transform: none !important;
+  transform-origin: 50% 50% !important;
+  perspective: none !important;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%) !important;
+}
+
+.lyrics-perspective-forward .lyrics-ceiling-inner,
+.lyrics-perspective-crawl .lyrics-ceiling-inner {
+  transform: none !important;
+  transform-origin: 50% 50% !important;
+}
+
+/* Past/future blocks live on the ceiling only. */
+.lyrics-past-block,
+.lyrics-future-block {
+  position: absolute;
+  inset: 0;
+  transform: none !important;
+  pointer-events: none;
+}
+
+/* Old combined center/active line styles are no longer used. */
+.lyrics-line-active,
+.lyrics-line-center-hidden {
+  display: none !important;
+}
+
+/* Inactive lyrics: projected, dim, centered, and contained. */
+.lyrics-line {
+  position: absolute !important;
+  box-sizing: border-box !important;
+  display: grid !important;
+  place-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+  padding-inline: 0.45em !important;
+  font-size: calc(var(--lyrics-base-font-size) * var(--lyrics-line-scale, 1)) !important;
+  line-height: 1.12 !important;
+  letter-spacing: 0.055em !important;
+  color: rgba(255, 211, 164, 0.50) !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.52) !important;
+  mix-blend-mode: screen;
+  filter: none !important;
+}
+
+.lyrics-line-past {
+  transform: translateX(-50%) translateY(-50%) scale(calc(0.70 + (var(--lyrics-section-t, 0) * 0.20))) !important;
+  opacity: calc(0.10 + (var(--lyrics-section-t, 0) * 0.24)) !important;
+  animation: lyricPastSettle 520ms ease both;
+}
+
+.lyrics-line-future {
+  transform: translateX(-50%) translateY(-50%) scale(calc(0.98 - (var(--lyrics-section-t, 0) * 0.22))) !important;
+  opacity: calc(0.34 - (var(--lyrics-section-t, 0) * 0.18)) !important;
+  animation: lyricFutureSettle 520ms ease both;
+}
+
+@keyframes lyricPastSettle {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(calc(-50% + 10px)) scale(0.88);
+  }
+}
+
+@keyframes lyricFutureSettle {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(calc(-50% - 8px)) scale(0.98);
+  }
+}
+
+/* Active lyric sits outside the ceiling blend and faces the viewer like a small marquee sign. */
+.active-lyrics-block {
+  position: absolute !important;
+  left: var(--lyrics-active-x) !important;
+  top: var(--lyrics-active-y) !important;
+  width: var(--lyrics-active-w) !important;
+  height: var(--lyrics-active-h) !important;
+  min-height: var(--lyrics-active-h) !important;
+  z-index: 42 !important;
+  transform: translateX(-50%) translateY(-50%) !important;
+  display: grid !important;
+  place-items: center !important;
+  pointer-events: none !important;
+  mix-blend-mode: normal !important;
+  isolation: isolate !important;
+}
+
+.active-lyrics-line {
+  width: 100% !important;
+  height: var(--lyrics-active-h) !important;
+  min-height: var(--lyrics-active-h) !important;
+  box-sizing: border-box !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 1.1em !important;
+  border-radius: 12px !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-align: center !important;
+  line-height: 1.05 !important;
+  font-family: "Press Start 2P", monospace !important;
+  font-size: calc(var(--lyrics-base-font-size) * var(--lyrics-line-scale, 1)) !important;
+  letter-spacing: 0.07em !important;
+  font-weight: 900 !important;
+  color: #ffc84f !important;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(var(--lyrics-active-bg-rgb), calc(var(--lyrics-active-bg-opacity) * 0.84)) 5%,
+      rgba(var(--lyrics-active-bg-rgb), var(--lyrics-active-bg-opacity)) 17%,
+      rgba(var(--lyrics-active-bg-rgb), var(--lyrics-active-bg-opacity)) 83%,
+      rgba(var(--lyrics-active-bg-rgb), calc(var(--lyrics-active-bg-opacity) * 0.84)) 95%,
+      transparent 100%
+    ) !important;
+  border: 1px solid rgba(255, 184, 76, calc(0.08 + var(--lyrics-active-bg-opacity) * 0.20)) !important;
+  -webkit-text-stroke-width: var(--lyrics-active-stroke) !important;
+  -webkit-text-stroke-color: rgba(0, 0, 0, 0.96) !important;
+  paint-order: stroke fill !important;
+  text-shadow:
+    0 1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000,
+    0 -1px 0 #000,
+    0 0 3px rgba(255, 197, 75, 0.72) !important;
+  filter: drop-shadow(0 0 calc(var(--lyrics-active-stroke) * 0.85) rgba(0, 0, 0, 0.96)) !important;
+  transform: scale(var(--lyrics-active-zoom)) !important;
+  transform-origin: 50% 50% !important;
+  mix-blend-mode: normal !important;
+  isolation: isolate !important;
+}
+
+.lyrics-active-layout-single-line .active-lyrics-line {
+  white-space: nowrap !important;
+}
+
+.lyrics-active-layout-two-line .active-lyrics-line {
+  white-space: normal !important;
+}
+
+/* Active animations now only target the active sign. */
+.lyrics-animation-vertical-marquee .active-lyrics-line {
+  animation: activeLyricVerticalSign 680ms cubic-bezier(.2, .86, .22, 1) both;
+}
+
+@keyframes activeLyricVerticalSign {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(calc(var(--lyrics-active-zoom) * 0.96));
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(var(--lyrics-active-zoom));
+  }
+}
+
+.lyrics-animation-active-horizontal-marquee .active-lyrics-line {
+  animation: activeLyricHorizontalSign 760ms cubic-bezier(.2, .86, .22, 1) both;
+}
+
+@keyframes activeLyricHorizontalSign {
+  0% {
+    opacity: 0;
+    transform: translateX(150px) scale(calc(var(--lyrics-active-zoom) * 0.98));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(var(--lyrics-active-zoom));
+  }
+}
+
+.lyrics-animation-focus-sweep .active-lyrics-line {
+  animation: activeLyricFocusSign 520ms ease both;
+}
+
+@keyframes activeLyricFocusSign {
+  0% { opacity: 0.1; }
+  100% { opacity: 1; }
+}
+
+.lyrics-animation-soft-slide .active-lyrics-line {
+  animation: activeLyricVerticalSign 760ms cubic-bezier(.22, .86, .2, 1) both;
+}
+
+.lyrics-animation-pulse-pop .active-lyrics-line {
+  animation: activeLyricPulseSign 500ms cubic-bezier(.18, 1.16, .26, 1) both;
+}
+
+@keyframes activeLyricPulseSign {
+  0% {
+    opacity: 0.35;
+    transform: scale(calc(var(--lyrics-active-zoom) * 0.90));
+  }
+  62% {
+    opacity: 1;
+    transform: scale(calc(var(--lyrics-active-zoom) + 0.05));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(var(--lyrics-active-zoom));
+  }
+}
+
+.lyrics-animation-instant .active-lyrics-line {
+  animation: none !important;
+}
+
+/* Guide positions match the new three-layer geometry. */
+.lyrics-boundary-guide-past-top {
+  left: var(--lyrics-past-top-x) !important;
+  top: var(--lyrics-past-top-y) !important;
+  width: var(--lyrics-past-top-w) !important;
+}
+
+.lyrics-boundary-guide-past-bottom {
+  left: var(--lyrics-past-bottom-x) !important;
+  top: var(--lyrics-past-bottom-y) !important;
+  width: var(--lyrics-past-bottom-w) !important;
+}
+
+.lyrics-boundary-guide-future-top {
+  left: var(--lyrics-future-top-x) !important;
+  top: var(--lyrics-future-top-y) !important;
+  width: var(--lyrics-future-top-w) !important;
+}
+
+.lyrics-boundary-guide-future-bottom {
+  left: var(--lyrics-future-bottom-x) !important;
+  top: var(--lyrics-future-bottom-y) !important;
+  width: var(--lyrics-future-bottom-w) !important;
+}
+
+.lyrics-boundary-guide-active {
+  left: var(--lyrics-active-x) !important;
+  top: var(--lyrics-active-y) !important;
+  width: var(--lyrics-active-w) !important;
+  height: var(--lyrics-active-h) !important;
+  transform: translateX(-50%) translateY(-50%) !important;
+  border-radius: 12px !important;
+}
