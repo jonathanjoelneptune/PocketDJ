@@ -3382,3 +3382,28 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   width: 38px !important;
   height: 38px !important;
 }
+
+
+/* Final side-panel close behavior polish */
+.panel-close {
+  font-size: clamp(0.52rem, calc(var(--room-w) * 0.0048), 0.72rem) !important;
+  font-family: "Press Start 2P", monospace !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  text-align: center !important;
+  padding: 0 !important;
+  color: rgba(255, 218, 155, 0.94) !important;
+}
+
+.panel-close:hover {
+  color: #ffd98a !important;
+  border-color: rgba(255, 184, 76, 0.42) !important;
+  background: rgba(72, 43, 21, 0.40) !important;
+}
+
+/* Keep the side panel interactive while allowing the room/background to close it. */
+.control-card {
+  pointer-events: auto !important;
+}

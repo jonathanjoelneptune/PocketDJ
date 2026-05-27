@@ -117,7 +117,9 @@ function bindControls(): void {
     openSidePanel(true);
   });
 
-  qs<HTMLButtonElement>("#hidePanel").addEventListener("click", () => {
+  qs<HTMLButtonElement>("#hidePanel").addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     setSidePanelLocked(false);
     closeSidePanel();
   });
@@ -127,6 +129,12 @@ function bindControls(): void {
   });
 
   const controlCard = qs<HTMLElement>("#controlCard");
+  controlCard.addEventListener("pointerdown", (event) => {
+    event.stopPropagation();
+  });
+  controlCard.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
   controlCard.addEventListener("mouseenter", () => {
     clearSidePanelHideTimer();
   });
@@ -138,8 +146,13 @@ function bindControls(): void {
   sideTab.addEventListener("mouseenter", () => {
     openSidePanel(true);
   });
-  sideTab.addEventListener("click", () => {
+  sideTab.addEventListener("click", (event) => {
+    event.stopPropagation();
     openSidePanel(true);
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    closeSidePanelOnOutsidePointer(event);
   });
 
   bindFloorPlaybackControls();
@@ -221,6 +234,22 @@ function bindControls(): void {
 
 
 
+
+function closeSidePanelOnOutsidePointer(event: PointerEvent): void {
+  const panel = qs<HTMLElement>("#controlCard");
+  if (!panel.classList.contains("control-card-open")) return;
+
+  const target = event.target;
+  if (!(target instanceof Node)) return;
+
+  const sideTab = qs<HTMLElement>("#sidePanelTab");
+  const panelToggle = qs<HTMLElement>("#panelToggle");
+
+  if (panel.contains(target) || sideTab.contains(target) || panelToggle.contains(target)) return;
+
+  setSidePanelLocked(false);
+  closeSidePanel();
+}
 
 function openSidePanel(autoHide = true): void {
   setControlPanelOpen(true);
