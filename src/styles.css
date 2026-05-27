@@ -1081,41 +1081,44 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   bottom: clamp(12px, 2vw, 24px);
   z-index: 9;
   width: auto;
-  min-width: 112px;
-  height: 38px;
+  min-width: 118px;
+  height: 40px;
   padding: 0 14px;
   border-radius: 999px;
-  color: rgba(235, 228, 215, 0.90);
+  color: #ffbf47;
   background:
-    linear-gradient(180deg, rgba(12, 12, 15, 0.76), rgba(4, 6, 10, 0.68));
-  border: 1px solid rgba(174, 160, 137, 0.34);
+    linear-gradient(180deg, rgba(16, 10, 4, 0.84), rgba(2, 2, 5, 0.78));
+  border: 1px solid rgba(255, 170, 40, 0.42);
   box-shadow:
-    0 12px 34px rgba(0,0,0,0.38),
-    0 0 14px rgba(180, 145, 90, 0.10),
-    inset 0 0 14px rgba(255,255,255,0.045);
+    0 12px 34px rgba(0,0,0,0.42),
+    0 0 14px rgba(255,170,40,0.16),
+    inset 0 0 16px rgba(255,170,40,0.045);
   font-family: "Press Start 2P", monospace;
-  font-size: 0.52rem;
+  font-size: 0.50rem;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.025em;
+  text-shadow:
+    0 0 4px rgba(255, 170, 40, 0.75),
+    0 0 10px rgba(255, 170, 40, 0.28);
   backdrop-filter: blur(12px);
 }
 
 .floor-controls-toggle-open,
 .floor-controls-toggle-playing {
-  color: rgba(255, 246, 218, 0.98);
-  border-color: rgba(214, 184, 126, 0.48);
+  color: #ffd98a;
+  border-color: rgba(255, 190, 76, 0.68);
   box-shadow:
-    0 12px 34px rgba(0,0,0,0.38),
-    0 0 18px rgba(180, 145, 90, 0.18),
-    inset 0 0 18px rgba(214, 184, 126, 0.08);
+    0 12px 34px rgba(0,0,0,0.42),
+    0 0 20px rgba(255,170,40,0.24),
+    inset 0 0 18px rgba(255,170,40,0.09);
 }
 
 .floor-player {
   position: absolute;
   left: 50%;
-  bottom: 4.45%;
-  width: min(34%, 548px);
-  height: clamp(58px, 7.3vw, 104px);
+  bottom: 4.25%;
+  width: min(36%, 575px);
+  height: clamp(66px, 8.0vw, 116px);
   transform:
     translateX(-50%)
     perspective(620px)
@@ -1124,8 +1127,8 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   transform-origin: center bottom;
   display: grid;
   grid-template-columns: 1fr 1.15fr 1fr 0.62fr;
-  grid-template-rows: 1fr clamp(4px, 0.46vw, 8px);
-  gap: clamp(7px, 0.95vw, 16px) clamp(8px, 1.1vw, 18px);
+  grid-template-rows: 1fr clamp(7px, 0.75vw, 14px);
+  gap: clamp(8px, 1vw, 16px) clamp(8px, 1.1vw, 18px);
   align-items: center;
   justify-items: center;
   z-index: 6;
@@ -1135,7 +1138,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     opacity 260ms ease,
     transform 260ms ease,
     filter 260ms ease;
-  filter: drop-shadow(0 18px 26px rgba(0,0,0,0.32));
+  filter: drop-shadow(0 18px 26px rgba(0,0,0,0.34));
 }
 
 .floor-player-hidden {
@@ -1153,17 +1156,17 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .floor-control {
   width: 100%;
   height: 100%;
-  min-height: 42px;
-  border: 1px solid rgba(174, 160, 137, 0.24);
-  border-radius: 8px;
-  color: rgba(232, 224, 211, 0.68);
+  min-height: 46px;
+  border: 1px solid rgba(255, 170, 40, 0.30);
+  border-radius: 6px;
+  color: #ffbf47;
   background:
-    linear-gradient(180deg, rgba(13, 13, 16, 0.36), rgba(0,0,0,0.18)),
-    radial-gradient(ellipse at center, rgba(196, 166, 110, 0.075), transparent 70%);
+    linear-gradient(180deg, rgba(16, 10, 4, 0.58), rgba(1,1,4,0.40)),
+    radial-gradient(ellipse at center, rgba(255,170,40,0.075), transparent 70%);
   box-shadow:
-    inset 0 0 18px rgba(0,0,0,0.40),
-    inset 0 0 10px rgba(214,184,126,0.032),
-    0 12px 24px rgba(0,0,0,0.28);
+    inset 0 0 22px rgba(0,0,0,0.60),
+    inset 0 0 10px rgba(255,170,40,0.045),
+    0 12px 24px rgba(0,0,0,0.30);
   display: grid;
   place-items: center;
   backdrop-filter: blur(8px);
@@ -1177,15 +1180,16 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 .floor-control:hover:not(:disabled) {
-  color: rgba(255, 246, 218, 0.94);
-  border-color: rgba(214, 184, 126, 0.46);
+  color: #ffd98a;
+  border-color: rgba(255, 190, 76, 0.60);
   background:
-    linear-gradient(180deg, rgba(22, 20, 18, 0.44), rgba(0,0,0,0.20)),
-    radial-gradient(ellipse at center, rgba(214,184,126,0.12), transparent 70%);
+    linear-gradient(180deg, rgba(24, 14, 4, 0.64), rgba(1,1,4,0.42)),
+    radial-gradient(ellipse at center, rgba(255,170,40,0.15), transparent 70%);
   box-shadow:
-    inset 0 0 20px rgba(0,0,0,0.32),
-    0 0 18px rgba(180,145,90,0.13),
-    0 16px 30px rgba(0,0,0,0.32);
+    inset 0 0 24px rgba(0,0,0,0.48),
+    inset 0 0 14px rgba(255,170,40,0.08),
+    0 0 18px rgba(255,170,40,0.18),
+    0 16px 30px rgba(0,0,0,0.34);
 }
 
 .floor-control:active:not(:disabled) {
@@ -1200,16 +1204,17 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .floor-icon {
   display: block;
   font-family: "Press Start 2P", monospace;
-  font-size: clamp(1.05rem, 2.15vw, 2.65rem);
+  font-size: clamp(1.00rem, 2.02vw, 2.50rem);
   line-height: 1;
-  color: rgba(232, 224, 211, 0.76);
+  color: #ffbf47;
   text-shadow:
-    0 0 8px rgba(214,184,126,0.14),
-    0 0 18px rgba(180,145,90,0.10);
+    0 0 4px rgba(255, 170, 40, 0.78),
+    0 0 10px rgba(255, 170, 40, 0.38),
+    0 0 18px rgba(255, 170, 40, 0.18);
 }
 
 .floor-control-play .floor-icon {
-  font-size: clamp(1.24rem, 2.55vw, 3.18rem);
+  font-size: clamp(1.22rem, 2.48vw, 3.08rem);
 }
 
 .floor-control-more {
@@ -1222,23 +1227,26 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   width: clamp(7px, 0.9vw, 13px);
   aspect-ratio: 1;
   border-radius: 999px;
-  background: rgba(232, 224, 211, 0.58);
-  box-shadow: 0 0 10px rgba(180,145,90,0.12);
+  background: #ffbf47;
+  box-shadow:
+    0 0 5px rgba(255, 170, 40, 0.70),
+    0 0 12px rgba(255, 170, 40, 0.30);
 }
 
 .floor-progress {
   grid-column: 1 / 5;
   grid-row: 2;
   width: 100%;
-  height: clamp(4px, 0.46vw, 8px);
+  height: clamp(7px, 0.75vw, 14px);
   border-radius: 999px;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(0,0,0,0.38), rgba(255,255,255,0.035), rgba(0,0,0,0.32));
-  border: 1px solid rgba(174, 160, 137, 0.18);
+    linear-gradient(90deg, rgba(0,0,0,0.62), rgba(255,170,40,0.045), rgba(0,0,0,0.58));
+  border: 1px solid rgba(255, 170, 40, 0.24);
   box-shadow:
-    inset 0 0 8px rgba(0,0,0,0.55),
-    0 0 12px rgba(180,145,90,0.06);
+    inset 0 0 10px rgba(0,0,0,0.72),
+    inset 0 0 8px rgba(255,170,40,0.04),
+    0 0 12px rgba(255,170,40,0.08);
 }
 
 .floor-progress-fill {
@@ -1247,12 +1255,13 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   border-radius: inherit;
   background:
     linear-gradient(90deg,
-      rgba(161, 137, 99, 0.58),
-      rgba(232, 208, 159, 0.82),
-      rgba(161, 137, 99, 0.58));
+      rgba(180, 107, 20, 0.76),
+      rgba(255, 191, 71, 0.98),
+      rgba(255, 216, 134, 0.92));
   box-shadow:
-    0 0 10px rgba(214,184,126,0.22),
-    inset 0 0 4px rgba(255,255,255,0.18);
+    0 0 10px rgba(255,170,40,0.34),
+    0 0 18px rgba(255,170,40,0.16),
+    inset 0 0 4px rgba(255,255,255,0.22);
   transition: width 360ms linear;
 }
 
@@ -1262,34 +1271,35 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 .floor-player-playing .floor-progress-fill {
   box-shadow:
-    0 0 12px rgba(214,184,126,0.28),
-    inset 0 0 5px rgba(255,255,255,0.22);
+    0 0 12px rgba(255,170,40,0.40),
+    0 0 22px rgba(255,170,40,0.20),
+    inset 0 0 5px rgba(255,255,255,0.24);
 }
 
 @keyframes floorControlGlow {
   from {
     box-shadow:
-      inset 0 0 18px rgba(0,0,0,0.40),
-      inset 0 0 10px rgba(214,184,126,0.04),
-      0 12px 24px rgba(0,0,0,0.28);
+      inset 0 0 22px rgba(0,0,0,0.58),
+      inset 0 0 10px rgba(255,170,40,0.06),
+      0 12px 24px rgba(0,0,0,0.30);
   }
   to {
     box-shadow:
-      inset 0 0 18px rgba(0,0,0,0.32),
-      inset 0 0 18px rgba(214,184,126,0.10),
-      0 0 18px rgba(180,145,90,0.16),
-      0 16px 30px rgba(0,0,0,0.34);
+      inset 0 0 22px rgba(0,0,0,0.46),
+      inset 0 0 18px rgba(255,170,40,0.14),
+      0 0 22px rgba(255,170,40,0.24),
+      0 16px 30px rgba(0,0,0,0.36);
   }
 }
 
 @media (max-width: 900px) {
   .floor-player {
-    width: min(58%, 430px);
-    bottom: 5.0%;
+    width: min(60%, 445px);
+    bottom: 4.9%;
   }
 
   .floor-controls-toggle {
-    font-size: 0.48rem;
+    font-size: 0.46rem;
   }
 }
 
