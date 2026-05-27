@@ -1192,3 +1192,9 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   padding-bottom: 2px;
   overflow: visible;
 }
+
+
+/* During song changes, always show the single original title, not the duplicated scroll train. */
+.marquee-swap .marquee-title {
+  white-space: nowrap;
+}
