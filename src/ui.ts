@@ -361,27 +361,6 @@ function prepareMarqueeRowsForEntry(marquee: HTMLElement, titleEl: HTMLElement, 
   marquee.classList.toggle("marquee-artist-short", !artistIsLong);
 }
 
-
-function updateFloorControls(track: NormalizedTrack): void {
-  const floor = qs<HTMLElement>("#floorPlayer");
-  const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
-  const playButton = qs<HTMLButtonElement>("#floorPlayButton");
-  const playIcon = qs<HTMLElement>("#floorPlayIcon");
-  const prevButton = qs<HTMLButtonElement>("#floorPrevButton");
-  const nextButton = qs<HTMLButtonElement>("#floorNextButton");
-
-  const canControl = track.source === "spotify" && track.isAuthenticated;
-  floor.classList.toggle("floor-player-playing", track.isPlaying);
-  toggle.classList.toggle("floor-controls-toggle-playing", track.isPlaying);
-  playIcon.textContent = track.isPlaying ? "❚❚" : "▶";
-  playButton.setAttribute("aria-label", track.isPlaying ? "Pause Spotify" : "Play Spotify");
-
-  [playButton, prevButton, nextButton].forEach((button) => {
-    button.disabled = !canControl;
-    button.classList.toggle("floor-control-disabled", !canControl);
-  });
-}
-
 function updateMarqueeRowPan(marquee: HTMLElement, titleEl: HTMLElement, artistEl: HTMLElement): void {
   const viewport = marquee.querySelector<HTMLElement>(".marquee-viewport");
   const availableWidth = Math.max(0, (viewport?.clientWidth || marquee.clientWidth) - 10);
