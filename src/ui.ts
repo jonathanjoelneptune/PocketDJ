@@ -4,9 +4,12 @@ import { formatMs, qs } from "./utils/dom";
 type MarqueeState = "empty" | "paused" | "playing";
 
 type MarqueePayload = {
-  text: string;
+  title: string;
+  artist: string;
   state: MarqueeState;
   key: string;
+  titleLong: boolean;
+  artistLong: boolean;
 };
 
 let lastMarqueeKey = "";
@@ -32,9 +35,12 @@ export function renderShell(state: AppState): void {
         <div class="floor-shadow table-floor-shadow" aria-hidden="true"></div>
         <div class="floor-shadow dj-feet-shadow" aria-hidden="true"></div>
 
-        <div class="marquee" aria-live="polite">
+        <div class="marquee marquee-empty" aria-live="polite">
           <div class="marquee-viewport">
-            <span id="marqueeText">Nothing is currently playing • Start Spotify and Pocket DJ will wake up</span>
+            <div class="marquee-content" id="marqueeContent">
+              <div class="marquee-title" id="marqueeTitle">POCKET DJ</div>
+              <div class="marquee-artist" id="marqueeArtist">Listening lounge ready</div>
+            </div>
           </div>
         </div>
 
@@ -229,59 +235,96 @@ export function setControlPanelOpen(open: boolean): void {
 
 function updateMarquee(track: NormalizedTrack): void {
   const marquee = qs<HTMLElement>(".marquee");
-  const textElement = qs<HTMLElement>("#marqueeText");
+  const content = qs<HTMLElement>("#marqueeContent");
+  const titleEl = qs<HTMLElement>("#marqueeTitle");
+  const artistEl = qs<HTMLElement>("#marqueeArtist");
   const payload = buildMarqueePayload(track);
 
   marquee.classList.toggle("marquee-paused", payload.state === "paused");
   marquee.classList.toggle("marquee-empty", payload.state === "empty");
+  marquee.classList.toggle("marquee-playing", payload.state === "playing");
+  marquee.classList.toggle("marquee-title-long", payload.titleLong);
+  marquee.classList.toggle("marquee-artist-long", payload.artistLong);
+  marquee.classList.toggle("marquee-title-short", !payload.titleLong);
+  marquee.classList.toggle("marquee-artist-short", !payload.artistLong);
 
   if (payload.key === lastMarqueeKey) return;
   lastMarqueeKey = payload.key;
 
-  textElement.classList.add("marquee-text-changing");
+  content.classList.add("marquee-content-changing");
   marquee.classList.remove("marquee-swap");
   void marquee.offsetWidth;
   marquee.classList.add("marquee-swap");
 
   window.setTimeout(() => {
-    textElement.style.animation = "none";
-    textElement.textContent = payload.text;
-    void textElement.offsetWidth;
-    textElement.style.animation = "";
-    textElement.classList.remove("marquee-text-changing");
-  }, 110);
+    titleEl.textContent = payload.title;
+    artistEl.textContent = payload.artist;
+
+    content.style.animation = "none";
+    titleEl.style.animation = "none";
+    artistEl.style.animation = "none";
+    void content.offsetWidth;
+    content.style.animation = "";
+    titleEl.style.animation = "";
+    artistEl.style.animation = "";
+
+    content.classList.remove("marquee-content-changing");
+  }, 130);
 
   if (marqueeSwapTimer) window.clearTimeout(marqueeSwapTimer);
   marqueeSwapTimer = window.setTimeout(() => {
     marquee.classList.remove("marquee-swap");
-  }, 520);
+  }, 720);
 }
 
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
-  let text: string;
+  let title: string;
+  let artist: string;
   let state: MarqueeState;
 
   if (track.source === "demo") {
     state = track.isPlaying ? "playing" : "paused";
-    text = track.isPlaying
-      ? `${track.title} • ${track.artist}`
-      : `Paused • ${track.title} • ${track.artist}`;
+    title = track.isPlaying ? cleanMarqueeText(track.title) : `Paused: ${cleanMarqueeText(track.title)}`;
+    artist = cleanMarqueeText(track.artist || "Demo mode");
   } else if (!track.isAuthenticated || !track.trackId) {
     state = "empty";
-    text = "Nothing is currently playing • Start Spotify and Pocket DJ will wake up";
+    title = "POCKET DJ";
+    artist = idleMarqueePhrase();
   } else if (!track.isPlaying) {
     state = "paused";
-    text = `Paused • ${track.title} • ${track.artist}`;
+    title = `Paused: ${cleanMarqueeText(track.title)}`;
+    artist = cleanMarqueeText(track.artist || "Spotify");
   } else {
     state = "playing";
-    text = `${track.title} • ${track.artist}`;
+    title = cleanMarqueeText(track.title);
+    artist = cleanMarqueeText(track.artist || "Spotify");
   }
 
   return {
-    text,
+    title,
+    artist,
     state,
-    key: `${state}::${text.toUpperCase()}`
+    titleLong: title.length > 24,
+    artistLong: artist.length > 34,
+    key: `${state}::${title.toUpperCase()}::${artist.toUpperCase()}`
   };
+}
+
+function cleanMarqueeText(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function idleMarqueePhrase(): string {
+  const phrases = [
+    "Listening lounge ready",
+    "Start Spotify and Pocket DJ will wake up",
+    "Late night session standby",
+    "Vinyl dreams loading",
+    "Connect Spotify to begin"
+  ];
+
+  const index = Math.floor(Date.now() / 12_000) % phrases.length;
+  return phrases[index];
 }
 
 function updateConnectionBanner(track: NormalizedTrack): void {
