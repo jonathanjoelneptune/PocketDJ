@@ -5916,3 +5916,58 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   transform: translateX(-50%) translateY(-50%) !important;
   border-radius: 12px !important;
 }
+
+/* FIX: three-layer past/future slot variables. These are overwritten by room utility settings. */
+:root {
+  --lyrics-past-slot-0-x: 881px;
+  --lyrics-past-slot-0-y: 42px;
+  --lyrics-past-slot-0-w: 1177px;
+  --lyrics-past-slot-1-x: 881px;
+  --lyrics-past-slot-1-y: 84px;
+  --lyrics-past-slot-1-w: 1091px;
+  --lyrics-past-slot-2-x: 882px;
+  --lyrics-past-slot-2-y: 126px;
+  --lyrics-past-slot-2-w: 1006px;
+  --lyrics-past-slot-3-x: 882px;
+  --lyrics-past-slot-3-y: 168px;
+  --lyrics-past-slot-3-w: 920px;
+  --lyrics-past-slot-4-x: 882px;
+  --lyrics-past-slot-4-y: 168px;
+  --lyrics-past-slot-4-w: 920px;
+  --lyrics-past-slot-5-x: 882px;
+  --lyrics-past-slot-5-y: 168px;
+  --lyrics-past-slot-5-w: 920px;
+  --lyrics-past-slot-6-x: 882px;
+  --lyrics-past-slot-6-y: 168px;
+  --lyrics-past-slot-6-w: 920px;
+
+  --lyrics-future-slot-0-x: 932px;
+  --lyrics-future-slot-0-y: 293px;
+  --lyrics-future-slot-0-w: 860px;
+  --lyrics-future-slot-1-x: 915px;
+  --lyrics-future-slot-1-y: 328px;
+  --lyrics-future-slot-1-w: 873px;
+  --lyrics-future-slot-2-x: 899px;
+  --lyrics-future-slot-2-y: 362px;
+  --lyrics-future-slot-2-w: 887px;
+  --lyrics-future-slot-3-x: 882px;
+  --lyrics-future-slot-3-y: 397px;
+  --lyrics-future-slot-3-w: 900px;
+  --lyrics-future-slot-4-x: 882px;
+  --lyrics-future-slot-4-y: 397px;
+  --lyrics-future-slot-4-w: 900px;
+  --lyrics-future-slot-5-x: 882px;
+  --lyrics-future-slot-5-y: 397px;
+  --lyrics-future-slot-5-w: 900px;
+  --lyrics-future-slot-6-x: 882px;
+  --lyrics-future-slot-6-y: 397px;
+  --lyrics-future-slot-6-w: 900px;
+}
+
+/* Ensure empty class on the layer itself does not hide child lines after found state toggles. */
+.lyrics-past-block.lyrics-found,
+.lyrics-future-block.lyrics-found {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}

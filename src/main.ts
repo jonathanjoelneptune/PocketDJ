@@ -151,7 +151,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPerspectiveMode: "ceiling-forward"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v7";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v8";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -820,29 +820,21 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyrics-animation-revision", String(lyricAnimationRevision));
 
   const lineCount = roomUtility.lyricLineCount;
-  const halfWindow = Math.floor(lineCount / 2);
-  const pastCount = halfWindow;
-  const futureCount = lineCount - halfWindow - 1;
+  const pastCount = Math.max(1, Math.floor((lineCount - 1) / 2));
+  const futureCount = Math.max(1, lineCount - 1 - pastCount);
 
-  for (let slot = 0; slot < lineCount; slot += 1) {
-    const offset = slot - halfWindow;
+  for (let slot = 0; slot < pastCount; slot += 1) {
+    const t = pastCount <= 1 ? 1 : slot / (pastCount - 1);
+    root.style.setProperty(`--lyrics-past-slot-${slot}-x`, `${lerp(roomUtility.lyricPastTopX, roomUtility.lyricPastBottomX, t)}px`);
+    root.style.setProperty(`--lyrics-past-slot-${slot}-y`, `${lerp(roomUtility.lyricPastTopY, roomUtility.lyricPastBottomY, t)}px`);
+    root.style.setProperty(`--lyrics-past-slot-${slot}-w`, `${lerp(roomUtility.lyricPastTopW, roomUtility.lyricPastBottomW, t)}px`);
+  }
 
-    if (offset < 0) {
-      const t = pastCount <= 1 ? 1 : slot / (pastCount - 1);
-      root.style.setProperty(`--lyrics-slot-${slot}-x`, `${lerp(roomUtility.lyricPastTopX, roomUtility.lyricPastBottomX, t)}px`);
-      root.style.setProperty(`--lyrics-slot-${slot}-y`, `${lerp(roomUtility.lyricPastTopY, roomUtility.lyricPastBottomY, t)}px`);
-      root.style.setProperty(`--lyrics-slot-${slot}-w`, `${lerp(roomUtility.lyricPastTopW, roomUtility.lyricPastBottomW, t)}px`);
-    } else if (offset > 0) {
-      const futureSlot = offset - 1;
-      const t = futureCount <= 1 ? 0 : futureSlot / (futureCount - 1);
-      root.style.setProperty(`--lyrics-slot-${slot}-x`, `${lerp(roomUtility.lyricFutureTopX, roomUtility.lyricFutureBottomX, t)}px`);
-      root.style.setProperty(`--lyrics-slot-${slot}-y`, `${lerp(roomUtility.lyricFutureTopY, roomUtility.lyricFutureBottomY, t)}px`);
-      root.style.setProperty(`--lyrics-slot-${slot}-w`, `${lerp(roomUtility.lyricFutureTopW, roomUtility.lyricFutureBottomW, t)}px`);
-    } else {
-      root.style.setProperty(`--lyrics-slot-${slot}-x`, `${roomUtility.lyricActiveX}px`);
-      root.style.setProperty(`--lyrics-slot-${slot}-y`, `${roomUtility.lyricActiveY}px`);
-      root.style.setProperty(`--lyrics-slot-${slot}-w`, `${roomUtility.lyricActiveW}px`);
-    }
+  for (let slot = 0; slot < futureCount; slot += 1) {
+    const t = futureCount <= 1 ? 0 : slot / (futureCount - 1);
+    root.style.setProperty(`--lyrics-future-slot-${slot}-x`, `${lerp(roomUtility.lyricFutureTopX, roomUtility.lyricFutureBottomX, t)}px`);
+    root.style.setProperty(`--lyrics-future-slot-${slot}-y`, `${lerp(roomUtility.lyricFutureTopY, roomUtility.lyricFutureBottomY, t)}px`);
+    root.style.setProperty(`--lyrics-future-slot-${slot}-w`, `${lerp(roomUtility.lyricFutureTopW, roomUtility.lyricFutureBottomW, t)}px`);
   }
 
   root.classList.toggle("lyrics-animation-focus-sweep", roomUtility.lyricAnimationPreset === "focus-sweep");
@@ -892,7 +884,7 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
       return { ...DEFAULT_ROOM_UTILITY, ...parsed };
     }
 
-    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v6") ?? window.localStorage.getItem("pocketdj-room-utility-v5") ?? window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
+    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v7") ?? window.localStorage.getItem("pocketdj-room-utility-v6") ?? window.localStorage.getItem("pocketdj-room-utility-v5") ?? window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
     if (!oldRaw) return { ...DEFAULT_ROOM_UTILITY };
 
     const oldParsed = JSON.parse(oldRaw) as Partial<RoomUtilitySettings>;
