@@ -126,6 +126,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
 };
 
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v1";
+const ROOM_UTILITY_VERSION = 2;
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -773,15 +774,46 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
   try {
     const raw = window.localStorage.getItem(ROOM_UTILITY_KEY);
     if (!raw) return { ...DEFAULT_ROOM_UTILITY };
-    const parsed = JSON.parse(raw) as Partial<RoomUtilitySettings>;
-    return { ...DEFAULT_ROOM_UTILITY, ...parsed };
+
+    const parsed = JSON.parse(raw) as Partial<RoomUtilitySettings> & { utilityVersion?: number };
+    const merged = { ...DEFAULT_ROOM_UTILITY, ...parsed };
+
+    // Older browser-saved room utility values can silently override new shipped
+    // lyric defaults. Preserve saved speaker/room utility values, but reset
+    // lyric-specific settings when the saved payload is from an older version.
+    if (parsed.utilityVersion !== ROOM_UTILITY_VERSION) {
+      return {
+        ...merged,
+        lyricTopX: DEFAULT_ROOM_UTILITY.lyricTopX,
+        lyricTopY: DEFAULT_ROOM_UTILITY.lyricTopY,
+        lyricTopW: DEFAULT_ROOM_UTILITY.lyricTopW,
+        lyricMidX: DEFAULT_ROOM_UTILITY.lyricMidX,
+        lyricMidY: DEFAULT_ROOM_UTILITY.lyricMidY,
+        lyricMidW: DEFAULT_ROOM_UTILITY.lyricMidW,
+        lyricBottomX: DEFAULT_ROOM_UTILITY.lyricBottomX,
+        lyricBottomY: DEFAULT_ROOM_UTILITY.lyricBottomY,
+        lyricBottomW: DEFAULT_ROOM_UTILITY.lyricBottomW,
+        lyricGuideOpacity: DEFAULT_ROOM_UTILITY.lyricGuideOpacity,
+        lyricLineCount: DEFAULT_ROOM_UTILITY.lyricLineCount,
+        lyricAnimationPreset: DEFAULT_ROOM_UTILITY.lyricAnimationPreset,
+        lyricActivePreset: DEFAULT_ROOM_UTILITY.lyricActivePreset,
+        lyricInactivePreset: DEFAULT_ROOM_UTILITY.lyricInactivePreset,
+        lyricActiveZoom: DEFAULT_ROOM_UTILITY.lyricActiveZoom,
+        lyricBaseFontSize: DEFAULT_ROOM_UTILITY.lyricBaseFontSize,
+      };
+    }
+
+    return merged;
   } catch {
     return { ...DEFAULT_ROOM_UTILITY };
   }
 }
 
 function saveRoomUtilitySettings(): void {
-  window.localStorage.setItem(ROOM_UTILITY_KEY, JSON.stringify(roomUtility));
+  window.localStorage.setItem(
+    ROOM_UTILITY_KEY,
+    JSON.stringify({ ...roomUtility, utilityVersion: ROOM_UTILITY_VERSION }),
+  );
 }
 
 
