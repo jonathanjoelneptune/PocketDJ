@@ -382,6 +382,7 @@ function configureStaticArtistRow(options: {
 
   element.textContent = originalText;
   element.dataset.marqueeOriginal = originalText;
+  element.dataset.marqueeStaticArtist = "true";
   element.style.transition = "none";
   element.style.transform = "translateX(0)";
 
@@ -391,8 +392,7 @@ function configureStaticArtistRow(options: {
   marquee.classList.toggle("marquee-artist-long", isLong);
   marquee.classList.toggle("marquee-artist-short", !isLong);
 
-  // Artist text is intentionally decoupled from title scrolling. If it is too long,
-  // it stays static and clips within the marquee instead of running its own animation.
+  // Artist row is fully decoupled from title scrolling. It remains centered and static.
   element.textContent = originalText;
 }
 

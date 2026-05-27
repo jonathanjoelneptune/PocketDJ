@@ -175,12 +175,15 @@ button {
 
 .marquee-content {
   width: 100%;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: clamp(5px, 0.55vw, 10px);
   opacity: 1;
   transform: translateX(0) translateY(-2px);
   transition: opacity 260ms ease, transform 260ms ease, filter 260ms ease;
+  overflow: hidden;
 }
 
 .marquee-content.marquee-exiting .marquee-title {
@@ -211,7 +214,7 @@ button {
   overflow: visible;
   white-space: nowrap;
   text-align: center;
-  justify-self: center;
+  align-self: center;
   font-family: "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, monospace;
   color: #fbbf24;
   text-shadow:
@@ -247,22 +250,29 @@ button {
 }
 
 .marquee-title-short .marquee-title {
-  justify-self: center;
+  align-self: center;
   animation-name: marqueeLedGlow;
 }
 
 .marquee-title-long .marquee-title {
-  justify-self: start;
+  align-self: flex-start;
+  width: max-content;
+  max-width: none;
   animation: marqueeLedGlow 920ms ease-in-out infinite alternate;
 }
 
 .marquee-artist-short .marquee-artist {
-  justify-self: center;
+  align-self: center;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
   transform: translateX(0);
 }
 
 .marquee-artist-long .marquee-artist {
-  justify-self: center;
+  align-self: center;
+  width: 100%;
   max-width: 100%;
   overflow: hidden;
   text-overflow: clip;
@@ -1113,12 +1123,12 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .marquee-content.marquee-exiting .marquee-title,
 .marquee-content.marquee-entering .marquee-artist,
 .marquee-content.marquee-exiting .marquee-artist {
-  justify-self: center;
+  align-self: center;
 }
 
 
 .marquee-artist-long .marquee-artist {
-  justify-self: center;
+  align-self: center;
   max-width: 100%;
   overflow: hidden;
   text-overflow: clip;
@@ -1127,7 +1137,4 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 
-.marquee-artist-long .marquee-artist {
-  width: auto;
-  max-width: 100%;
-}
+
