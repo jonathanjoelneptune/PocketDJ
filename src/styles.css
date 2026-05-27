@@ -3407,3 +3407,120 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .control-card {
   pointer-events: auto !important;
 }
+
+
+/* Final side-panel close/outside-click behavior refinements */
+.panel-close {
+  position: relative !important;
+  z-index: 60 !important;
+  pointer-events: auto !important;
+}
+
+/* Lyrics ceiling source group */
+.lyrics-ceiling {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 4.5%;
+  height: 25%;
+  z-index: 4;
+  pointer-events: none;
+  perspective: 900px;
+  opacity: 0.72;
+}
+
+.lyrics-ceiling-inner {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 0%;
+  transform: rotateX(58deg) skewX(-1deg);
+  border-radius: 22px;
+  padding: 12px 22px 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(126, 68, 255, 0.16), transparent 55%),
+    linear-gradient(180deg, rgba(12, 6, 28, 0.22), rgba(4, 2, 10, 0.04));
+  box-shadow:
+    inset 0 0 30px rgba(255, 190, 90, 0.08),
+    0 0 28px rgba(125, 76, 255, 0.12);
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%);
+}
+
+.lyrics-source-pill {
+  width: fit-content;
+  margin: 0 auto 6px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(7px, calc(var(--room-w) * 0.0052), 11px);
+  letter-spacing: 0.14em;
+  color: rgba(255, 197, 92, 0.74);
+  background: rgba(10, 4, 18, 0.36);
+  text-shadow: 0 0 8px rgba(255, 167, 42, 0.7);
+}
+
+.lyrics-block {
+  height: calc(100% - 26px);
+  overflow: hidden;
+  text-align: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(8px, calc(var(--room-w) * 0.0062), 13px);
+  line-height: 1.55;
+  letter-spacing: 0.04em;
+  color: rgba(255, 218, 154, 0.48);
+  text-shadow:
+    0 0 8px rgba(255, 170, 54, 0.25),
+    0 0 18px rgba(118, 63, 255, 0.20);
+  scroll-behavior: smooth;
+}
+
+.lyrics-line {
+  margin: 5px 0;
+  opacity: 0.30;
+  transform: scale(0.96);
+  transition:
+    opacity 260ms ease,
+    transform 260ms ease,
+    color 260ms ease,
+    text-shadow 260ms ease;
+}
+
+.lyrics-line-near {
+  opacity: 0.54;
+}
+
+.lyrics-line-past {
+  opacity: 0.20;
+}
+
+.lyrics-line-active {
+  opacity: 0.95;
+  transform: scale(1.035);
+  color: rgba(255, 205, 96, 0.92);
+  text-shadow:
+    0 0 7px rgba(255, 174, 45, 0.95),
+    0 0 18px rgba(255, 121, 42, 0.55),
+    0 0 28px rgba(132, 77, 255, 0.45);
+}
+
+.lyrics-placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  opacity: 0.62;
+  color: rgba(255, 207, 139, 0.55);
+}
+
+@media (max-width: 760px) {
+  .lyrics-ceiling {
+    left: 8%;
+    right: 8%;
+    top: 5%;
+    height: 22%;
+  }
+
+  .lyrics-ceiling-inner {
+    transform: rotateX(54deg);
+    padding-inline: 14px;
+  }
+}

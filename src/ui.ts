@@ -1,3 +1,4 @@
+import type { LyricsPayload } from "./lyrics/lyricsClient";
 import type { AppState, NormalizedTrack } from "./state/types";
 import { formatMs, qs } from "./utils/dom";
 
@@ -23,6 +24,15 @@ export function renderShell(state: AppState): void {
         <div class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\')" aria-hidden="true"></div>
         <div class="album-wash" id="albumWash"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
+
+        <div id="lyricsCeiling" class="lyrics-ceiling" aria-live="polite">
+          <div class="lyrics-ceiling-inner">
+            <div id="lyricsSourcePill" class="lyrics-source-pill">LYRICS</div>
+            <div id="lyricsBlock" class="lyrics-block lyrics-empty">
+              <div class="lyrics-placeholder">Lyrics will appear on the ceiling</div>
+            </div>
+          </div>
+        </div>
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
           <img class="speaker-image" src="./assets/Speaker.png" alt="" draggable="false" />
@@ -599,6 +609,81 @@ function setTextIfChanged(element: Element, value: string): void {
 function getEstimatedProgress(track: NormalizedTrack): number {
   if (!track.isPlaying) return track.progressMs;
   return Math.min(track.durationMs, track.progressMs + (Date.now() - track.updatedAt));
+}
+
+export function updateLyricsCeiling(
+  lyrics: LyricsPayload,
+  playbackMs: number,
+  activeIndex: number,
+): void {
+  const block = qs<HTMLElement>("#lyricsBlock");
+  const pill = qs<HTMLElement>("#lyricsSourcePill");
+
+  pill.textContent =
+    lyrics.status === "found"
+      ? "LYRICS • LRCLIB"
+      : lyrics.status === "loading"
+        ? "LYRICS • SEARCHING"
+        : "LYRICS";
+
+  block.classList.toggle("lyrics-empty", lyrics.status !== "found");
+  block.classList.toggle("lyrics-found", lyrics.status === "found");
+
+  if (lyrics.status === "loading") {
+    block.innerHTML = `<div class="lyrics-placeholder">Searching lyrics...</div>`;
+    return;
+  }
+
+  if (lyrics.status === "instrumental") {
+    block.innerHTML = `<div class="lyrics-placeholder">Instrumental track</div>`;
+    return;
+  }
+
+  if (lyrics.status === "not-found") {
+    block.innerHTML = `<div class="lyrics-placeholder">Lyrics unavailable</div>`;
+    return;
+  }
+
+  if (lyrics.status === "error") {
+    block.innerHTML = `<div class="lyrics-placeholder">Lyrics error</div>`;
+    return;
+  }
+
+  if (lyrics.status !== "found") {
+    block.innerHTML = `<div class="lyrics-placeholder">Lyrics will appear on the ceiling</div>`;
+    return;
+  }
+
+  const lines =
+    lyrics.syncedLyrics.length > 0
+      ? lyrics.syncedLyrics
+      : lyrics.plainLyrics.split(/\r?\n/).map((text) => ({ timeMs: null, text }));
+
+  block.innerHTML = lines
+    .filter((line) => line.text.trim())
+    .map((line, index) => {
+      const isActive = index === activeIndex;
+      const isPast = activeIndex >= 0 && index < activeIndex;
+      const isNear = activeIndex >= 0 && Math.abs(index - activeIndex) <= 2;
+
+      return `
+        <div
+          class="lyrics-line ${isActive ? "lyrics-line-active" : ""} ${isPast ? "lyrics-line-past" : ""} ${isNear ? "lyrics-line-near" : ""}"
+          data-time="${line.timeMs ?? ""}"
+        >
+          ${escapeHtml(line.text)}
+        </div>
+      `;
+    })
+    .join("");
+
+  const activeLine = block.querySelector(".lyrics-line-active");
+  if (activeLine) {
+    activeLine.scrollIntoView({
+      block: "center",
+      behavior: "smooth",
+    });
+  }
 }
 
 function escapeHtml(value: string): string {

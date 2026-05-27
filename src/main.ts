@@ -4,8 +4,15 @@ import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
 import { disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, previousSpotifyTrack, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
+import {
+  emptyLyrics,
+  fetchLyricsForTrack,
+  getActiveLyricIndex,
+  getLyricsTrackKey,
+  type LyricsPayload,
+} from "./lyrics/lyricsClient";
 import { qs } from "./utils/dom";
-import { renderShell, setControlPanelOpen, updatePlaybackUi } from "./ui";
+import { renderShell, setControlPanelOpen, updateLyricsCeiling, updatePlaybackUi } from "./ui";
 
 const STANDARD_SPOTIFY_CLIENT_ID = "37da51db24384ad3a07c222f71b1525e";
 
@@ -30,6 +37,8 @@ let floorControlsHideTimer: number | null = null;
 let phase2ShuffleEnabled = false;
 let phase2RepeatMode: "off" | "context" | "track" = "off";
 let phase2Volume = 70;
+let lyricsState: LyricsPayload = emptyLyrics();
+let lyricsFetchKey = "";
 
 
 type SceneFilter =
@@ -117,12 +126,15 @@ function bindControls(): void {
     openSidePanel(true);
   });
 
-  qs<HTMLButtonElement>("#hidePanel").addEventListener("click", (event) => {
+  const hidePanelButton = qs<HTMLButtonElement>("#hidePanel");
+  const closePanelFromButton = (event: Event) => {
     event.preventDefault();
     event.stopPropagation();
     setSidePanelLocked(false);
     closeSidePanel();
-  });
+  };
+  hidePanelButton.addEventListener("pointerdown", closePanelFromButton);
+  hidePanelButton.addEventListener("click", closePanelFromButton);
 
   qs<HTMLButtonElement>("#panelLockToggle").addEventListener("click", () => {
     setSidePanelLocked(!sidePanelLocked);
@@ -236,6 +248,8 @@ function bindControls(): void {
 
 
 function closeSidePanelOnOutsidePointer(event: PointerEvent): void {
+  if (sidePanelLocked) return;
+
   const panel = qs<HTMLElement>("#controlCard");
   if (!panel.classList.contains("control-card-open")) return;
 
@@ -247,7 +261,6 @@ function closeSidePanelOnOutsidePointer(event: PointerEvent): void {
 
   if (panel.contains(target) || sideTab.contains(target) || panelToggle.contains(target)) return;
 
-  setSidePanelLocked(false);
   closeSidePanel();
 }
 
@@ -641,6 +654,29 @@ function saveRoomUtilitySettings(): void {
 }
 
 
+async function refreshLyricsForCurrentTrack(): Promise<void> {
+  const track = state.playback;
+  const key = getLyricsTrackKey(track);
+
+  if (!key || track.source === "none") {
+    lyricsState = emptyLyrics("idle");
+    lyricsFetchKey = "";
+    updateLyricsCeiling(lyricsState, 0, -1);
+    return;
+  }
+
+  if (key === lyricsFetchKey) return;
+
+  lyricsFetchKey = key;
+  lyricsState = { ...emptyLyrics("loading"), trackKey: key };
+  updateLyricsCeiling(lyricsState, getEstimatedPlaybackProgress(track), -1);
+
+  lyricsState = await fetchLyricsForTrack(track);
+  const lyricProgressMs = getEstimatedPlaybackProgress(track);
+  const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
+  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex);
+}
+
 async function pollSpotifyNow(): Promise<void> {
   if (useDemo) return;
   if (!state.spotifyClientId) return;
@@ -649,6 +685,7 @@ async function pollSpotifyNow(): Promise<void> {
     lastPollError = "";
     state.playback = await getCurrentlyPlaying(state.spotifyClientId);
     updatePlaybackUi(state.playback, state.debugOpen);
+    void refreshLyricsForCurrentTrack();
 
     if (state.playback.isAuthenticated && !panelAutoHiddenAfterConnect) {
       panelAutoHiddenAfterConnect = true;
@@ -678,6 +715,11 @@ function tick(): void {
   state.djMode = dj.update(state.playback);
   updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
   updatePlaybackUi(state.playback, state.debugOpen);
+
+  const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
+  const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
+  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex);
+
   requestAnimationFrame(tick);
 }
 
