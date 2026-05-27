@@ -52,7 +52,7 @@ type SceneFilter =
   | "cinematic-amber"
   | "moody-lowlight";
 
-type LyricAnimationPreset = "focus-sweep" | "soft-slide" | "pulse-pop" | "instant";
+type LyricAnimationPreset = "focus-sweep" | "vertical-marquee" | "active-horizontal-marquee" | "soft-slide" | "pulse-pop" | "instant";
 type ActiveLyricPreset = "amber-crisp" | "gold-neon" | "warm-white" | "violet-glow";
 type InactiveLyricPreset = "soft-ghost" | "warm-dim" | "clean-readable" | "minimal";
 
@@ -87,6 +87,7 @@ type RoomUtilitySettings = {
   lyricActivePreset: ActiveLyricPreset;
   lyricInactivePreset: InactiveLyricPreset;
   lyricActiveZoom: number;
+  lyricBaseFontSize: number;
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
@@ -105,21 +106,22 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   vignetteStrength: 0.20,
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
-  lyricTopX: 800,
-  lyricTopY: 70,
-  lyricTopW: 980,
-  lyricMidX: 800,
-  lyricMidY: 155,
-  lyricMidW: 880,
-  lyricBottomX: 800,
-  lyricBottomY: 255,
-  lyricBottomW: 780,
+  lyricTopX: 881,
+  lyricTopY: 40,
+  lyricTopW: 1177,
+  lyricMidX: 882,
+  lyricMidY: 220,
+  lyricMidW: 796,
+  lyricBottomX: 882,
+  lyricBottomY: 404,
+  lyricBottomW: 544,
   lyricGuideOpacity: 0.0,
   lyricLineCount: 7,
-  lyricAnimationPreset: "focus-sweep",
-  lyricActivePreset: "amber-crisp",
+  lyricAnimationPreset: "vertical-marquee",
+  lyricActivePreset: "warm-white",
   lyricInactivePreset: "soft-ghost",
-  lyricActiveZoom: 1.10
+  lyricActiveZoom: 1.10,
+  lyricBaseFontSize: 15
 };
 
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v1";
@@ -618,7 +620,8 @@ function bindRoomUtilityControls(): void {
     ["lyricBottomW", "lyricBottomWValue"],
     ["lyricGuideOpacity", "lyricGuideOpacityValue"],
     ["lyricLineCount", "lyricLineCountValue"],
-    ["lyricActiveZoom", "lyricActiveZoomValue"]
+    ["lyricActiveZoom", "lyricActiveZoomValue"],
+    ["lyricBaseFontSize", "lyricBaseFontSizeValue"]
   ] as const;
 
   controls.forEach(([inputId, labelId]) => {
@@ -709,6 +712,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyrics-guide-opacity", String(roomUtility.lyricGuideOpacity));
   root.style.setProperty("--lyrics-line-count", String(roomUtility.lyricLineCount));
   root.style.setProperty("--lyrics-active-zoom", String(roomUtility.lyricActiveZoom));
+  root.style.setProperty("--lyrics-base-font-size", `${roomUtility.lyricBaseFontSize}px`);
 
   for (let slot = 0; slot < roomUtility.lyricLineCount; slot += 1) {
     const t = roomUtility.lyricLineCount <= 1 ? 0.5 : slot / (roomUtility.lyricLineCount - 1);
@@ -729,6 +733,8 @@ function applyRoomUtilitySettings(): void {
   }
 
   root.classList.toggle("lyrics-animation-focus-sweep", roomUtility.lyricAnimationPreset === "focus-sweep");
+  root.classList.toggle("lyrics-animation-vertical-marquee", roomUtility.lyricAnimationPreset === "vertical-marquee");
+  root.classList.toggle("lyrics-animation-active-horizontal-marquee", roomUtility.lyricAnimationPreset === "active-horizontal-marquee");
   root.classList.toggle("lyrics-animation-soft-slide", roomUtility.lyricAnimationPreset === "soft-slide");
   root.classList.toggle("lyrics-animation-pulse-pop", roomUtility.lyricAnimationPreset === "pulse-pop");
   root.classList.toggle("lyrics-animation-instant", roomUtility.lyricAnimationPreset === "instant");

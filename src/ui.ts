@@ -223,38 +223,41 @@ export function renderShell(state: AppState): void {
             <p class="utility-help">Use pixel values to tune the ceiling lyric shape. The active lyric sits on the middle line. Increase guide opacity to see the red boundary lines while tuning.</p>
 
             <div class="lyric-utility-stack">
-              <label>Top X px <span id="lyricTopXValue">800</span>
-                <input id="lyricTopX" type="range" min="0" max="1600" step="1" value="800" />
+              <label>Top X px <span id="lyricTopXValue">881</span>
+                <input id="lyricTopX" type="range" min="0" max="1600" step="1" value="881" />
               </label>
-              <label>Top Y px <span id="lyricTopYValue">70</span>
-                <input id="lyricTopY" type="range" min="0" max="360" step="1" value="70" />
+              <label>Top Y px <span id="lyricTopYValue">40</span>
+                <input id="lyricTopY" type="range" min="0" max="360" step="1" value="40" />
               </label>
-              <label>Top width px <span id="lyricTopWValue">980</span>
-                <input id="lyricTopW" type="range" min="120" max="1600" step="1" value="980" />
-              </label>
-
-              <label>Middle X px <span id="lyricMidXValue">800</span>
-                <input id="lyricMidX" type="range" min="0" max="1600" step="1" value="800" />
-              </label>
-              <label>Middle Y px <span id="lyricMidYValue">155</span>
-                <input id="lyricMidY" type="range" min="0" max="420" step="1" value="155" />
-              </label>
-              <label>Middle width px <span id="lyricMidWValue">880</span>
-                <input id="lyricMidW" type="range" min="120" max="1600" step="1" value="880" />
+              <label>Top width px <span id="lyricTopWValue">1177</span>
+                <input id="lyricTopW" type="range" min="120" max="1600" step="1" value="1177" />
               </label>
 
-              <label>Bottom X px <span id="lyricBottomXValue">800</span>
-                <input id="lyricBottomX" type="range" min="0" max="1600" step="1" value="800" />
+              <label>Middle X px <span id="lyricMidXValue">882</span>
+                <input id="lyricMidX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Bottom Y px <span id="lyricBottomYValue">255</span>
-                <input id="lyricBottomY" type="range" min="0" max="520" step="1" value="255" />
+              <label>Middle Y px <span id="lyricMidYValue">220</span>
+                <input id="lyricMidY" type="range" min="0" max="420" step="1" value="220" />
               </label>
-              <label>Bottom width px <span id="lyricBottomWValue">780</span>
-                <input id="lyricBottomW" type="range" min="120" max="1600" step="1" value="780" />
+              <label>Middle width px <span id="lyricMidWValue">796</span>
+                <input id="lyricMidW" type="range" min="120" max="1600" step="1" value="796" />
+              </label>
+
+              <label>Bottom X px <span id="lyricBottomXValue">882</span>
+                <input id="lyricBottomX" type="range" min="0" max="1600" step="1" value="882" />
+              </label>
+              <label>Bottom Y px <span id="lyricBottomYValue">404</span>
+                <input id="lyricBottomY" type="range" min="0" max="520" step="1" value="404" />
+              </label>
+              <label>Bottom width px <span id="lyricBottomWValue">544</span>
+                <input id="lyricBottomW" type="range" min="120" max="1600" step="1" value="544" />
               </label>
 
               <label>Number of lyric lines <span id="lyricLineCountValue">7</span>
-                <input id="lyricLineCount" type="range" min="3" max="11" step="2" value="7" />
+                <input id="lyricLineCount" type="range" min="3" max="15" step="2" value="7" />
+              </label>
+              <label>Base lyric font size px <span id="lyricBaseFontSizeValue">15</span>
+                <input id="lyricBaseFontSize" type="range" min="8" max="26" step="1" value="15" />
               </label>
               <label>Active lyric zoom <span id="lyricActiveZoomValue">1.10</span>
                 <input id="lyricActiveZoom" type="range" min="1" max="1.35" step="0.01" value="1.10" />
@@ -268,6 +271,8 @@ export function renderShell(state: AppState): void {
               <label>Animation preset
                 <select id="lyricAnimationPreset">
                   <option value="focus-sweep">Focus sweep</option>
+                  <option value="vertical-marquee">Vertical marquee</option>
+                  <option value="active-horizontal-marquee">Active horizontal marquee</option>
                   <option value="soft-slide">Soft slide</option>
                   <option value="pulse-pop">Pulse pop</option>
                   <option value="instant">Instant</option>
@@ -703,6 +708,7 @@ export function updateLyricsCeiling(
   ceiling.classList.toggle("lyrics-ceiling-visible", enabled && lyrics.status === "found");
 
   if (!enabled) {
+    lastLyricsRenderSignature = "";
     block.innerHTML = "";
     return;
   }
@@ -711,11 +717,13 @@ export function updateLyricsCeiling(
   block.classList.toggle("lyrics-found", lyrics.status === "found");
 
   if (lyrics.status === "loading" || lyrics.status === "idle") {
+    lastLyricsRenderSignature = "";
     block.innerHTML = "";
     return;
   }
 
   if (lyrics.status === "instrumental" || lyrics.status === "not-found" || lyrics.status === "error") {
+    lastLyricsRenderSignature = "";
     block.innerHTML = "";
     return;
   }
@@ -728,10 +736,14 @@ export function updateLyricsCeiling(
   const cleanLines = sourceLines.filter((line) => line.text.trim());
   const rootStyles = getComputedStyle(document.documentElement);
   const requestedLineCount = Number(rootStyles.getPropertyValue("--lyrics-line-count")) || 7;
-  const lineCount = Math.max(3, Math.min(11, Math.round(requestedLineCount)));
+  const lineCount = Math.max(3, Math.min(15, Math.round(requestedLineCount)));
   const halfWindow = Math.floor(lineCount / 2);
   const centerIndex = activeIndex >= 0 ? activeIndex : 0;
   const visibleSlots = Array.from({ length: lineCount }, (_, slotIndex) => slotIndex - halfWindow);
+  const renderSignature = `${lyrics.trackKey}|${activeIndex}|${lineCount}`;
+
+  if (renderSignature === lastLyricsRenderSignature) return;
+  lastLyricsRenderSignature = renderSignature;
 
   block.innerHTML = visibleSlots
     .map((offset, slotIndex) => {

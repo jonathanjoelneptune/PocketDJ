@@ -4349,3 +4349,181 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     font-size: clamp(11px, 2.2vw, 14px) !important;
   }
 }
+
+
+/* Final lyric defaults from first-pass tuning and animation/font utilities */
+:root {
+  --lyrics-top-x: 881px;
+  --lyrics-top-y: 40px;
+  --lyrics-top-w: 1177px;
+  --lyrics-mid-x: 882px;
+  --lyrics-mid-y: 220px;
+  --lyrics-mid-w: 796px;
+  --lyrics-bottom-x: 882px;
+  --lyrics-bottom-y: 404px;
+  --lyrics-bottom-w: 544px;
+  --lyrics-line-count: 7;
+  --lyrics-active-zoom: 1.10;
+  --lyrics-base-font-size: 15px;
+}
+
+.lyrics-block {
+  font-size: clamp(calc(var(--lyrics-base-font-size) * 0.78), calc(var(--lyrics-base-font-size) * (var(--room-w) / 1600)), calc(var(--lyrics-base-font-size) * 1.16)) !important;
+}
+
+/* Let long lines fit more gracefully before they resort to ellipsis. */
+.lyrics-line {
+  font-size: inherit !important;
+  max-width: 100%;
+  padding-inline: 0.25em;
+}
+
+/* Remove the active line glow so the ceiling text is less muddled. */
+.lyrics-line-active {
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.46),
+    0 0 2px rgba(255, 235, 198, 0.42) !important;
+  filter: none !important;
+}
+
+/* Use a thin amber bracket/accent instead of a glow cloud. */
+.lyrics-line-active::after {
+  left: 24% !important;
+  right: 24% !important;
+  bottom: -0.42em !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 190, 82, 0.92), transparent) !important;
+  box-shadow: none !important;
+  opacity: 0.92 !important;
+}
+
+/* Active lyric faces the screen. It counter-rotates out of the ceiling plane. */
+.lyrics-ceiling-inner,
+.lyrics-boundary-guides {
+  transform-style: preserve-3d;
+}
+
+.lyrics-line-active {
+  transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom)) !important;
+}
+
+/* Focus sweep now stays restrained and readable. */
+@keyframes lyricFocusSweep {
+  0% {
+    opacity: 0.12;
+    transform: translateX(-50%) translateY(calc(-50% + 8px)) rotateX(-58deg) skewX(0.35deg) scale(0.98);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(calc(-50% - 1px)) rotateX(-58deg) skewX(0.35deg) scale(calc(var(--lyrics-active-zoom) + 0.015));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+/* Vertical marquee preset: active line rises into place, similar feel to marquee movement but vertical. */
+.lyrics-animation-vertical-marquee .lyrics-line {
+  transition:
+    opacity 360ms ease,
+    transform 540ms cubic-bezier(.22, .9, .24, 1),
+    color 260ms ease !important;
+}
+
+.lyrics-animation-vertical-marquee .lyrics-line-active {
+  animation: lyricVerticalMarquee 620ms cubic-bezier(.22, .9, .24, 1) both !important;
+}
+
+@keyframes lyricVerticalMarquee {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(calc(-50% + 42px)) rotateX(-58deg) skewX(0.35deg) scale(0.98);
+  }
+  72% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(calc(-50% - 3px)) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+/* Active horizontal marquee preset: only the active lyric slides in horizontally. */
+.lyrics-animation-active-horizontal-marquee .lyrics-line-active {
+  animation: lyricActiveHorizontalMarquee 760ms cubic-bezier(.22, .9, .24, 1) both !important;
+}
+
+@keyframes lyricActiveHorizontalMarquee {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(-50% + 180px)) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(0.98);
+  }
+  78% {
+    opacity: 1;
+    transform: translateX(calc(-50% - 8px)) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+/* Repoint existing alternate animations to the active line's screen-facing state. */
+@keyframes lyricSoftSlide {
+  0% {
+    opacity: 0.18;
+    transform: translateX(-50%) translateY(calc(-50% + 18px)) rotateX(-58deg) skewX(0.35deg) scale(1.00);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+@keyframes lyricPulsePop {
+  0% {
+    opacity: 0.35;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(0.96);
+  }
+  48% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(calc(var(--lyrics-active-zoom) + 0.055));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+/* Presets without glow-heavy active states. */
+.lyrics-active-gold-neon .lyrics-line-active,
+.lyrics-active-warm-white .lyrics-line-active,
+.lyrics-active-violet-glow .lyrics-line-active,
+.lyrics-active-amber-crisp .lyrics-line-active {
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.48),
+    0 0 2px rgba(255, 235, 198, 0.40) !important;
+}
+
+.lyrics-active-warm-white .lyrics-line-active {
+  color: rgba(255, 239, 205, 0.98) !important;
+}
+
+.lyrics-active-gold-neon .lyrics-line-active {
+  color: rgba(255, 222, 126, 1) !important;
+}
+
+.lyrics-active-violet-glow .lyrics-line-active {
+  color: rgba(241, 214, 255, 0.98) !important;
+}
+
+.lyrics-active-amber-crisp .lyrics-line-active {
+  color: rgba(255, 218, 132, 0.98) !important;
+}
+
+/* Utility panel defaults and option labeling support */
+.lyric-utility-stack input#lyricLineCount {
+  accent-color: #f5a02f;
+}
