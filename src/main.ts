@@ -78,6 +78,11 @@ type RoomUtilitySettings = {
   lyricBottomY: number;
   lyricBottomW: number;
   lyricGuideOpacity: number;
+  lyricLineCount: number;
+  lyricAnimationPreset: LyricAnimationPreset;
+  lyricActivePreset: ActiveLyricPreset;
+  lyricInactivePreset: InactiveLyricPreset;
+  lyricActiveZoom: number;
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
@@ -96,16 +101,21 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   vignetteStrength: 0.20,
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
-  lyricTopX: 50.0,
-  lyricTopY: 7.5,
-  lyricTopW: 70.0,
-  lyricMidX: 50.0,
-  lyricMidY: 18.0,
-  lyricMidW: 64.0,
-  lyricBottomX: 50.0,
-  lyricBottomY: 29.0,
-  lyricBottomW: 58.0,
-  lyricGuideOpacity: 0.0
+  lyricTopX: 800,
+  lyricTopY: 70,
+  lyricTopW: 980,
+  lyricMidX: 800,
+  lyricMidY: 155,
+  lyricMidW: 880,
+  lyricBottomX: 800,
+  lyricBottomY: 255,
+  lyricBottomW: 780,
+  lyricGuideOpacity: 0.0,
+  lyricLineCount: 7,
+  lyricAnimationPreset: "focus-sweep",
+  lyricActivePreset: "amber-crisp",
+  lyricInactivePreset: "soft-ghost",
+  lyricActiveZoom: 1.10
 };
 
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v1";
@@ -569,7 +579,14 @@ function updatePhase2SpotifyControls(): void {
 
 function bindRoomUtilityControls(): void {
   const sceneFilter = qs<HTMLSelectElement>("#sceneFilterSelect");
+  const lyricAnimationPreset = qs<HTMLSelectElement>("#lyricAnimationPreset");
+  const lyricActivePreset = qs<HTMLSelectElement>("#lyricActivePreset");
+  const lyricInactivePreset = qs<HTMLSelectElement>("#lyricInactivePreset");
+
   sceneFilter.value = roomUtility.sceneFilter;
+  lyricAnimationPreset.value = roomUtility.lyricAnimationPreset;
+  lyricActivePreset.value = roomUtility.lyricActivePreset;
+  lyricInactivePreset.value = roomUtility.lyricInactivePreset;
 
   const controls = [
     ["speakerLeftX", "speakerLeftXValue"],
@@ -595,7 +612,9 @@ function bindRoomUtilityControls(): void {
     ["lyricBottomX", "lyricBottomXValue"],
     ["lyricBottomY", "lyricBottomYValue"],
     ["lyricBottomW", "lyricBottomWValue"],
-    ["lyricGuideOpacity", "lyricGuideOpacityValue"]
+    ["lyricGuideOpacity", "lyricGuideOpacityValue"],
+    ["lyricLineCount", "lyricLineCountValue"],
+    ["lyricActiveZoom", "lyricActiveZoomValue"]
   ] as const;
 
   controls.forEach(([inputId, labelId]) => {
@@ -616,6 +635,21 @@ function bindRoomUtilityControls(): void {
     applyRoomUtilitySettings();
   });
 
+  lyricAnimationPreset.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, lyricAnimationPreset: lyricAnimationPreset.value as LyricAnimationPreset };
+    applyRoomUtilitySettings();
+  });
+
+  lyricActivePreset.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, lyricActivePreset: lyricActivePreset.value as ActiveLyricPreset };
+    applyRoomUtilitySettings();
+  });
+
+  lyricInactivePreset.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, lyricInactivePreset: lyricInactivePreset.value as InactiveLyricPreset };
+    applyRoomUtilitySettings();
+  });
+
   qs<HTMLButtonElement>("#saveRoomUtility").addEventListener("click", () => {
     saveRoomUtilitySettings();
     applyRoomUtilitySettings();
@@ -624,6 +658,9 @@ function bindRoomUtilityControls(): void {
   qs<HTMLButtonElement>("#resetRoomUtility").addEventListener("click", () => {
     roomUtility = { ...DEFAULT_ROOM_UTILITY };
     sceneFilter.value = roomUtility.sceneFilter;
+    lyricAnimationPreset.value = roomUtility.lyricAnimationPreset;
+    lyricActivePreset.value = roomUtility.lyricActivePreset;
+    lyricInactivePreset.value = roomUtility.lyricInactivePreset;
     controls.forEach(([inputId, labelId]) => {
       const input = qs<HTMLInputElement>(`#${inputId}`);
       const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter">;
@@ -633,6 +670,10 @@ function bindRoomUtilityControls(): void {
     saveRoomUtilitySettings();
     applyRoomUtilitySettings();
   });
+}
+
+function lerp(start: number, end: number, t: number): number {
+  return start + (end - start) * t;
 }
 
 function applyRoomUtilitySettings(): void {
@@ -652,16 +693,51 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength));
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
   root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
-  root.style.setProperty("--lyrics-top-x", `${roomUtility.lyricTopX}%`);
-  root.style.setProperty("--lyrics-top-y", `${roomUtility.lyricTopY}%`);
-  root.style.setProperty("--lyrics-top-w", `${roomUtility.lyricTopW}%`);
-  root.style.setProperty("--lyrics-mid-x", `${roomUtility.lyricMidX}%`);
-  root.style.setProperty("--lyrics-mid-y", `${roomUtility.lyricMidY}%`);
-  root.style.setProperty("--lyrics-mid-w", `${roomUtility.lyricMidW}%`);
-  root.style.setProperty("--lyrics-bottom-x", `${roomUtility.lyricBottomX}%`);
-  root.style.setProperty("--lyrics-bottom-y", `${roomUtility.lyricBottomY}%`);
-  root.style.setProperty("--lyrics-bottom-w", `${roomUtility.lyricBottomW}%`);
+  root.style.setProperty("--lyrics-top-x", `${roomUtility.lyricTopX}px`);
+  root.style.setProperty("--lyrics-top-y", `${roomUtility.lyricTopY}px`);
+  root.style.setProperty("--lyrics-top-w", `${roomUtility.lyricTopW}px`);
+  root.style.setProperty("--lyrics-mid-x", `${roomUtility.lyricMidX}px`);
+  root.style.setProperty("--lyrics-mid-y", `${roomUtility.lyricMidY}px`);
+  root.style.setProperty("--lyrics-mid-w", `${roomUtility.lyricMidW}px`);
+  root.style.setProperty("--lyrics-bottom-x", `${roomUtility.lyricBottomX}px`);
+  root.style.setProperty("--lyrics-bottom-y", `${roomUtility.lyricBottomY}px`);
+  root.style.setProperty("--lyrics-bottom-w", `${roomUtility.lyricBottomW}px`);
   root.style.setProperty("--lyrics-guide-opacity", String(roomUtility.lyricGuideOpacity));
+  root.style.setProperty("--lyrics-line-count", String(roomUtility.lyricLineCount));
+  root.style.setProperty("--lyrics-active-zoom", String(roomUtility.lyricActiveZoom));
+
+  for (let slot = 0; slot < roomUtility.lyricLineCount; slot += 1) {
+    const t = roomUtility.lyricLineCount <= 1 ? 0.5 : slot / (roomUtility.lyricLineCount - 1);
+    const firstHalf = t <= 0.5;
+    const localT = firstHalf ? t / 0.5 : (t - 0.5) / 0.5;
+
+    const from = firstHalf
+      ? { x: roomUtility.lyricTopX, y: roomUtility.lyricTopY, w: roomUtility.lyricTopW }
+      : { x: roomUtility.lyricMidX, y: roomUtility.lyricMidY, w: roomUtility.lyricMidW };
+
+    const to = firstHalf
+      ? { x: roomUtility.lyricMidX, y: roomUtility.lyricMidY, w: roomUtility.lyricMidW }
+      : { x: roomUtility.lyricBottomX, y: roomUtility.lyricBottomY, w: roomUtility.lyricBottomW };
+
+    root.style.setProperty(`--lyrics-slot-${slot}-x`, `${lerp(from.x, to.x, localT)}px`);
+    root.style.setProperty(`--lyrics-slot-${slot}-y`, `${lerp(from.y, to.y, localT)}px`);
+    root.style.setProperty(`--lyrics-slot-${slot}-w`, `${lerp(from.w, to.w, localT)}px`);
+  }
+
+  root.classList.toggle("lyrics-animation-focus-sweep", roomUtility.lyricAnimationPreset === "focus-sweep");
+  root.classList.toggle("lyrics-animation-soft-slide", roomUtility.lyricAnimationPreset === "soft-slide");
+  root.classList.toggle("lyrics-animation-pulse-pop", roomUtility.lyricAnimationPreset === "pulse-pop");
+  root.classList.toggle("lyrics-animation-instant", roomUtility.lyricAnimationPreset === "instant");
+
+  root.classList.toggle("lyrics-active-amber-crisp", roomUtility.lyricActivePreset === "amber-crisp");
+  root.classList.toggle("lyrics-active-gold-neon", roomUtility.lyricActivePreset === "gold-neon");
+  root.classList.toggle("lyrics-active-warm-white", roomUtility.lyricActivePreset === "warm-white");
+  root.classList.toggle("lyrics-active-violet-glow", roomUtility.lyricActivePreset === "violet-glow");
+
+  root.classList.toggle("lyrics-inactive-soft-ghost", roomUtility.lyricInactivePreset === "soft-ghost");
+  root.classList.toggle("lyrics-inactive-warm-dim", roomUtility.lyricInactivePreset === "warm-dim");
+  root.classList.toggle("lyrics-inactive-clean-readable", roomUtility.lyricInactivePreset === "clean-readable");
+  root.classList.toggle("lyrics-inactive-minimal", roomUtility.lyricInactivePreset === "minimal");
 
   const overlay = qs<HTMLElement>("#roomFilterOverlay");
   overlay.className = `room-filter-overlay ${roomUtility.sceneFilter}`;
@@ -675,7 +751,9 @@ function updateSpeakerPulse(isPlaying: boolean): void {
 }
 
 function setUtilityLabel(id: string, value: number): void {
-  qs(`#${id}`).textContent = value.toFixed(id.includes("Scale") ? 2 : 1);
+  const pxOrCount = id.startsWith("lyric") && !id.includes("GuideOpacity") && !id.includes("ActiveZoom");
+  const decimals = id.includes("Scale") || id.includes("ActiveZoom") || id.includes("GuideOpacity") ? 2 : pxOrCount ? 0 : 1;
+  qs(`#${id}`).textContent = value.toFixed(decimals);
 }
 
 function loadRoomUtilitySettings(): RoomUtilitySettings {

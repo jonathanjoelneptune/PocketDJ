@@ -220,45 +220,77 @@ export function renderShell(state: AppState): void {
 
           <div class="lyrics-boundary-utility">
             <div class="utility-subhead">Lyrics boundary utility</div>
-            <p class="utility-help">Set the ceiling lyric trapezoid with top, middle, and bottom guide lines. The active lyric stays centered on the middle line.</p>
+            <p class="utility-help">Use pixel values to tune the ceiling lyric shape. The active lyric sits on the middle line. Increase guide opacity to see the red boundary lines while tuning.</p>
 
-            <div class="utility-grid lyric-boundary-grid">
-              <label>Top X % <span id="lyricTopXValue">50.0</span>
-                <input id="lyricTopX" type="range" min="0" max="100" step="0.1" value="50.0" />
+            <div class="lyric-utility-stack">
+              <label>Top X px <span id="lyricTopXValue">800</span>
+                <input id="lyricTopX" type="range" min="0" max="1600" step="1" value="800" />
               </label>
-              <label>Top Y % <span id="lyricTopYValue">7.5</span>
-                <input id="lyricTopY" type="range" min="0" max="45" step="0.1" value="7.5" />
+              <label>Top Y px <span id="lyricTopYValue">70</span>
+                <input id="lyricTopY" type="range" min="0" max="360" step="1" value="70" />
               </label>
-              <label>Top width % <span id="lyricTopWValue">70.0</span>
-                <input id="lyricTopW" type="range" min="20" max="100" step="0.1" value="70.0" />
-              </label>
-
-              <label>Middle X % <span id="lyricMidXValue">50.0</span>
-                <input id="lyricMidX" type="range" min="0" max="100" step="0.1" value="50.0" />
-              </label>
-              <label>Middle Y % <span id="lyricMidYValue">18.0</span>
-                <input id="lyricMidY" type="range" min="0" max="55" step="0.1" value="18.0" />
-              </label>
-              <label>Middle width % <span id="lyricMidWValue">64.0</span>
-                <input id="lyricMidW" type="range" min="20" max="100" step="0.1" value="64.0" />
+              <label>Top width px <span id="lyricTopWValue">980</span>
+                <input id="lyricTopW" type="range" min="120" max="1600" step="1" value="980" />
               </label>
 
-              <label>Bottom X % <span id="lyricBottomXValue">50.0</span>
-                <input id="lyricBottomX" type="range" min="0" max="100" step="0.1" value="50.0" />
+              <label>Middle X px <span id="lyricMidXValue">800</span>
+                <input id="lyricMidX" type="range" min="0" max="1600" step="1" value="800" />
               </label>
-              <label>Bottom Y % <span id="lyricBottomYValue">29.0</span>
-                <input id="lyricBottomY" type="range" min="0" max="65" step="0.1" value="29.0" />
+              <label>Middle Y px <span id="lyricMidYValue">155</span>
+                <input id="lyricMidY" type="range" min="0" max="420" step="1" value="155" />
               </label>
-              <label>Bottom width % <span id="lyricBottomWValue">58.0</span>
-                <input id="lyricBottomW" type="range" min="20" max="100" step="0.1" value="58.0" />
+              <label>Middle width px <span id="lyricMidWValue">880</span>
+                <input id="lyricMidW" type="range" min="120" max="1600" step="1" value="880" />
               </label>
 
-              <label>Guide opacity <span id="lyricGuideOpacityValue">0.0</span>
+              <label>Bottom X px <span id="lyricBottomXValue">800</span>
+                <input id="lyricBottomX" type="range" min="0" max="1600" step="1" value="800" />
+              </label>
+              <label>Bottom Y px <span id="lyricBottomYValue">255</span>
+                <input id="lyricBottomY" type="range" min="0" max="520" step="1" value="255" />
+              </label>
+              <label>Bottom width px <span id="lyricBottomWValue">780</span>
+                <input id="lyricBottomW" type="range" min="120" max="1600" step="1" value="780" />
+              </label>
+
+              <label>Number of lyric lines <span id="lyricLineCountValue">7</span>
+                <input id="lyricLineCount" type="range" min="3" max="11" step="2" value="7" />
+              </label>
+              <label>Active lyric zoom <span id="lyricActiveZoomValue">1.10</span>
+                <input id="lyricActiveZoom" type="range" min="1" max="1.35" step="0.01" value="1.10" />
+              </label>
+              <label>Guide opacity <span id="lyricGuideOpacityValue">0.00</span>
                 <input id="lyricGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.0" />
               </label>
             </div>
-          </div>
 
+            <div class="lyric-preset-grid">
+              <label>Animation preset
+                <select id="lyricAnimationPreset">
+                  <option value="focus-sweep">Focus sweep</option>
+                  <option value="soft-slide">Soft slide</option>
+                  <option value="pulse-pop">Pulse pop</option>
+                  <option value="instant">Instant</option>
+                </select>
+              </label>
+              <label>Active lyric preset
+                <select id="lyricActivePreset">
+                  <option value="amber-crisp">Amber crisp</option>
+                  <option value="gold-neon">Gold neon</option>
+                  <option value="warm-white">Warm white</option>
+                  <option value="violet-glow">Violet glow</option>
+                </select>
+              </label>
+              <label>Inactive lyric preset
+                <select id="lyricInactivePreset">
+                  <option value="soft-ghost">Soft ghost</option>
+                  <option value="warm-dim">Warm dim</option>
+                  <option value="clean-readable">Clean readable</option>
+                  <option value="minimal">Minimal</option>
+                </select>
+              </label>
+            </div>
+          </div>
           <div class="button-grid utility-buttons">
             <button id="saveRoomUtility" class="secondary" type="button">Save room utility</button>
             <button id="resetRoomUtility" class="secondary" type="button">Reset utility</button>
@@ -694,8 +726,12 @@ export function updateLyricsCeiling(
       : lyrics.plainLyrics.split(/\r?\n/).map((text) => ({ timeMs: null, text }));
 
   const cleanLines = sourceLines.filter((line) => line.text.trim());
+  const rootStyles = getComputedStyle(document.documentElement);
+  const requestedLineCount = Number(rootStyles.getPropertyValue("--lyrics-line-count")) || 7;
+  const lineCount = Math.max(3, Math.min(11, Math.round(requestedLineCount)));
+  const halfWindow = Math.floor(lineCount / 2);
   const centerIndex = activeIndex >= 0 ? activeIndex : 0;
-  const visibleSlots = [-3, -2, -1, 0, 1, 2, 3];
+  const visibleSlots = Array.from({ length: lineCount }, (_, slotIndex) => slotIndex - halfWindow);
 
   block.innerHTML = visibleSlots
     .map((offset, slotIndex) => {
@@ -707,7 +743,8 @@ export function updateLyricsCeiling(
 
       return `
         <div
-          class="lyrics-line lyrics-slot-${slotIndex} ${line ? "" : "lyrics-line-blank"} ${isActive ? "lyrics-line-active" : ""} ${isPast ? "lyrics-line-past" : ""} ${isNear ? "lyrics-line-near" : ""}"
+          class="lyrics-line ${line ? "" : "lyrics-line-blank"} ${isActive ? "lyrics-line-active" : ""} ${isPast ? "lyrics-line-past" : ""} ${isNear ? "lyrics-line-near" : ""}"
+          style="left: var(--lyrics-slot-${slotIndex}-x); top: var(--lyrics-slot-${slotIndex}-y); width: var(--lyrics-slot-${slotIndex}-w);"
           data-time="${line?.timeMs ?? ""}"
         >
           ${line ? escapeHtml(line.text) : ""}
