@@ -3208,3 +3208,177 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .control-card-locked {
   border-color: rgba(255, 184, 76, 0.28) !important;
 }
+
+
+/* Final side-panel lock state, dropdown, and small-window responsive fixes */
+
+/* Locked side-panel lock button matches the connected pill.
+   Unlocked lock button matches the current playing/idle pill. */
+.panel-lock-toggle {
+  border-color: rgba(255, 184, 76, 0.24) !important;
+  background: rgba(36, 23, 38, 0.54) !important;
+  color: rgba(255, 218, 155, 0.90) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255,184,76,0.035),
+    0 0 12px rgba(0,0,0,0.14) !important;
+}
+
+.panel-lock-active {
+  color: #f7d68c !important;
+  border-color: rgba(255, 184, 76, 0.38) !important;
+  background: rgba(72, 43, 21, 0.44) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255,184,76,0.050),
+    0 0 12px rgba(255,184,76,0.10) !important;
+}
+
+/* The side-panel lock icon stays a single centered CSS-drawn shape. */
+.panel-lock-toggle::before,
+.floor-lock-toggle::before {
+  top: 38% !important;
+}
+
+.panel-lock-toggle::after,
+.floor-lock-toggle::after {
+  top: 59% !important;
+}
+
+/* Center the Connected dropdown directly below the Connected pill and remove the heavy menu box. */
+.connect-pill-wrap {
+  position: relative !important;
+}
+
+.connect-dropdown {
+  left: 50% !important;
+  right: auto !important;
+  top: calc(100% + 7px) !important;
+  min-width: 0 !important;
+  width: max-content !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: translate(-50%, -4px) !important;
+  z-index: 40 !important;
+}
+
+.connect-dropdown-open {
+  transform: translate(-50%, 0) !important;
+}
+
+.connect-dropdown button {
+  width: auto !important;
+  min-width: calc(var(--room-w) * 0.065) !important;
+  height: max(28px, calc(var(--room-h) * 0.036)) !important;
+  padding: 0 calc(var(--room-w) * 0.010) !important;
+  border-radius: 999px !important;
+  color: rgba(255, 218, 155, 0.96) !important;
+  background: rgba(36, 23, 38, 0.88) !important;
+  border: 1px solid rgba(255, 184, 76, 0.22) !important;
+  box-shadow:
+    0 12px 26px rgba(0,0,0,0.28),
+    inset 0 0 12px rgba(255,184,76,0.04) !important;
+}
+
+/* Better responsive panel width:
+   Fullscreen remains around 25% of room. Smaller windows can use up to 80%
+   of the actual browser viewport so it never jumps left or becomes unreadable. */
+.control-card {
+  --side-panel-target: max(360px, calc(var(--room-w) * 0.25));
+  --side-panel-width: min(80vw, var(--side-panel-target)) !important;
+  width: var(--side-panel-width) !important;
+  max-width: var(--side-panel-width) !important;
+
+  /* Clamp to the visible viewport so the panel stays on the right even in very small windows. */
+  right: max(8px, calc((100vw - var(--room-w)) / 2)) !important;
+  left: auto !important;
+}
+
+/* If 360px cannot fit, use most of the viewport. */
+@media (max-width: 460px) {
+  .control-card {
+    --side-panel-width: 80vw !important;
+    right: 8px !important;
+  }
+}
+
+/* Keep the right-edge hover tab aligned to the visible right side, too. */
+.side-panel-tab {
+  right: max(0px, calc((100vw - var(--room-w)) / 2)) !important;
+}
+
+/* Do not let side-panel text shrink below the bottom-left Controls button feel. */
+.control-card,
+.control-card button,
+.control-card summary,
+.control-card label,
+.control-card span,
+.control-card strong,
+.control-card small,
+.control-card .track-title,
+.control-card .track-artist {
+  font-size-adjust: none;
+}
+
+.mini-brand {
+  font-size: clamp(0.52rem, calc(var(--room-w) * 0.0046), 0.74rem) !important;
+}
+
+.mode-pill,
+.connect-pill,
+.panel-lock-toggle,
+.panel-close,
+.panel-icon-button,
+.panel-play-button,
+.dev-tools button,
+.dev-button-grid button,
+.utility-buttons button,
+.connect-dropdown button {
+  font-size: clamp(0.42rem, calc(var(--room-w) * 0.00345), 0.58rem) !important;
+}
+
+.panel-shuffle::before,
+.panel-repeat::before {
+  font-size: clamp(0.42rem, calc(var(--room-w) * 0.00345), 0.58rem) !important;
+}
+
+.now-card-compact .track-title {
+  font-size: clamp(0.72rem, calc(var(--room-w) * 0.0075), 0.96rem) !important;
+}
+
+.now-card-compact .track-artist {
+  font-size: clamp(0.58rem, calc(var(--room-w) * 0.0060), 0.78rem) !important;
+}
+
+.now-card-compact .progress-row span,
+.panel-volume-row {
+  font-size: clamp(0.44rem, calc(var(--room-w) * 0.0048), 0.62rem) !important;
+}
+
+.dev-tools > summary {
+  font-size: clamp(0.48rem, calc(var(--room-w) * 0.0050), 0.66rem) !important;
+}
+
+/* In compact windows, preserve usability by letting the card breathe horizontally. */
+@media (max-width: 760px) {
+  .control-card {
+    --side-panel-width: min(80vw, max(320px, calc(var(--room-w) * 0.52))) !important;
+    right: max(8px, calc((100vw - var(--room-w)) / 2)) !important;
+  }
+
+  .now-card-compact {
+    grid-template-columns: clamp(54px, calc(var(--room-w) * 0.085), 72px) minmax(0, 1fr) !important;
+  }
+
+  .now-card-compact .art {
+    width: clamp(54px, calc(var(--room-w) * 0.085), 72px) !important;
+    height: clamp(54px, calc(var(--room-w) * 0.085), 72px) !important;
+  }
+}
+
+/* Slightly stronger small-window floor lock centering, same single-row lock shape. */
+.floor-lock-toggle {
+  width: 38px !important;
+  height: 38px !important;
+}

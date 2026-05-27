@@ -118,8 +118,7 @@ function bindControls(): void {
   });
 
   qs<HTMLButtonElement>("#hidePanel").addEventListener("click", () => {
-    sidePanelLocked = false;
-    updateSidePanelLockUi();
+    setSidePanelLocked(false);
     closeSidePanel();
   });
 
