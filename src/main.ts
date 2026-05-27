@@ -110,13 +110,13 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
   lyricTopX: 881,
-  lyricTopY: 66,
+  lyricTopY: 42,
   lyricTopW: 1177,
   lyricMidX: 882,
-  lyricMidY: 254,
+  lyricMidY: 192,
   lyricMidW: 796,
   lyricBottomX: 882,
-  lyricBottomY: 432,
+  lyricBottomY: 346,
   lyricBottomW: 544,
   lyricGuideOpacity: 0.0,
   lyricLineCount: 11,
@@ -128,7 +128,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricActiveLayout: "two-line"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v2";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v3";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -792,7 +792,7 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
       return { ...DEFAULT_ROOM_UTILITY, ...parsed };
     }
 
-    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v1");
+    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
     if (!oldRaw) return { ...DEFAULT_ROOM_UTILITY };
 
     const oldParsed = JSON.parse(oldRaw) as Partial<RoomUtilitySettings>;

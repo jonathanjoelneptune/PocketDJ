@@ -39,6 +39,7 @@ export function renderShell(state: AppState): void {
               <div class="lyrics-placeholder">Lyrics will appear on the ceiling</div>
             </div>
           </div>
+          <div id="activeLyricsBlock" class="active-lyrics-block" aria-hidden="true"></div>
         </div>
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
@@ -229,8 +230,8 @@ export function renderShell(state: AppState): void {
               <label>Top X px <span id="lyricTopXValue">881</span>
                 <input id="lyricTopX" type="range" min="0" max="1600" step="1" value="881" />
               </label>
-              <label>Top Y px <span id="lyricTopYValue">66</span>
-                <input id="lyricTopY" type="range" min="0" max="360" step="1" value="66" />
+              <label>Top Y px <span id="lyricTopYValue">42</span>
+                <input id="lyricTopY" type="range" min="0" max="360" step="1" value="42" />
               </label>
               <label>Top width px <span id="lyricTopWValue">1177</span>
                 <input id="lyricTopW" type="range" min="120" max="1600" step="1" value="1177" />
@@ -239,8 +240,8 @@ export function renderShell(state: AppState): void {
               <label>Middle X px <span id="lyricMidXValue">882</span>
                 <input id="lyricMidX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Middle Y px <span id="lyricMidYValue">254</span>
-                <input id="lyricMidY" type="range" min="0" max="420" step="1" value="254" />
+              <label>Middle Y px <span id="lyricMidYValue">192</span>
+                <input id="lyricMidY" type="range" min="0" max="420" step="1" value="192" />
               </label>
               <label>Middle width px <span id="lyricMidWValue">796</span>
                 <input id="lyricMidW" type="range" min="120" max="1600" step="1" value="796" />
@@ -249,8 +250,8 @@ export function renderShell(state: AppState): void {
               <label>Bottom X px <span id="lyricBottomXValue">882</span>
                 <input id="lyricBottomX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Bottom Y px <span id="lyricBottomYValue">432</span>
-                <input id="lyricBottomY" type="range" min="0" max="520" step="1" value="432" />
+              <label>Bottom Y px <span id="lyricBottomYValue">346</span>
+                <input id="lyricBottomY" type="range" min="0" max="520" step="1" value="346" />
               </label>
               <label>Bottom width px <span id="lyricBottomWValue">544</span>
                 <input id="lyricBottomW" type="range" min="120" max="1600" step="1" value="544" />
@@ -711,6 +712,7 @@ export function updateLyricsCeiling(
 ): void {
   const ceiling = qs<HTMLElement>("#lyricsCeiling");
   const block = qs<HTMLElement>("#lyricsBlock");
+  const activeBlock = qs<HTMLElement>("#activeLyricsBlock");
 
   updateLyricsToggleUi(lyrics.status, enabled);
 
@@ -720,6 +722,7 @@ export function updateLyricsCeiling(
   if (!enabled) {
     lastLyricsRenderSignature = "";
     block.innerHTML = "";
+    activeBlock.innerHTML = "";
     return;
   }
 
@@ -729,12 +732,14 @@ export function updateLyricsCeiling(
   if (lyrics.status === "loading" || lyrics.status === "idle") {
     lastLyricsRenderSignature = "";
     block.innerHTML = "";
+    activeBlock.innerHTML = "";
     return;
   }
 
   if (lyrics.status === "instrumental" || lyrics.status === "not-found" || lyrics.status === "error") {
     lastLyricsRenderSignature = "";
     block.innerHTML = "";
+    activeBlock.innerHTML = "";
     return;
   }
 
@@ -759,19 +764,35 @@ export function updateLyricsCeiling(
   if (renderSignature === lastLyricsRenderSignature) return;
   lastLyricsRenderSignature = renderSignature;
 
+  const activeLine = cleanLines[centerIndex];
+  const activeTextLength = activeLine?.text.length ?? 0;
+  const activeScale = getLyricLineScale(activeTextLength, true);
+
+  activeBlock.innerHTML = activeLine
+    ? `
+      <div
+        class="active-lyrics-line"
+        style="--lyrics-line-scale: ${activeScale};"
+        data-time="${activeLine.timeMs ?? ""}"
+      >
+        ${escapeHtml(activeLine.text)}
+      </div>
+    `
+    : "";
+
   block.innerHTML = visibleSlots
     .map((offset, slotIndex) => {
       const absoluteIndex = centerIndex + offset;
       const line = cleanLines[absoluteIndex];
-      const isActive = offset === 0 && Boolean(line);
+      const isCenterSlot = offset === 0;
       const isPast = offset < 0;
       const isNear = Math.abs(offset) <= 2;
       const textLength = line?.text.length ?? 0;
-      const lineScale = getLyricLineScale(textLength, isActive);
+      const lineScale = getLyricLineScale(textLength, false);
 
       return `
         <div
-          class="lyrics-line ${line ? "" : "lyrics-line-blank"} ${isActive ? "lyrics-line-active" : ""} ${isPast ? "lyrics-line-past" : ""} ${isNear ? "lyrics-line-near" : ""}"
+          class="lyrics-line ${line ? "" : "lyrics-line-blank"} ${isCenterSlot ? "lyrics-line-center-hidden" : ""} ${isPast ? "lyrics-line-past" : ""} ${isNear ? "lyrics-line-near" : ""}"
           style="left: var(--lyrics-slot-${slotIndex}-x); top: var(--lyrics-slot-${slotIndex}-y); width: var(--lyrics-slot-${slotIndex}-w); --lyrics-line-scale: ${lineScale};"
           data-time="${line?.timeMs ?? ""}"
         >
