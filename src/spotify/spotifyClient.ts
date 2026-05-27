@@ -174,6 +174,19 @@ export async function seekSpotify(clientId: string, positionMs: number): Promise
   await spotifyPlayerCommand(clientId, `/seek?position_ms=${clampedPosition}`, { method: "PUT" });
 }
 
+export async function setSpotifyVolume(clientId: string, volumePercent: number): Promise<void> {
+  const clampedVolume = Math.max(0, Math.min(100, Math.round(volumePercent)));
+  await spotifyPlayerCommand(clientId, `/volume?volume_percent=${clampedVolume}`, { method: "PUT" });
+}
+
+export async function setSpotifyShuffle(clientId: string, enabled: boolean): Promise<void> {
+  await spotifyPlayerCommand(clientId, `/shuffle?state=${enabled ? "true" : "false"}`, { method: "PUT" });
+}
+
+export async function setSpotifyRepeat(clientId: string, mode: "off" | "track" | "context"): Promise<void> {
+  await spotifyPlayerCommand(clientId, `/repeat?state=${mode}`, { method: "PUT" });
+}
+
 export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedTrack> {
   const token = await getUsableToken(clientId);
   if (!token) {

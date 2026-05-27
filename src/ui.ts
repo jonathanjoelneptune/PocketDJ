@@ -96,13 +96,14 @@ export function renderShell(state: AppState): void {
           </div>
           <div class="brand-actions">
             <div class="mode-pill" id="modePill">IDLE</div>
+            <div class="connect-pill-wrap">
+              <button id="connectSpotify" class="connect-pill disconnected" type="button" aria-haspopup="true" aria-expanded="false">Connect</button>
+              <div id="connectDropdown" class="connect-dropdown">
+                <button id="disconnectSpotify" type="button">Disconnect</button>
+              </div>
+            </div>
             <button id="hidePanel" class="panel-close" type="button" aria-label="Hide controls">×</button>
           </div>
-        </div>
-
-        <div id="connectionBanner" class="connection-banner disconnected">
-          <strong>Spotify is not connected</strong>
-          <span>Paste your Client ID, then connect Spotify from this hosted GitHub Pages URL.</span>
         </div>
 
         <div class="now-card">
@@ -118,24 +119,34 @@ export function renderShell(state: AppState): void {
           </div>
         </div>
 
-        <div class="redirect-card">
-          <div class="field-label">Spotify Redirect URI</div>
-          <code>${escapeHtml(state.redirectUri)}</code>
-          <p>Add this exact hosted page URL in Spotify before connecting. No localhost redirect is needed.</p>
-        </div>
+        <section class="spotify-utility-panel" aria-label="Spotify utility controls">
+          <div class="utility-row">
+            <label for="spotifyVolume">Volume <span id="spotifyVolumeValue">70</span></label>
+            <input id="spotifyVolume" type="range" min="0" max="100" step="1" value="70" />
+          </div>
 
-        <label class="field-label" for="clientIdInput">Spotify Client ID</label>
-        <input id="clientIdInput" class="text-input" value="${escapeHtml(state.spotifyClientId)}" placeholder="Paste client ID from Spotify Dashboard" />
+          <div class="spotify-toggle-grid">
+            <button id="spotifyShuffle" class="secondary spotify-toggle" type="button">Shuffle: Off</button>
+            <button id="spotifyRepeat" class="secondary spotify-toggle" type="button">Repeat: off</button>
+          </div>
 
-        <div class="button-grid">
-          <button id="connectSpotify" class="primary">Connect Spotify</button>
-          <button id="disconnectSpotify" class="secondary">Disconnect</button>
-          <button id="demoButton" class="secondary">Demo Mode</button>
-          <button id="debugButton" class="secondary">Debug</button>
-        </div>
+          <div class="phase2-placeholder">
+            <span>Phase 2 ready</span>
+            <small>Search, playlists, and library browser can land here next.</small>
+          </div>
+        </section>
 
+        <details class="dev-tools">
+          <summary>Dev tools</summary>
 
-        <details class="room-utility-controls" open>
+          <div class="button-grid dev-button-grid">
+            <button id="demoButton" class="secondary" type="button">Demo Mode</button>
+            <button id="debugButton" class="secondary" type="button">Debug</button>
+          </div>
+
+          <input id="clientIdInput" type="hidden" value="${escapeHtml(state.spotifyClientId || "37da51db24384ad3a07c222f71b1525e")}" />
+
+          <details class="room-utility-controls">
           <summary>Room utility controls</summary>
 
           <label class="field-label" for="sceneFilterSelect">Scene filter</label>
@@ -204,7 +215,7 @@ export function renderShell(state: AppState): void {
           </div>
         </details>
 
-        <details class="setup-notes">
+          <details class="setup-notes">
           <summary>GitHub Pages setup</summary>
           <ol>
             <li>Deploy this repo with GitHub Actions Pages.</li>
@@ -214,7 +225,8 @@ export function renderShell(state: AppState): void {
           </ol>
         </details>
 
-        <pre id="debugPanel" class="debug-panel" hidden></pre>
+          <pre id="debugPanel" class="debug-panel" hidden></pre>
+        </details>
       </aside>
     </main>
   `;
@@ -548,22 +560,25 @@ function idleMarqueePhrase(): string {
 }
 
 function updateConnectionBanner(track: NormalizedTrack): void {
-  const banner = qs<HTMLDivElement>("#connectionBanner");
+  const pill = qs<HTMLButtonElement>("#connectSpotify");
+  const dropdown = qs<HTMLElement>("#connectDropdown");
 
   if (track.source === "demo") {
-    banner.className = "connection-banner demo";
-    banner.innerHTML = "<strong>Demo mode is running</strong><span>Spotify is not connected. The room is using sample playback data.</span>";
+    pill.className = "connect-pill demo";
+    pill.textContent = "Demo";
+    dropdown.classList.remove("connect-dropdown-open");
     return;
   }
 
   if (track.isAuthenticated) {
-    banner.className = "connection-banner connected";
-    banner.innerHTML = "<strong>Spotify connected</strong><span>The control panel is hidden automatically so the room stays clean.</span>";
+    pill.className = "connect-pill connected";
+    pill.textContent = "Connected";
     return;
   }
 
-  banner.className = "connection-banner disconnected";
-  banner.innerHTML = "<strong>Spotify is not connected</strong><span>Paste your Client ID, then connect Spotify from this hosted GitHub Pages URL.</span>";
+  pill.className = "connect-pill disconnected";
+  pill.textContent = "Connect";
+  dropdown.classList.remove("connect-dropdown-open");
 }
 
 function setTextIfChanged(element: Element, value: string): void {

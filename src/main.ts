@@ -2,13 +2,15 @@ import "./styles.css";
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, previousSpotifyTrack, seekSpotify, startSpotifyLogin } from "./spotify/spotifyClient";
+import { disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, previousSpotifyTrack, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import { qs } from "./utils/dom";
 import { renderShell, setControlPanelOpen, updatePlaybackUi } from "./ui";
 
+const STANDARD_SPOTIFY_CLIENT_ID = "37da51db24384ad3a07c222f71b1525e";
+
 const state: AppState = {
-  spotifyClientId: loadClientId(),
+  spotifyClientId: loadClientId() || STANDARD_SPOTIFY_CLIENT_ID,
   redirectUri: getDefaultRedirectUri(),
   playback: emptyTrack(),
   djMode: "idle",
@@ -23,6 +25,9 @@ let panelAutoHiddenAfterConnect = false;
 let floorControlsOpen = false;
 let floorControlsLocked = false;
 let floorControlsHideTimer: number | null = null;
+let phase2ShuffleEnabled = false;
+let phase2RepeatMode: "off" | "context" | "track" = "off";
+let phase2Volume = 70;
 
 
 type SceneFilter =
@@ -77,6 +82,7 @@ let roomUtility = loadRoomUtilitySettings();
 
 
 async function boot(): Promise<void> {
+  if (!loadClientId()) saveClientId(STANDARD_SPOTIFY_CLIENT_ID);
   renderShell(state);
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
   bindControls();
@@ -114,8 +120,14 @@ function bindControls(): void {
   bindFloorPlaybackControls();
 
   qs<HTMLButtonElement>("#connectSpotify").addEventListener("click", async () => {
-    const clientId = qs<HTMLInputElement>("#clientIdInput").value.trim();
-    await startSpotifyLogin(clientId, state.redirectUri);
+    if (loadTokens()) {
+      qs<HTMLElement>("#connectDropdown").classList.toggle("connect-dropdown-open");
+      return;
+    }
+
+    state.spotifyClientId = STANDARD_SPOTIFY_CLIENT_ID;
+    saveClientId(state.spotifyClientId);
+    await startSpotifyLogin(state.spotifyClientId, state.redirectUri);
   });
 
   qs<HTMLButtonElement>("#disconnectSpotify").addEventListener("click", () => {
@@ -126,6 +138,7 @@ function bindControls(): void {
     panelAutoHiddenAfterConnect = false;
     setControlPanelOpen(true);
     updatePlaybackUi(state.playback, state.debugOpen);
+    qs<HTMLElement>("#connectDropdown").classList.remove("connect-dropdown-open");
   });
 
   qs<HTMLButtonElement>("#demoButton").addEventListener("click", () => {
@@ -139,6 +152,34 @@ function bindControls(): void {
   qs<HTMLButtonElement>("#debugButton").addEventListener("click", () => {
     state.debugOpen = !state.debugOpen;
     updatePlaybackUi(lastPollError ? { ...state.playback, artist: `${state.playback.artist} | ${lastPollError}` } : state.playback, state.debugOpen);
+  });
+
+  qs<HTMLInputElement>("#spotifyVolume").addEventListener("input", (event) => {
+    const input = event.target as HTMLInputElement;
+    phase2Volume = Number(input.value);
+    qs<HTMLElement>("#spotifyVolumeValue").textContent = String(phase2Volume);
+  });
+
+  qs<HTMLInputElement>("#spotifyVolume").addEventListener("change", () => {
+    void runSpotifyPlaybackCommand(async () => {
+      await setSpotifyVolume(state.spotifyClientId, phase2Volume);
+    });
+  });
+
+  qs<HTMLButtonElement>("#spotifyShuffle").addEventListener("click", () => {
+    phase2ShuffleEnabled = !phase2ShuffleEnabled;
+    updatePhase2SpotifyControls();
+    void runSpotifyPlaybackCommand(async () => {
+      await setSpotifyShuffle(state.spotifyClientId, phase2ShuffleEnabled);
+    });
+  });
+
+  qs<HTMLButtonElement>("#spotifyRepeat").addEventListener("click", () => {
+    phase2RepeatMode = phase2RepeatMode === "off" ? "context" : phase2RepeatMode === "context" ? "track" : "off";
+    updatePhase2SpotifyControls();
+    void runSpotifyPlaybackCommand(async () => {
+      await setSpotifyRepeat(state.spotifyClientId, phase2RepeatMode);
+    });
   });
 
   qs<HTMLInputElement>("#clientIdInput").addEventListener("change", (event) => {
@@ -284,6 +325,21 @@ async function runSpotifyPlaybackCommand(command: () => Promise<void>): Promise<
     console.warn(lastPollError);
     updatePlaybackUi({ ...state.playback, artist: `${state.playback.artist} | ${lastPollError}` }, state.debugOpen);
   }
+}
+
+function updatePhase2SpotifyControls(): void {
+  const shuffle = qs<HTMLButtonElement>("#spotifyShuffle");
+  const repeat = qs<HTMLButtonElement>("#spotifyRepeat");
+  const volume = qs<HTMLInputElement>("#spotifyVolume");
+
+  shuffle.classList.toggle("spotify-control-active", phase2ShuffleEnabled);
+  shuffle.textContent = phase2ShuffleEnabled ? "Shuffle: On" : "Shuffle: Off";
+
+  repeat.classList.toggle("spotify-control-active", phase2RepeatMode !== "off");
+  repeat.textContent = `Repeat: ${phase2RepeatMode}`;
+
+  volume.value = String(phase2Volume);
+  qs<HTMLElement>("#spotifyVolumeValue").textContent = String(phase2Volume);
 }
 
 function bindRoomUtilityControls(): void {
