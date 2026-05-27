@@ -203,10 +203,12 @@ button {
 .marquee-artist {
   --marquee-title-pan: 0px;
   --marquee-artist-pan: 0px;
-  max-width: 100%;
+  width: max-content;
+  max-width: none;
   overflow: visible;
   white-space: nowrap;
   text-align: center;
+  justify-self: center;
   font-family: "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, monospace;
   color: #fbbf24;
   text-shadow:
@@ -242,20 +244,24 @@ button {
 }
 
 .marquee-title-short .marquee-title {
+  justify-self: center;
   animation-name: marqueeLedGlow;
 }
 
 .marquee-title-long .marquee-title {
+  justify-self: start;
   animation:
     marqueeTitlePingPong 10s ease-in-out infinite,
     marqueeLedGlow 920ms ease-in-out infinite alternate;
 }
 
 .marquee-artist-short .marquee-artist {
+  justify-self: center;
   transform: translateX(0);
 }
 
 .marquee-artist-long .marquee-artist {
+  justify-self: start;
   animation:
     marqueeArtistPingPong 10s ease-in-out infinite,
     marqueeLedGlow 1150ms ease-in-out infinite alternate;
@@ -281,7 +287,7 @@ button {
 /* Song-change movement is handled by .marquee-exiting and .marquee-entering. */
 
 @keyframes marqueeTitlePingPong {
-  0%, 18% {
+  0%, 16% {
     transform: translateX(0);
   }
   48%, 64% {
@@ -293,7 +299,7 @@ button {
 }
 
 @keyframes marqueeArtistPingPong {
-  0%, 18% {
+  0%, 16% {
     transform: translateX(0);
   }
   48%, 64% {
@@ -1103,4 +1109,12 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .marquee-content.marquee-entering .marquee-artist,
 .marquee-content.marquee-exiting .marquee-artist {
   animation-fill-mode: both;
+}
+
+
+.marquee-content.marquee-entering .marquee-title,
+.marquee-content.marquee-exiting .marquee-title,
+.marquee-content.marquee-entering .marquee-artist,
+.marquee-content.marquee-exiting .marquee-artist {
+  justify-self: center;
 }

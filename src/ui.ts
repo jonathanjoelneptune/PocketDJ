@@ -286,16 +286,27 @@ function updateMarquee(track: NormalizedTrack): void {
 }
 
 function updateMarqueeRowPan(marquee: HTMLElement, titleEl: HTMLElement, artistEl: HTMLElement): void {
-  const titleOverflow = Math.max(0, titleEl.scrollWidth - titleEl.clientWidth + 24);
-  const artistOverflow = Math.max(0, artistEl.scrollWidth - artistEl.clientWidth + 24);
+  const viewport = marquee.querySelector<HTMLElement>(".marquee-viewport");
+  const availableWidth = Math.max(0, (viewport?.clientWidth || marquee.clientWidth) - 10);
+
+  const titleOverflow = getRowOverflowPx(titleEl, availableWidth);
+  const artistOverflow = getRowOverflowPx(artistEl, availableWidth);
 
   titleEl.style.setProperty("--marquee-title-pan", `${-titleOverflow}px`);
   artistEl.style.setProperty("--marquee-artist-pan", `${-artistOverflow}px`);
 
-  marquee.classList.toggle("marquee-title-long", titleOverflow > 4);
-  marquee.classList.toggle("marquee-artist-long", artistOverflow > 4);
-  marquee.classList.toggle("marquee-title-short", titleOverflow <= 4);
-  marquee.classList.toggle("marquee-artist-short", artistOverflow <= 4);
+  marquee.classList.toggle("marquee-title-long", titleOverflow > 6);
+  marquee.classList.toggle("marquee-artist-long", artistOverflow > 6);
+  marquee.classList.toggle("marquee-title-short", titleOverflow <= 6);
+  marquee.classList.toggle("marquee-artist-short", artistOverflow <= 6);
+}
+
+function getRowOverflowPx(element: HTMLElement, availableWidth: number): number {
+  const measuredWidth = element.scrollWidth;
+  const overflow = measuredWidth - availableWidth;
+
+  // Add a small tail so the last characters fully clear the right LED edge before returning.
+  return Math.max(0, Math.ceil(overflow + 36));
 }
 
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
