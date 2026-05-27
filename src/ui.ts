@@ -146,17 +146,17 @@ export function renderShell(state: AppState): void {
             <label>Speaker pulse <span id="speakerPulseValue">0.5</span>
               <input id="speakerPulse" type="range" min="0" max="1" step="0.01" value="0.5" />
             </label>
-            <label>Speaker pulse X % <span id="speakerPulseXValue">53.0</span>
-              <input id="speakerPulseX" type="range" min="20" max="80" step="0.1" value="53.0" />
+            <label>Speaker pulse X % <span id="speakerPulseXValue">50.9</span>
+              <input id="speakerPulseX" type="range" min="20" max="80" step="0.1" value="50.9" />
             </label>
-            <label>Speaker pulse Y % <span id="speakerPulseYValue">50.4</span>
-              <input id="speakerPulseY" type="range" min="20" max="85" step="0.1" value="50.4" />
+            <label>Speaker pulse Y % <span id="speakerPulseYValue">48.8</span>
+              <input id="speakerPulseY" type="range" min="20" max="85" step="0.1" value="48.8" />
             </label>
-            <label>Speaker pulse size % <span id="speakerPulseSizeValue">48.2</span>
-              <input id="speakerPulseSize" type="range" min="12" max="80" step="0.1" value="48.2" />
+            <label>Speaker pulse size % <span id="speakerPulseSizeValue">55.3</span>
+              <input id="speakerPulseSize" type="range" min="12" max="80" step="0.1" value="55.3" />
             </label>
-            <label>Driver warp opacity <span id="speakerWarpOpacityValue">1.00</span>
-              <input id="speakerWarpOpacity" type="range" min="0" max="1" step="0.01" value="1.00" />
+            <label>Driver warp opacity <span id="speakerWarpOpacityValue">1.0</span>
+              <input id="speakerWarpOpacity" type="range" min="0" max="1" step="0.01" value="1.0" />
             </label>
           </div>
 
