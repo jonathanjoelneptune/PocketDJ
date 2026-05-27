@@ -272,7 +272,7 @@ function updateFloorControls(track: NormalizedTrack): void {
   const canControl = track.source === "spotify" && track.isAuthenticated;
   floor.classList.toggle("floor-player-playing", track.isPlaying);
   toggle.classList.toggle("floor-controls-toggle-playing", track.isPlaying);
-  playIcon.textContent = track.isPlaying ? "Ⅱ" : "▶";
+  playIcon.textContent = track.isPlaying ? "||" : "▶";
   playButton.setAttribute("aria-label", track.isPlaying ? "Pause Spotify" : "Play Spotify");
 
   const progressPercent = track.durationMs > 0
