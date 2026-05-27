@@ -528,7 +528,11 @@ button {
   position: absolute;
   top: var(--speaker-y);
   width: clamp(58px, 5.6%, 120px);
-  aspect-ratio: 0.58;
+
+  /* Lock the speaker canvas to the actual speaker asset proportions.
+     The driver anchor below is positioned inside this same local coordinate system. */
+  aspect-ratio: 768 / 1332;
+
   opacity: var(--speaker-opacity);
   transform: translate(-50%, -50%) scale(var(--speaker-scale));
   transform-origin: center bottom;
@@ -547,7 +551,8 @@ button {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: fill;
+  display: block;
   user-select: none;
   pointer-events: none;
   image-rendering: auto;
@@ -575,19 +580,35 @@ button {
   z-index: -1;
 }
 
-/* Proper isolated speaker cone animation using cropped Speaker Driver.png */
-.speaker-driver {
+/* Speaker-local driver anchor.
+   This wrapper is the only element positioned by the tuning controls.
+   The PNG inside the wrapper is what pulses, so scaling cannot move the anchor point. */
+.speaker-driver-anchor {
   position: absolute;
   left: var(--speaker-pulse-x);
   top: var(--speaker-pulse-y);
   width: var(--speaker-pulse-size);
   height: auto;
-  transform: translate(-50%, -50%) scale(1);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
   transform-origin: center center;
   z-index: 4;
   pointer-events: none;
   opacity: var(--speaker-warp-opacity);
+  will-change: transform;
+}
+
+.speaker-driver {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
   image-rendering: auto;
+  transform: scale(1);
+  transform-origin: center center;
   will-change: transform;
 }
 
@@ -597,11 +618,11 @@ button {
 
 @keyframes speakerDriverPulse {
   from {
-    transform: translate(-50%, -50%) scale(0.96);
+    transform: scale(0.96);
   }
 
   to {
-    transform: translate(-50%, -50%) scale(calc(1.02 + (var(--speaker-pulse) * 0.08)));
+    transform: scale(calc(1.02 + (var(--speaker-pulse) * 0.08)));
   }
 }
 

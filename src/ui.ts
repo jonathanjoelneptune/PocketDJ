@@ -26,11 +26,15 @@ export function renderShell(state: AppState): void {
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
           <img class="speaker-image" src="./assets/Speaker.png" alt="" draggable="false" />
-          <img class="speaker-driver" src="./assets/Speaker Driver.png" alt="" draggable="false" />
+          <div class="speaker-driver-anchor">
+            <img class="speaker-driver" src="./assets/Speaker Driver.png" alt="" draggable="false" />
+          </div>
         </div>
         <div class="room-speaker room-speaker-right" id="rightSpeaker" aria-hidden="true">
           <img class="speaker-image" src="./assets/Speaker.png" alt="" draggable="false" />
-          <img class="speaker-driver" src="./assets/Speaker Driver.png" alt="" draggable="false" />
+          <div class="speaker-driver-anchor">
+            <img class="speaker-driver" src="./assets/Speaker Driver.png" alt="" draggable="false" />
+          </div>
         </div>
 
         <div class="floor-shadow table-floor-shadow" aria-hidden="true"></div>
