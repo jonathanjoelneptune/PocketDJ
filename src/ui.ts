@@ -251,12 +251,14 @@ function updateMarquee(track: NormalizedTrack): void {
   if (payload.key === lastMarqueeKey) return;
   lastMarqueeKey = payload.key;
 
-  content.classList.add("marquee-content-changing");
-  marquee.classList.remove("marquee-swap");
-  void marquee.offsetWidth;
+  if (marqueeSwapTimer) window.clearTimeout(marqueeSwapTimer);
+
+  // Always transition old text out to the left first.
+  content.classList.remove("marquee-entering");
+  content.classList.add("marquee-exiting");
   marquee.classList.add("marquee-swap");
 
-  window.setTimeout(() => {
+  marqueeSwapTimer = window.setTimeout(() => {
     titleEl.textContent = payload.title;
     artistEl.textContent = payload.artist;
 
@@ -268,13 +270,15 @@ function updateMarquee(track: NormalizedTrack): void {
     titleEl.style.animation = "";
     artistEl.style.animation = "";
 
-    content.classList.remove("marquee-content-changing");
-  }, 130);
+    // Then bring the new song in from the right. Artist follows slightly after title via CSS delay.
+    content.classList.remove("marquee-exiting");
+    content.classList.add("marquee-entering");
 
-  if (marqueeSwapTimer) window.clearTimeout(marqueeSwapTimer);
-  marqueeSwapTimer = window.setTimeout(() => {
-    marquee.classList.remove("marquee-swap");
-  }, 720);
+    marqueeSwapTimer = window.setTimeout(() => {
+      content.classList.remove("marquee-entering");
+      marquee.classList.remove("marquee-swap");
+    }, 980);
+  }, 430);
 }
 
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
