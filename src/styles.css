@@ -6306,3 +6306,59 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 #lyricPosterTransition {
   width: 100%;
 }
+
+
+/* POSTER TRAPEZOID + CORRECT CEILING PERSPECTIVE
+   The ceiling lyric now widens toward the top/back of the ceiling and stays clipped inside a tunable trapezoid. */
+:root {
+  --lyric-poster-top-left: 3%;
+  --lyric-poster-top-right: 97%;
+  --lyric-poster-bottom-left: 18%;
+  --lyric-poster-bottom-right: 82%;
+}
+
+.lyric-poster-line {
+  /* The poster box itself is clipped to the ceiling trapezoid. */
+  overflow: hidden !important;
+  clip-path: polygon(
+    var(--lyric-poster-top-left) 0%,
+    var(--lyric-poster-top-right) 0%,
+    var(--lyric-poster-bottom-right) 100%,
+    var(--lyric-poster-bottom-left) 100%
+  ) !important;
+
+  /* Flip the perspective from the previous Star-Wars direction.
+     Positive utility values now make the lyric appear wider/larger toward the top of the ceiling. */
+  transform:
+    translateX(-50%)
+    translateY(-50%)
+    perspective(900px)
+    rotateX(calc(var(--lyric-poster-tilt) * -1))
+    skewX(var(--lyric-poster-skew))
+    scale(var(--lyric-poster-zoom)) !important;
+  transform-origin: 50% 46% !important;
+}
+
+/* Keep the actual text inset so the outline does not get cut by the trapezoid edge. */
+.lyric-poster-text {
+  width: 92% !important;
+  height: 88% !important;
+  margin: auto !important;
+}
+
+/* Guide preview follows the same trapezoid. */
+.lyrics-boundary-guide-video {
+  clip-path: polygon(
+    var(--lyric-poster-top-left) 0%,
+    var(--lyric-poster-top-right) 0%,
+    var(--lyric-poster-bottom-right) 100%,
+    var(--lyric-poster-bottom-left) 100%
+  ) !important;
+  transform:
+    translateX(-50%)
+    translateY(-50%)
+    perspective(900px)
+    rotateX(calc(var(--lyric-poster-tilt) * -1))
+    skewX(var(--lyric-poster-skew))
+    scale(var(--lyric-poster-zoom)) !important;
+}

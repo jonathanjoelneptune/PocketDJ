@@ -241,6 +241,18 @@ export function renderShell(state: AppState): void {
               <label>Ceiling skew deg <span id="lyricPosterSkewValue">-4.00</span>
                 <input id="lyricPosterSkew" type="range" min="-25" max="25" step="0.5" value="-4" />
               </label>
+              <label>Top left % <span id="lyricPosterTopLeftValue">3.00</span>
+                <input id="lyricPosterTopLeft" type="range" min="0" max="45" step="0.5" value="3" />
+              </label>
+              <label>Top right % <span id="lyricPosterTopRightValue">97.00</span>
+                <input id="lyricPosterTopRight" type="range" min="55" max="100" step="0.5" value="97" />
+              </label>
+              <label>Bottom left % <span id="lyricPosterBottomLeftValue">18.00</span>
+                <input id="lyricPosterBottomLeft" type="range" min="0" max="45" step="0.5" value="18" />
+              </label>
+              <label>Bottom right % <span id="lyricPosterBottomRightValue">82.00</span>
+                <input id="lyricPosterBottomRight" type="range" min="55" max="100" step="0.5" value="82" />
+              </label>
               <label>Stroke px <span id="lyricPosterStrokeValue">2.40</span>
                 <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="2.4" />
               </label>
@@ -725,6 +737,11 @@ export function updateLyricsCeiling(
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const posterWidth = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-w")) || 1180;
   const posterHeight = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-h")) || 205;
+  const posterTopLeft = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-top-left")) || 3;
+  const posterTopRight = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-top-right")) || 97;
+  const posterBottomLeft = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-left")) || 18;
+  const posterBottomRight = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-right")) || 82;
+  const posterSafeWidth = posterWidth * Math.max(0.25, Math.min((posterTopRight - posterTopLeft) / 100, (posterBottomRight - posterBottomLeft) / 100));
   const baseFontSize = Number.parseFloat(rootStyles.getPropertyValue("--lyrics-base-font-size")) || 12;
   const maxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || "auto") as "auto" | "1" | "2" | "3";
   const rootClassSignature = document.documentElement.className;
@@ -738,7 +755,7 @@ export function updateLyricsCeiling(
   lastLyricsRenderSignature = renderSignature;
   activeBlock.style.setProperty("--lyric-line-visibility", "1");
 
-  const layout = buildPosterLyricLayout(activeLine.text, posterWidth, posterHeight, baseFontSize, maxRowsValue);
+  const layout = buildPosterLyricLayout(activeLine.text, posterSafeWidth, posterHeight, baseFontSize, maxRowsValue);
 
   activeBlock.innerHTML = `
     <div class="lyric-poster-text" data-time="${activeLine.timeMs ?? ""}" style="--poster-font-size: ${layout.fontSize}px;">

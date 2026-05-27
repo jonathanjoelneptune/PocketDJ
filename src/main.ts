@@ -82,6 +82,10 @@ type RoomUtilitySettings = {
   lyricPosterZoom: number;
   lyricPosterTilt: number;
   lyricPosterSkew: number;
+  lyricPosterTopLeft: number;
+  lyricPosterTopRight: number;
+  lyricPosterBottomLeft: number;
+  lyricPosterBottomRight: number;
   lyricPosterStroke: number;
   lyricPosterStrokeOpacity: number;
   lyricPosterFillOpacity: number;
@@ -115,6 +119,10 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterZoom: 1.00,
   lyricPosterTilt: 54,
   lyricPosterSkew: -4,
+  lyricPosterTopLeft: 3,
+  lyricPosterTopRight: 97,
+  lyricPosterBottomLeft: 18,
+  lyricPosterBottomRight: 82,
   lyricPosterStroke: 2.4,
   lyricPosterStrokeOpacity: 0.52,
   lyricPosterFillOpacity: 0.02,
@@ -125,7 +133,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricBaseFontSize: 12
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v10";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v11";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -615,6 +623,10 @@ function bindRoomUtilityControls(): void {
     ["lyricPosterZoom", "lyricPosterZoomValue"],
     ["lyricPosterTilt", "lyricPosterTiltValue"],
     ["lyricPosterSkew", "lyricPosterSkewValue"],
+    ["lyricPosterTopLeft", "lyricPosterTopLeftValue"],
+    ["lyricPosterTopRight", "lyricPosterTopRightValue"],
+    ["lyricPosterBottomLeft", "lyricPosterBottomLeftValue"],
+    ["lyricPosterBottomRight", "lyricPosterBottomRightValue"],
     ["lyricPosterStroke", "lyricPosterStrokeValue"],
     ["lyricPosterStrokeOpacity", "lyricPosterStrokeOpacityValue"],
     ["lyricPosterFillOpacity", "lyricPosterFillOpacityValue"],
@@ -726,6 +738,10 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-zoom", String(roomUtility.lyricPosterZoom));
   root.style.setProperty("--lyric-poster-tilt", `${roomUtility.lyricPosterTilt}deg`);
   root.style.setProperty("--lyric-poster-skew", `${roomUtility.lyricPosterSkew}deg`);
+  root.style.setProperty("--lyric-poster-top-left", `${roomUtility.lyricPosterTopLeft}%`);
+  root.style.setProperty("--lyric-poster-top-right", `${roomUtility.lyricPosterTopRight}%`);
+  root.style.setProperty("--lyric-poster-bottom-left", `${roomUtility.lyricPosterBottomLeft}%`);
+  root.style.setProperty("--lyric-poster-bottom-right", `${roomUtility.lyricPosterBottomRight}%`);
   root.style.setProperty("--lyric-poster-stroke", `${roomUtility.lyricPosterStroke}px`);
   root.style.setProperty("--lyric-poster-stroke-opacity", String(roomUtility.lyricPosterStrokeOpacity));
   root.style.setProperty("--lyric-poster-fill-opacity", String(roomUtility.lyricPosterFillOpacity));
@@ -760,7 +776,7 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
     }
 
     const oldRaw =
-      window.localStorage.getItem("pocketdj-room-utility-v8") ??
+      window.localStorage.getItem("pocketdj-room-utility-v10") ?? window.localStorage.getItem("pocketdj-room-utility-v9") ?? window.localStorage.getItem("pocketdj-room-utility-v8") ?? window.localStorage.getItem("pocketdj-room-utility-v7") ?? window.localStorage.getItem("pocketdj-room-utility-v6") ?? window.localStorage.getItem("pocketdj-room-utility-v5") ?? window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1") ??
       window.localStorage.getItem("pocketdj-room-utility-v7") ??
       window.localStorage.getItem("pocketdj-room-utility-v6") ??
       window.localStorage.getItem("pocketdj-room-utility-v5") ??
