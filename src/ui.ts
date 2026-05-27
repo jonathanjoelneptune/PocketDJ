@@ -270,15 +270,15 @@ function updateMarquee(track: NormalizedTrack): void {
     titleEl.style.animation = "";
     artistEl.style.animation = "";
 
-    // Then bring the new song in from the right. Artist follows slightly after title via CSS delay.
+    // Then bring the new song in from the right. Artist follows after title via CSS delay.
     content.classList.remove("marquee-exiting");
     content.classList.add("marquee-entering");
 
     marqueeSwapTimer = window.setTimeout(() => {
       content.classList.remove("marquee-entering");
       marquee.classList.remove("marquee-swap");
-    }, 2300);
-  }, 1150);
+    }, 5200);
+  }, 2300);
 }
 
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {

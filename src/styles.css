@@ -184,19 +184,19 @@ button {
 }
 
 .marquee-content.marquee-exiting .marquee-title {
-  animation: marqueeTitleExitLeft 1150ms cubic-bezier(.45,0,.72,.18) both;
+  animation: marqueeTitleExitLeft 2300ms cubic-bezier(.45,0,.72,.18) both;
 }
 
 .marquee-content.marquee-exiting .marquee-artist {
-  animation: marqueeArtistExitLeft 1150ms cubic-bezier(.45,0,.72,.18) 420ms both;
+  animation: marqueeArtistExitLeft 2300ms cubic-bezier(.45,0,.72,.18) 900ms both;
 }
 
 .marquee-content.marquee-entering .marquee-title {
-  animation: marqueeTitleEnterRight 1500ms cubic-bezier(.16,.88,.22,1) both;
+  animation: marqueeTitleEnterRight 3000ms cubic-bezier(.16,.88,.22,1) both;
 }
 
 .marquee-content.marquee-entering .marquee-artist {
-  animation: marqueeArtistEnterRight 1500ms cubic-bezier(.16,.88,.22,1) 1050ms both;
+  animation: marqueeArtistEnterRight 3000ms cubic-bezier(.16,.88,.22,1) 1800ms both;
 }
 
 .marquee-title,
@@ -253,9 +253,7 @@ button {
 }
 
 .marquee-artist-long .marquee-artist {
-  animation:
-    marqueeArtistDrift 24s ease-in-out infinite,
-    marqueeLedGlow 1150ms ease-in-out infinite alternate;
+  animation: marqueeLedGlow 1150ms ease-in-out infinite alternate;
 }
 
 .marquee-paused .marquee-title,
@@ -299,15 +297,7 @@ button {
 
 /* Artists drift independently and slower than the title. */
 @keyframes marqueeArtistDrift {
-  0%, 12% {
-    transform: translateX(calc(50% + 30vw));
-  }
-  42%, 58% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(calc(-50% - 30vw));
-  }
+  0%, 100% { transform: translateX(0); }
 }
 
 @keyframes marqueeLedGlow {
