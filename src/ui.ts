@@ -28,11 +28,11 @@ export function renderShell(state: AppState): void {
         <div class="album-wash" id="albumWash"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
 
-        <div id="lyricsCeiling" class="lyrics-ceiling lyric-video-ceiling" aria-live="polite">
+        <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
           <div class="lyrics-boundary-guides" aria-hidden="true">
             <div class="lyrics-boundary-guide lyrics-boundary-guide-video"></div>
           </div>
-          <div id="activeLyricsBlock" class="active-lyrics-block lyric-video-line" aria-hidden="true"></div>
+          <div id="activeLyricsBlock" class="active-lyrics-block lyric-poster-line" aria-hidden="true"></div>
         </div>
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
@@ -216,67 +216,66 @@ export function renderShell(state: AppState): void {
           </div>
 
           <div class="lyrics-boundary-utility">
-            <div class="utility-subhead">Ceiling lyric video utility</div>
-            <p class="utility-help">Phase 1 active-line fill mode. Only the current lyric is shown, with a faint base line and a filled line that writes across as the lyric plays.</p>
+            <div class="utility-subhead">Ceiling lyric poster utility</div>
+            <p class="utility-help">Poster mode shows only the active lyric as a huge transparent ceiling projection with a gray stroke. No karaoke fill, no past/future block.</p>
 
             <div class="lyric-utility-stack">
-              <label>Lyric X px <span id="lyricVideoXValue">882</span>
-                <input id="lyricVideoX" type="range" min="0" max="1600" step="1" value="882" />
+              <label>Poster X px <span id="lyricPosterXValue">882</span>
+                <input id="lyricPosterX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Lyric Y px <span id="lyricVideoYValue">88</span>
-                <input id="lyricVideoY" type="range" min="0" max="520" step="1" value="88" />
+              <label>Poster Y px <span id="lyricPosterYValue">128</span>
+                <input id="lyricPosterY" type="range" min="0" max="520" step="1" value="128" />
               </label>
-              <label>Lyric width px <span id="lyricVideoWValue">850</span>
-                <input id="lyricVideoW" type="range" min="180" max="1600" step="1" value="850" />
+              <label>Poster width px <span id="lyricPosterWValue">1180</span>
+                <input id="lyricPosterW" type="range" min="240" max="1600" step="1" value="1180" />
               </label>
-              <label>Lyric height px <span id="lyricVideoHValue">34</span>
-                <input id="lyricVideoH" type="range" min="18" max="180" step="1" value="34" />
+              <label>Poster height px <span id="lyricPosterHValue">205</span>
+                <input id="lyricPosterH" type="range" min="60" max="420" step="1" value="205" />
               </label>
-              <label>Lyric zoom <span id="lyricVideoZoomValue">1.08</span>
-                <input id="lyricVideoZoom" type="range" min="0.65" max="1.8" step="0.01" value="1.08" />
+              <label>Poster zoom <span id="lyricPosterZoomValue">1.00</span>
+                <input id="lyricPosterZoom" type="range" min="0.55" max="1.8" step="0.01" value="1.00" />
               </label>
-              <label>Ceiling tilt deg <span id="lyricVideoTiltValue">0.00</span>
-                <input id="lyricVideoTilt" type="range" min="-35" max="35" step="0.5" value="0" />
+              <label>Ceiling tilt deg <span id="lyricPosterTiltValue">54.00</span>
+                <input id="lyricPosterTilt" type="range" min="0" max="75" step="0.5" value="54" />
               </label>
-              <label>Base text opacity <span id="lyricVideoBaseOpacityValue">0.24</span>
-                <input id="lyricVideoBaseOpacity" type="range" min="0" max="1" step="0.01" value="0.24" />
+              <label>Ceiling skew deg <span id="lyricPosterSkewValue">-4.00</span>
+                <input id="lyricPosterSkew" type="range" min="-25" max="25" step="0.5" value="-4" />
               </label>
-              <label>Fill text opacity <span id="lyricVideoFillOpacityValue">1.00</span>
-                <input id="lyricVideoFillOpacity" type="range" min="0" max="1" step="0.01" value="1.00" />
+              <label>Stroke px <span id="lyricPosterStrokeValue">2.40</span>
+                <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="2.4" />
               </label>
-              <label>Text stroke px <span id="lyricVideoStrokeValue">2.00</span>
-                <input id="lyricVideoStroke" type="range" min="0" max="8" step="0.25" value="2" />
+              <label>Stroke opacity <span id="lyricPosterStrokeOpacityValue">0.52</span>
+                <input id="lyricPosterStrokeOpacity" type="range" min="0" max="1" step="0.01" value="0.52" />
               </label>
-              <label>Background opacity <span id="lyricVideoBgOpacityValue">0.86</span>
-                <input id="lyricVideoBgOpacity" type="range" min="0" max="1" step="0.01" value="0.86" />
+              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0.02</span>
+                <input id="lyricPosterFillOpacity" type="range" min="0" max="0.35" step="0.01" value="0.02" />
               </label>
-              <label>Glow strength <span id="lyricVideoGlowValue">0.50</span>
-                <input id="lyricVideoGlow" type="range" min="0" max="1" step="0.01" value="0.50" />
+              <label>Glow strength <span id="lyricPosterGlowValue">0.18</span>
+                <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0.18" />
               </label>
-              <label>Fill lead ms <span id="lyricVideoLeadMsValue">180</span>
-                <input id="lyricVideoLeadMs" type="range" min="-1000" max="1000" step="10" value="180" />
-              </label>
-              <label>Fade ms <span id="lyricVideoFadeMsValue">180</span>
-                <input id="lyricVideoFadeMs" type="range" min="0" max="1200" step="10" value="180" />
+              <label>Row spacing <span id="lyricPosterRowGapValue">0.18</span>
+                <input id="lyricPosterRowGap" type="range" min="-0.15" max="0.8" step="0.01" value="0.18" />
               </label>
               <label>Base lyric font size px <span id="lyricBaseFontSizeValue">12</span>
-                <input id="lyricBaseFontSize" type="range" min="8" max="30" step="1" value="12" />
+                <input id="lyricBaseFontSize" type="range" min="8" max="32" step="1" value="12" />
               </label>
-              <label>Background color
-                <input id="lyricVideoBgColor" type="color" value="#000000" />
+              <label>Max rows
+                <select id="lyricPosterMaxRows">
+                  <option value="auto" selected>Auto 1 to 3 rows</option>
+                  <option value="1">Force 1 row</option>
+                  <option value="2">Force 2 rows</option>
+                  <option value="3">Force 3 rows</option>
+                </select>
               </label>
-              <label>Fill color
-                <input id="lyricVideoFillColor" type="color" value="#ffc84f" />
-              </label>
-              <label>Fill mode
-                <select id="lyricVideoMode">
-                  <option value="smooth-fill" selected>Smooth fill wipe</option>
-                  <option value="word-fill">Word-by-word fill</option>
+              <label>Transition
+                <select id="lyricPosterTransition">
+                  <option value="push-slide" selected>Quick push slide</option>
+                  <option value="fade-slide">Subtle fade slide</option>
                 </select>
               </label>
             </div>
           </div>
-          
+
           <div class="button-grid utility-buttons">
             <button id="saveRoomUtility" class="secondary" type="button">Save room utility</button>
             <button id="resetRoomUtility" class="secondary" type="button">Reset utility</button>
@@ -691,7 +690,6 @@ export function updateLyricsCeiling(
   const clearLyrics = () => {
     lastLyricsRenderSignature = "";
     activeBlock.innerHTML = "";
-    activeBlock.style.setProperty("--lyric-fill-progress", "0%");
     activeBlock.style.setProperty("--lyric-line-visibility", "0");
   };
 
@@ -723,57 +721,115 @@ export function updateLyricsCeiling(
 
   const centerIndex = Math.max(0, Math.min(cleanLines.length - 1, activeIndex >= 0 ? activeIndex : 0));
   const activeLine = cleanLines[centerIndex];
-  const nextTimedLine = cleanLines.slice(centerIndex + 1).find((line) => typeof line.timeMs === "number" && line.timeMs !== null);
-  const lineStartMs = typeof activeLine.timeMs === "number" ? activeLine.timeMs : playbackMs;
-  const lineEndMs =
-    typeof nextTimedLine?.timeMs === "number"
-      ? nextTimedLine.timeMs
-      : lineStartMs + Math.max(1600, Math.min(5200, activeLine.text.length * 95));
-
   const rootStyles = getComputedStyle(document.documentElement);
-  const leadMs = Number(rootStyles.getPropertyValue("--lyric-video-lead-ms")) || 0;
-  const fadeMs = Math.max(1, Number(rootStyles.getPropertyValue("--lyric-video-fade-ms")) || 1);
-  const durationMs = Math.max(1, lineEndMs - lineStartMs);
-  const rawProgress = (playbackMs - lineStartMs + leadMs) / durationMs;
-  const progress = Math.max(0, Math.min(1, rawProgress));
-  const visibilityIn = Math.max(0, Math.min(1, (playbackMs - lineStartMs + leadMs + fadeMs) / fadeMs));
-  const visibilityOut = Math.max(0, Math.min(1, (lineEndMs - playbackMs + fadeMs) / fadeMs));
-  const visibility = Math.min(visibilityIn, visibilityOut);
-  const wordCount = activeLine.text.trim().split(/\s+/).filter(Boolean).length;
-  const steppedProgress = wordCount > 0 ? Math.ceil(progress * wordCount) / wordCount : progress;
-  const fillProgress = document.documentElement.classList.contains("lyric-video-mode-word-fill") ? steppedProgress : progress;
-
-  activeBlock.style.setProperty("--lyric-fill-progress", `${(fillProgress * 100).toFixed(2)}%`);
-  activeBlock.style.setProperty("--lyric-line-visibility", String(visibility));
-
-  const activeZoom = rootStyles.getPropertyValue("--lyric-video-zoom").trim();
-  const activeStroke = rootStyles.getPropertyValue("--lyric-video-stroke").trim();
-  const activeBgOpacity = rootStyles.getPropertyValue("--lyric-video-bg-opacity").trim();
-  const activeBgColor = rootStyles.getPropertyValue("--lyric-video-bg-color").trim();
-  const activeFillColor = rootStyles.getPropertyValue("--lyric-video-fill-color").trim();
-  const activeWidth = rootStyles.getPropertyValue("--lyric-video-w").trim();
-  const activeHeight = rootStyles.getPropertyValue("--lyric-video-h").trim();
-  const baseFontSize = rootStyles.getPropertyValue("--lyrics-base-font-size").trim();
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
+  const posterWidth = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-w")) || 1180;
+  const posterHeight = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-h")) || 205;
+  const baseFontSize = Number.parseFloat(rootStyles.getPropertyValue("--lyrics-base-font-size")) || 12;
+  const maxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || "auto") as "auto" | "1" | "2" | "3";
   const rootClassSignature = document.documentElement.className;
-  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${activeZoom}|${activeStroke}|${activeBgOpacity}|${activeBgColor}|${activeFillColor}|${activeWidth}|${activeHeight}|${baseFontSize}|${animationRevision}|${rootClassSignature}`;
+  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${posterWidth}|${posterHeight}|${baseFontSize}|${maxRowsValue}|${animationRevision}|${rootClassSignature}`;
 
-  if (renderSignature === lastLyricsRenderSignature) return;
+  if (renderSignature === lastLyricsRenderSignature) {
+    activeBlock.style.setProperty("--lyric-line-visibility", "1");
+    return;
+  }
+
   lastLyricsRenderSignature = renderSignature;
+  activeBlock.style.setProperty("--lyric-line-visibility", "1");
 
-  const activeTextLength = activeLine.text.length;
-  const activeScale = getLyricLineScale(activeTextLength, true);
+  const layout = buildPosterLyricLayout(activeLine.text, posterWidth, posterHeight, baseFontSize, maxRowsValue);
 
   activeBlock.innerHTML = `
-    <div
-      class="lyric-video-text"
-      style="--lyrics-line-scale: ${activeScale};"
-      data-time="${activeLine.timeMs ?? ""}"
-    >
-      <span class="lyric-video-base">${escapeHtml(activeLine.text)}</span>
-      <span class="lyric-video-fill" aria-hidden="true">${escapeHtml(activeLine.text)}</span>
+    <div class="lyric-poster-text" data-time="${activeLine.timeMs ?? ""}" style="--poster-font-size: ${layout.fontSize}px;">
+      ${layout.rows.map((row) => `<div class="lyric-poster-row">${escapeHtml(row)}</div>`).join("")}
     </div>
   `;
+}
+
+function buildPosterLyricLayout(
+  text: string,
+  boxWidth: number,
+  boxHeight: number,
+  baseFontSize: number,
+  maxRowsValue: "auto" | "1" | "2" | "3",
+): { rows: string[]; fontSize: number } {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return { rows: [""], fontSize: baseFontSize };
+
+  const forcedRows = maxRowsValue === "auto" ? 0 : Number(maxRowsValue);
+  const candidateRowCounts =
+    forcedRows > 0
+      ? [forcedRows]
+      : words.length <= 3
+        ? [1, 2]
+        : words.length <= 7
+          ? [1, 2, 3]
+          : [2, 3];
+
+  let best = { rows: [text], fontSize: 1, score: -Infinity };
+
+  for (const rowCount of candidateRowCounts) {
+    const rows = balanceWordsIntoRows(words, Math.max(1, Math.min(rowCount, words.length)));
+    const longest = Math.max(...rows.map((row) => weightedPosterLength(row)));
+    const heightFactor = rows.length * (1 + 0.18) - 0.18;
+    const widthFit = (boxWidth * 0.94) / Math.max(1, longest * 0.64);
+    const heightFit = (boxHeight * 0.90) / Math.max(1, heightFactor);
+    const fontSize = Math.max(baseFontSize * 1.4, Math.min(widthFit, heightFit));
+    const balancePenalty = longest - (rows.reduce((sum, row) => sum + weightedPosterLength(row), 0) / rows.length);
+    const score = fontSize - balancePenalty * 1.8 - rows.length * 1.5;
+
+    if (score > best.score) best = { rows, fontSize, score };
+  }
+
+  return { rows: best.rows, fontSize: best.fontSize };
+}
+
+function balanceWordsIntoRows(words: string[], rowCount: number): string[] {
+  if (rowCount <= 1) return [words.join(" ")];
+
+  const total = words.reduce((sum, word) => sum + weightedPosterLength(word), 0);
+  const target = total / rowCount;
+  const rows: string[][] = [];
+  let current: string[] = [];
+  let currentWeight = 0;
+  let rowsRemaining = rowCount;
+
+  words.forEach((word, index) => {
+    const remainingWords = words.length - index;
+    const wordWeight = weightedPosterLength(word);
+    const shouldBreak =
+      current.length > 0 &&
+      currentWeight + wordWeight > target &&
+      remainingWords >= rowsRemaining;
+
+    if (shouldBreak) {
+      rows.push(current);
+      current = [];
+      currentWeight = 0;
+      rowsRemaining -= 1;
+    }
+
+    current.push(word);
+    currentWeight += wordWeight;
+  });
+
+  if (current.length) rows.push(current);
+  while (rows.length < rowCount) rows.push([]);
+
+  return rows.filter((row) => row.length).map((row) => row.join(" "));
+}
+
+function weightedPosterLength(value: string): number {
+  return value
+    .replace(/[il.,'’!|]/gi, "x")
+    .split("")
+    .reduce((sum, char) => {
+      if (char === " ") return sum + 0.55;
+      if (/[MW@#%&]/.test(char)) return sum + 1.35;
+      if (/[A-Z0-9]/.test(char)) return sum + 1.08;
+      return sum + 1;
+    }, 0);
 }
 
 function getLyricLineScale(textLength: number, isActive: boolean): number {

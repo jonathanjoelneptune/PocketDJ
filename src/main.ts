@@ -75,22 +75,20 @@ type RoomUtilitySettings = {
   vignetteStrength: number;
   shadowOpacity: number;
   tableShadowScale: number;
-  lyricVideoX: number;
-  lyricVideoY: number;
-  lyricVideoW: number;
-  lyricVideoH: number;
-  lyricVideoZoom: number;
-  lyricVideoTilt: number;
-  lyricVideoBaseOpacity: number;
-  lyricVideoFillOpacity: number;
-  lyricVideoStroke: number;
-  lyricVideoBgOpacity: number;
-  lyricVideoBgColor: string;
-  lyricVideoFillColor: string;
-  lyricVideoGlow: number;
-  lyricVideoLeadMs: number;
-  lyricVideoFadeMs: number;
-  lyricVideoMode: "smooth-fill" | "word-fill";
+  lyricPosterX: number;
+  lyricPosterY: number;
+  lyricPosterW: number;
+  lyricPosterH: number;
+  lyricPosterZoom: number;
+  lyricPosterTilt: number;
+  lyricPosterSkew: number;
+  lyricPosterStroke: number;
+  lyricPosterStrokeOpacity: number;
+  lyricPosterFillOpacity: number;
+  lyricPosterGlow: number;
+  lyricPosterRowGap: number;
+  lyricPosterMaxRows: "auto" | "1" | "2" | "3";
+  lyricPosterTransition: "push-slide" | "fade-slide";
   lyricBaseFontSize: number;
 };
 
@@ -110,26 +108,24 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   vignetteStrength: 0.20,
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
-  lyricVideoX: 882,
-  lyricVideoY: 88,
-  lyricVideoW: 850,
-  lyricVideoH: 34,
-  lyricVideoZoom: 1.08,
-  lyricVideoTilt: 0,
-  lyricVideoBaseOpacity: 0.24,
-  lyricVideoFillOpacity: 1.00,
-  lyricVideoStroke: 2,
-  lyricVideoBgOpacity: 0.86,
-  lyricVideoBgColor: "#000000",
-  lyricVideoFillColor: "#ffc84f",
-  lyricVideoGlow: 0.50,
-  lyricVideoLeadMs: 180,
-  lyricVideoFadeMs: 180,
-  lyricVideoMode: "smooth-fill",
+  lyricPosterX: 882,
+  lyricPosterY: 128,
+  lyricPosterW: 1180,
+  lyricPosterH: 205,
+  lyricPosterZoom: 1.00,
+  lyricPosterTilt: 54,
+  lyricPosterSkew: -4,
+  lyricPosterStroke: 2.4,
+  lyricPosterStrokeOpacity: 0.52,
+  lyricPosterFillOpacity: 0.02,
+  lyricPosterGlow: 0.18,
+  lyricPosterRowGap: 0.18,
+  lyricPosterMaxRows: "auto",
+  lyricPosterTransition: "push-slide",
   lyricBaseFontSize: 12
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v9";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v10";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -614,25 +610,24 @@ function bindRoomUtilityControls(): void {
     ["vignetteStrength", "vignetteStrengthValue"],
     ["shadowOpacity", "shadowOpacityValue"],
     ["tableShadowScale", "tableShadowScaleValue"],
-    ["lyricVideoX", "lyricVideoXValue"],
-    ["lyricVideoY", "lyricVideoYValue"],
-    ["lyricVideoW", "lyricVideoWValue"],
-    ["lyricVideoH", "lyricVideoHValue"],
-    ["lyricVideoZoom", "lyricVideoZoomValue"],
-    ["lyricVideoTilt", "lyricVideoTiltValue"],
-    ["lyricVideoBaseOpacity", "lyricVideoBaseOpacityValue"],
-    ["lyricVideoFillOpacity", "lyricVideoFillOpacityValue"],
-    ["lyricVideoStroke", "lyricVideoStrokeValue"],
-    ["lyricVideoBgOpacity", "lyricVideoBgOpacityValue"],
-    ["lyricVideoGlow", "lyricVideoGlowValue"],
-    ["lyricVideoLeadMs", "lyricVideoLeadMsValue"],
-    ["lyricVideoFadeMs", "lyricVideoFadeMsValue"],
+    ["lyricPosterX", "lyricPosterXValue"],
+    ["lyricPosterY", "lyricPosterYValue"],
+    ["lyricPosterW", "lyricPosterWValue"],
+    ["lyricPosterH", "lyricPosterHValue"],
+    ["lyricPosterZoom", "lyricPosterZoomValue"],
+    ["lyricPosterTilt", "lyricPosterTiltValue"],
+    ["lyricPosterSkew", "lyricPosterSkewValue"],
+    ["lyricPosterStroke", "lyricPosterStrokeValue"],
+    ["lyricPosterStrokeOpacity", "lyricPosterStrokeOpacityValue"],
+    ["lyricPosterFillOpacity", "lyricPosterFillOpacityValue"],
+    ["lyricPosterGlow", "lyricPosterGlowValue"],
+    ["lyricPosterRowGap", "lyricPosterRowGapValue"],
     ["lyricBaseFontSize", "lyricBaseFontSizeValue"]
   ] as const;
 
   controls.forEach(([inputId, labelId]) => {
     const input = qs<HTMLInputElement>(`#${inputId}`);
-    const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter" | "lyricVideoMode" | "lyricVideoBgColor" | "lyricVideoFillColor">;
+    const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter" | "lyricPosterMaxRows" | "lyricPosterTransition">;
     input.value = String(roomUtility[key]);
     setUtilityLabel(labelId, Number(input.value));
 
@@ -681,7 +676,7 @@ function bindRoomUtilityControls(): void {
 
     controls.forEach(([inputId, labelId]) => {
       const input = qs<HTMLInputElement>(`#${inputId}`);
-      const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter" | "lyricVideoMode" | "lyricVideoBgColor" | "lyricVideoFillColor">;
+      const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter" | "lyricPosterMaxRows" | "lyricPosterTransition">;
       input.value = String(roomUtility[key]);
       setUtilityLabel(labelId, Number(input.value));
     });
@@ -733,28 +728,23 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
   root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
 
-  root.style.setProperty("--lyric-video-x", `${roomUtility.lyricVideoX}px`);
-  root.style.setProperty("--lyric-video-y", `${roomUtility.lyricVideoY}px`);
-  root.style.setProperty("--lyric-video-w", `${roomUtility.lyricVideoW}px`);
-  root.style.setProperty("--lyric-video-h", `${roomUtility.lyricVideoH}px`);
-  root.style.setProperty("--lyric-video-zoom", String(roomUtility.lyricVideoZoom));
-  root.style.setProperty("--lyric-video-tilt", `${roomUtility.lyricVideoTilt}deg`);
-  root.style.setProperty("--lyric-video-base-opacity", String(roomUtility.lyricVideoBaseOpacity));
-  root.style.setProperty("--lyric-video-fill-opacity", String(roomUtility.lyricVideoFillOpacity));
-  root.style.setProperty("--lyric-video-stroke", `${roomUtility.lyricVideoStroke}px`);
-  root.style.setProperty("--lyric-video-bg-opacity", String(roomUtility.lyricVideoBgOpacity));
-  root.style.setProperty("--lyric-video-bg-color", roomUtility.lyricVideoBgColor);
-  root.style.setProperty("--lyric-video-bg-rgb", hexToRgbParts(roomUtility.lyricVideoBgColor));
-  root.style.setProperty("--lyric-video-fill-color", roomUtility.lyricVideoFillColor);
-  root.style.setProperty("--lyric-video-fill-rgb", hexToRgbParts(roomUtility.lyricVideoFillColor));
-  root.style.setProperty("--lyric-video-glow", String(roomUtility.lyricVideoGlow));
-  root.style.setProperty("--lyric-video-lead-ms", `${roomUtility.lyricVideoLeadMs}`);
-  root.style.setProperty("--lyric-video-fade-ms", `${roomUtility.lyricVideoFadeMs}`);
+  root.style.setProperty("--lyric-poster-x", `${roomUtility.lyricPosterX}px`);
+  root.style.setProperty("--lyric-poster-y", `${roomUtility.lyricPosterY}px`);
+  root.style.setProperty("--lyric-poster-w", `${roomUtility.lyricPosterW}px`);
+  root.style.setProperty("--lyric-poster-h", `${roomUtility.lyricPosterH}px`);
+  root.style.setProperty("--lyric-poster-zoom", String(roomUtility.lyricPosterZoom));
+  root.style.setProperty("--lyric-poster-tilt", `${roomUtility.lyricPosterTilt}deg`);
+  root.style.setProperty("--lyric-poster-skew", `${roomUtility.lyricPosterSkew}deg`);
+  root.style.setProperty("--lyric-poster-stroke", `${roomUtility.lyricPosterStroke}px`);
+  root.style.setProperty("--lyric-poster-stroke-opacity", String(roomUtility.lyricPosterStrokeOpacity));
+  root.style.setProperty("--lyric-poster-fill-opacity", String(roomUtility.lyricPosterFillOpacity));
+  root.style.setProperty("--lyric-poster-glow", String(roomUtility.lyricPosterGlow));
+  root.style.setProperty("--lyric-poster-row-gap", String(roomUtility.lyricPosterRowGap));
   root.style.setProperty("--lyrics-base-font-size", `${roomUtility.lyricBaseFontSize}px`);
   root.style.setProperty("--lyrics-animation-revision", String(lyricAnimationRevision));
 
-  root.classList.toggle("lyric-video-mode-smooth-fill", roomUtility.lyricVideoMode === "smooth-fill");
-  root.classList.toggle("lyric-video-mode-word-fill", roomUtility.lyricVideoMode === "word-fill");
+  root.classList.toggle("lyric-poster-transition-push", roomUtility.lyricPosterTransition === "push-slide");
+  root.classList.toggle("lyric-poster-transition-fade", roomUtility.lyricPosterTransition === "fade-slide");
 }
 
 function updateSpeakerPulse(isPlaying: boolean): void {

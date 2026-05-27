@@ -6144,3 +6144,165 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   border: 1px solid rgba(255, 184, 76, 0.28);
   background: rgba(18, 12, 28, 0.78);
 }
+
+
+/* CEILING LYRIC POSTER MODE
+   Active lyric only. Huge transparent fill with soft gray stroke, dynamically rowed and scaled. */
+:root {
+  --lyric-poster-x: 882px;
+  --lyric-poster-y: 128px;
+  --lyric-poster-w: 1180px;
+  --lyric-poster-h: 205px;
+  --lyric-poster-zoom: 1;
+  --lyric-poster-tilt: 54deg;
+  --lyric-poster-skew: -4deg;
+  --lyric-poster-stroke: 2.4px;
+  --lyric-poster-stroke-opacity: 0.52;
+  --lyric-poster-fill-opacity: 0.02;
+  --lyric-poster-glow: 0.18;
+  --lyric-poster-row-gap: 0.18;
+  --lyric-line-visibility: 0;
+}
+
+/* Retire karaoke fill remnants and old lyric blocks. */
+.lyrics-ceiling-inner,
+.lyrics-past-block,
+.lyrics-future-block,
+.lyrics-line,
+.lyrics-line-past,
+.lyrics-line-future,
+.lyrics-line-active,
+.lyric-video-text,
+.lyric-video-base,
+.lyric-video-fill {
+  display: none !important;
+}
+
+.lyric-poster-ceiling {
+  position: absolute;
+  inset: 0;
+  z-index: 34;
+  pointer-events: none;
+  mix-blend-mode: normal !important;
+  isolation: isolate !important;
+}
+
+.lyric-poster-line {
+  position: absolute !important;
+  left: var(--lyric-poster-x) !important;
+  top: var(--lyric-poster-y) !important;
+  width: var(--lyric-poster-w) !important;
+  height: var(--lyric-poster-h) !important;
+  z-index: 42 !important;
+  display: grid !important;
+  place-items: center !important;
+  transform:
+    translateX(-50%)
+    translateY(-50%)
+    perspective(900px)
+    rotateX(var(--lyric-poster-tilt))
+    skewX(var(--lyric-poster-skew))
+    scale(var(--lyric-poster-zoom)) !important;
+  transform-origin: 50% 58% !important;
+  opacity: var(--lyric-line-visibility, 1);
+  overflow: visible !important;
+  mix-blend-mode: normal !important;
+  isolation: isolate !important;
+}
+
+.lyric-poster-text {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: calc(var(--poster-font-size) * var(--lyric-poster-row-gap));
+  text-align: center;
+  font-family: "Arial Black", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: var(--poster-font-size);
+  font-weight: 900;
+  line-height: 0.86;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  font-style: italic;
+  color: rgba(255, 255, 255, var(--lyric-poster-fill-opacity));
+  -webkit-text-stroke-width: var(--lyric-poster-stroke);
+  -webkit-text-stroke-color: rgba(215, 215, 215, var(--lyric-poster-stroke-opacity));
+  paint-order: stroke fill;
+  text-shadow:
+    0 0 calc(4px + (var(--lyric-poster-glow) * 12px)) rgba(235, 235, 235, calc(var(--lyric-poster-glow) * 0.45)),
+    0 1px 2px rgba(0, 0, 0, 0.18);
+  filter: saturate(0.92);
+}
+
+.lyric-poster-row {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* Animation A: fast push from the front/bottom toward the back/top. */
+.lyric-poster-transition-push .lyric-poster-text {
+  animation: lyricPosterPushSlide 520ms cubic-bezier(.18, .88, .2, 1) both;
+}
+
+@keyframes lyricPosterPushSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(30%) scale(1.04);
+    filter: blur(1.6px);
+  }
+  72% {
+    opacity: 1;
+    transform: translateY(-2%) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Animation B: subtle fade with a tiny upward drift. */
+.lyric-poster-transition-fade .lyric-poster-text {
+  animation: lyricPosterFadeSlide 620ms ease both;
+}
+
+@keyframes lyricPosterFadeSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(10%) scale(1.01);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Guide now shows the poster canvas. */
+.lyrics-boundary-guide-video {
+  left: var(--lyric-poster-x) !important;
+  top: var(--lyric-poster-y) !important;
+  width: var(--lyric-poster-w) !important;
+  height: var(--lyric-poster-h) !important;
+  transform:
+    translateX(-50%)
+    translateY(-50%)
+    perspective(900px)
+    rotateX(var(--lyric-poster-tilt))
+    skewX(var(--lyric-poster-skew))
+    scale(var(--lyric-poster-zoom)) !important;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 42, 42, 0.82);
+  background: rgba(255, 42, 42, 0.045);
+  opacity: var(--lyrics-guide-opacity, 0);
+}
+
+#lyricPosterMaxRows,
+#lyricPosterTransition {
+  width: 100%;
+}
