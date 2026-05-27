@@ -5480,3 +5480,72 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   border: 1px solid rgba(255, 184, 76, 0.28);
   background: rgba(18, 12, 28, 0.78);
 }
+
+
+/* FIX: active lyric background/color/stroke utilities and future-section alignment */
+:root {
+  --lyrics-active-bg-rgb: 5, 2, 8;
+  --lyrics-future-bottom-w: 900px;
+}
+
+/* Keep inactive/future/past lines centered inside their guide widths so lower-right text does not spill sideways. */
+.lyrics-line {
+  display: grid !important;
+  place-items: center !important;
+  text-align: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+.lyrics-line-past,
+.lyrics-line-future {
+  overflow: hidden !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
+}
+
+.lyrics-line-future {
+  transform: translateX(-50%) translateY(-50%) scale(0.94) !important;
+}
+
+.lyrics-line-past {
+  transform: translateX(-50%) translateY(-50%) scale(0.94) !important;
+}
+
+/* Make the tunable active backing obvious and independent of browser color-mix support. */
+.active-lyrics-line {
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(var(--lyrics-active-bg-rgb), calc(var(--lyrics-active-bg-opacity) * 0.74)) 8%,
+      rgba(var(--lyrics-active-bg-rgb), var(--lyrics-active-bg-opacity)) 50%,
+      rgba(var(--lyrics-active-bg-rgb), calc(var(--lyrics-active-bg-opacity) * 0.74)) 92%,
+      transparent 100%
+    ) !important;
+  border-color: rgba(255, 184, 76, calc(0.10 + (var(--lyrics-active-bg-opacity) * 0.22))) !important;
+  -webkit-text-stroke-width: var(--lyrics-active-stroke) !important;
+  -webkit-text-stroke-color: rgba(0, 0, 0, 0.92) !important;
+  paint-order: stroke fill !important;
+  text-shadow:
+    0 1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000,
+    0 -1px 0 #000,
+    0 0 3px rgba(255, 197, 75, 0.80) !important;
+}
+
+/* Stroke utility fallback. These shadows make the black outline visible even when text-stroke renders subtly. */
+.active-lyrics-line {
+  filter:
+    drop-shadow(0 0 calc(var(--lyrics-active-stroke) * 0.65) rgba(0, 0, 0, 0.95))
+    drop-shadow(0 1px calc(var(--lyrics-active-stroke) * 0.45) rgba(0, 0, 0, 0.80));
+}
+
+/* The active guide should show the actual tunable box when guide opacity is enabled. */
+.lyrics-boundary-guide-active {
+  box-sizing: border-box;
+  border-radius: 12px;
+  transform: translateX(-50%) translateY(-50%);
+}

@@ -295,8 +295,8 @@ export function renderShell(state: AppState): void {
               <label>Future bottom Y px <span id="lyricFutureBottomYValue">346</span>
                 <input id="lyricFutureBottomY" type="range" min="0" max="520" step="1" value="346" />
               </label>
-              <label>Future bottom width px <span id="lyricFutureBottomWValue">544</span>
-                <input id="lyricFutureBottomW" type="range" min="120" max="1600" step="1" value="544" />
+              <label>Future bottom width px <span id="lyricFutureBottomWValue">900</span>
+                <input id="lyricFutureBottomW" type="range" min="120" max="1600" step="1" value="900" />
               </label>
             </div>
 
@@ -799,9 +799,14 @@ export function updateLyricsCeiling(
   const visibleSlots = Array.from({ length: lineCount }, (_, slotIndex) => slotIndex - halfWindow);
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const activeZoom = rootStyles.getPropertyValue("--lyrics-active-zoom").trim();
+  const activeStroke = rootStyles.getPropertyValue("--lyrics-active-stroke").trim();
+  const activeBgOpacity = rootStyles.getPropertyValue("--lyrics-active-bg-opacity").trim();
+  const activeBgColor = rootStyles.getPropertyValue("--lyrics-active-bg-color").trim();
+  const activeWidth = rootStyles.getPropertyValue("--lyrics-active-w").trim();
+  const activeHeight = rootStyles.getPropertyValue("--lyrics-active-h").trim();
   const baseFontSize = rootStyles.getPropertyValue("--lyrics-base-font-size").trim();
   const rootClassSignature = document.documentElement.className;
-  const renderSignature = `${lyrics.trackKey}|${activeIndex}|${lineCount}|${animationRevision}|${activeZoom}|${baseFontSize}|${rootClassSignature}`;
+  const renderSignature = `${lyrics.trackKey}|${activeIndex}|${lineCount}|${animationRevision}|${activeZoom}|${activeStroke}|${activeBgOpacity}|${activeBgColor}|${activeWidth}|${activeHeight}|${baseFontSize}|${rootClassSignature}`;
 
   if (renderSignature === lastLyricsRenderSignature) return;
   lastLyricsRenderSignature = renderSignature;

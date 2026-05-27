@@ -130,7 +130,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricFutureTopW: 860,
   lyricFutureBottomX: 882,
   lyricFutureBottomY: 346,
-  lyricFutureBottomW: 544,
+  lyricFutureBottomW: 900,
   lyricActiveX: 882,
   lyricActiveY: 192,
   lyricActiveW: 850,
@@ -148,7 +148,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricActiveLayout: "two-line"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v4";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v5";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -670,6 +670,7 @@ function bindRoomUtilityControls(): void {
     input.addEventListener("input", () => {
       roomUtility = { ...roomUtility, [key]: Number(input.value) };
       setUtilityLabel(labelId, Number(input.value));
+      if (String(key).startsWith("lyric")) lyricAnimationRevision += 1;
       applyRoomUtilitySettings();
     });
   });
@@ -701,6 +702,7 @@ function bindRoomUtilityControls(): void {
   });
 
   lyricActiveBgColor.addEventListener("input", () => {
+    lyricAnimationRevision += 1;
     roomUtility = { ...roomUtility, lyricActiveBgColor: lyricActiveBgColor.value };
     applyRoomUtilitySettings();
   });
@@ -730,6 +732,27 @@ function bindRoomUtilityControls(): void {
     saveRoomUtilitySettings();
     applyRoomUtilitySettings();
   });
+}
+
+
+function hexToRgbParts(hex: string): string {
+  const normalized = hex.replace("#", "").trim();
+
+  if (/^[0-9a-fA-F]{3}$/.test(normalized)) {
+    return normalized
+      .split("")
+      .map((char) => parseInt(`${char}${char}`, 16))
+      .join(", ");
+  }
+
+  if (/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    const r = parseInt(normalized.slice(0, 2), 16);
+    const g = parseInt(normalized.slice(2, 4), 16);
+    const b = parseInt(normalized.slice(4, 6), 16);
+    return `${r}, ${g}, ${b}`;
+  }
+
+  return "5, 2, 8";
 }
 
 function lerp(start: number, end: number, t: number): number {
@@ -774,6 +797,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyrics-active-stroke", `${roomUtility.lyricActiveStroke}px`);
   root.style.setProperty("--lyrics-active-bg-opacity", String(roomUtility.lyricActiveBgOpacity));
   root.style.setProperty("--lyrics-active-bg-color", roomUtility.lyricActiveBgColor);
+  root.style.setProperty("--lyrics-active-bg-rgb", hexToRgbParts(roomUtility.lyricActiveBgColor));
 
   root.style.setProperty("--lyrics-guide-opacity", String(roomUtility.lyricGuideOpacity));
   root.style.setProperty("--lyrics-line-count", String(roomUtility.lyricLineCount));
@@ -851,7 +875,7 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
       return { ...DEFAULT_ROOM_UTILITY, ...parsed };
     }
 
-    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
+    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
     if (!oldRaw) return { ...DEFAULT_ROOM_UTILITY };
 
     const oldParsed = JSON.parse(oldRaw) as Partial<RoomUtilitySettings>;
