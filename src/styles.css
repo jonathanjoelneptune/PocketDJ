@@ -5328,3 +5328,155 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .lyrics-line-active {
   display: none !important;
 }
+
+
+/* SECTION LYRIC UTILITY: separate past/future sections plus tunable screen-facing active lyric */
+:root {
+  --lyrics-past-top-x: 881px;
+  --lyrics-past-top-y: 42px;
+  --lyrics-past-top-w: 1177px;
+  --lyrics-past-bottom-x: 882px;
+  --lyrics-past-bottom-y: 142px;
+  --lyrics-past-bottom-w: 920px;
+
+  --lyrics-future-top-x: 882px;
+  --lyrics-future-top-y: 250px;
+  --lyrics-future-top-w: 860px;
+  --lyrics-future-bottom-x: 882px;
+  --lyrics-future-bottom-y: 346px;
+  --lyrics-future-bottom-w: 544px;
+
+  --lyrics-active-x: 882px;
+  --lyrics-active-y: 192px;
+  --lyrics-active-w: 850px;
+  --lyrics-active-h: 58px;
+  --lyrics-active-zoom: 1.08;
+  --lyrics-active-stroke: 2px;
+  --lyrics-active-bg-opacity: 0.86;
+  --lyrics-active-bg-color: #050208;
+}
+
+/* Old guide names are superseded by the new section guides. */
+.lyrics-boundary-guide-top,
+.lyrics-boundary-guide-mid,
+.lyrics-boundary-guide-bottom {
+  display: none !important;
+}
+
+.lyrics-boundary-guide-past-top {
+  left: var(--lyrics-past-top-x);
+  top: var(--lyrics-past-top-y);
+  width: var(--lyrics-past-top-w);
+}
+
+.lyrics-boundary-guide-past-bottom {
+  left: var(--lyrics-past-bottom-x);
+  top: var(--lyrics-past-bottom-y);
+  width: var(--lyrics-past-bottom-w);
+}
+
+.lyrics-boundary-guide-future-top {
+  left: var(--lyrics-future-top-x);
+  top: var(--lyrics-future-top-y);
+  width: var(--lyrics-future-top-w);
+}
+
+.lyrics-boundary-guide-future-bottom {
+  left: var(--lyrics-future-bottom-x);
+  top: var(--lyrics-future-bottom-y);
+  width: var(--lyrics-future-bottom-w);
+}
+
+.lyrics-boundary-guide-active {
+  left: var(--lyrics-active-x);
+  top: var(--lyrics-active-y);
+  width: var(--lyrics-active-w);
+  height: var(--lyrics-active-h);
+  border: 2px solid rgba(255, 42, 42, 0.85);
+  background: rgba(255, 42, 42, 0.06);
+}
+
+/* The center slot is reserved for the active overlay. */
+.lyrics-line-center-hidden {
+  visibility: hidden !important;
+}
+
+/* Past and future lyrics fade in/out as they enter/leave their sections. */
+.lyrics-line-past {
+  animation: pastLyricFadeIn 420ms ease both;
+}
+
+.lyrics-line-future {
+  animation: futureLyricFadeIn 420ms ease both;
+}
+
+@keyframes pastLyricFadeIn {
+  0% { opacity: 0; filter: blur(1px); }
+  100% { opacity: var(--lyrics-past-opacity, 0.18); filter: blur(0); }
+}
+
+@keyframes futureLyricFadeIn {
+  0% { opacity: 0; filter: blur(1px); }
+  100% { opacity: var(--lyrics-future-opacity, 0.26); filter: blur(0); }
+}
+
+/* Active overlay positioning and sizing utilities. */
+.active-lyrics-block {
+  left: var(--lyrics-active-x) !important;
+  top: var(--lyrics-active-y) !important;
+  width: var(--lyrics-active-w) !important;
+  min-height: var(--lyrics-active-h) !important;
+  height: var(--lyrics-active-h) !important;
+}
+
+/* Use the tunable stroke/background controls. */
+.active-lyrics-line {
+  width: 100%;
+  min-height: var(--lyrics-active-h) !important;
+  color: #ffc84f;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--lyrics-active-bg-color) calc(var(--lyrics-active-bg-opacity) * 100%), transparent) 12%,
+      color-mix(in srgb, var(--lyrics-active-bg-color) calc(min(1, var(--lyrics-active-bg-opacity) + 0.10) * 100%), transparent) 50%,
+      color-mix(in srgb, var(--lyrics-active-bg-color) calc(var(--lyrics-active-bg-opacity) * 100%), transparent) 88%,
+      transparent 100%
+    ) !important;
+  -webkit-text-stroke: var(--lyrics-active-stroke) rgba(0, 0, 0, 0.86);
+  paint-order: stroke fill;
+  text-shadow:
+    0 1px 0 #4a1d03,
+    0 -1px 0 rgba(255, 248, 206, 0.24),
+    0 0 3px rgba(255, 197, 75, 0.70) !important;
+}
+
+/* color-mix fallback for older browsers */
+@supports not (color: color-mix(in srgb, red 50%, transparent)) {
+  .active-lyrics-line {
+    background:
+      linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(5, 2, 8, var(--lyrics-active-bg-opacity)) 12%,
+        rgba(5, 2, 8, var(--lyrics-active-bg-opacity)) 50%,
+        rgba(5, 2, 8, var(--lyrics-active-bg-opacity)) 88%,
+        transparent 100%
+      ) !important;
+  }
+}
+
+/* Section utility layout polish. */
+.utility-subhead-secondary {
+  margin-top: 14px !important;
+  color: rgba(255, 219, 146, 0.88) !important;
+}
+
+#lyricActiveBgColor {
+  width: 100%;
+  height: 34px;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 184, 76, 0.28);
+  background: rgba(18, 12, 28, 0.78);
+}

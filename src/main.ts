@@ -74,21 +74,31 @@ type RoomUtilitySettings = {
   vignetteStrength: number;
   shadowOpacity: number;
   tableShadowScale: number;
-  lyricTopX: number;
-  lyricTopY: number;
-  lyricTopW: number;
-  lyricMidX: number;
-  lyricMidY: number;
-  lyricMidW: number;
-  lyricBottomX: number;
-  lyricBottomY: number;
-  lyricBottomW: number;
+  lyricPastTopX: number;
+  lyricPastTopY: number;
+  lyricPastTopW: number;
+  lyricPastBottomX: number;
+  lyricPastBottomY: number;
+  lyricPastBottomW: number;
+  lyricFutureTopX: number;
+  lyricFutureTopY: number;
+  lyricFutureTopW: number;
+  lyricFutureBottomX: number;
+  lyricFutureBottomY: number;
+  lyricFutureBottomW: number;
+  lyricActiveX: number;
+  lyricActiveY: number;
+  lyricActiveW: number;
+  lyricActiveH: number;
+  lyricActiveZoom: number;
+  lyricActiveStroke: number;
+  lyricActiveBgOpacity: number;
+  lyricActiveBgColor: string;
   lyricGuideOpacity: number;
   lyricLineCount: number;
   lyricAnimationPreset: LyricAnimationPreset;
   lyricActivePreset: ActiveLyricPreset;
   lyricInactivePreset: InactiveLyricPreset;
-  lyricActiveZoom: number;
   lyricBaseFontSize: number;
   lyricActiveLayout: LyricActiveLayout;
 };
@@ -109,26 +119,36 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   vignetteStrength: 0.20,
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
-  lyricTopX: 881,
-  lyricTopY: 42,
-  lyricTopW: 1177,
-  lyricMidX: 882,
-  lyricMidY: 192,
-  lyricMidW: 796,
-  lyricBottomX: 882,
-  lyricBottomY: 346,
-  lyricBottomW: 544,
+  lyricPastTopX: 881,
+  lyricPastTopY: 42,
+  lyricPastTopW: 1177,
+  lyricPastBottomX: 882,
+  lyricPastBottomY: 142,
+  lyricPastBottomW: 920,
+  lyricFutureTopX: 882,
+  lyricFutureTopY: 250,
+  lyricFutureTopW: 860,
+  lyricFutureBottomX: 882,
+  lyricFutureBottomY: 346,
+  lyricFutureBottomW: 544,
+  lyricActiveX: 882,
+  lyricActiveY: 192,
+  lyricActiveW: 850,
+  lyricActiveH: 58,
+  lyricActiveZoom: 1.08,
+  lyricActiveStroke: 2,
+  lyricActiveBgOpacity: 0.86,
+  lyricActiveBgColor: "#050208",
   lyricGuideOpacity: 0.0,
   lyricLineCount: 11,
   lyricAnimationPreset: "vertical-marquee",
   lyricActivePreset: "amber-crisp",
   lyricInactivePreset: "clean-readable",
-  lyricActiveZoom: 1.08,
   lyricBaseFontSize: 12,
   lyricActiveLayout: "two-line"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v3";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v4";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -593,12 +613,14 @@ function bindRoomUtilityControls(): void {
   const lyricActivePreset = qs<HTMLSelectElement>("#lyricActivePreset");
   const lyricInactivePreset = qs<HTMLSelectElement>("#lyricInactivePreset");
   const lyricActiveLayout = qs<HTMLSelectElement>("#lyricActiveLayout");
+  const lyricActiveBgColor = qs<HTMLInputElement>("#lyricActiveBgColor");
 
   sceneFilter.value = roomUtility.sceneFilter;
   lyricAnimationPreset.value = roomUtility.lyricAnimationPreset;
   lyricActivePreset.value = roomUtility.lyricActivePreset;
   lyricInactivePreset.value = roomUtility.lyricInactivePreset;
   lyricActiveLayout.value = roomUtility.lyricActiveLayout;
+  lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
 
   const controls = [
     ["speakerLeftX", "speakerLeftXValue"],
@@ -615,18 +637,27 @@ function bindRoomUtilityControls(): void {
     ["vignetteStrength", "vignetteStrengthValue"],
     ["shadowOpacity", "shadowOpacityValue"],
     ["tableShadowScale", "tableShadowScaleValue"],
-    ["lyricTopX", "lyricTopXValue"],
-    ["lyricTopY", "lyricTopYValue"],
-    ["lyricTopW", "lyricTopWValue"],
-    ["lyricMidX", "lyricMidXValue"],
-    ["lyricMidY", "lyricMidYValue"],
-    ["lyricMidW", "lyricMidWValue"],
-    ["lyricBottomX", "lyricBottomXValue"],
-    ["lyricBottomY", "lyricBottomYValue"],
-    ["lyricBottomW", "lyricBottomWValue"],
+    ["lyricPastTopX", "lyricPastTopXValue"],
+    ["lyricPastTopY", "lyricPastTopYValue"],
+    ["lyricPastTopW", "lyricPastTopWValue"],
+    ["lyricPastBottomX", "lyricPastBottomXValue"],
+    ["lyricPastBottomY", "lyricPastBottomYValue"],
+    ["lyricPastBottomW", "lyricPastBottomWValue"],
+    ["lyricFutureTopX", "lyricFutureTopXValue"],
+    ["lyricFutureTopY", "lyricFutureTopYValue"],
+    ["lyricFutureTopW", "lyricFutureTopWValue"],
+    ["lyricFutureBottomX", "lyricFutureBottomXValue"],
+    ["lyricFutureBottomY", "lyricFutureBottomYValue"],
+    ["lyricFutureBottomW", "lyricFutureBottomWValue"],
+    ["lyricActiveX", "lyricActiveXValue"],
+    ["lyricActiveY", "lyricActiveYValue"],
+    ["lyricActiveW", "lyricActiveWValue"],
+    ["lyricActiveH", "lyricActiveHValue"],
+    ["lyricActiveZoom", "lyricActiveZoomValue"],
+    ["lyricActiveStroke", "lyricActiveStrokeValue"],
+    ["lyricActiveBgOpacity", "lyricActiveBgOpacityValue"],
     ["lyricGuideOpacity", "lyricGuideOpacityValue"],
     ["lyricLineCount", "lyricLineCountValue"],
-    ["lyricActiveZoom", "lyricActiveZoomValue"],
     ["lyricBaseFontSize", "lyricBaseFontSizeValue"]
   ] as const;
 
@@ -669,6 +700,11 @@ function bindRoomUtilityControls(): void {
     applyRoomUtilitySettings();
   });
 
+  lyricActiveBgColor.addEventListener("input", () => {
+    roomUtility = { ...roomUtility, lyricActiveBgColor: lyricActiveBgColor.value };
+    applyRoomUtilitySettings();
+  });
+
   qs<HTMLButtonElement>("#saveRoomUtility").addEventListener("click", () => {
     saveRoomUtilitySettings();
     applyRoomUtilitySettings();
@@ -681,7 +717,10 @@ function bindRoomUtilityControls(): void {
     lyricActivePreset.value = roomUtility.lyricActivePreset;
     lyricInactivePreset.value = roomUtility.lyricInactivePreset;
     lyricActiveLayout.value = roomUtility.lyricActiveLayout;
+    lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
+  lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
   lyricActiveLayout.value = roomUtility.lyricActiveLayout;
+  lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
     controls.forEach(([inputId, labelId]) => {
       const input = qs<HTMLInputElement>(`#${inputId}`);
       const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter">;
@@ -714,37 +753,57 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength));
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
   root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
-  root.style.setProperty("--lyrics-top-x", `${roomUtility.lyricTopX}px`);
-  root.style.setProperty("--lyrics-top-y", `${roomUtility.lyricTopY}px`);
-  root.style.setProperty("--lyrics-top-w", `${roomUtility.lyricTopW}px`);
-  root.style.setProperty("--lyrics-mid-x", `${roomUtility.lyricMidX}px`);
-  root.style.setProperty("--lyrics-mid-y", `${roomUtility.lyricMidY}px`);
-  root.style.setProperty("--lyrics-mid-w", `${roomUtility.lyricMidW}px`);
-  root.style.setProperty("--lyrics-bottom-x", `${roomUtility.lyricBottomX}px`);
-  root.style.setProperty("--lyrics-bottom-y", `${roomUtility.lyricBottomY}px`);
-  root.style.setProperty("--lyrics-bottom-w", `${roomUtility.lyricBottomW}px`);
+  root.style.setProperty("--lyrics-past-top-x", `${roomUtility.lyricPastTopX}px`);
+  root.style.setProperty("--lyrics-past-top-y", `${roomUtility.lyricPastTopY}px`);
+  root.style.setProperty("--lyrics-past-top-w", `${roomUtility.lyricPastTopW}px`);
+  root.style.setProperty("--lyrics-past-bottom-x", `${roomUtility.lyricPastBottomX}px`);
+  root.style.setProperty("--lyrics-past-bottom-y", `${roomUtility.lyricPastBottomY}px`);
+  root.style.setProperty("--lyrics-past-bottom-w", `${roomUtility.lyricPastBottomW}px`);
+  root.style.setProperty("--lyrics-future-top-x", `${roomUtility.lyricFutureTopX}px`);
+  root.style.setProperty("--lyrics-future-top-y", `${roomUtility.lyricFutureTopY}px`);
+  root.style.setProperty("--lyrics-future-top-w", `${roomUtility.lyricFutureTopW}px`);
+  root.style.setProperty("--lyrics-future-bottom-x", `${roomUtility.lyricFutureBottomX}px`);
+  root.style.setProperty("--lyrics-future-bottom-y", `${roomUtility.lyricFutureBottomY}px`);
+  root.style.setProperty("--lyrics-future-bottom-w", `${roomUtility.lyricFutureBottomW}px`);
+
+  root.style.setProperty("--lyrics-active-x", `${roomUtility.lyricActiveX}px`);
+  root.style.setProperty("--lyrics-active-y", `${roomUtility.lyricActiveY}px`);
+  root.style.setProperty("--lyrics-active-w", `${roomUtility.lyricActiveW}px`);
+  root.style.setProperty("--lyrics-active-h", `${roomUtility.lyricActiveH}px`);
+  root.style.setProperty("--lyrics-active-zoom", String(roomUtility.lyricActiveZoom));
+  root.style.setProperty("--lyrics-active-stroke", `${roomUtility.lyricActiveStroke}px`);
+  root.style.setProperty("--lyrics-active-bg-opacity", String(roomUtility.lyricActiveBgOpacity));
+  root.style.setProperty("--lyrics-active-bg-color", roomUtility.lyricActiveBgColor);
+
   root.style.setProperty("--lyrics-guide-opacity", String(roomUtility.lyricGuideOpacity));
   root.style.setProperty("--lyrics-line-count", String(roomUtility.lyricLineCount));
-  root.style.setProperty("--lyrics-active-zoom", String(roomUtility.lyricActiveZoom));
   root.style.setProperty("--lyrics-base-font-size", `${roomUtility.lyricBaseFontSize}px`);
   root.style.setProperty("--lyrics-animation-revision", String(lyricAnimationRevision));
 
-  for (let slot = 0; slot < roomUtility.lyricLineCount; slot += 1) {
-    const t = roomUtility.lyricLineCount <= 1 ? 0.5 : slot / (roomUtility.lyricLineCount - 1);
-    const firstHalf = t <= 0.5;
-    const localT = firstHalf ? t / 0.5 : (t - 0.5) / 0.5;
+  const lineCount = roomUtility.lyricLineCount;
+  const halfWindow = Math.floor(lineCount / 2);
+  const pastCount = halfWindow;
+  const futureCount = lineCount - halfWindow - 1;
 
-    const from = firstHalf
-      ? { x: roomUtility.lyricTopX, y: roomUtility.lyricTopY, w: roomUtility.lyricTopW }
-      : { x: roomUtility.lyricMidX, y: roomUtility.lyricMidY, w: roomUtility.lyricMidW };
+  for (let slot = 0; slot < lineCount; slot += 1) {
+    const offset = slot - halfWindow;
 
-    const to = firstHalf
-      ? { x: roomUtility.lyricMidX, y: roomUtility.lyricMidY, w: roomUtility.lyricMidW }
-      : { x: roomUtility.lyricBottomX, y: roomUtility.lyricBottomY, w: roomUtility.lyricBottomW };
-
-    root.style.setProperty(`--lyrics-slot-${slot}-x`, `${lerp(from.x, to.x, localT)}px`);
-    root.style.setProperty(`--lyrics-slot-${slot}-y`, `${lerp(from.y, to.y, localT)}px`);
-    root.style.setProperty(`--lyrics-slot-${slot}-w`, `${lerp(from.w, to.w, localT)}px`);
+    if (offset < 0) {
+      const t = pastCount <= 1 ? 1 : slot / (pastCount - 1);
+      root.style.setProperty(`--lyrics-slot-${slot}-x`, `${lerp(roomUtility.lyricPastTopX, roomUtility.lyricPastBottomX, t)}px`);
+      root.style.setProperty(`--lyrics-slot-${slot}-y`, `${lerp(roomUtility.lyricPastTopY, roomUtility.lyricPastBottomY, t)}px`);
+      root.style.setProperty(`--lyrics-slot-${slot}-w`, `${lerp(roomUtility.lyricPastTopW, roomUtility.lyricPastBottomW, t)}px`);
+    } else if (offset > 0) {
+      const futureSlot = offset - 1;
+      const t = futureCount <= 1 ? 0 : futureSlot / (futureCount - 1);
+      root.style.setProperty(`--lyrics-slot-${slot}-x`, `${lerp(roomUtility.lyricFutureTopX, roomUtility.lyricFutureBottomX, t)}px`);
+      root.style.setProperty(`--lyrics-slot-${slot}-y`, `${lerp(roomUtility.lyricFutureTopY, roomUtility.lyricFutureBottomY, t)}px`);
+      root.style.setProperty(`--lyrics-slot-${slot}-w`, `${lerp(roomUtility.lyricFutureTopW, roomUtility.lyricFutureBottomW, t)}px`);
+    } else {
+      root.style.setProperty(`--lyrics-slot-${slot}-x`, `${roomUtility.lyricActiveX}px`);
+      root.style.setProperty(`--lyrics-slot-${slot}-y`, `${roomUtility.lyricActiveY}px`);
+      root.style.setProperty(`--lyrics-slot-${slot}-w`, `${roomUtility.lyricActiveW}px`);
+    }
   }
 
   root.classList.toggle("lyrics-animation-focus-sweep", roomUtility.lyricAnimationPreset === "focus-sweep");
@@ -779,8 +838,8 @@ function updateSpeakerPulse(isPlaying: boolean): void {
 }
 
 function setUtilityLabel(id: string, value: number): void {
-  const pxOrCount = id.startsWith("lyric") && !id.includes("GuideOpacity") && !id.includes("ActiveZoom");
-  const decimals = id.includes("Scale") || id.includes("ActiveZoom") || id.includes("GuideOpacity") ? 2 : pxOrCount ? 0 : 1;
+  const pxOrCount = id.startsWith("lyric") && !id.includes("GuideOpacity") && !id.includes("ActiveZoom") && !id.includes("BgOpacity") && !id.includes("Stroke");
+  const decimals = id.includes("Scale") || id.includes("ActiveZoom") || id.includes("GuideOpacity") || id.includes("BgOpacity") || id.includes("Stroke") ? 2 : pxOrCount ? 0 : 1;
   qs(`#${id}`).textContent = value.toFixed(decimals);
 }
 
@@ -792,7 +851,7 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
       return { ...DEFAULT_ROOM_UTILITY, ...parsed };
     }
 
-    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
+    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
     if (!oldRaw) return { ...DEFAULT_ROOM_UTILITY };
 
     const oldParsed = JSON.parse(oldRaw) as Partial<RoomUtilitySettings>;

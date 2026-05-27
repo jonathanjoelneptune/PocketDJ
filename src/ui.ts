@@ -30,9 +30,11 @@ export function renderShell(state: AppState): void {
 
         <div id="lyricsCeiling" class="lyrics-ceiling" aria-live="polite">
           <div class="lyrics-boundary-guides" aria-hidden="true">
-            <div class="lyrics-boundary-guide lyrics-boundary-guide-top"></div>
-            <div class="lyrics-boundary-guide lyrics-boundary-guide-mid"></div>
-            <div class="lyrics-boundary-guide lyrics-boundary-guide-bottom"></div>
+            <div class="lyrics-boundary-guide lyrics-boundary-guide-past-top"></div>
+            <div class="lyrics-boundary-guide lyrics-boundary-guide-past-bottom"></div>
+            <div class="lyrics-boundary-guide lyrics-boundary-guide-future-top"></div>
+            <div class="lyrics-boundary-guide lyrics-boundary-guide-future-bottom"></div>
+            <div class="lyrics-boundary-guide lyrics-boundary-guide-active"></div>
           </div>
           <div class="lyrics-ceiling-inner">
             <div id="lyricsBlock" class="lyrics-block lyrics-empty">
@@ -223,48 +225,88 @@ export function renderShell(state: AppState): void {
           </div>
 
           <div class="lyrics-boundary-utility">
-            <div class="utility-subhead">Lyrics boundary utility</div>
-            <p class="utility-help">Use pixel values to tune the ceiling lyric shape. The active lyric sits on the middle line. Increase guide opacity to see the red boundary lines while tuning.</p>
+            <div class="utility-subhead">Lyrics section utility</div>
+            <p class="utility-help">Past lyrics use the top section. Future lyrics use the bottom section. The active lyric is controlled separately between them.</p>
 
+            <div class="utility-subhead utility-subhead-secondary">Past lyrics section</div>
             <div class="lyric-utility-stack">
-              <label>Top X px <span id="lyricTopXValue">881</span>
-                <input id="lyricTopX" type="range" min="0" max="1600" step="1" value="881" />
+              <label>Past top X px <span id="lyricPastTopXValue">881</span>
+                <input id="lyricPastTopX" type="range" min="0" max="1600" step="1" value="881" />
               </label>
-              <label>Top Y px <span id="lyricTopYValue">42</span>
-                <input id="lyricTopY" type="range" min="0" max="360" step="1" value="42" />
+              <label>Past top Y px <span id="lyricPastTopYValue">42</span>
+                <input id="lyricPastTopY" type="range" min="0" max="520" step="1" value="42" />
               </label>
-              <label>Top width px <span id="lyricTopWValue">1177</span>
-                <input id="lyricTopW" type="range" min="120" max="1600" step="1" value="1177" />
+              <label>Past top width px <span id="lyricPastTopWValue">1177</span>
+                <input id="lyricPastTopW" type="range" min="120" max="1600" step="1" value="1177" />
               </label>
+              <label>Past bottom X px <span id="lyricPastBottomXValue">882</span>
+                <input id="lyricPastBottomX" type="range" min="0" max="1600" step="1" value="882" />
+              </label>
+              <label>Past bottom Y px <span id="lyricPastBottomYValue">142</span>
+                <input id="lyricPastBottomY" type="range" min="0" max="520" step="1" value="142" />
+              </label>
+              <label>Past bottom width px <span id="lyricPastBottomWValue">920</span>
+                <input id="lyricPastBottomW" type="range" min="120" max="1600" step="1" value="920" />
+              </label>
+            </div>
 
-              <label>Middle X px <span id="lyricMidXValue">882</span>
-                <input id="lyricMidX" type="range" min="0" max="1600" step="1" value="882" />
+            <div class="utility-subhead utility-subhead-secondary">Active lyric</div>
+            <div class="lyric-utility-stack">
+              <label>Active X px <span id="lyricActiveXValue">882</span>
+                <input id="lyricActiveX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Middle Y px <span id="lyricMidYValue">192</span>
-                <input id="lyricMidY" type="range" min="0" max="420" step="1" value="192" />
+              <label>Active Y px <span id="lyricActiveYValue">192</span>
+                <input id="lyricActiveY" type="range" min="0" max="520" step="1" value="192" />
               </label>
-              <label>Middle width px <span id="lyricMidWValue">796</span>
-                <input id="lyricMidW" type="range" min="120" max="1600" step="1" value="796" />
+              <label>Active width px <span id="lyricActiveWValue">850</span>
+                <input id="lyricActiveW" type="range" min="180" max="1600" step="1" value="850" />
               </label>
+              <label>Active height px <span id="lyricActiveHValue">58</span>
+                <input id="lyricActiveH" type="range" min="20" max="180" step="1" value="58" />
+              </label>
+              <label>Active lyric zoom <span id="lyricActiveZoomValue">1.08</span>
+                <input id="lyricActiveZoom" type="range" min="0.75" max="1.6" step="0.01" value="1.08" />
+              </label>
+              <label>Black stroke px <span id="lyricActiveStrokeValue">2.00</span>
+                <input id="lyricActiveStroke" type="range" min="0" max="8" step="0.25" value="2" />
+              </label>
+              <label>Background opacity <span id="lyricActiveBgOpacityValue">0.86</span>
+                <input id="lyricActiveBgOpacity" type="range" min="0" max="1" step="0.01" value="0.86" />
+              </label>
+              <label>Background color
+                <input id="lyricActiveBgColor" type="color" value="#050208" />
+              </label>
+            </div>
 
-              <label>Bottom X px <span id="lyricBottomXValue">882</span>
-                <input id="lyricBottomX" type="range" min="0" max="1600" step="1" value="882" />
+            <div class="utility-subhead utility-subhead-secondary">Future lyrics section</div>
+            <div class="lyric-utility-stack">
+              <label>Future top X px <span id="lyricFutureTopXValue">882</span>
+                <input id="lyricFutureTopX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Bottom Y px <span id="lyricBottomYValue">346</span>
-                <input id="lyricBottomY" type="range" min="0" max="520" step="1" value="346" />
+              <label>Future top Y px <span id="lyricFutureTopYValue">250</span>
+                <input id="lyricFutureTopY" type="range" min="0" max="520" step="1" value="250" />
               </label>
-              <label>Bottom width px <span id="lyricBottomWValue">544</span>
-                <input id="lyricBottomW" type="range" min="120" max="1600" step="1" value="544" />
+              <label>Future top width px <span id="lyricFutureTopWValue">860</span>
+                <input id="lyricFutureTopW" type="range" min="120" max="1600" step="1" value="860" />
               </label>
+              <label>Future bottom X px <span id="lyricFutureBottomXValue">882</span>
+                <input id="lyricFutureBottomX" type="range" min="0" max="1600" step="1" value="882" />
+              </label>
+              <label>Future bottom Y px <span id="lyricFutureBottomYValue">346</span>
+                <input id="lyricFutureBottomY" type="range" min="0" max="520" step="1" value="346" />
+              </label>
+              <label>Future bottom width px <span id="lyricFutureBottomWValue">544</span>
+                <input id="lyricFutureBottomW" type="range" min="120" max="1600" step="1" value="544" />
+              </label>
+            </div>
 
+            <div class="utility-subhead utility-subhead-secondary">General lyrics</div>
+            <div class="lyric-utility-stack">
               <label>Number of lyric lines <span id="lyricLineCountValue">11</span>
                 <input id="lyricLineCount" type="range" min="3" max="15" step="2" value="11" />
               </label>
               <label>Base lyric font size px <span id="lyricBaseFontSizeValue">12</span>
                 <input id="lyricBaseFontSize" type="range" min="8" max="26" step="1" value="12" />
-              </label>
-              <label>Active lyric zoom <span id="lyricActiveZoomValue">1.08</span>
-                <input id="lyricActiveZoom" type="range" min="1" max="1.35" step="0.01" value="1.08" />
               </label>
               <label>Guide opacity <span id="lyricGuideOpacityValue">0.00</span>
                 <input id="lyricGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.0" />
@@ -304,9 +346,9 @@ export function renderShell(state: AppState): void {
                   <option value="two-line" selected>Two-line wrap</option>
                 </select>
               </label>
-
             </div>
           </div>
+          
           <div class="button-grid utility-buttons">
             <button id="saveRoomUtility" class="secondary" type="button">Save room utility</button>
             <button id="resetRoomUtility" class="secondary" type="button">Reset utility</button>
@@ -786,13 +828,14 @@ export function updateLyricsCeiling(
       const line = cleanLines[absoluteIndex];
       const isCenterSlot = offset === 0;
       const isPast = offset < 0;
+      const isFuture = offset > 0;
       const isNear = Math.abs(offset) <= 2;
       const textLength = line?.text.length ?? 0;
       const lineScale = getLyricLineScale(textLength, false);
 
       return `
         <div
-          class="lyrics-line ${line ? "" : "lyrics-line-blank"} ${isCenterSlot ? "lyrics-line-center-hidden" : ""} ${isPast ? "lyrics-line-past" : ""} ${isNear ? "lyrics-line-near" : ""}"
+          class="lyrics-line ${line ? "" : "lyrics-line-blank"} ${isCenterSlot ? "lyrics-line-center-hidden" : ""} ${isPast ? "lyrics-line-past" : ""} ${isFuture ? "lyrics-line-future" : ""} ${isNear ? "lyrics-line-near" : ""}"
           style="left: var(--lyrics-slot-${slotIndex}-x); top: var(--lyrics-slot-${slotIndex}-y); width: var(--lyrics-slot-${slotIndex}-w); --lyrics-line-scale: ${lineScale};"
           data-time="${line?.timeMs ?? ""}"
         >
