@@ -27,7 +27,6 @@ export function renderShell(state: AppState): void {
 
         <div id="lyricsCeiling" class="lyrics-ceiling" aria-live="polite">
           <div class="lyrics-ceiling-inner">
-            <div id="lyricsSourcePill" class="lyrics-source-pill">LYRICS</div>
             <div id="lyricsBlock" class="lyrics-block lyrics-empty">
               <div class="lyrics-placeholder">Lyrics will appear on the ceiling</div>
             </div>
@@ -102,6 +101,7 @@ export function renderShell(state: AppState): void {
         <div class="brand-row compact-brand-row">
           <div class="mini-brand">Pocket DJ</div>
           <div class="brand-actions">
+            <button id="lyricsToggle" class="lyrics-toggle lyrics-toggle-on lyrics-toggle-unknown" type="button" aria-pressed="true" title="Toggle ceiling lyrics">LYRICS</button>
             <div class="mode-pill" id="modePill">IDLE</div>
             <div class="connect-pill-wrap">
               <button id="connectSpotify" class="connect-pill disconnected" type="button" aria-haspopup="true" aria-expanded="false">Connect</button>
@@ -110,7 +110,6 @@ export function renderShell(state: AppState): void {
               </div>
             </div>
             <button id="panelLockToggle" class="panel-lock-toggle" type="button" aria-label="Lock side panel open" title="Lock side panel open">🔒</button>
-            <button id="hidePanel" class="panel-close" type="button" aria-label="Hide controls">×</button>
           </div>
         </div>
 
@@ -615,42 +614,31 @@ export function updateLyricsCeiling(
   lyrics: LyricsPayload,
   playbackMs: number,
   activeIndex: number,
+  enabled = true,
 ): void {
+  const ceiling = qs<HTMLElement>("#lyricsCeiling");
   const block = qs<HTMLElement>("#lyricsBlock");
-  const pill = qs<HTMLElement>("#lyricsSourcePill");
 
-  pill.textContent =
-    lyrics.status === "found"
-      ? "LYRICS • LRCLIB"
-      : lyrics.status === "loading"
-        ? "LYRICS • SEARCHING"
-        : "LYRICS";
+  updateLyricsToggleUi(lyrics.status, enabled);
+
+  ceiling.classList.toggle("lyrics-ceiling-hidden", !enabled);
+  ceiling.classList.toggle("lyrics-ceiling-visible", enabled && lyrics.status === "found");
+
+  if (!enabled) {
+    block.innerHTML = "";
+    return;
+  }
 
   block.classList.toggle("lyrics-empty", lyrics.status !== "found");
   block.classList.toggle("lyrics-found", lyrics.status === "found");
 
-  if (lyrics.status === "loading") {
-    block.innerHTML = `<div class="lyrics-placeholder">Searching lyrics...</div>`;
+  if (lyrics.status === "loading" || lyrics.status === "idle") {
+    block.innerHTML = "";
     return;
   }
 
-  if (lyrics.status === "instrumental") {
-    block.innerHTML = `<div class="lyrics-placeholder">Instrumental track</div>`;
-    return;
-  }
-
-  if (lyrics.status === "not-found") {
-    block.innerHTML = `<div class="lyrics-placeholder">Lyrics unavailable</div>`;
-    return;
-  }
-
-  if (lyrics.status === "error") {
-    block.innerHTML = `<div class="lyrics-placeholder">Lyrics error</div>`;
-    return;
-  }
-
-  if (lyrics.status !== "found") {
-    block.innerHTML = `<div class="lyrics-placeholder">Lyrics will appear on the ceiling</div>`;
+  if (lyrics.status === "instrumental" || lyrics.status === "not-found" || lyrics.status === "error") {
+    block.innerHTML = "";
     return;
   }
 
@@ -684,6 +672,20 @@ export function updateLyricsCeiling(
       behavior: "smooth",
     });
   }
+}
+
+export function updateLyricsToggleUi(status: LyricsPayload["status"], enabled: boolean): void {
+  const toggle = qs<HTMLButtonElement>("#lyricsToggle");
+
+  toggle.classList.toggle("lyrics-toggle-on", enabled);
+  toggle.classList.toggle("lyrics-toggle-off", !enabled);
+  toggle.classList.toggle("lyrics-toggle-found", enabled && status === "found");
+  toggle.classList.toggle("lyrics-toggle-missing", enabled && (status === "not-found" || status === "instrumental" || status === "error"));
+  toggle.classList.toggle("lyrics-toggle-searching", enabled && status === "loading");
+  toggle.classList.toggle("lyrics-toggle-unknown", enabled && (status === "idle" || status === "loading"));
+
+  toggle.setAttribute("aria-pressed", String(enabled));
+  toggle.setAttribute("title", enabled ? "Hide ceiling lyrics" : "Show ceiling lyrics");
 }
 
 function escapeHtml(value: string): string {

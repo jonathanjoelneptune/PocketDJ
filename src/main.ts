@@ -12,7 +12,7 @@ import {
   type LyricsPayload,
 } from "./lyrics/lyricsClient";
 import { qs } from "./utils/dom";
-import { renderShell, setControlPanelOpen, updateLyricsCeiling, updatePlaybackUi } from "./ui";
+import { renderShell, setControlPanelOpen, updateLyricsCeiling, updateLyricsToggleUi, updatePlaybackUi } from "./ui";
 
 const STANDARD_SPOTIFY_CLIENT_ID = "37da51db24384ad3a07c222f71b1525e";
 
@@ -39,6 +39,7 @@ let phase2RepeatMode: "off" | "context" | "track" = "off";
 let phase2Volume = 70;
 let lyricsState: LyricsPayload = emptyLyrics();
 let lyricsFetchKey = "";
+let lyricsEnabled = true;
 
 
 type SceneFilter =
@@ -98,6 +99,7 @@ async function boot(): Promise<void> {
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
   bindControls();
   updateSidePanelLockUi();
+  updateLyricsToggleUi(lyricsState.status, lyricsEnabled);
   scheduleSidePanelAutoHide();
   bindRoomUtilityControls();
   applyRoomUtilitySettings();
@@ -126,15 +128,13 @@ function bindControls(): void {
     openSidePanel(true);
   });
 
-  const hidePanelButton = qs<HTMLButtonElement>("#hidePanel");
-  const closePanelFromButton = (event: Event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setSidePanelLocked(false);
-    closeSidePanel();
-  };
-  hidePanelButton.addEventListener("pointerdown", closePanelFromButton);
-  hidePanelButton.addEventListener("click", closePanelFromButton);
+  qs<HTMLButtonElement>("#lyricsToggle").addEventListener("click", () => {
+    lyricsEnabled = !lyricsEnabled;
+    const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
+    const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
+    updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled);
+  });
+
 
   qs<HTMLButtonElement>("#panelLockToggle").addEventListener("click", () => {
     setSidePanelLocked(!sidePanelLocked);
@@ -661,7 +661,7 @@ async function refreshLyricsForCurrentTrack(): Promise<void> {
   if (!key || track.source === "none") {
     lyricsState = emptyLyrics("idle");
     lyricsFetchKey = "";
-    updateLyricsCeiling(lyricsState, 0, -1);
+    updateLyricsCeiling(lyricsState, 0, -1, lyricsEnabled);
     return;
   }
 
@@ -669,12 +669,12 @@ async function refreshLyricsForCurrentTrack(): Promise<void> {
 
   lyricsFetchKey = key;
   lyricsState = { ...emptyLyrics("loading"), trackKey: key };
-  updateLyricsCeiling(lyricsState, getEstimatedPlaybackProgress(track), -1);
+  updateLyricsCeiling(lyricsState, getEstimatedPlaybackProgress(track), -1, lyricsEnabled);
 
   lyricsState = await fetchLyricsForTrack(track);
   const lyricProgressMs = getEstimatedPlaybackProgress(track);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
-  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex);
+  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled);
 }
 
 async function pollSpotifyNow(): Promise<void> {
@@ -718,7 +718,7 @@ function tick(): void {
 
   const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
-  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex);
+  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled);
 
   requestAnimationFrame(tick);
 }
