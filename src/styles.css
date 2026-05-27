@@ -2390,3 +2390,145 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   height: 4px !important;
   accent-color: #38bdf8;
 }
+
+
+/* Final side-panel top-row pill alignment and pause-button cleanup */
+.compact-brand-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: calc(var(--room-w) * 0.0052) !important;
+  min-height: calc(var(--room-h) * 0.046) !important;
+}
+
+.mini-brand {
+  align-self: center !important;
+  display: flex !important;
+  align-items: center !important;
+  height: calc(var(--room-h) * 0.034) !important;
+  line-height: 1 !important;
+  font-size: calc(var(--room-w) * 0.0046) !important;
+  padding-top: 1px !important;
+}
+
+.brand-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: calc(var(--room-w) * 0.0046) !important;
+  min-height: calc(var(--room-h) * 0.046) !important;
+}
+
+.mode-pill,
+.connect-pill,
+.panel-close {
+  display: inline-grid !important;
+  place-items: center !important;
+  align-self: center !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+
+.mode-pill,
+.connect-pill {
+  height: calc(var(--room-h) * 0.034) !important;
+  min-height: 24px !important;
+  max-height: 30px !important;
+  min-width: calc(var(--room-w) * 0.041) !important;
+  padding: 0 calc(var(--room-w) * 0.0058) !important;
+  font-size: calc(var(--room-w) * 0.0031) !important;
+  border-radius: 999px !important;
+  white-space: nowrap !important;
+}
+
+.connect-pill {
+  min-width: calc(var(--room-w) * 0.054) !important;
+}
+
+.panel-close {
+  width: calc(var(--room-h) * 0.034) !important;
+  height: calc(var(--room-h) * 0.034) !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  max-width: 30px !important;
+  max-height: 30px !important;
+  padding: 0 !important;
+  font-size: calc(var(--room-w) * 0.0062) !important;
+  transform: none !important;
+}
+
+/* Clean pause/play control inside the side panel.
+   Use drawn pause bars instead of a font glyph so it does not look like odd roman numerals. */
+.panel-play-button {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.panel-play-button #panelPlayIcon {
+  font-size: 0 !important;
+  letter-spacing: 0 !important;
+  transform: none !important;
+  width: calc(var(--room-w) * 0.0135) !important;
+  height: calc(var(--room-w) * 0.0135) !important;
+  display: block !important;
+  position: relative !important;
+}
+
+.panel-play-button #panelPlayIcon::before,
+.panel-play-button #panelPlayIcon::after {
+  content: "";
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  width: 29%;
+  border-radius: 2px;
+  background: #0f172a;
+  box-shadow: inset 0 0 1px rgba(255,255,255,0.25);
+}
+
+/* pause bars */
+.panel-play-button #panelPlayIcon::before {
+  left: 16%;
+}
+
+.panel-play-button #panelPlayIcon::after {
+  right: 16%;
+}
+
+/* When paused, JS places a play triangle. Hide the after bar and make the before pseudo a triangle. */
+.panel-play-button #panelPlayIcon:not(:empty) {
+  width: calc(var(--room-w) * 0.014) !important;
+  height: calc(var(--room-w) * 0.014) !important;
+}
+
+/* The text content is either || or ▶. Detect the play state with a class-independent fallback:
+   if the app writes ▶, the actual text is hidden by font-size 0, so use aria-label to draw triangle. */
+.panel-play-button[aria-label="Play Spotify"] #panelPlayIcon::before {
+  left: 28%;
+  top: 14%;
+  bottom: auto;
+  width: 0;
+  height: 0;
+  border-radius: 0;
+  background: transparent;
+  border-left: calc(var(--room-w) * 0.010) solid #0f172a;
+  border-top: calc(var(--room-w) * 0.0065) solid transparent;
+  border-bottom: calc(var(--room-w) * 0.0065) solid transparent;
+  box-shadow: none;
+}
+
+.panel-play-button[aria-label="Play Spotify"] #panelPlayIcon::after {
+  display: none;
+}
+
+/* Smaller screens still keep the top row aligned and readable. */
+@media (max-width: 900px) {
+  .mini-brand {
+    font-size: calc(var(--room-w) * 0.0052) !important;
+  }
+
+  .mode-pill,
+  .connect-pill {
+    font-size: calc(var(--room-w) * 0.0036) !important;
+  }
+}
