@@ -60,7 +60,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   speakerPulseX: 53.0,
   speakerPulseY: 50.4,
   speakerPulseSize: 48.2,
-  speakerWarpOpacity: 0.92,
+  speakerWarpOpacity: 1.00,
   sceneFilter: "neon-purple",
   filterStrength: 0.20,
   vignetteStrength: 0.20,

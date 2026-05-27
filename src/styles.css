@@ -39,7 +39,7 @@
   --speaker-pulse-x: 53%;
   --speaker-pulse-y: 50.4%;
   --speaker-pulse-size: 48.2%;
-  --speaker-warp-opacity: 0.92;
+  --speaker-warp-opacity: 1.00;
   --scene-filter-strength: 0.20;
   --scene-vignette-strength: 0.20;
   --shadow-opacity: 1.00;
@@ -315,70 +315,33 @@ button {
   z-index: -1;
 }
 
-/* Tunable driver movement. This clips a duplicate of the speaker image to the driver area
-   and subtly scales it from the cone center, so it reads as the physical cone moving. */
-.speaker-driver-warp {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  background-image: url("./assets/Speaker.png");
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  clip-path: circle(calc(var(--speaker-pulse-size) * 0.50) at var(--speaker-pulse-x) var(--speaker-pulse-y));
-  transform-origin: var(--speaker-pulse-x) var(--speaker-pulse-y);
-  opacity: 0;
-  filter: none;
-}
-
-/* Very subtle dark rim only. This is not a light pulse. It just gives the moving cone edge depth. */
-.speaker-pulse {
+/* Proper isolated speaker cone animation using cropped Speaker Driver.png */
+.speaker-driver {
   position: absolute;
   left: var(--speaker-pulse-x);
   top: var(--speaker-pulse-y);
   width: var(--speaker-pulse-size);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  opacity: 0;
+  height: auto;
+  transform: translate(-50%, -50%) scale(1);
+  transform-origin: center center;
   z-index: 4;
   pointer-events: none;
-  background:
-    radial-gradient(circle at center,
-      rgba(0,0,0,0) 0 48%,
-      rgba(0,0,0,0.20) 54%,
-      rgba(0,0,0,0) 72%);
-  mix-blend-mode: multiply;
+  opacity: var(--speaker-warp-opacity);
+  image-rendering: auto;
+  will-change: transform;
 }
 
-.room-speaker.playing .speaker-driver-warp {
-  animation: speakerConeWarp 560ms ease-in-out infinite alternate;
+.room-speaker.playing .speaker-driver {
+  animation: speakerDriverPulse 520ms ease-in-out infinite alternate;
 }
 
-.room-speaker.playing .speaker-pulse {
-  animation: speakerConeRim 560ms ease-in-out infinite alternate;
-}
-
-@keyframes speakerConeWarp {
+@keyframes speakerDriverPulse {
   from {
-    opacity: calc(var(--speaker-warp-opacity) * 0.74);
-    transform: scale(0.992);
+    transform: translate(-50%, -50%) scale(0.96);
   }
-  to {
-    opacity: var(--speaker-warp-opacity);
-    transform: scale(calc(1 + (var(--speaker-pulse) * 0.045)));
-  }
-}
 
-@keyframes speakerConeRim {
-  from {
-    opacity: 0.18;
-    scale: 0.98;
-  }
   to {
-    opacity: calc(0.18 + (var(--speaker-pulse) * 0.32));
-    scale: 1.04;
+    transform: translate(-50%, -50%) scale(calc(1.02 + (var(--speaker-pulse) * 0.08)));
   }
 }
 
