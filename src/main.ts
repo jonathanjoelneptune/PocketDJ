@@ -586,14 +586,12 @@ function updatePhase2SpotifyControls(): void {
 
 function bindRoomUtilityControls(): void {
   const sceneFilter = qs<HTMLSelectElement>("#sceneFilterSelect");
-  const lyricVideoMode = qs<HTMLSelectElement>("#lyricVideoMode");
-  const lyricVideoBgColor = qs<HTMLInputElement>("#lyricVideoBgColor");
-  const lyricVideoFillColor = qs<HTMLInputElement>("#lyricVideoFillColor");
+  const lyricPosterMaxRows = qs<HTMLSelectElement>("#lyricPosterMaxRows");
+  const lyricPosterTransition = qs<HTMLSelectElement>("#lyricPosterTransition");
 
   sceneFilter.value = roomUtility.sceneFilter;
-  lyricVideoMode.value = roomUtility.lyricVideoMode;
-  lyricVideoBgColor.value = roomUtility.lyricVideoBgColor;
-  lyricVideoFillColor.value = roomUtility.lyricVideoFillColor;
+  lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
+  lyricPosterTransition.value = roomUtility.lyricPosterTransition;
 
   const controls = [
     ["speakerLeftX", "speakerLeftXValue"],
@@ -644,21 +642,15 @@ function bindRoomUtilityControls(): void {
     applyRoomUtilitySettings();
   });
 
-  lyricVideoMode.addEventListener("change", () => {
+  lyricPosterMaxRows.addEventListener("change", () => {
     lyricAnimationRevision += 1;
-    roomUtility = { ...roomUtility, lyricVideoMode: lyricVideoMode.value as RoomUtilitySettings["lyricVideoMode"] };
+    roomUtility = { ...roomUtility, lyricPosterMaxRows: lyricPosterMaxRows.value as RoomUtilitySettings["lyricPosterMaxRows"] };
     applyRoomUtilitySettings();
   });
 
-  lyricVideoBgColor.addEventListener("input", () => {
+  lyricPosterTransition.addEventListener("change", () => {
     lyricAnimationRevision += 1;
-    roomUtility = { ...roomUtility, lyricVideoBgColor: lyricVideoBgColor.value };
-    applyRoomUtilitySettings();
-  });
-
-  lyricVideoFillColor.addEventListener("input", () => {
-    lyricAnimationRevision += 1;
-    roomUtility = { ...roomUtility, lyricVideoFillColor: lyricVideoFillColor.value };
+    roomUtility = { ...roomUtility, lyricPosterTransition: lyricPosterTransition.value as RoomUtilitySettings["lyricPosterTransition"] };
     applyRoomUtilitySettings();
   });
 
@@ -670,9 +662,8 @@ function bindRoomUtilityControls(): void {
   qs<HTMLButtonElement>("#resetRoomUtility").addEventListener("click", () => {
     roomUtility = { ...DEFAULT_ROOM_UTILITY };
     sceneFilter.value = roomUtility.sceneFilter;
-    lyricVideoMode.value = roomUtility.lyricVideoMode;
-    lyricVideoBgColor.value = roomUtility.lyricVideoBgColor;
-    lyricVideoFillColor.value = roomUtility.lyricVideoFillColor;
+    lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
+    lyricPosterTransition.value = roomUtility.lyricPosterTransition;
 
     controls.forEach(([inputId, labelId]) => {
       const input = qs<HTMLInputElement>(`#${inputId}`);
