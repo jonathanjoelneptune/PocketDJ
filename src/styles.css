@@ -1173,3 +1173,45 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   width: max-content !important;
   max-width: none;
 }
+
+
+/* Final marquee text clipping and song-change train guards */
+.marquee-viewport {
+  inset: -3px 7.5% 0 7.5%;
+}
+
+.marquee-content {
+  transform: translateX(0) translateY(1px);
+  gap: clamp(6px, 0.62vw, 11px);
+  overflow: hidden;
+}
+
+.marquee-title,
+.marquee-artist {
+  line-height: 1.22;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  overflow: visible;
+}
+
+/* Short/non-scrolling titles stay centered; long/scrolled titles stay left anchored. */
+.marquee.marquee-title-short .marquee-title {
+  align-self: center !important;
+  width: max-content !important;
+  max-width: 100%;
+  transform: translateX(0);
+  text-align: center;
+}
+
+.marquee.marquee-title-long .marquee-title {
+  align-self: flex-start !important;
+  width: max-content !important;
+  max-width: none;
+}
+
+/* During the song-change animation, keep the clean single title visible.
+   The duplicated train is created by JS only after the transition completes. */
+.marquee-swap .marquee-title,
+.marquee-swap .marquee-artist {
+  white-space: nowrap;
+}
