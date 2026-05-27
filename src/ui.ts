@@ -89,11 +89,8 @@ export function renderShell(state: AppState): void {
       <pre id="animationDebugPanel" class="animation-debug-panel" hidden>frame: loading</pre>
 
       <aside id="controlCard" class="control-card control-card-open">
-        <div class="brand-row">
-          <div>
-            <p class="eyebrow">Spotify-reactive room</p>
-            <h1>Pocket DJ</h1>
-          </div>
+        <div class="brand-row compact-brand-row">
+          <div class="mini-brand">Pocket DJ</div>
           <div class="brand-actions">
             <div class="mode-pill" id="modePill">IDLE</div>
             <div class="connect-pill-wrap">
@@ -106,7 +103,7 @@ export function renderShell(state: AppState): void {
           </div>
         </div>
 
-        <div class="now-card">
+        <div class="now-card now-card-compact">
           <div class="art" id="albumArt"><span>♪</span></div>
           <div class="track-copy">
             <div class="track-title" id="trackTitle">${state.playback.title}</div>
@@ -116,25 +113,22 @@ export function renderShell(state: AppState): void {
               <div class="progress"><div id="progressFill"></div></div>
               <span id="progressEnd">0:00</span>
             </div>
+
+            <div class="panel-playback-row" aria-label="Panel playback controls">
+              <button id="panelShuffleButton" class="panel-icon-button panel-shuffle" type="button" aria-label="Shuffle" title="Shuffle off">⤨</button>
+              <button id="panelPrevButton" class="panel-icon-button" type="button" aria-label="Previous or restart" title="Previous or restart">⏮</button>
+              <button id="panelPlayButton" class="panel-play-button" type="button" aria-label="Play or pause" title="Play or pause"><span id="panelPlayIcon">▶</span></button>
+              <button id="panelNextButton" class="panel-icon-button" type="button" aria-label="Next" title="Next">⏭</button>
+              <button id="panelRepeatButton" class="panel-icon-button panel-repeat" type="button" aria-label="Repeat" title="Repeat off">↻</button>
+            </div>
+
+            <div class="panel-volume-row">
+              <span>VOL</span>
+              <input id="spotifyVolume" type="range" min="0" max="100" step="1" value="70" />
+              <strong id="spotifyVolumeValue">70</strong>
+            </div>
           </div>
         </div>
-
-        <section class="spotify-utility-panel" aria-label="Spotify utility controls">
-          <div class="utility-row">
-            <label for="spotifyVolume">Volume <span id="spotifyVolumeValue">70</span></label>
-            <input id="spotifyVolume" type="range" min="0" max="100" step="1" value="70" />
-          </div>
-
-          <div class="spotify-toggle-grid">
-            <button id="spotifyShuffle" class="secondary spotify-toggle" type="button">Shuffle: Off</button>
-            <button id="spotifyRepeat" class="secondary spotify-toggle" type="button">Repeat: off</button>
-          </div>
-
-          <div class="phase2-placeholder">
-            <span>Phase 2 ready</span>
-            <small>Search, playlists, and library browser can land here next.</small>
-          </div>
-        </section>
 
         <details class="dev-tools">
           <summary>Dev tools</summary>
@@ -283,19 +277,25 @@ function updateFloorControls(track: NormalizedTrack): void {
   const prevButton = qs<HTMLButtonElement>("#floorPrevButton");
   const nextButton = qs<HTMLButtonElement>("#floorNextButton");
   const progressFill = qs<HTMLDivElement>("#floorProgressFill");
+  const panelPlayIcon = qs<HTMLElement>("#panelPlayIcon");
+  const panelPlayButton = qs<HTMLButtonElement>("#panelPlayButton");
+  const panelPrevButton = qs<HTMLButtonElement>("#panelPrevButton");
+  const panelNextButton = qs<HTMLButtonElement>("#panelNextButton");
 
   const canControl = track.source === "spotify" && track.isAuthenticated;
   floor.classList.toggle("floor-player-playing", track.isPlaying);
   toggle.classList.toggle("floor-controls-toggle-playing", track.isPlaying);
   playIcon.textContent = track.isPlaying ? "||" : "▶";
+  panelPlayIcon.textContent = track.isPlaying ? "||" : "▶";
   playButton.setAttribute("aria-label", track.isPlaying ? "Pause Spotify" : "Play Spotify");
+  panelPlayButton.setAttribute("aria-label", track.isPlaying ? "Pause Spotify" : "Play Spotify");
 
   const progressPercent = track.durationMs > 0
     ? Math.min(100, (getEstimatedProgress(track) / track.durationMs) * 100)
     : 0;
   progressFill.style.width = `${progressPercent}%`;
 
-  [playButton, prevButton, nextButton].forEach((button) => {
+  [playButton, prevButton, nextButton, panelPlayButton, panelPrevButton, panelNextButton].forEach((button) => {
     button.disabled = !canControl;
     button.classList.toggle("floor-control-disabled", !canControl);
   });

@@ -166,7 +166,7 @@ function bindControls(): void {
     });
   });
 
-  qs<HTMLButtonElement>("#spotifyShuffle").addEventListener("click", () => {
+  qs<HTMLButtonElement>("#panelShuffleButton").addEventListener("click", () => {
     phase2ShuffleEnabled = !phase2ShuffleEnabled;
     updatePhase2SpotifyControls();
     void runSpotifyPlaybackCommand(async () => {
@@ -174,7 +174,7 @@ function bindControls(): void {
     });
   });
 
-  qs<HTMLButtonElement>("#spotifyRepeat").addEventListener("click", () => {
+  qs<HTMLButtonElement>("#panelRepeatButton").addEventListener("click", () => {
     phase2RepeatMode = phase2RepeatMode === "off" ? "context" : phase2RepeatMode === "context" ? "track" : "off";
     updatePhase2SpotifyControls();
     void runSpotifyPlaybackCommand(async () => {
@@ -244,6 +244,30 @@ function bindFloorPlaybackControls(): void {
     const isPanelOpen = panel.classList.contains("control-card-open");
     setControlPanelOpen(!isPanelOpen);
     setFloorControlsOpen(true, false);
+  });
+
+  qs<HTMLButtonElement>("#panelPlayButton").addEventListener("click", () => {
+    void runSpotifyPlaybackCommand(async () => {
+      if (state.playback.isPlaying) await pauseSpotify(state.spotifyClientId);
+      else await playSpotify(state.spotifyClientId);
+    });
+  });
+
+  qs<HTMLButtonElement>("#panelNextButton").addEventListener("click", () => {
+    void runSpotifyPlaybackCommand(async () => {
+      await nextSpotifyTrack(state.spotifyClientId);
+    });
+  });
+
+  qs<HTMLButtonElement>("#panelPrevButton").addEventListener("click", () => {
+    void runSpotifyPlaybackCommand(async () => {
+      const estimatedProgress = getEstimatedPlaybackProgress(state.playback);
+      if (estimatedProgress > 3_000) {
+        await seekSpotify(state.spotifyClientId, 0);
+      } else {
+        await previousSpotifyTrack(state.spotifyClientId);
+      }
+    });
   });
 }
 
@@ -328,15 +352,15 @@ async function runSpotifyPlaybackCommand(command: () => Promise<void>): Promise<
 }
 
 function updatePhase2SpotifyControls(): void {
-  const shuffle = qs<HTMLButtonElement>("#spotifyShuffle");
-  const repeat = qs<HTMLButtonElement>("#spotifyRepeat");
+  const shuffle = qs<HTMLButtonElement>("#panelShuffleButton");
+  const repeat = qs<HTMLButtonElement>("#panelRepeatButton");
   const volume = qs<HTMLInputElement>("#spotifyVolume");
 
   shuffle.classList.toggle("spotify-control-active", phase2ShuffleEnabled);
-  shuffle.textContent = phase2ShuffleEnabled ? "Shuffle: On" : "Shuffle: Off";
+  shuffle.setAttribute("title", phase2ShuffleEnabled ? "Shuffle on" : "Shuffle off");
 
   repeat.classList.toggle("spotify-control-active", phase2RepeatMode !== "off");
-  repeat.textContent = `Repeat: ${phase2RepeatMode}`;
+  repeat.setAttribute("title", `Repeat: ${phase2RepeatMode}`);
 
   volume.value = String(phase2Volume);
   qs<HTMLElement>("#spotifyVolumeValue").textContent = String(phase2Volume);
