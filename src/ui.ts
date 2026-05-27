@@ -300,7 +300,7 @@ function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
 
   if (track.source === "demo") {
     state = track.isPlaying ? "playing" : "paused";
-    title = `TITLE: ${track.isPlaying ? cleanMarqueeText(track.title) : `Paused: ${cleanMarqueeText(track.title)}`}`;
+    title = track.isPlaying ? `TITLE: ${cleanMarqueeText(track.title)}` : `PAUSED: ${cleanMarqueeText(track.title)}`;
     artist = `${artistPrefix}${artistRaw || "Demo mode"}`;
   } else if (!track.isAuthenticated || !track.trackId) {
     state = "empty";
@@ -308,7 +308,7 @@ function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
     artist = idleMarqueePhrase();
   } else if (!track.isPlaying) {
     state = "paused";
-    title = `TITLE: Paused: ${cleanMarqueeText(track.title)}`;
+    title = `PAUSED: ${cleanMarqueeText(track.title)}`;
     artist = `${artistPrefix}${artistRaw}`;
   } else {
     state = "playing";

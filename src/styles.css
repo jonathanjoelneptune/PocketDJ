@@ -177,9 +177,9 @@ button {
   width: 100%;
   display: grid;
   place-items: center;
-  gap: clamp(3px, 0.38vw, 7px);
+  gap: clamp(1px, 0.22vw, 4px);
   opacity: 1;
-  transform: translateX(0);
+  transform: translateX(0) translateY(-2px);
   transition: opacity 260ms ease, transform 260ms ease, filter 260ms ease;
 }
 
@@ -215,15 +215,15 @@ button {
 }
 
 .marquee-title {
-  font-size: clamp(7px, 0.78vw, 15px);
-  line-height: 1.2;
-  letter-spacing: 0.05em;
+  font-size: clamp(8px, 0.90vw, 17px);
+  line-height: 1.05;
+  letter-spacing: 0.045em;
 }
 
 .marquee-artist {
-  font-size: clamp(7px, 0.78vw, 15px);
-  line-height: 1.2;
-  letter-spacing: 0.05em;
+  font-size: clamp(8px, 0.90vw, 17px);
+  line-height: 1.05;
+  letter-spacing: 0.045em;
   color: #fde68a;
   opacity: 0.82;
   text-shadow:
