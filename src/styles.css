@@ -251,7 +251,7 @@ button {
 .marquee-title-long .marquee-title {
   justify-self: start;
   animation:
-    marqueeTitleRevealReset 18s ease-in-out infinite,
+    marqueeTitleExitReenter 22s linear infinite,
     marqueeLedGlow 920ms ease-in-out infinite alternate;
 }
 
@@ -263,7 +263,7 @@ button {
 .marquee-artist-long .marquee-artist {
   justify-self: start;
   animation:
-    marqueeArtistRevealReset 21s ease-in-out 2s infinite,
+    marqueeArtistExitReenter 24s linear 2s infinite,
     marqueeLedGlow 1150ms ease-in-out infinite alternate;
 }
 
@@ -286,25 +286,25 @@ button {
 
 /* Song-change movement is handled by .marquee-exiting and .marquee-entering. */
 
-@keyframes marqueeTitleRevealReset {
-  0%, 22% {
+@keyframes marqueeTitleExitReenter {
+  0%, 16% {
     transform: translateX(0);
     opacity: 1;
   }
 
-  62%, 78% {
+  58% {
     transform: translateX(var(--marquee-title-pan));
     opacity: 1;
   }
 
-  84% {
-    transform: translateX(var(--marquee-title-pan));
-    opacity: 0;
+  72% {
+    transform: translateX(calc(var(--marquee-title-pan) - 110%));
+    opacity: 1;
   }
 
-  85% {
-    transform: translateX(0);
-    opacity: 0;
+  72.1% {
+    transform: translateX(calc(100vw));
+    opacity: 1;
   }
 
   100% {
@@ -313,25 +313,25 @@ button {
   }
 }
 
-@keyframes marqueeArtistRevealReset {
-  0%, 24% {
+@keyframes marqueeArtistExitReenter {
+  0%, 18% {
     transform: translateX(0);
     opacity: 0.82;
   }
 
-  64%, 79% {
+  60% {
     transform: translateX(var(--marquee-artist-pan));
     opacity: 0.82;
   }
 
-  85% {
-    transform: translateX(var(--marquee-artist-pan));
-    opacity: 0;
+  74% {
+    transform: translateX(calc(var(--marquee-artist-pan) - 110%));
+    opacity: 0.82;
   }
 
-  86% {
-    transform: translateX(0);
-    opacity: 0;
+  74.1% {
+    transform: translateX(calc(100vw));
+    opacity: 0.82;
   }
 
   100% {
@@ -344,7 +344,11 @@ button {
 
 
 
-/* Long rows reveal overflow, hold, fade-reset, then repeat. */
+
+
+
+
+/* Long rows reveal overflow, exit left, then re-enter from the right. */
 @keyframes marqueeTitleCenterHold {
   0% {
     transform: translateX(110%);
