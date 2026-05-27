@@ -264,7 +264,7 @@ function updateMarquee(track: NormalizedTrack): void {
     artistEl.dataset.marqueeOriginal = payload.artist;
     titleEl.textContent = payload.title;
     artistEl.textContent = payload.artist;
-    updateMarqueeRowPan(marquee, titleEl, artistEl);
+    prepareMarqueeRowsForEntry(marquee, titleEl, artistEl);
 
     content.style.animation = "none";
     titleEl.style.animation = "none";
@@ -281,8 +281,35 @@ function updateMarquee(track: NormalizedTrack): void {
     marqueeSwapTimer = window.setTimeout(() => {
       content.classList.remove("marquee-entering");
       marquee.classList.remove("marquee-swap");
+      updateMarqueeRowPan(marquee, titleEl, artistEl);
     }, 5200);
   }, 2300);
+}
+
+function prepareMarqueeRowsForEntry(marquee: HTMLElement, titleEl: HTMLElement, artistEl: HTMLElement): void {
+  clearTitleScrollLoop();
+
+  const viewport = marquee.querySelector<HTMLElement>(".marquee-viewport");
+  const availableWidth = Math.max(0, (viewport?.clientWidth || marquee.clientWidth) - 10);
+
+  const titleText = titleEl.dataset.marqueeOriginal || titleEl.textContent || "";
+  const artistText = artistEl.dataset.marqueeOriginal || artistEl.textContent || "";
+
+  titleEl.textContent = titleText;
+  titleEl.style.transition = "none";
+  titleEl.style.transform = "translateX(0)";
+
+  const titleIsLong = titleEl.scrollWidth > availableWidth + 6;
+  marquee.classList.toggle("marquee-title-long", titleIsLong);
+  marquee.classList.toggle("marquee-title-short", !titleIsLong);
+
+  artistEl.textContent = artistText;
+  artistEl.style.transition = "none";
+  artistEl.style.transform = "translateX(0)";
+
+  const artistIsLong = artistEl.scrollWidth > availableWidth + 6;
+  marquee.classList.toggle("marquee-artist-long", artistIsLong);
+  marquee.classList.toggle("marquee-artist-short", !artistIsLong);
 }
 
 function updateMarqueeRowPan(marquee: HTMLElement, titleEl: HTMLElement, artistEl: HTMLElement): void {
@@ -332,7 +359,8 @@ function configureTitleMarqueeRow(options: {
   }
 
   element.textContent = `${originalText}${separator}${originalText}`;
-  const loopDistance = Math.max(1, element.scrollWidth / 2);
+  const fullLoopWidth = element.scrollWidth;
+  const loopDistance = Math.max(1, fullLoopWidth - originalWidth);
 
   // Constant visual speed. The title always pauses for 10 seconds when the T in TITLE is at the left edge.
   const pxPerSecond = 34;

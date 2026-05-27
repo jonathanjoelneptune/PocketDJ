@@ -1119,11 +1119,19 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 
-.marquee-content.marquee-entering .marquee-title,
-.marquee-content.marquee-exiting .marquee-title,
 .marquee-content.marquee-entering .marquee-artist,
 .marquee-content.marquee-exiting .marquee-artist {
   align-self: center;
+}
+
+.marquee-title-short .marquee-content.marquee-entering .marquee-title,
+.marquee-title-short .marquee-content.marquee-exiting .marquee-title {
+  align-self: center;
+}
+
+.marquee-title-long .marquee-content.marquee-entering .marquee-title,
+.marquee-title-long .marquee-content.marquee-exiting .marquee-title {
+  align-self: flex-start;
 }
 
 
@@ -1138,3 +1146,14 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 
 
+
+
+.marquee-title-long .marquee-content.marquee-entering .marquee-title,
+.marquee-title-long .marquee-content.marquee-exiting .marquee-title {
+  align-self: flex-start;
+}
+
+.marquee-title-short .marquee-content.marquee-entering .marquee-title,
+.marquee-title-short .marquee-content.marquee-exiting .marquee-title {
+  align-self: center;
+}
