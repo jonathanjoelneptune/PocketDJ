@@ -28,20 +28,12 @@ export function renderShell(state: AppState): void {
         <div class="album-wash" id="albumWash"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
 
-        <div id="lyricsCeiling" class="lyrics-ceiling" aria-live="polite">
+        <div id="lyricsCeiling" class="lyrics-ceiling lyric-video-ceiling" aria-live="polite">
           <div class="lyrics-boundary-guides" aria-hidden="true">
-            <div class="lyrics-boundary-guide lyrics-boundary-guide-past-top"></div>
-            <div class="lyrics-boundary-guide lyrics-boundary-guide-past-bottom"></div>
-            <div class="lyrics-boundary-guide lyrics-boundary-guide-future-top"></div>
-            <div class="lyrics-boundary-guide lyrics-boundary-guide-future-bottom"></div>
-            <div class="lyrics-boundary-guide lyrics-boundary-guide-active"></div>
+            <div class="lyrics-boundary-guide lyrics-boundary-guide-video"></div>
           </div>
-          <div class="lyrics-ceiling-inner">
-            <div id="pastLyricsBlock" class="lyrics-block lyrics-past-block lyrics-empty"></div>
-            <div id="futureLyricsBlock" class="lyrics-block lyrics-future-block lyrics-empty"></div>
-          </div>
+          <div id="activeLyricsBlock" class="active-lyrics-block lyric-video-line" aria-hidden="true"></div>
         </div>
-        <div id="activeLyricsBlock" class="active-lyrics-block" aria-hidden="true"></div>
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
           <img class="speaker-image" src="./assets/Speaker.png" alt="" draggable="false" />
@@ -224,131 +216,62 @@ export function renderShell(state: AppState): void {
           </div>
 
           <div class="lyrics-boundary-utility">
-            <div class="utility-subhead">Lyrics section utility</div>
-            <p class="utility-help">Past lyrics use the top section. Future lyrics use the bottom section. The active lyric is controlled separately between them.</p>
+            <div class="utility-subhead">Ceiling lyric video utility</div>
+            <p class="utility-help">Phase 1 active-line fill mode. Only the current lyric is shown, with a faint base line and a filled line that writes across as the lyric plays.</p>
 
-            <div class="utility-subhead utility-subhead-secondary">Past lyrics section</div>
             <div class="lyric-utility-stack">
-              <label>Past top X px <span id="lyricPastTopXValue">881</span>
-                <input id="lyricPastTopX" type="range" min="0" max="1600" step="1" value="881" />
+              <label>Lyric X px <span id="lyricVideoXValue">882</span>
+                <input id="lyricVideoX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Past top Y px <span id="lyricPastTopYValue">42</span>
-                <input id="lyricPastTopY" type="range" min="0" max="520" step="1" value="42" />
+              <label>Lyric Y px <span id="lyricVideoYValue">88</span>
+                <input id="lyricVideoY" type="range" min="0" max="520" step="1" value="88" />
               </label>
-              <label>Past top width px <span id="lyricPastTopWValue">1177</span>
-                <input id="lyricPastTopW" type="range" min="120" max="1600" step="1" value="1177" />
+              <label>Lyric width px <span id="lyricVideoWValue">850</span>
+                <input id="lyricVideoW" type="range" min="180" max="1600" step="1" value="850" />
               </label>
-              <label>Past bottom X px <span id="lyricPastBottomXValue">882</span>
-                <input id="lyricPastBottomX" type="range" min="0" max="1600" step="1" value="882" />
+              <label>Lyric height px <span id="lyricVideoHValue">34</span>
+                <input id="lyricVideoH" type="range" min="18" max="180" step="1" value="34" />
               </label>
-              <label>Past bottom Y px <span id="lyricPastBottomYValue">168</span>
-                <input id="lyricPastBottomY" type="range" min="0" max="520" step="1" value="168" />
+              <label>Lyric zoom <span id="lyricVideoZoomValue">1.08</span>
+                <input id="lyricVideoZoom" type="range" min="0.65" max="1.8" step="0.01" value="1.08" />
               </label>
-              <label>Past bottom width px <span id="lyricPastBottomWValue">920</span>
-                <input id="lyricPastBottomW" type="range" min="120" max="1600" step="1" value="920" />
+              <label>Ceiling tilt deg <span id="lyricVideoTiltValue">0.00</span>
+                <input id="lyricVideoTilt" type="range" min="-35" max="35" step="0.5" value="0" />
               </label>
-            </div>
-
-            <div class="utility-subhead utility-subhead-secondary">Active lyric</div>
-            <div class="lyric-utility-stack">
-              <label>Active X px <span id="lyricActiveXValue">882</span>
-                <input id="lyricActiveX" type="range" min="0" max="1600" step="1" value="882" />
+              <label>Base text opacity <span id="lyricVideoBaseOpacityValue">0.24</span>
+                <input id="lyricVideoBaseOpacity" type="range" min="0" max="1" step="0.01" value="0.24" />
               </label>
-              <label>Active Y px <span id="lyricActiveYValue">88</span>
-                <input id="lyricActiveY" type="range" min="0" max="520" step="1" value="88" />
+              <label>Fill text opacity <span id="lyricVideoFillOpacityValue">1.00</span>
+                <input id="lyricVideoFillOpacity" type="range" min="0" max="1" step="0.01" value="1.00" />
               </label>
-              <label>Active width px <span id="lyricActiveWValue">850</span>
-                <input id="lyricActiveW" type="range" min="180" max="1600" step="1" value="850" />
+              <label>Text stroke px <span id="lyricVideoStrokeValue">2.00</span>
+                <input id="lyricVideoStroke" type="range" min="0" max="8" step="0.25" value="2" />
               </label>
-              <label>Active height px <span id="lyricActiveHValue">25</span>
-                <input id="lyricActiveH" type="range" min="20" max="180" step="1" value="25" />
+              <label>Background opacity <span id="lyricVideoBgOpacityValue">0.86</span>
+                <input id="lyricVideoBgOpacity" type="range" min="0" max="1" step="0.01" value="0.86" />
               </label>
-              <label>Active lyric zoom <span id="lyricActiveZoomValue">1.08</span>
-                <input id="lyricActiveZoom" type="range" min="0.75" max="1.6" step="0.01" value="1.08" />
+              <label>Glow strength <span id="lyricVideoGlowValue">0.50</span>
+                <input id="lyricVideoGlow" type="range" min="0" max="1" step="0.01" value="0.50" />
               </label>
-              <label>Black stroke px <span id="lyricActiveStrokeValue">2.00</span>
-                <input id="lyricActiveStroke" type="range" min="0" max="8" step="0.25" value="2" />
+              <label>Fill lead ms <span id="lyricVideoLeadMsValue">180</span>
+                <input id="lyricVideoLeadMs" type="range" min="-1000" max="1000" step="10" value="180" />
               </label>
-              <label>Background opacity <span id="lyricActiveBgOpacityValue">1.00</span>
-                <input id="lyricActiveBgOpacity" type="range" min="0" max="1" step="0.01" value="1.00" />
-              </label>
-              <label>Background color
-                <input id="lyricActiveBgColor" type="color" value="#000000" />
-              </label>
-            </div>
-
-            <div class="utility-subhead utility-subhead-secondary">Future lyrics section</div>
-            <div class="lyric-utility-stack">
-              <label>Future top X px <span id="lyricFutureTopXValue">932</span>
-                <input id="lyricFutureTopX" type="range" min="0" max="1600" step="1" value="932" />
-              </label>
-              <label>Future top Y px <span id="lyricFutureTopYValue">293</span>
-                <input id="lyricFutureTopY" type="range" min="0" max="520" step="1" value="293" />
-              </label>
-              <label>Future top width px <span id="lyricFutureTopWValue">860</span>
-                <input id="lyricFutureTopW" type="range" min="120" max="1600" step="1" value="860" />
-              </label>
-              <label>Future bottom X px <span id="lyricFutureBottomXValue">882</span>
-                <input id="lyricFutureBottomX" type="range" min="0" max="1600" step="1" value="882" />
-              </label>
-              <label>Future bottom Y px <span id="lyricFutureBottomYValue">397</span>
-                <input id="lyricFutureBottomY" type="range" min="0" max="520" step="1" value="397" />
-              </label>
-              <label>Future bottom width px <span id="lyricFutureBottomWValue">900</span>
-                <input id="lyricFutureBottomW" type="range" min="120" max="1600" step="1" value="900" />
-              </label>
-            </div>
-
-            <div class="utility-subhead utility-subhead-secondary">General lyrics</div>
-            <div class="lyric-utility-stack">
-              <label>Number of lyric lines <span id="lyricLineCountValue">9</span>
-                <input id="lyricLineCount" type="range" min="3" max="15" step="2" value="9" />
+              <label>Fade ms <span id="lyricVideoFadeMsValue">180</span>
+                <input id="lyricVideoFadeMs" type="range" min="0" max="1200" step="10" value="180" />
               </label>
               <label>Base lyric font size px <span id="lyricBaseFontSizeValue">12</span>
-                <input id="lyricBaseFontSize" type="range" min="8" max="26" step="1" value="12" />
+                <input id="lyricBaseFontSize" type="range" min="8" max="30" step="1" value="12" />
               </label>
-              <label>Guide opacity <span id="lyricGuideOpacityValue">0.00</span>
-                <input id="lyricGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.0" />
+              <label>Background color
+                <input id="lyricVideoBgColor" type="color" value="#000000" />
               </label>
-            </div>
-
-            <div class="lyric-preset-grid">
-              <label>Animation preset
-                <select id="lyricAnimationPreset">
-                  <option value="focus-sweep">Focus sweep</option>
-                  <option value="vertical-marquee" selected>Vertical marquee</option>
-                  <option value="active-horizontal-marquee">Active horizontal marquee</option>
-                  <option value="soft-slide">Soft slide</option>
-                  <option value="pulse-pop">Pulse pop</option>
-                  <option value="instant">Instant</option>
-                </select>
+              <label>Fill color
+                <input id="lyricVideoFillColor" type="color" value="#ffc84f" />
               </label>
-              <label>Active lyric preset
-                <select id="lyricActivePreset">
-                  <option value="amber-crisp" selected>Amber crisp</option>
-                  <option value="gold-neon">Gold neon</option>
-                  <option value="warm-white">Warm white</option>
-                  <option value="violet-glow">Violet glow</option>
-                </select>
-              </label>
-              <label>Inactive lyric preset
-                <select id="lyricInactivePreset">
-                  <option value="soft-ghost">Soft ghost</option>
-                  <option value="warm-dim">Warm dim</option>
-                  <option value="clean-readable" selected>Clean readable</option>
-                  <option value="minimal">Minimal</option>
-                </select>
-              </label>
-              <label>Active lyric layout
-                <select id="lyricActiveLayout">
-                  <option value="single-line">Single line</option>
-                  <option value="two-line" selected>Two-line wrap</option>
-                </select>
-              </label>
-              <label>Ceiling perspective
-                <select id="lyricPerspectiveMode">
-                  <option value="ceiling-forward" selected>Forward toward viewer</option>
-                  <option value="ceiling-crawl">Star crawl away</option>
+              <label>Fill mode
+                <select id="lyricVideoMode">
+                  <option value="smooth-fill" selected>Smooth fill wipe</option>
+                  <option value="word-fill">Word-by-word fill</option>
                 </select>
               </label>
             </div>
@@ -758,8 +681,6 @@ export function updateLyricsCeiling(
   enabled = true,
 ): void {
   const ceiling = qs<HTMLElement>("#lyricsCeiling");
-  const pastBlock = qs<HTMLElement>("#pastLyricsBlock");
-  const futureBlock = qs<HTMLElement>("#futureLyricsBlock");
   const activeBlock = qs<HTMLElement>("#activeLyricsBlock");
 
   updateLyricsToggleUi(lyrics.status, enabled);
@@ -769,20 +690,15 @@ export function updateLyricsCeiling(
 
   const clearLyrics = () => {
     lastLyricsRenderSignature = "";
-    pastBlock.innerHTML = "";
-    futureBlock.innerHTML = "";
     activeBlock.innerHTML = "";
+    activeBlock.style.setProperty("--lyric-fill-progress", "0%");
+    activeBlock.style.setProperty("--lyric-line-visibility", "0");
   };
 
   if (!enabled) {
     clearLyrics();
     return;
   }
-
-  pastBlock.classList.toggle("lyrics-empty", lyrics.status !== "found");
-  futureBlock.classList.toggle("lyrics-empty", lyrics.status !== "found");
-  pastBlock.classList.toggle("lyrics-found", lyrics.status === "found");
-  futureBlock.classList.toggle("lyrics-found", lyrics.status === "found");
 
   if (lyrics.status === "loading" || lyrics.status === "idle") {
     clearLyrics();
@@ -805,94 +721,59 @@ export function updateLyricsCeiling(
     return;
   }
 
-  const rootStyles = getComputedStyle(document.documentElement);
-  const requestedLineCount = Number(rootStyles.getPropertyValue("--lyrics-line-count")) || 9;
-  const lineCount = Math.max(3, Math.min(15, Math.round(requestedLineCount)));
-  const pastCount = Math.max(1, Math.floor((lineCount - 1) / 2));
-  const futureCount = Math.max(1, lineCount - 1 - pastCount);
   const centerIndex = Math.max(0, Math.min(cleanLines.length - 1, activeIndex >= 0 ? activeIndex : 0));
+  const activeLine = cleanLines[centerIndex];
+  const nextTimedLine = cleanLines.slice(centerIndex + 1).find((line) => typeof line.timeMs === "number" && line.timeMs !== null);
+  const lineStartMs = typeof activeLine.timeMs === "number" ? activeLine.timeMs : playbackMs;
+  const lineEndMs =
+    typeof nextTimedLine?.timeMs === "number"
+      ? nextTimedLine.timeMs
+      : lineStartMs + Math.max(1600, Math.min(5200, activeLine.text.length * 95));
 
-  const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
-  const activeZoom = rootStyles.getPropertyValue("--lyrics-active-zoom").trim();
-  const activeStroke = rootStyles.getPropertyValue("--lyrics-active-stroke").trim();
-  const activeBgOpacity = rootStyles.getPropertyValue("--lyrics-active-bg-opacity").trim();
-  const activeBgColor = rootStyles.getPropertyValue("--lyrics-active-bg-color").trim();
-  const activeWidth = rootStyles.getPropertyValue("--lyrics-active-w").trim();
-  const activeHeight = rootStyles.getPropertyValue("--lyrics-active-h").trim();
+  const rootStyles = getComputedStyle(document.documentElement);
+  const leadMs = Number(rootStyles.getPropertyValue("--lyric-video-lead-ms")) || 0;
+  const fadeMs = Math.max(1, Number(rootStyles.getPropertyValue("--lyric-video-fade-ms")) || 1);
+  const durationMs = Math.max(1, lineEndMs - lineStartMs);
+  const rawProgress = (playbackMs - lineStartMs + leadMs) / durationMs;
+  const progress = Math.max(0, Math.min(1, rawProgress));
+  const visibilityIn = Math.max(0, Math.min(1, (playbackMs - lineStartMs + leadMs + fadeMs) / fadeMs));
+  const visibilityOut = Math.max(0, Math.min(1, (lineEndMs - playbackMs + fadeMs) / fadeMs));
+  const visibility = Math.min(visibilityIn, visibilityOut);
+  const wordCount = activeLine.text.trim().split(/\s+/).filter(Boolean).length;
+  const steppedProgress = wordCount > 0 ? Math.ceil(progress * wordCount) / wordCount : progress;
+  const fillProgress = document.documentElement.classList.contains("lyric-video-mode-word-fill") ? steppedProgress : progress;
+
+  activeBlock.style.setProperty("--lyric-fill-progress", `${(fillProgress * 100).toFixed(2)}%`);
+  activeBlock.style.setProperty("--lyric-line-visibility", String(visibility));
+
+  const activeZoom = rootStyles.getPropertyValue("--lyric-video-zoom").trim();
+  const activeStroke = rootStyles.getPropertyValue("--lyric-video-stroke").trim();
+  const activeBgOpacity = rootStyles.getPropertyValue("--lyric-video-bg-opacity").trim();
+  const activeBgColor = rootStyles.getPropertyValue("--lyric-video-bg-color").trim();
+  const activeFillColor = rootStyles.getPropertyValue("--lyric-video-fill-color").trim();
+  const activeWidth = rootStyles.getPropertyValue("--lyric-video-w").trim();
+  const activeHeight = rootStyles.getPropertyValue("--lyric-video-h").trim();
   const baseFontSize = rootStyles.getPropertyValue("--lyrics-base-font-size").trim();
+  const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
-  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${lineCount}|${animationRevision}|${activeZoom}|${activeStroke}|${activeBgOpacity}|${activeBgColor}|${activeWidth}|${activeHeight}|${baseFontSize}|${rootClassSignature}`;
+  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${activeZoom}|${activeStroke}|${activeBgOpacity}|${activeBgColor}|${activeFillColor}|${activeWidth}|${activeHeight}|${baseFontSize}|${animationRevision}|${rootClassSignature}`;
 
   if (renderSignature === lastLyricsRenderSignature) return;
   lastLyricsRenderSignature = renderSignature;
 
-  const activeLine = cleanLines[centerIndex];
   const activeTextLength = activeLine.text.length;
   const activeScale = getLyricLineScale(activeTextLength, true);
 
   activeBlock.innerHTML = `
     <div
-      class="active-lyrics-line"
+      class="lyric-video-text"
       style="--lyrics-line-scale: ${activeScale};"
       data-time="${activeLine.timeMs ?? ""}"
     >
-      ${escapeHtml(activeLine.text)}
+      <span class="lyric-video-base">${escapeHtml(activeLine.text)}</span>
+      <span class="lyric-video-fill" aria-hidden="true">${escapeHtml(activeLine.text)}</span>
     </div>
   `;
-
-  const pastLines = Array.from({ length: pastCount }, (_, i) => {
-    const lineIndex = centerIndex - pastCount + i;
-    return lineIndex >= 0 ? { line: cleanLines[lineIndex], slot: i, lineIndex } : null;
-  }).filter((item): item is { line: { timeMs: number | null; text: string }; slot: number; lineIndex: number } => Boolean(item));
-
-  const futureLines = Array.from({ length: futureCount }, (_, i) => {
-    const lineIndex = centerIndex + 1 + i;
-    return lineIndex < cleanLines.length ? { line: cleanLines[lineIndex], slot: i, lineIndex } : null;
-  }).filter((item): item is { line: { timeMs: number | null; text: string }; slot: number; lineIndex: number } => Boolean(item));
-
-  pastBlock.innerHTML = pastLines
-    .map(({ line, slot }) => {
-      const t = pastCount <= 1 ? 1 : slot / (pastCount - 1);
-      const scale = getLyricLineScale(line.text.length, false);
-      return `
-        <div
-          class="lyrics-line lyrics-line-past"
-          style="
-            left: var(--lyrics-past-slot-${slot}-x);
-            top: var(--lyrics-past-slot-${slot}-y);
-            width: var(--lyrics-past-slot-${slot}-w);
-            --lyrics-line-scale: ${scale};
-            --lyrics-section-t: ${t.toFixed(3)};
-          "
-          data-time="${line.timeMs ?? ""}"
-        >
-          ${escapeHtml(line.text)}
-        </div>
-      `;
-    })
-    .join("");
-
-  futureBlock.innerHTML = futureLines
-    .map(({ line, slot }) => {
-      const t = futureCount <= 1 ? 0 : slot / (futureCount - 1);
-      const scale = getLyricLineScale(line.text.length, false);
-      return `
-        <div
-          class="lyrics-line lyrics-line-future"
-          style="
-            left: var(--lyrics-future-slot-${slot}-x);
-            top: var(--lyrics-future-slot-${slot}-y);
-            width: var(--lyrics-future-slot-${slot}-w);
-            --lyrics-line-scale: ${scale};
-            --lyrics-section-t: ${t.toFixed(3)};
-          "
-          data-time="${line.timeMs ?? ""}"
-        >
-          ${escapeHtml(line.text)}
-        </div>
-      `;
-    })
-    .join("");
 }
 
 function getLyricLineScale(textLength: number, isActive: boolean): number {

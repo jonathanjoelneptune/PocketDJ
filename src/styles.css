@@ -5971,3 +5971,176 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   opacity: 1 !important;
   visibility: visible !important;
 }
+
+
+/* PHASE 1 ACTIVE LYRIC FILL LINE
+   One current lyric line only. The ceiling lyric behaves like a subtle karaoke music video. */
+:root {
+  --lyric-video-x: 882px;
+  --lyric-video-y: 88px;
+  --lyric-video-w: 850px;
+  --lyric-video-h: 34px;
+  --lyric-video-zoom: 1.08;
+  --lyric-video-tilt: 0deg;
+  --lyric-video-base-opacity: 0.24;
+  --lyric-video-fill-opacity: 1;
+  --lyric-video-stroke: 2px;
+  --lyric-video-bg-opacity: 0.86;
+  --lyric-video-bg-color: #000000;
+  --lyric-video-bg-rgb: 0, 0, 0;
+  --lyric-video-fill-color: #ffc84f;
+  --lyric-video-fill-rgb: 255, 200, 79;
+  --lyric-video-glow: 0.5;
+  --lyric-fill-progress: 0%;
+  --lyric-line-visibility: 0;
+}
+
+/* Retire past/future/block lyric display from the previous experiments. */
+.lyrics-ceiling-inner,
+.lyrics-past-block,
+.lyrics-future-block,
+.lyrics-line,
+.lyrics-line-past,
+.lyrics-line-future,
+.lyrics-line-active {
+  display: none !important;
+}
+
+/* The only guide now is the active lyric video box. */
+.lyrics-boundary-guide-past-top,
+.lyrics-boundary-guide-past-bottom,
+.lyrics-boundary-guide-future-top,
+.lyrics-boundary-guide-future-bottom,
+.lyrics-boundary-guide-active {
+  display: none !important;
+}
+
+.lyrics-boundary-guide-video {
+  left: var(--lyric-video-x) !important;
+  top: var(--lyric-video-y) !important;
+  width: var(--lyric-video-w) !important;
+  height: var(--lyric-video-h) !important;
+  transform: translateX(-50%) translateY(-50%) !important;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 42, 42, 0.82);
+  background: rgba(255, 42, 42, 0.055);
+  opacity: var(--lyrics-guide-opacity, 0);
+}
+
+/* Make sure this layer is not blended. Black must stay black. */
+.lyric-video-ceiling {
+  position: absolute;
+  inset: 0;
+  z-index: 34;
+  mix-blend-mode: normal !important;
+  isolation: isolate !important;
+  pointer-events: none;
+}
+
+.lyric-video-ceiling .active-lyrics-block,
+.active-lyrics-block.lyric-video-line {
+  position: absolute !important;
+  left: var(--lyric-video-x) !important;
+  top: var(--lyric-video-y) !important;
+  width: var(--lyric-video-w) !important;
+  height: var(--lyric-video-h) !important;
+  min-height: var(--lyric-video-h) !important;
+  z-index: 48 !important;
+  transform:
+    translateX(-50%)
+    translateY(-50%)
+    rotateX(var(--lyric-video-tilt))
+    scale(var(--lyric-video-zoom)) !important;
+  transform-origin: 50% 50% !important;
+  display: grid !important;
+  place-items: center !important;
+  pointer-events: none !important;
+  mix-blend-mode: normal !important;
+  isolation: isolate !important;
+  opacity: var(--lyric-line-visibility, 1);
+}
+
+.lyric-video-text {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 0 1.1em;
+  border-radius: 999px;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(var(--lyric-video-bg-rgb), calc(var(--lyric-video-bg-opacity) * 0.72)) 5%,
+      rgba(var(--lyric-video-bg-rgb), var(--lyric-video-bg-opacity)) 18%,
+      rgba(var(--lyric-video-bg-rgb), var(--lyric-video-bg-opacity)) 82%,
+      rgba(var(--lyric-video-bg-rgb), calc(var(--lyric-video-bg-opacity) * 0.72)) 95%,
+      transparent 100%
+    ) !important;
+  border: 1px solid rgba(255, 184, 76, calc(0.08 + var(--lyric-video-bg-opacity) * 0.16));
+  box-shadow:
+    inset 0 0 16px rgba(255, 183, 65, calc(var(--lyric-video-glow) * 0.06)),
+    0 0 18px rgba(0, 0, 0, 0.22);
+}
+
+.lyric-video-base,
+.lyric-video-fill {
+  grid-area: 1 / 1;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  text-align: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: calc(var(--lyrics-base-font-size) * var(--lyrics-line-scale, 1));
+  line-height: 1.05;
+  letter-spacing: 0.07em;
+  font-weight: 900;
+  -webkit-text-stroke-width: var(--lyric-video-stroke);
+  -webkit-text-stroke-color: rgba(0, 0, 0, 0.96);
+  paint-order: stroke fill;
+  text-shadow:
+    0 1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000,
+    0 -1px 0 #000;
+  filter:
+    drop-shadow(0 0 calc(var(--lyric-video-stroke) * 0.65) rgba(0, 0, 0, 0.95));
+}
+
+.lyric-video-base {
+  color: rgba(255, 218, 170, var(--lyric-video-base-opacity));
+}
+
+.lyric-video-fill {
+  color: var(--lyric-video-fill-color);
+  opacity: var(--lyric-video-fill-opacity);
+  clip-path: inset(0 calc(100% - var(--lyric-fill-progress)) 0 0);
+  text-shadow:
+    0 1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000,
+    0 -1px 0 #000,
+    0 0 calc(4px + (var(--lyric-video-glow) * 9px)) rgba(var(--lyric-video-fill-rgb), calc(0.30 + var(--lyric-video-glow) * 0.45));
+}
+
+.lyric-video-mode-word-fill .lyric-video-fill {
+  transition: clip-path 90ms steps(1, end);
+}
+
+.lyric-video-mode-smooth-fill .lyric-video-fill {
+  transition: clip-path 90ms linear;
+}
+
+#lyricVideoBgColor,
+#lyricVideoFillColor {
+  width: 100%;
+  height: 34px;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 184, 76, 0.28);
+  background: rgba(18, 12, 28, 0.78);
+}

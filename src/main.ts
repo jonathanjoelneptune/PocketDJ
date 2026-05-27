@@ -75,34 +75,23 @@ type RoomUtilitySettings = {
   vignetteStrength: number;
   shadowOpacity: number;
   tableShadowScale: number;
-  lyricPastTopX: number;
-  lyricPastTopY: number;
-  lyricPastTopW: number;
-  lyricPastBottomX: number;
-  lyricPastBottomY: number;
-  lyricPastBottomW: number;
-  lyricFutureTopX: number;
-  lyricFutureTopY: number;
-  lyricFutureTopW: number;
-  lyricFutureBottomX: number;
-  lyricFutureBottomY: number;
-  lyricFutureBottomW: number;
-  lyricActiveX: number;
-  lyricActiveY: number;
-  lyricActiveW: number;
-  lyricActiveH: number;
-  lyricActiveZoom: number;
-  lyricActiveStroke: number;
-  lyricActiveBgOpacity: number;
-  lyricActiveBgColor: string;
-  lyricGuideOpacity: number;
-  lyricLineCount: number;
-  lyricAnimationPreset: LyricAnimationPreset;
-  lyricActivePreset: ActiveLyricPreset;
-  lyricInactivePreset: InactiveLyricPreset;
+  lyricVideoX: number;
+  lyricVideoY: number;
+  lyricVideoW: number;
+  lyricVideoH: number;
+  lyricVideoZoom: number;
+  lyricVideoTilt: number;
+  lyricVideoBaseOpacity: number;
+  lyricVideoFillOpacity: number;
+  lyricVideoStroke: number;
+  lyricVideoBgOpacity: number;
+  lyricVideoBgColor: string;
+  lyricVideoFillColor: string;
+  lyricVideoGlow: number;
+  lyricVideoLeadMs: number;
+  lyricVideoFadeMs: number;
+  lyricVideoMode: "smooth-fill" | "word-fill";
   lyricBaseFontSize: number;
-  lyricActiveLayout: LyricActiveLayout;
-  lyricPerspectiveMode: LyricPerspectiveMode;
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
@@ -121,37 +110,26 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   vignetteStrength: 0.20,
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
-  lyricPastTopX: 881,
-  lyricPastTopY: 42,
-  lyricPastTopW: 1177,
-  lyricPastBottomX: 882,
-  lyricPastBottomY: 168,
-  lyricPastBottomW: 920,
-  lyricFutureTopX: 932,
-  lyricFutureTopY: 293,
-  lyricFutureTopW: 860,
-  lyricFutureBottomX: 882,
-  lyricFutureBottomY: 397,
-  lyricFutureBottomW: 900,
-  lyricActiveX: 882,
-  lyricActiveY: 88,
-  lyricActiveW: 850,
-  lyricActiveH: 25,
-  lyricActiveZoom: 1.08,
-  lyricActiveStroke: 2,
-  lyricActiveBgOpacity: 1.00,
-  lyricActiveBgColor: "#000000",
-  lyricGuideOpacity: 0.0,
-  lyricLineCount: 9,
-  lyricAnimationPreset: "vertical-marquee",
-  lyricActivePreset: "amber-crisp",
-  lyricInactivePreset: "clean-readable",
-  lyricBaseFontSize: 12,
-  lyricActiveLayout: "two-line",
-  lyricPerspectiveMode: "ceiling-forward"
+  lyricVideoX: 882,
+  lyricVideoY: 88,
+  lyricVideoW: 850,
+  lyricVideoH: 34,
+  lyricVideoZoom: 1.08,
+  lyricVideoTilt: 0,
+  lyricVideoBaseOpacity: 0.24,
+  lyricVideoFillOpacity: 1.00,
+  lyricVideoStroke: 2,
+  lyricVideoBgOpacity: 0.86,
+  lyricVideoBgColor: "#000000",
+  lyricVideoFillColor: "#ffc84f",
+  lyricVideoGlow: 0.50,
+  lyricVideoLeadMs: 180,
+  lyricVideoFadeMs: 180,
+  lyricVideoMode: "smooth-fill",
+  lyricBaseFontSize: 12
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v8";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v9";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -612,21 +590,14 @@ function updatePhase2SpotifyControls(): void {
 
 function bindRoomUtilityControls(): void {
   const sceneFilter = qs<HTMLSelectElement>("#sceneFilterSelect");
-  const lyricAnimationPreset = qs<HTMLSelectElement>("#lyricAnimationPreset");
-  const lyricActivePreset = qs<HTMLSelectElement>("#lyricActivePreset");
-  const lyricInactivePreset = qs<HTMLSelectElement>("#lyricInactivePreset");
-  const lyricActiveLayout = qs<HTMLSelectElement>("#lyricActiveLayout");
-  const lyricActiveBgColor = qs<HTMLInputElement>("#lyricActiveBgColor");
-  const lyricPerspectiveMode = qs<HTMLSelectElement>("#lyricPerspectiveMode");
+  const lyricVideoMode = qs<HTMLSelectElement>("#lyricVideoMode");
+  const lyricVideoBgColor = qs<HTMLInputElement>("#lyricVideoBgColor");
+  const lyricVideoFillColor = qs<HTMLInputElement>("#lyricVideoFillColor");
 
   sceneFilter.value = roomUtility.sceneFilter;
-  lyricAnimationPreset.value = roomUtility.lyricAnimationPreset;
-  lyricActivePreset.value = roomUtility.lyricActivePreset;
-  lyricInactivePreset.value = roomUtility.lyricInactivePreset;
-  lyricActiveLayout.value = roomUtility.lyricActiveLayout;
-  lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
-    lyricPerspectiveMode.value = roomUtility.lyricPerspectiveMode;
-  lyricPerspectiveMode.value = roomUtility.lyricPerspectiveMode;
+  lyricVideoMode.value = roomUtility.lyricVideoMode;
+  lyricVideoBgColor.value = roomUtility.lyricVideoBgColor;
+  lyricVideoFillColor.value = roomUtility.lyricVideoFillColor;
 
   const controls = [
     ["speakerLeftX", "speakerLeftXValue"],
@@ -643,33 +614,25 @@ function bindRoomUtilityControls(): void {
     ["vignetteStrength", "vignetteStrengthValue"],
     ["shadowOpacity", "shadowOpacityValue"],
     ["tableShadowScale", "tableShadowScaleValue"],
-    ["lyricPastTopX", "lyricPastTopXValue"],
-    ["lyricPastTopY", "lyricPastTopYValue"],
-    ["lyricPastTopW", "lyricPastTopWValue"],
-    ["lyricPastBottomX", "lyricPastBottomXValue"],
-    ["lyricPastBottomY", "lyricPastBottomYValue"],
-    ["lyricPastBottomW", "lyricPastBottomWValue"],
-    ["lyricFutureTopX", "lyricFutureTopXValue"],
-    ["lyricFutureTopY", "lyricFutureTopYValue"],
-    ["lyricFutureTopW", "lyricFutureTopWValue"],
-    ["lyricFutureBottomX", "lyricFutureBottomXValue"],
-    ["lyricFutureBottomY", "lyricFutureBottomYValue"],
-    ["lyricFutureBottomW", "lyricFutureBottomWValue"],
-    ["lyricActiveX", "lyricActiveXValue"],
-    ["lyricActiveY", "lyricActiveYValue"],
-    ["lyricActiveW", "lyricActiveWValue"],
-    ["lyricActiveH", "lyricActiveHValue"],
-    ["lyricActiveZoom", "lyricActiveZoomValue"],
-    ["lyricActiveStroke", "lyricActiveStrokeValue"],
-    ["lyricActiveBgOpacity", "lyricActiveBgOpacityValue"],
-    ["lyricGuideOpacity", "lyricGuideOpacityValue"],
-    ["lyricLineCount", "lyricLineCountValue"],
+    ["lyricVideoX", "lyricVideoXValue"],
+    ["lyricVideoY", "lyricVideoYValue"],
+    ["lyricVideoW", "lyricVideoWValue"],
+    ["lyricVideoH", "lyricVideoHValue"],
+    ["lyricVideoZoom", "lyricVideoZoomValue"],
+    ["lyricVideoTilt", "lyricVideoTiltValue"],
+    ["lyricVideoBaseOpacity", "lyricVideoBaseOpacityValue"],
+    ["lyricVideoFillOpacity", "lyricVideoFillOpacityValue"],
+    ["lyricVideoStroke", "lyricVideoStrokeValue"],
+    ["lyricVideoBgOpacity", "lyricVideoBgOpacityValue"],
+    ["lyricVideoGlow", "lyricVideoGlowValue"],
+    ["lyricVideoLeadMs", "lyricVideoLeadMsValue"],
+    ["lyricVideoFadeMs", "lyricVideoFadeMsValue"],
     ["lyricBaseFontSize", "lyricBaseFontSizeValue"]
   ] as const;
 
   controls.forEach(([inputId, labelId]) => {
     const input = qs<HTMLInputElement>(`#${inputId}`);
-    const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter">;
+    const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter" | "lyricVideoMode" | "lyricVideoBgColor" | "lyricVideoFillColor">;
     input.value = String(roomUtility[key]);
     setUtilityLabel(labelId, Number(input.value));
 
@@ -686,36 +649,21 @@ function bindRoomUtilityControls(): void {
     applyRoomUtilitySettings();
   });
 
-  lyricAnimationPreset.addEventListener("change", () => {
+  lyricVideoMode.addEventListener("change", () => {
     lyricAnimationRevision += 1;
-    roomUtility = { ...roomUtility, lyricAnimationPreset: lyricAnimationPreset.value as LyricAnimationPreset };
+    roomUtility = { ...roomUtility, lyricVideoMode: lyricVideoMode.value as RoomUtilitySettings["lyricVideoMode"] };
     applyRoomUtilitySettings();
   });
 
-  lyricActivePreset.addEventListener("change", () => {
-    roomUtility = { ...roomUtility, lyricActivePreset: lyricActivePreset.value as ActiveLyricPreset };
-    applyRoomUtilitySettings();
-  });
-
-  lyricInactivePreset.addEventListener("change", () => {
-    roomUtility = { ...roomUtility, lyricInactivePreset: lyricInactivePreset.value as InactiveLyricPreset };
-    applyRoomUtilitySettings();
-  });
-
-  lyricActiveLayout.addEventListener("change", () => {
-    roomUtility = { ...roomUtility, lyricActiveLayout: lyricActiveLayout.value as LyricActiveLayout };
-    applyRoomUtilitySettings();
-  });
-
-  lyricActiveBgColor.addEventListener("input", () => {
+  lyricVideoBgColor.addEventListener("input", () => {
     lyricAnimationRevision += 1;
-    roomUtility = { ...roomUtility, lyricActiveBgColor: lyricActiveBgColor.value };
+    roomUtility = { ...roomUtility, lyricVideoBgColor: lyricVideoBgColor.value };
     applyRoomUtilitySettings();
   });
 
-  lyricPerspectiveMode.addEventListener("change", () => {
+  lyricVideoFillColor.addEventListener("input", () => {
     lyricAnimationRevision += 1;
-    roomUtility = { ...roomUtility, lyricPerspectiveMode: lyricPerspectiveMode.value as LyricPerspectiveMode };
+    roomUtility = { ...roomUtility, lyricVideoFillColor: lyricVideoFillColor.value };
     applyRoomUtilitySettings();
   });
 
@@ -727,28 +675,21 @@ function bindRoomUtilityControls(): void {
   qs<HTMLButtonElement>("#resetRoomUtility").addEventListener("click", () => {
     roomUtility = { ...DEFAULT_ROOM_UTILITY };
     sceneFilter.value = roomUtility.sceneFilter;
-    lyricAnimationPreset.value = roomUtility.lyricAnimationPreset;
-    lyricActivePreset.value = roomUtility.lyricActivePreset;
-    lyricInactivePreset.value = roomUtility.lyricInactivePreset;
-    lyricActiveLayout.value = roomUtility.lyricActiveLayout;
-    lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
-  lyricPerspectiveMode.value = roomUtility.lyricPerspectiveMode;
-  lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
-  lyricPerspectiveMode.value = roomUtility.lyricPerspectiveMode;
-  lyricActiveLayout.value = roomUtility.lyricActiveLayout;
-  lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
-  lyricPerspectiveMode.value = roomUtility.lyricPerspectiveMode;
+    lyricVideoMode.value = roomUtility.lyricVideoMode;
+    lyricVideoBgColor.value = roomUtility.lyricVideoBgColor;
+    lyricVideoFillColor.value = roomUtility.lyricVideoFillColor;
+
     controls.forEach(([inputId, labelId]) => {
       const input = qs<HTMLInputElement>(`#${inputId}`);
-      const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter">;
+      const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter" | "lyricVideoMode" | "lyricVideoBgColor" | "lyricVideoFillColor">;
       input.value = String(roomUtility[key]);
       setUtilityLabel(labelId, Number(input.value));
     });
+
     saveRoomUtilitySettings();
     applyRoomUtilitySettings();
   });
 }
-
 
 function hexToRgbParts(hex: string): string {
   const normalized = hex.replace("#", "").trim();
@@ -767,7 +708,7 @@ function hexToRgbParts(hex: string): string {
     return `${r}, ${g}, ${b}`;
   }
 
-  return "5, 2, 8";
+  return "0, 0, 0";
 }
 
 function lerp(start: number, end: number, t: number): number {
@@ -791,76 +732,29 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength));
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
   root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
-  root.style.setProperty("--lyrics-past-top-x", `${roomUtility.lyricPastTopX}px`);
-  root.style.setProperty("--lyrics-past-top-y", `${roomUtility.lyricPastTopY}px`);
-  root.style.setProperty("--lyrics-past-top-w", `${roomUtility.lyricPastTopW}px`);
-  root.style.setProperty("--lyrics-past-bottom-x", `${roomUtility.lyricPastBottomX}px`);
-  root.style.setProperty("--lyrics-past-bottom-y", `${roomUtility.lyricPastBottomY}px`);
-  root.style.setProperty("--lyrics-past-bottom-w", `${roomUtility.lyricPastBottomW}px`);
-  root.style.setProperty("--lyrics-future-top-x", `${roomUtility.lyricFutureTopX}px`);
-  root.style.setProperty("--lyrics-future-top-y", `${roomUtility.lyricFutureTopY}px`);
-  root.style.setProperty("--lyrics-future-top-w", `${roomUtility.lyricFutureTopW}px`);
-  root.style.setProperty("--lyrics-future-bottom-x", `${roomUtility.lyricFutureBottomX}px`);
-  root.style.setProperty("--lyrics-future-bottom-y", `${roomUtility.lyricFutureBottomY}px`);
-  root.style.setProperty("--lyrics-future-bottom-w", `${roomUtility.lyricFutureBottomW}px`);
 
-  root.style.setProperty("--lyrics-active-x", `${roomUtility.lyricActiveX}px`);
-  root.style.setProperty("--lyrics-active-y", `${roomUtility.lyricActiveY}px`);
-  root.style.setProperty("--lyrics-active-w", `${roomUtility.lyricActiveW}px`);
-  root.style.setProperty("--lyrics-active-h", `${roomUtility.lyricActiveH}px`);
-  root.style.setProperty("--lyrics-active-zoom", String(roomUtility.lyricActiveZoom));
-  root.style.setProperty("--lyrics-active-stroke", `${roomUtility.lyricActiveStroke}px`);
-  root.style.setProperty("--lyrics-active-bg-opacity", String(roomUtility.lyricActiveBgOpacity));
-  root.style.setProperty("--lyrics-active-bg-color", roomUtility.lyricActiveBgColor);
-  root.style.setProperty("--lyrics-active-bg-rgb", hexToRgbParts(roomUtility.lyricActiveBgColor));
-
-  root.style.setProperty("--lyrics-guide-opacity", String(roomUtility.lyricGuideOpacity));
-  root.style.setProperty("--lyrics-line-count", String(roomUtility.lyricLineCount));
+  root.style.setProperty("--lyric-video-x", `${roomUtility.lyricVideoX}px`);
+  root.style.setProperty("--lyric-video-y", `${roomUtility.lyricVideoY}px`);
+  root.style.setProperty("--lyric-video-w", `${roomUtility.lyricVideoW}px`);
+  root.style.setProperty("--lyric-video-h", `${roomUtility.lyricVideoH}px`);
+  root.style.setProperty("--lyric-video-zoom", String(roomUtility.lyricVideoZoom));
+  root.style.setProperty("--lyric-video-tilt", `${roomUtility.lyricVideoTilt}deg`);
+  root.style.setProperty("--lyric-video-base-opacity", String(roomUtility.lyricVideoBaseOpacity));
+  root.style.setProperty("--lyric-video-fill-opacity", String(roomUtility.lyricVideoFillOpacity));
+  root.style.setProperty("--lyric-video-stroke", `${roomUtility.lyricVideoStroke}px`);
+  root.style.setProperty("--lyric-video-bg-opacity", String(roomUtility.lyricVideoBgOpacity));
+  root.style.setProperty("--lyric-video-bg-color", roomUtility.lyricVideoBgColor);
+  root.style.setProperty("--lyric-video-bg-rgb", hexToRgbParts(roomUtility.lyricVideoBgColor));
+  root.style.setProperty("--lyric-video-fill-color", roomUtility.lyricVideoFillColor);
+  root.style.setProperty("--lyric-video-fill-rgb", hexToRgbParts(roomUtility.lyricVideoFillColor));
+  root.style.setProperty("--lyric-video-glow", String(roomUtility.lyricVideoGlow));
+  root.style.setProperty("--lyric-video-lead-ms", `${roomUtility.lyricVideoLeadMs}`);
+  root.style.setProperty("--lyric-video-fade-ms", `${roomUtility.lyricVideoFadeMs}`);
   root.style.setProperty("--lyrics-base-font-size", `${roomUtility.lyricBaseFontSize}px`);
   root.style.setProperty("--lyrics-animation-revision", String(lyricAnimationRevision));
 
-  const lineCount = roomUtility.lyricLineCount;
-  const pastCount = Math.max(1, Math.floor((lineCount - 1) / 2));
-  const futureCount = Math.max(1, lineCount - 1 - pastCount);
-
-  for (let slot = 0; slot < pastCount; slot += 1) {
-    const t = pastCount <= 1 ? 1 : slot / (pastCount - 1);
-    root.style.setProperty(`--lyrics-past-slot-${slot}-x`, `${lerp(roomUtility.lyricPastTopX, roomUtility.lyricPastBottomX, t)}px`);
-    root.style.setProperty(`--lyrics-past-slot-${slot}-y`, `${lerp(roomUtility.lyricPastTopY, roomUtility.lyricPastBottomY, t)}px`);
-    root.style.setProperty(`--lyrics-past-slot-${slot}-w`, `${lerp(roomUtility.lyricPastTopW, roomUtility.lyricPastBottomW, t)}px`);
-  }
-
-  for (let slot = 0; slot < futureCount; slot += 1) {
-    const t = futureCount <= 1 ? 0 : slot / (futureCount - 1);
-    root.style.setProperty(`--lyrics-future-slot-${slot}-x`, `${lerp(roomUtility.lyricFutureTopX, roomUtility.lyricFutureBottomX, t)}px`);
-    root.style.setProperty(`--lyrics-future-slot-${slot}-y`, `${lerp(roomUtility.lyricFutureTopY, roomUtility.lyricFutureBottomY, t)}px`);
-    root.style.setProperty(`--lyrics-future-slot-${slot}-w`, `${lerp(roomUtility.lyricFutureTopW, roomUtility.lyricFutureBottomW, t)}px`);
-  }
-
-  root.classList.toggle("lyrics-animation-focus-sweep", roomUtility.lyricAnimationPreset === "focus-sweep");
-  root.classList.toggle("lyrics-animation-vertical-marquee", roomUtility.lyricAnimationPreset === "vertical-marquee");
-  root.classList.toggle("lyrics-animation-active-horizontal-marquee", roomUtility.lyricAnimationPreset === "active-horizontal-marquee");
-  root.classList.toggle("lyrics-animation-soft-slide", roomUtility.lyricAnimationPreset === "soft-slide");
-  root.classList.toggle("lyrics-animation-pulse-pop", roomUtility.lyricAnimationPreset === "pulse-pop");
-  root.classList.toggle("lyrics-animation-instant", roomUtility.lyricAnimationPreset === "instant");
-
-  root.classList.toggle("lyrics-active-amber-crisp", roomUtility.lyricActivePreset === "amber-crisp");
-  root.classList.toggle("lyrics-active-gold-neon", roomUtility.lyricActivePreset === "gold-neon");
-  root.classList.toggle("lyrics-active-warm-white", roomUtility.lyricActivePreset === "warm-white");
-  root.classList.toggle("lyrics-active-violet-glow", roomUtility.lyricActivePreset === "violet-glow");
-
-  root.classList.toggle("lyrics-inactive-soft-ghost", roomUtility.lyricInactivePreset === "soft-ghost");
-  root.classList.toggle("lyrics-inactive-warm-dim", roomUtility.lyricInactivePreset === "warm-dim");
-  root.classList.toggle("lyrics-inactive-clean-readable", roomUtility.lyricInactivePreset === "clean-readable");
-  root.classList.toggle("lyrics-inactive-minimal", roomUtility.lyricInactivePreset === "minimal");
-
-  root.classList.toggle("lyrics-active-layout-single-line", roomUtility.lyricActiveLayout === "single-line");
-  root.classList.toggle("lyrics-active-layout-two-line", roomUtility.lyricActiveLayout === "two-line");
-  root.classList.toggle("lyrics-perspective-forward", roomUtility.lyricPerspectiveMode === "ceiling-forward");
-  root.classList.toggle("lyrics-perspective-crawl", roomUtility.lyricPerspectiveMode === "ceiling-crawl");
-
-  const overlay = qs<HTMLElement>("#roomFilterOverlay");
-  overlay.className = `room-filter-overlay ${roomUtility.sceneFilter}`;
+  root.classList.toggle("lyric-video-mode-smooth-fill", roomUtility.lyricVideoMode === "smooth-fill");
+  root.classList.toggle("lyric-video-mode-word-fill", roomUtility.lyricVideoMode === "word-fill");
 }
 
 function updateSpeakerPulse(isPlaying: boolean): void {
@@ -884,7 +778,16 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
       return { ...DEFAULT_ROOM_UTILITY, ...parsed };
     }
 
-    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v7") ?? window.localStorage.getItem("pocketdj-room-utility-v6") ?? window.localStorage.getItem("pocketdj-room-utility-v5") ?? window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
+    const oldRaw =
+      window.localStorage.getItem("pocketdj-room-utility-v8") ??
+      window.localStorage.getItem("pocketdj-room-utility-v7") ??
+      window.localStorage.getItem("pocketdj-room-utility-v6") ??
+      window.localStorage.getItem("pocketdj-room-utility-v5") ??
+      window.localStorage.getItem("pocketdj-room-utility-v4") ??
+      window.localStorage.getItem("pocketdj-room-utility-v3") ??
+      window.localStorage.getItem("pocketdj-room-utility-v2") ??
+      window.localStorage.getItem("pocketdj-room-utility-v1");
+
     if (!oldRaw) return { ...DEFAULT_ROOM_UTILITY };
 
     const oldParsed = JSON.parse(oldRaw) as Partial<RoomUtilitySettings>;
