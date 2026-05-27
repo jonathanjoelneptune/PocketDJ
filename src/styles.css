@@ -4527,3 +4527,235 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .lyric-utility-stack input#lyricLineCount {
   accent-color: #f5a02f;
 }
+
+
+/* Final lyrics room-blend polish, animation behavior, and crisp active lyric */
+:root {
+  --lyrics-line-count: 11;
+  --lyrics-base-font-size: 12px;
+  --lyrics-active-zoom: 1.08;
+  --lyrics-animation-revision: 0;
+}
+
+/* Keep the lyric projection inside the ceiling, but make it feel painted into the room. */
+.lyrics-ceiling {
+  mix-blend-mode: screen;
+  opacity: 0.72 !important;
+}
+
+.lyrics-ceiling-inner {
+  background:
+    radial-gradient(circle at 50% 16%, rgba(255, 184, 76, 0.045), transparent 38%),
+    radial-gradient(circle at 50% 2%, rgba(124, 69, 216, 0.060), transparent 58%) !important;
+}
+
+/* Readable base type. Long lines shrink before clipping. */
+.lyrics-block {
+  font-size: clamp(calc(var(--lyrics-base-font-size) * 0.78), calc(var(--lyrics-base-font-size) * (var(--room-w) / 1600)), calc(var(--lyrics-base-font-size) * 1.18)) !important;
+  line-height: 1.18 !important;
+  letter-spacing: 0.055em !important;
+  text-shadow: none !important;
+}
+
+.lyrics-line {
+  box-sizing: border-box !important;
+  padding-inline: 0.45em !important;
+  font-size: calc(1em * var(--lyrics-line-scale, 1)) !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  opacity: 0.24 !important;
+  color: rgba(255, 204, 150, 0.50) !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.45),
+    0 0 3px rgba(255, 166, 58, 0.10) !important;
+  filter: none !important;
+}
+
+.lyrics-line-near {
+  opacity: 0.46 !important;
+  color: rgba(255, 215, 167, 0.62) !important;
+}
+
+.lyrics-line-past {
+  opacity: 0.17 !important;
+  color: rgba(255, 199, 150, 0.38) !important;
+}
+
+/* Active lyric should read like the marquee: crisp amber, screen-facing, with a dark backing strip. */
+.lyrics-line-active {
+  z-index: 3 !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  color: #ffd46f !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.070em !important;
+  transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom)) !important;
+  text-shadow:
+    0 1px 0 #5b2505,
+    0 -1px 0 rgba(255, 247, 203, 0.25),
+    0 0 4px rgba(255, 186, 66, 0.75),
+    0 0 9px rgba(255, 147, 28, 0.32) !important;
+  filter: none !important;
+}
+
+.lyrics-line-active::before {
+  content: "";
+  position: absolute;
+  left: -1.2em;
+  right: -1.2em;
+  top: -0.34em;
+  bottom: -0.32em;
+  z-index: -1;
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, transparent, rgba(5, 2, 8, 0.42) 14%, rgba(5, 2, 8, 0.54) 50%, rgba(5, 2, 8, 0.42) 86%, transparent);
+  box-shadow:
+    inset 0 0 14px rgba(255, 181, 64, 0.035),
+    0 0 16px rgba(0,0,0,0.14);
+}
+
+.lyrics-line-active::after {
+  display: none !important;
+}
+
+/* Animation presets: all operate only when the active lyric re-renders on line change or preset change. */
+.lyrics-animation-vertical-marquee .lyrics-line-active {
+  animation: lyricVerticalMarqueeFinal 720ms cubic-bezier(.18, .88, .18, 1) both !important;
+}
+
+@keyframes lyricVerticalMarqueeFinal {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(calc(-50% + 58px)) rotateX(-58deg) skewX(0.35deg) scale(0.96);
+  }
+  76% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(calc(-50% - 4px)) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+.lyrics-animation-active-horizontal-marquee .lyrics-line-active {
+  animation: lyricHorizontalMarqueeFinal 820ms cubic-bezier(.18, .88, .18, 1) both !important;
+}
+
+@keyframes lyricHorizontalMarqueeFinal {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(-50% + 260px)) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(0.98);
+  }
+  72% {
+    opacity: 1;
+    transform: translateX(calc(-50% - 12px)) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+.lyrics-animation-focus-sweep .lyrics-line-active {
+  animation: lyricFocusSweepFinal 620ms cubic-bezier(.2, .85, .2, 1) both !important;
+}
+
+@keyframes lyricFocusSweepFinal {
+  0% {
+    opacity: 0.1;
+    transform: translateX(-50%) translateY(calc(-50% + 18px)) rotateX(-58deg) skewX(0.35deg) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+.lyrics-animation-soft-slide .lyrics-line-active {
+  animation: lyricSoftSlideFinal 760ms cubic-bezier(.22, .86, .2, 1) both !important;
+}
+
+@keyframes lyricSoftSlideFinal {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(calc(-50% + 28px)) rotateX(-58deg) skewX(0.35deg) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+.lyrics-animation-pulse-pop .lyrics-line-active {
+  animation: lyricPulsePopFinal 540ms cubic-bezier(.18, 1.22, .26, 1) both !important;
+}
+
+@keyframes lyricPulsePopFinal {
+  0% {
+    opacity: 0.35;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(0.92);
+  }
+  62% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(calc(var(--lyrics-active-zoom) + 0.04));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+.lyrics-animation-instant .lyrics-line,
+.lyrics-animation-instant .lyrics-line-active {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Active presets now adjust color/crispness, not heavy glow. */
+.lyrics-active-amber-crisp .lyrics-line-active {
+  color: #ffd46f !important;
+}
+
+.lyrics-active-gold-neon .lyrics-line-active {
+  color: #ffe27d !important;
+}
+
+.lyrics-active-warm-white .lyrics-line-active {
+  color: #fff0c9 !important;
+}
+
+.lyrics-active-violet-glow .lyrics-line-active {
+  color: #efd2ff !important;
+  text-shadow:
+    0 1px 0 #2c153a,
+    0 0 4px rgba(220, 174, 255, 0.72),
+    0 0 8px rgba(164, 92, 255, 0.34) !important;
+}
+
+/* Inactive presets are intentionally subtle so the active line owns the focus. */
+.lyrics-inactive-clean-readable .lyrics-line:not(.lyrics-line-active) {
+  opacity: 0.42 !important;
+  color: rgba(255, 218, 172, 0.62) !important;
+}
+
+.lyrics-inactive-soft-ghost .lyrics-line:not(.lyrics-line-active) {
+  opacity: 0.25 !important;
+  color: rgba(255, 203, 160, 0.48) !important;
+}
+
+.lyrics-inactive-warm-dim .lyrics-line:not(.lyrics-line-active) {
+  opacity: 0.34 !important;
+  color: rgba(255, 184, 118, 0.52) !important;
+}
+
+.lyrics-inactive-minimal .lyrics-line:not(.lyrics-line-active) {
+  opacity: 0.13 !important;
+  color: rgba(255, 217, 170, 0.36) !important;
+}
+
+/* More stable line spacing for 11-line layouts. */
+.lyrics-boundary-guide {
+  height: 2px !important;
+}

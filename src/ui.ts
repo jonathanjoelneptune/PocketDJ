@@ -256,14 +256,14 @@ export function renderShell(state: AppState): void {
                 <input id="lyricBottomW" type="range" min="120" max="1600" step="1" value="544" />
               </label>
 
-              <label>Number of lyric lines <span id="lyricLineCountValue">7</span>
-                <input id="lyricLineCount" type="range" min="3" max="15" step="2" value="7" />
+              <label>Number of lyric lines <span id="lyricLineCountValue">11</span>
+                <input id="lyricLineCount" type="range" min="3" max="15" step="2" value="11" />
               </label>
-              <label>Base lyric font size px <span id="lyricBaseFontSizeValue">15</span>
-                <input id="lyricBaseFontSize" type="range" min="8" max="26" step="1" value="15" />
+              <label>Base lyric font size px <span id="lyricBaseFontSizeValue">12</span>
+                <input id="lyricBaseFontSize" type="range" min="8" max="26" step="1" value="12" />
               </label>
-              <label>Active lyric zoom <span id="lyricActiveZoomValue">1.10</span>
-                <input id="lyricActiveZoom" type="range" min="1" max="1.35" step="0.01" value="1.10" />
+              <label>Active lyric zoom <span id="lyricActiveZoomValue">1.08</span>
+                <input id="lyricActiveZoom" type="range" min="1" max="1.35" step="0.01" value="1.08" />
               </label>
               <label>Guide opacity <span id="lyricGuideOpacityValue">0.00</span>
                 <input id="lyricGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.0" />
@@ -274,7 +274,7 @@ export function renderShell(state: AppState): void {
               <label>Animation preset
                 <select id="lyricAnimationPreset">
                   <option value="focus-sweep">Focus sweep</option>
-                  <option value="vertical-marquee">Vertical marquee</option>
+                  <option value="vertical-marquee" selected>Vertical marquee</option>
                   <option value="active-horizontal-marquee">Active horizontal marquee</option>
                   <option value="soft-slide">Soft slide</option>
                   <option value="pulse-pop">Pulse pop</option>
@@ -283,7 +283,7 @@ export function renderShell(state: AppState): void {
               </label>
               <label>Active lyric preset
                 <select id="lyricActivePreset">
-                  <option value="amber-crisp">Amber crisp</option>
+                  <option value="amber-crisp" selected>Amber crisp</option>
                   <option value="gold-neon">Gold neon</option>
                   <option value="warm-white">Warm white</option>
                   <option value="violet-glow">Violet glow</option>
@@ -293,7 +293,7 @@ export function renderShell(state: AppState): void {
                 <select id="lyricInactivePreset">
                   <option value="soft-ghost">Soft ghost</option>
                   <option value="warm-dim">Warm dim</option>
-                  <option value="clean-readable">Clean readable</option>
+                  <option value="clean-readable" selected>Clean readable</option>
                   <option value="minimal">Minimal</option>
                 </select>
               </label>
@@ -743,7 +743,11 @@ export function updateLyricsCeiling(
   const halfWindow = Math.floor(lineCount / 2);
   const centerIndex = activeIndex >= 0 ? activeIndex : 0;
   const visibleSlots = Array.from({ length: lineCount }, (_, slotIndex) => slotIndex - halfWindow);
-  const renderSignature = `${lyrics.trackKey}|${activeIndex}|${lineCount}`;
+  const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
+  const activeZoom = rootStyles.getPropertyValue("--lyrics-active-zoom").trim();
+  const baseFontSize = rootStyles.getPropertyValue("--lyrics-base-font-size").trim();
+  const rootClassSignature = document.documentElement.className;
+  const renderSignature = `${lyrics.trackKey}|${activeIndex}|${lineCount}|${animationRevision}|${activeZoom}|${baseFontSize}|${rootClassSignature}`;
 
   if (renderSignature === lastLyricsRenderSignature) return;
   lastLyricsRenderSignature = renderSignature;
@@ -755,11 +759,13 @@ export function updateLyricsCeiling(
       const isActive = offset === 0 && Boolean(line);
       const isPast = offset < 0;
       const isNear = Math.abs(offset) <= 2;
+      const textLength = line?.text.length ?? 0;
+      const lineScale = getLyricLineScale(textLength, isActive);
 
       return `
         <div
           class="lyrics-line ${line ? "" : "lyrics-line-blank"} ${isActive ? "lyrics-line-active" : ""} ${isPast ? "lyrics-line-past" : ""} ${isNear ? "lyrics-line-near" : ""}"
-          style="left: var(--lyrics-slot-${slotIndex}-x); top: var(--lyrics-slot-${slotIndex}-y); width: var(--lyrics-slot-${slotIndex}-w);"
+          style="left: var(--lyrics-slot-${slotIndex}-x); top: var(--lyrics-slot-${slotIndex}-y); width: var(--lyrics-slot-${slotIndex}-w); --lyrics-line-scale: ${lineScale};"
           data-time="${line?.timeMs ?? ""}"
         >
           ${line ? escapeHtml(line.text) : ""}
@@ -767,6 +773,16 @@ export function updateLyricsCeiling(
       `;
     })
     .join("");
+}
+
+function getLyricLineScale(textLength: number, isActive: boolean): number {
+  const activeAllowance = isActive ? 44 : 34;
+  const softLimit = isActive ? 62 : 46;
+
+  if (textLength <= activeAllowance) return 1;
+  if (textLength <= softLimit) return isActive ? 0.88 : 0.84;
+  if (textLength <= 78) return isActive ? 0.76 : 0.72;
+  return isActive ? 0.66 : 0.62;
 }
 
 export function updateLyricsToggleUi(status: LyricsPayload["status"], enabled: boolean): void {

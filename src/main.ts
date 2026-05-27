@@ -40,6 +40,7 @@ let phase2Volume = 70;
 let lyricsState: LyricsPayload = emptyLyrics();
 let lyricsFetchKey = "";
 let lyricsEnabled = true;
+let lyricAnimationRevision = 0;
 
 
 type SceneFilter =
@@ -116,12 +117,12 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricBottomY: 404,
   lyricBottomW: 544,
   lyricGuideOpacity: 0.0,
-  lyricLineCount: 7,
+  lyricLineCount: 11,
   lyricAnimationPreset: "vertical-marquee",
-  lyricActivePreset: "warm-white",
-  lyricInactivePreset: "soft-ghost",
-  lyricActiveZoom: 1.10,
-  lyricBaseFontSize: 15
+  lyricActivePreset: "amber-crisp",
+  lyricInactivePreset: "clean-readable",
+  lyricActiveZoom: 1.08,
+  lyricBaseFontSize: 12
 };
 
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v1";
@@ -643,6 +644,7 @@ function bindRoomUtilityControls(): void {
   });
 
   lyricAnimationPreset.addEventListener("change", () => {
+    lyricAnimationRevision += 1;
     roomUtility = { ...roomUtility, lyricAnimationPreset: lyricAnimationPreset.value as LyricAnimationPreset };
     applyRoomUtilitySettings();
   });
@@ -713,6 +715,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyrics-line-count", String(roomUtility.lyricLineCount));
   root.style.setProperty("--lyrics-active-zoom", String(roomUtility.lyricActiveZoom));
   root.style.setProperty("--lyrics-base-font-size", `${roomUtility.lyricBaseFontSize}px`);
+  root.style.setProperty("--lyrics-animation-revision", String(lyricAnimationRevision));
 
   for (let slot = 0; slot < roomUtility.lyricLineCount; slot += 1) {
     const t = roomUtility.lyricLineCount <= 1 ? 0.5 : slot / (roomUtility.lyricLineCount - 1);
