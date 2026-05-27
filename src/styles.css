@@ -5549,3 +5549,90 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   border-radius: 12px;
   transform: translateX(-50%) translateY(-50%);
 }
+
+
+/* LOCKED LYRIC DEFAULTS + BLACK ACTIVE BACKING + FORWARD CEILING FLOW */
+:root {
+  --lyrics-past-top-x: 881px;
+  --lyrics-past-top-y: 42px;
+  --lyrics-past-top-w: 1177px;
+  --lyrics-past-bottom-x: 882px;
+  --lyrics-past-bottom-y: 168px;
+  --lyrics-past-bottom-w: 920px;
+
+  --lyrics-active-x: 882px;
+  --lyrics-active-y: 88px;
+  --lyrics-active-w: 850px;
+  --lyrics-active-h: 25px;
+  --lyrics-active-zoom: 1.08;
+  --lyrics-active-stroke: 2px;
+  --lyrics-active-bg-opacity: 1;
+  --lyrics-active-bg-color: #000000;
+  --lyrics-active-bg-rgb: 0, 0, 0;
+
+  --lyrics-future-top-x: 932px;
+  --lyrics-future-top-y: 293px;
+  --lyrics-future-top-w: 860px;
+  --lyrics-future-bottom-x: 882px;
+  --lyrics-future-bottom-y: 397px;
+  --lyrics-future-bottom-w: 900px;
+
+  --lyrics-line-count: 9;
+  --lyrics-base-font-size: 12px;
+}
+
+/* Flip the ceiling projection from a Star-Wars-away feel toward a forward-to-viewer feel. */
+.lyrics-perspective-forward .lyrics-ceiling-inner {
+  transform-origin: 50% 100% !important;
+  transform: rotateX(-58deg) skewX(-1deg) !important;
+  mask-image: linear-gradient(to top, transparent 0%, black 16%, black 88%, transparent 100%) !important;
+}
+
+.lyrics-perspective-crawl .lyrics-ceiling-inner {
+  transform-origin: 50% 0% !important;
+  transform: rotateX(58deg) skewX(-1deg) !important;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%) !important;
+}
+
+/* Make the active backing obey black/background color/opacity exactly. No color-mix. */
+.active-lyrics-line {
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(var(--lyrics-active-bg-rgb), calc(var(--lyrics-active-bg-opacity) * 0.82)) 5%,
+      rgba(var(--lyrics-active-bg-rgb), var(--lyrics-active-bg-opacity)) 18%,
+      rgba(var(--lyrics-active-bg-rgb), var(--lyrics-active-bg-opacity)) 82%,
+      rgba(var(--lyrics-active-bg-rgb), calc(var(--lyrics-active-bg-opacity) * 0.82)) 95%,
+      transparent 100%
+    ) !important;
+  min-height: var(--lyrics-active-h) !important;
+  height: var(--lyrics-active-h) !important;
+  padding: 0 1.05em !important;
+  line-height: 1 !important;
+  border: 1px solid rgba(255, 184, 76, calc(0.08 + var(--lyrics-active-bg-opacity) * 0.20)) !important;
+  -webkit-text-stroke: var(--lyrics-active-stroke) rgba(0, 0, 0, 0.96) !important;
+  paint-order: stroke fill !important;
+  text-shadow:
+    0 1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000,
+    0 -1px 0 #000,
+    0 0 3px rgba(255, 197, 75, 0.72) !important;
+  filter: drop-shadow(0 0 calc(var(--lyrics-active-stroke) * 0.85) rgba(0, 0, 0, 0.95)) !important;
+}
+
+#lyricActiveBgColor {
+  background: #000 !important;
+}
+
+/* Keep lower/future lyric rows centered and contained. */
+.lyrics-line-past,
+.lyrics-line-future {
+  display: grid !important;
+  place-items: center !important;
+  text-align: center !important;
+  transform: translateX(-50%) translateY(-50%) scale(0.94) !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
+}

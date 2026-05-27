@@ -242,8 +242,8 @@ export function renderShell(state: AppState): void {
               <label>Past bottom X px <span id="lyricPastBottomXValue">882</span>
                 <input id="lyricPastBottomX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Past bottom Y px <span id="lyricPastBottomYValue">142</span>
-                <input id="lyricPastBottomY" type="range" min="0" max="520" step="1" value="142" />
+              <label>Past bottom Y px <span id="lyricPastBottomYValue">168</span>
+                <input id="lyricPastBottomY" type="range" min="0" max="520" step="1" value="168" />
               </label>
               <label>Past bottom width px <span id="lyricPastBottomWValue">920</span>
                 <input id="lyricPastBottomW" type="range" min="120" max="1600" step="1" value="920" />
@@ -255,14 +255,14 @@ export function renderShell(state: AppState): void {
               <label>Active X px <span id="lyricActiveXValue">882</span>
                 <input id="lyricActiveX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Active Y px <span id="lyricActiveYValue">192</span>
-                <input id="lyricActiveY" type="range" min="0" max="520" step="1" value="192" />
+              <label>Active Y px <span id="lyricActiveYValue">88</span>
+                <input id="lyricActiveY" type="range" min="0" max="520" step="1" value="88" />
               </label>
               <label>Active width px <span id="lyricActiveWValue">850</span>
                 <input id="lyricActiveW" type="range" min="180" max="1600" step="1" value="850" />
               </label>
-              <label>Active height px <span id="lyricActiveHValue">58</span>
-                <input id="lyricActiveH" type="range" min="20" max="180" step="1" value="58" />
+              <label>Active height px <span id="lyricActiveHValue">25</span>
+                <input id="lyricActiveH" type="range" min="20" max="180" step="1" value="25" />
               </label>
               <label>Active lyric zoom <span id="lyricActiveZoomValue">1.08</span>
                 <input id="lyricActiveZoom" type="range" min="0.75" max="1.6" step="0.01" value="1.08" />
@@ -270,21 +270,21 @@ export function renderShell(state: AppState): void {
               <label>Black stroke px <span id="lyricActiveStrokeValue">2.00</span>
                 <input id="lyricActiveStroke" type="range" min="0" max="8" step="0.25" value="2" />
               </label>
-              <label>Background opacity <span id="lyricActiveBgOpacityValue">0.86</span>
-                <input id="lyricActiveBgOpacity" type="range" min="0" max="1" step="0.01" value="0.86" />
+              <label>Background opacity <span id="lyricActiveBgOpacityValue">1.00</span>
+                <input id="lyricActiveBgOpacity" type="range" min="0" max="1" step="0.01" value="1.00" />
               </label>
               <label>Background color
-                <input id="lyricActiveBgColor" type="color" value="#050208" />
+                <input id="lyricActiveBgColor" type="color" value="#000000" />
               </label>
             </div>
 
             <div class="utility-subhead utility-subhead-secondary">Future lyrics section</div>
             <div class="lyric-utility-stack">
-              <label>Future top X px <span id="lyricFutureTopXValue">882</span>
-                <input id="lyricFutureTopX" type="range" min="0" max="1600" step="1" value="882" />
+              <label>Future top X px <span id="lyricFutureTopXValue">932</span>
+                <input id="lyricFutureTopX" type="range" min="0" max="1600" step="1" value="932" />
               </label>
-              <label>Future top Y px <span id="lyricFutureTopYValue">250</span>
-                <input id="lyricFutureTopY" type="range" min="0" max="520" step="1" value="250" />
+              <label>Future top Y px <span id="lyricFutureTopYValue">293</span>
+                <input id="lyricFutureTopY" type="range" min="0" max="520" step="1" value="293" />
               </label>
               <label>Future top width px <span id="lyricFutureTopWValue">860</span>
                 <input id="lyricFutureTopW" type="range" min="120" max="1600" step="1" value="860" />
@@ -292,8 +292,8 @@ export function renderShell(state: AppState): void {
               <label>Future bottom X px <span id="lyricFutureBottomXValue">882</span>
                 <input id="lyricFutureBottomX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Future bottom Y px <span id="lyricFutureBottomYValue">346</span>
-                <input id="lyricFutureBottomY" type="range" min="0" max="520" step="1" value="346" />
+              <label>Future bottom Y px <span id="lyricFutureBottomYValue">397</span>
+                <input id="lyricFutureBottomY" type="range" min="0" max="520" step="1" value="397" />
               </label>
               <label>Future bottom width px <span id="lyricFutureBottomWValue">900</span>
                 <input id="lyricFutureBottomW" type="range" min="120" max="1600" step="1" value="900" />
@@ -302,8 +302,8 @@ export function renderShell(state: AppState): void {
 
             <div class="utility-subhead utility-subhead-secondary">General lyrics</div>
             <div class="lyric-utility-stack">
-              <label>Number of lyric lines <span id="lyricLineCountValue">11</span>
-                <input id="lyricLineCount" type="range" min="3" max="15" step="2" value="11" />
+              <label>Number of lyric lines <span id="lyricLineCountValue">9</span>
+                <input id="lyricLineCount" type="range" min="3" max="15" step="2" value="9" />
               </label>
               <label>Base lyric font size px <span id="lyricBaseFontSizeValue">12</span>
                 <input id="lyricBaseFontSize" type="range" min="8" max="26" step="1" value="12" />
@@ -317,11 +317,11 @@ export function renderShell(state: AppState): void {
               <label>Animation preset
                 <select id="lyricAnimationPreset">
                   <option value="focus-sweep">Focus sweep</option>
-                  <option value="vertical-marquee" selected>Vertical marquee</option>
+                  <option value="vertical-marquee">Vertical marquee</option>
                   <option value="active-horizontal-marquee">Active horizontal marquee</option>
                   <option value="soft-slide">Soft slide</option>
                   <option value="pulse-pop">Pulse pop</option>
-                  <option value="instant">Instant</option>
+                  <option value="instant" selected>Instant</option>
                 </select>
               </label>
               <label>Active lyric preset
@@ -344,6 +344,12 @@ export function renderShell(state: AppState): void {
                 <select id="lyricActiveLayout">
                   <option value="single-line">Single line</option>
                   <option value="two-line" selected>Two-line wrap</option>
+                </select>
+              </label>
+              <label>Ceiling perspective
+                <select id="lyricPerspectiveMode">
+                  <option value="ceiling-forward" selected>Forward toward viewer</option>
+                  <option value="ceiling-crawl">Star crawl away</option>
                 </select>
               </label>
             </div>

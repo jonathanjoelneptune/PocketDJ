@@ -57,6 +57,7 @@ type LyricAnimationPreset = "focus-sweep" | "vertical-marquee" | "active-horizon
 type ActiveLyricPreset = "amber-crisp" | "gold-neon" | "warm-white" | "violet-glow";
 type InactiveLyricPreset = "soft-ghost" | "warm-dim" | "clean-readable" | "minimal";
 type LyricActiveLayout = "single-line" | "two-line";
+type LyricPerspectiveMode = "ceiling-forward" | "ceiling-crawl";
 
 type RoomUtilitySettings = {
   speakerLeftX: number;
@@ -101,6 +102,7 @@ type RoomUtilitySettings = {
   lyricInactivePreset: InactiveLyricPreset;
   lyricBaseFontSize: number;
   lyricActiveLayout: LyricActiveLayout;
+  lyricPerspectiveMode: LyricPerspectiveMode;
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
@@ -123,32 +125,33 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPastTopY: 42,
   lyricPastTopW: 1177,
   lyricPastBottomX: 882,
-  lyricPastBottomY: 142,
+  lyricPastBottomY: 168,
   lyricPastBottomW: 920,
-  lyricFutureTopX: 882,
-  lyricFutureTopY: 250,
+  lyricFutureTopX: 932,
+  lyricFutureTopY: 293,
   lyricFutureTopW: 860,
   lyricFutureBottomX: 882,
-  lyricFutureBottomY: 346,
+  lyricFutureBottomY: 397,
   lyricFutureBottomW: 900,
   lyricActiveX: 882,
-  lyricActiveY: 192,
+  lyricActiveY: 88,
   lyricActiveW: 850,
-  lyricActiveH: 58,
+  lyricActiveH: 25,
   lyricActiveZoom: 1.08,
   lyricActiveStroke: 2,
-  lyricActiveBgOpacity: 0.86,
-  lyricActiveBgColor: "#050208",
+  lyricActiveBgOpacity: 1.00,
+  lyricActiveBgColor: "#000000",
   lyricGuideOpacity: 0.0,
-  lyricLineCount: 11,
-  lyricAnimationPreset: "vertical-marquee",
+  lyricLineCount: 9,
+  lyricAnimationPreset: "instant",
   lyricActivePreset: "amber-crisp",
   lyricInactivePreset: "clean-readable",
   lyricBaseFontSize: 12,
-  lyricActiveLayout: "two-line"
+  lyricActiveLayout: "two-line",
+  lyricPerspectiveMode: "ceiling-forward"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v5";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v6";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -614,6 +617,7 @@ function bindRoomUtilityControls(): void {
   const lyricInactivePreset = qs<HTMLSelectElement>("#lyricInactivePreset");
   const lyricActiveLayout = qs<HTMLSelectElement>("#lyricActiveLayout");
   const lyricActiveBgColor = qs<HTMLInputElement>("#lyricActiveBgColor");
+  const lyricPerspectiveMode = qs<HTMLSelectElement>("#lyricPerspectiveMode");
 
   sceneFilter.value = roomUtility.sceneFilter;
   lyricAnimationPreset.value = roomUtility.lyricAnimationPreset;
@@ -621,6 +625,8 @@ function bindRoomUtilityControls(): void {
   lyricInactivePreset.value = roomUtility.lyricInactivePreset;
   lyricActiveLayout.value = roomUtility.lyricActiveLayout;
   lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
+    lyricPerspectiveMode.value = roomUtility.lyricPerspectiveMode;
+  lyricPerspectiveMode.value = roomUtility.lyricPerspectiveMode;
 
   const controls = [
     ["speakerLeftX", "speakerLeftXValue"],
@@ -707,6 +713,12 @@ function bindRoomUtilityControls(): void {
     applyRoomUtilitySettings();
   });
 
+  lyricPerspectiveMode.addEventListener("change", () => {
+    lyricAnimationRevision += 1;
+    roomUtility = { ...roomUtility, lyricPerspectiveMode: lyricPerspectiveMode.value as LyricPerspectiveMode };
+    applyRoomUtilitySettings();
+  });
+
   qs<HTMLButtonElement>("#saveRoomUtility").addEventListener("click", () => {
     saveRoomUtilitySettings();
     applyRoomUtilitySettings();
@@ -720,9 +732,12 @@ function bindRoomUtilityControls(): void {
     lyricInactivePreset.value = roomUtility.lyricInactivePreset;
     lyricActiveLayout.value = roomUtility.lyricActiveLayout;
     lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
+  lyricPerspectiveMode.value = roomUtility.lyricPerspectiveMode;
   lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
+  lyricPerspectiveMode.value = roomUtility.lyricPerspectiveMode;
   lyricActiveLayout.value = roomUtility.lyricActiveLayout;
   lyricActiveBgColor.value = roomUtility.lyricActiveBgColor;
+  lyricPerspectiveMode.value = roomUtility.lyricPerspectiveMode;
     controls.forEach(([inputId, labelId]) => {
       const input = qs<HTMLInputElement>(`#${inputId}`);
       const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter">;
@@ -849,6 +864,8 @@ function applyRoomUtilitySettings(): void {
 
   root.classList.toggle("lyrics-active-layout-single-line", roomUtility.lyricActiveLayout === "single-line");
   root.classList.toggle("lyrics-active-layout-two-line", roomUtility.lyricActiveLayout === "two-line");
+  root.classList.toggle("lyrics-perspective-forward", roomUtility.lyricPerspectiveMode === "ceiling-forward");
+  root.classList.toggle("lyrics-perspective-crawl", roomUtility.lyricPerspectiveMode === "ceiling-crawl");
 
   const overlay = qs<HTMLElement>("#roomFilterOverlay");
   overlay.className = `room-filter-overlay ${roomUtility.sceneFilter}`;
@@ -875,7 +892,7 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
       return { ...DEFAULT_ROOM_UTILITY, ...parsed };
     }
 
-    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
+    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v5") ?? window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1");
     if (!oldRaw) return { ...DEFAULT_ROOM_UTILITY };
 
     const oldParsed = JSON.parse(oldRaw) as Partial<RoomUtilitySettings>;
