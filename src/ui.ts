@@ -642,17 +642,24 @@ export function updateLyricsCeiling(
     return;
   }
 
-  const lines =
+  const sourceLines =
     lyrics.syncedLyrics.length > 0
       ? lyrics.syncedLyrics
       : lyrics.plainLyrics.split(/\r?\n/).map((text) => ({ timeMs: null, text }));
 
-  block.innerHTML = lines
-    .filter((line) => line.text.trim())
-    .map((line, index) => {
-      const isActive = index === activeIndex;
-      const isPast = activeIndex >= 0 && index < activeIndex;
-      const isNear = activeIndex >= 0 && Math.abs(index - activeIndex) <= 2;
+  const cleanLines = sourceLines.filter((line) => line.text.trim());
+  const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
+  const visibleLineCount = 7;
+  const halfWindow = Math.floor(visibleLineCount / 2);
+  const startIndex = Math.max(0, Math.min(cleanLines.length - visibleLineCount, safeActiveIndex - halfWindow));
+  const visibleLines = cleanLines.slice(startIndex, startIndex + visibleLineCount);
+
+  block.innerHTML = visibleLines
+    .map((line, visibleIndex) => {
+      const absoluteIndex = startIndex + visibleIndex;
+      const isActive = absoluteIndex === activeIndex;
+      const isPast = activeIndex >= 0 && absoluteIndex < activeIndex;
+      const isNear = activeIndex >= 0 && Math.abs(absoluteIndex - activeIndex) <= 2;
 
       return `
         <div
@@ -664,14 +671,6 @@ export function updateLyricsCeiling(
       `;
     })
     .join("");
-
-  const activeLine = block.querySelector(".lyrics-line-active");
-  if (activeLine) {
-    activeLine.scrollIntoView({
-      block: "center",
-      behavior: "smooth",
-    });
-  }
 }
 
 export function updateLyricsToggleUi(status: LyricsPayload["status"], enabled: boolean): void {
