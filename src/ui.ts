@@ -244,22 +244,13 @@ function updateMarquee(track: NormalizedTrack): void {
   marquee.classList.toggle("marquee-paused", payload.state === "paused");
   marquee.classList.toggle("marquee-empty", payload.state === "empty");
   marquee.classList.toggle("marquee-playing", payload.state === "playing");
-  marquee.classList.toggle("marquee-title-long", payload.titleLong);
-  marquee.classList.toggle("marquee-artist-long", payload.artistLong);
-  marquee.classList.toggle("marquee-title-short", !payload.titleLong);
-  marquee.classList.toggle("marquee-artist-short", !payload.artistLong);
-
+  // Title/artist long-vs-short classes are set from actual rendered width in
+  // prepareMarqueeRowsForEntry/updateMarqueeRowPan. Do not use character-count
+  // guesses here, or short titles can stay left-anchored after a long scrolling title.
   if (payload.key === lastMarqueeKey) return;
   lastMarqueeKey = payload.key;
 
   if (marqueeSwapTimer) window.clearTimeout(marqueeSwapTimer);
-
-  // Always transition the old song out as a single clean title, not the duplicated scroll train.
-  clearTitleScrollLoop();
-  titleEl.style.transition = "none";
-  titleEl.style.transform = "translateX(0)";
-  titleEl.textContent = titleEl.dataset.marqueeOriginal || titleEl.textContent || "";
-  artistEl.textContent = artistEl.dataset.marqueeOriginal || artistEl.textContent || "";
 
   // Always transition old text out to the left first.
   content.classList.remove("marquee-entering");
@@ -305,6 +296,7 @@ function prepareMarqueeRowsForEntry(marquee: HTMLElement, titleEl: HTMLElement, 
   titleEl.textContent = titleText;
   titleEl.style.transition = "none";
   titleEl.style.transform = "translateX(0)";
+  titleEl.style.marginLeft = "0";
 
   const titleIsLong = titleEl.scrollWidth > availableWidth + 6;
   marquee.classList.toggle("marquee-title-long", titleIsLong);

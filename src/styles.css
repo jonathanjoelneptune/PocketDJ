@@ -1124,6 +1124,15 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   align-self: center;
 }
 
+.marquee-title-short .marquee-content.marquee-entering .marquee-title,
+.marquee-title-short .marquee-content.marquee-exiting .marquee-title {
+  align-self: center;
+}
+
+.marquee-title-long .marquee-content.marquee-entering .marquee-title,
+.marquee-title-long .marquee-content.marquee-exiting .marquee-title {
+  align-self: flex-start;
+}
 
 
 .marquee-artist-long .marquee-artist {
@@ -1150,51 +1159,17 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 
-/* Final marquee alignment fixes */
-.marquee-title-short .marquee-title {
+/* Correct short-title centering after a previous long scrolling title. */
+.marquee.marquee-title-short .marquee-title {
   align-self: center !important;
-  width: max-content;
+  width: max-content !important;
   max-width: 100%;
+  transform: translateX(0);
   text-align: center;
 }
 
-.marquee-title-long .marquee-title {
+.marquee.marquee-title-long .marquee-title {
   align-self: flex-start !important;
-  width: max-content;
+  width: max-content !important;
   max-width: none;
-}
-
-/* During entry/exit, keep short titles centered and long titles left-anchored. */
-.marquee.marquee-title-short .marquee-content.marquee-entering .marquee-title,
-.marquee.marquee-title-short .marquee-content.marquee-exiting .marquee-title {
-  align-self: center !important;
-}
-
-.marquee.marquee-title-long .marquee-content.marquee-entering .marquee-title,
-.marquee.marquee-title-long .marquee-content.marquee-exiting .marquee-title {
-  align-self: flex-start !important;
-}
-
-/* Give the LED text more vertical breathing room so pixel caps are not clipped. */
-.marquee-viewport {
-  inset: -2px 7.5% 0 7.5%;
-}
-
-.marquee-content {
-  transform: translateX(0) translateY(0);
-  gap: clamp(6px, 0.62vw, 11px);
-}
-
-.marquee-title,
-.marquee-artist {
-  line-height: 1.18;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  overflow: visible;
-}
-
-
-/* During song changes, always show the single original title, not the duplicated scroll train. */
-.marquee-swap .marquee-title {
-  white-space: nowrap;
 }
