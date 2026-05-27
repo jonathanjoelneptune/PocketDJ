@@ -184,19 +184,19 @@ button {
 }
 
 .marquee-content.marquee-exiting .marquee-title {
-  animation: marqueeTitleExitLeft 430ms cubic-bezier(.55,0,.8,.2) both;
+  animation: marqueeTitleExitLeft 1150ms cubic-bezier(.45,0,.72,.18) both;
 }
 
 .marquee-content.marquee-exiting .marquee-artist {
-  animation: marqueeArtistExitLeft 430ms cubic-bezier(.55,0,.8,.2) 140ms both;
+  animation: marqueeArtistExitLeft 1150ms cubic-bezier(.45,0,.72,.18) 420ms both;
 }
 
 .marquee-content.marquee-entering .marquee-title {
-  animation: marqueeTitleEnterRight 620ms cubic-bezier(.2,.85,.24,1) both;
+  animation: marqueeTitleEnterRight 1500ms cubic-bezier(.16,.88,.22,1) both;
 }
 
 .marquee-content.marquee-entering .marquee-artist {
-  animation: marqueeArtistEnterRight 620ms cubic-bezier(.2,.85,.24,1) 820ms both;
+  animation: marqueeArtistEnterRight 1500ms cubic-bezier(.16,.88,.22,1) 1050ms both;
 }
 
 .marquee-title,

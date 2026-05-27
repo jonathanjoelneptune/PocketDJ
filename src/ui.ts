@@ -277,8 +277,8 @@ function updateMarquee(track: NormalizedTrack): void {
     marqueeSwapTimer = window.setTimeout(() => {
       content.classList.remove("marquee-entering");
       marquee.classList.remove("marquee-swap");
-    }, 980);
-  }, 430);
+    }, 2300);
+  }, 1150);
 }
 
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
