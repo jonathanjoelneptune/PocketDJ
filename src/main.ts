@@ -52,6 +52,10 @@ type SceneFilter =
   | "cinematic-amber"
   | "moody-lowlight";
 
+type LyricAnimationPreset = "focus-sweep" | "soft-slide" | "pulse-pop" | "instant";
+type ActiveLyricPreset = "amber-crisp" | "gold-neon" | "warm-white" | "violet-glow";
+type InactiveLyricPreset = "soft-ghost" | "warm-dim" | "clean-readable" | "minimal";
+
 type RoomUtilitySettings = {
   speakerLeftX: number;
   speakerRightX: number;
