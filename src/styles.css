@@ -204,7 +204,8 @@ button {
   --marquee-title-pan: 0px;
   --marquee-artist-pan: 0px;
   --marquee-title-duration: 22s;
-  --marquee-artist-duration: 24s;
+  --marquee-title-hold: 22%;
+  --marquee-artist-duration: 0s;
   width: max-content;
   max-width: none;
   overflow: visible;
@@ -253,7 +254,7 @@ button {
 .marquee-title-long .marquee-title {
   justify-self: start;
   animation:
-    marqueeTitleTrain var(--marquee-title-duration, 22s) linear infinite,
+    marqueeTitleTrainWithPause var(--marquee-title-duration, 22s) linear infinite,
     marqueeLedGlow 920ms ease-in-out infinite alternate;
 }
 
@@ -263,10 +264,11 @@ button {
 }
 
 .marquee-artist-long .marquee-artist {
-  justify-self: start;
-  animation:
-    marqueeArtistTrain var(--marquee-artist-duration, 24s) linear infinite,
-    marqueeLedGlow 1150ms ease-in-out infinite alternate;
+  justify-self: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  animation: marqueeLedGlow 1150ms ease-in-out infinite alternate;
 }
 
 .marquee-paused .marquee-title,
@@ -288,22 +290,12 @@ button {
 
 /* Song-change movement is handled by .marquee-exiting and .marquee-entering. */
 
-@keyframes marqueeTitleTrain {
-  from {
+@keyframes marqueeTitleTrainWithPause {
+  0%, 22% {
     transform: translateX(0);
   }
 
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes marqueeArtistTrain {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
+  100% {
     transform: translateX(-50%);
   }
 }
@@ -320,7 +312,11 @@ button {
 
 
 
-/* Long rows use a constant-speed repeated text train with separator icon. */
+
+
+
+
+/* Long title rows pause, then constant-speed train scroll. Artist rows remain static. */
 @keyframes marqueeTitleCenterHold {
   0% {
     transform: translateX(110%);
@@ -1127,4 +1123,10 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .marquee-content.marquee-entering .marquee-artist,
 .marquee-content.marquee-exiting .marquee-artist {
   justify-self: center;
+}
+
+
+.marquee-artist-long .marquee-artist {
+  width: auto;
+  max-width: 100%;
 }

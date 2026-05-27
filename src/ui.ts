@@ -291,38 +291,29 @@ function updateMarqueeRowPan(marquee: HTMLElement, titleEl: HTMLElement, artistE
   const viewport = marquee.querySelector<HTMLElement>(".marquee-viewport");
   const availableWidth = Math.max(0, (viewport?.clientWidth || marquee.clientWidth) - 10);
 
-  configureMarqueeRow({
+  configureTitleMarqueeRow({
     marquee,
     element: titleEl,
     originalText: titleEl.dataset.marqueeOriginal || titleEl.textContent || "",
-    availableWidth,
-    longClass: "marquee-title-long",
-    shortClass: "marquee-title-short",
-    durationVar: "--marquee-title-duration"
+    availableWidth
   });
 
-  configureMarqueeRow({
+  configureStaticArtistRow({
     marquee,
     element: artistEl,
     originalText: artistEl.dataset.marqueeOriginal || artistEl.textContent || "",
-    availableWidth,
-    longClass: "marquee-artist-long",
-    shortClass: "marquee-artist-short",
-    durationVar: "--marquee-artist-duration"
+    availableWidth
   });
 }
 
-function configureMarqueeRow(options: {
+function configureTitleMarqueeRow(options: {
   marquee: HTMLElement;
   element: HTMLElement;
   originalText: string;
   availableWidth: number;
-  longClass: string;
-  shortClass: string;
-  durationVar: string;
 }): void {
   const separator = "     ✦     ";
-  const { marquee, element, originalText, availableWidth, longClass, shortClass, durationVar } = options;
+  const { marquee, element, originalText, availableWidth } = options;
 
   element.textContent = originalText;
   element.dataset.marqueeOriginal = originalText;
@@ -330,23 +321,50 @@ function configureMarqueeRow(options: {
   const originalWidth = element.scrollWidth;
   const isLong = originalWidth > availableWidth + 6;
 
-  marquee.classList.toggle(longClass, isLong);
-  marquee.classList.toggle(shortClass, !isLong);
+  marquee.classList.toggle("marquee-title-long", isLong);
+  marquee.classList.toggle("marquee-title-short", !isLong);
 
   if (!isLong) {
     element.textContent = originalText;
-    element.style.setProperty(durationVar, "0s");
+    element.style.setProperty("--marquee-title-duration", "0s");
     return;
   }
 
   element.textContent = `${originalText}${separator}${originalText}`;
   const loopDistance = Math.max(1, element.scrollWidth / 2);
 
-  // Constant visual speed for long marquee rows. Higher pxPerSecond = faster.
+  // Constant visual speed for long title rows, plus a 5-second hold at the start.
   const pxPerSecond = 34;
-  const durationSeconds = Math.max(14, Math.min(48, loopDistance / pxPerSecond));
+  const holdSeconds = 5;
+  const scrollSeconds = Math.max(10, Math.min(44, loopDistance / pxPerSecond));
+  const totalSeconds = holdSeconds + scrollSeconds;
+  const holdPercent = Math.min(42, Math.max(10, (holdSeconds / totalSeconds) * 100));
 
-  element.style.setProperty(durationVar, `${durationSeconds.toFixed(2)}s`);
+  element.style.setProperty("--marquee-title-duration", `${totalSeconds.toFixed(2)}s`);
+  element.style.setProperty("--marquee-title-hold", `${holdPercent.toFixed(2)}%`);
+}
+
+function configureStaticArtistRow(options: {
+  marquee: HTMLElement;
+  element: HTMLElement;
+  originalText: string;
+  availableWidth: number;
+}): void {
+  const { marquee, element, originalText, availableWidth } = options;
+
+  element.textContent = originalText;
+  element.dataset.marqueeOriginal = originalText;
+
+  const originalWidth = element.scrollWidth;
+  const isLong = originalWidth > availableWidth + 6;
+
+  marquee.classList.toggle("marquee-artist-long", isLong);
+  marquee.classList.toggle("marquee-artist-short", !isLong);
+
+  // Artist text is intentionally decoupled from title scrolling. If it is too long,
+  // it stays static and clips within the marquee instead of running its own animation.
+  element.textContent = originalText;
+  element.style.setProperty("--marquee-artist-duration", "0s");
 }
 
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
