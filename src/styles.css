@@ -3763,146 +3763,254 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 
-/* Final lyrics readability, ceiling placement, and smoother focus transition */
+/* Lyrics boundary utility: three tunable guide lines and shaped lyric slots */
+:root {
+  --lyrics-top-x: 50%;
+  --lyrics-top-y: 7.5%;
+  --lyrics-top-w: 70%;
+  --lyrics-mid-x: 50%;
+  --lyrics-mid-y: 18%;
+  --lyrics-mid-w: 64%;
+  --lyrics-bottom-x: 50%;
+  --lyrics-bottom-y: 29%;
+  --lyrics-bottom-w: 58%;
+  --lyrics-guide-opacity: 0;
+}
 
-/* Slightly narrower horizontally and lower on the ceiling plane. */
 .lyrics-ceiling {
-  left: 12% !important;
-  right: 12% !important;
-  top: 3.2% !important;
-  height: 32.5% !important;
-  opacity: 0.82 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  height: 38% !important;
+  opacity: 0.86 !important;
+  perspective: 1000px;
 }
 
 .lyrics-ceiling-inner {
+  position: absolute !important;
+  inset: 0 !important;
   transform: rotateX(58deg) skewX(-0.35deg) !important;
-  padding: calc(var(--room-h) * 0.020) calc(var(--room-w) * 0.024) calc(var(--room-h) * 0.026) !important;
+  transform-origin: 50% 0% !important;
+  padding: 0 !important;
   background:
-    radial-gradient(circle at 50% 8%, rgba(255, 184, 76, 0.075), transparent 42%),
-    radial-gradient(circle at 50% 0%, rgba(126, 68, 255, 0.11), transparent 58%),
-    linear-gradient(180deg, rgba(12, 6, 28, 0.16), rgba(4, 2, 10, 0.018)) !important;
-  mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 94%, transparent 100%) !important;
+    radial-gradient(circle at 50% 8%, rgba(255, 184, 76, 0.055), transparent 42%),
+    radial-gradient(circle at 50% 0%, rgba(126, 68, 255, 0.08), transparent 58%) !important;
+  mask-image: none !important;
+  overflow: visible !important;
 }
 
-/* Seven-line lyric window with crisper text and less mushy glow. */
 .lyrics-block {
+  position: absolute !important;
+  inset: 0 !important;
+  overflow: visible !important;
   height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-  font-size: clamp(10px, calc(var(--room-w) * 0.0077), 17px) !important;
-  line-height: 1.48 !important;
+  display: block !important;
+  font-size: clamp(9px, calc(var(--room-w) * 0.0071), 16px) !important;
+  line-height: 1.25 !important;
   letter-spacing: 0.035em !important;
+  text-align: center;
   color: rgba(255, 218, 154, 0.58) !important;
   text-shadow:
-    0 0 3px rgba(255, 184, 76, 0.24),
-    0 0 9px rgba(118, 63, 255, 0.16) !important;
+    0 0 3px rgba(255, 184, 76, 0.26),
+    0 0 8px rgba(118, 63, 255, 0.15) !important;
 }
 
 .lyrics-line {
-  margin: calc(var(--room-h) * 0.0037) 0 !important;
+  position: absolute !important;
+  margin: 0 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   opacity: 0.30 !important;
-  transform: translateY(0) scale(0.97) !important;
-  filter: blur(0.15px);
+  filter: blur(0.1px);
+  transform: translateX(-50%) translateY(-50%) scale(0.96) !important;
+  transform-origin: 50% 50%;
   transition:
     opacity 360ms ease,
     transform 420ms cubic-bezier(.2, .95, .25, 1),
     color 260ms ease,
     text-shadow 260ms ease,
     filter 260ms ease !important;
-  will-change: transform, opacity, filter;
+}
+
+/* 7 lyric slots. Slot 3 is always the active lyric and sits on the middle guide line. */
+.lyrics-slot-0 {
+  left: var(--lyrics-top-x);
+  top: var(--lyrics-top-y);
+  width: var(--lyrics-top-w);
+}
+
+.lyrics-slot-1 {
+  left: calc((var(--lyrics-top-x) * 2 + var(--lyrics-mid-x)) / 3);
+  top: calc((var(--lyrics-top-y) * 2 + var(--lyrics-mid-y)) / 3);
+  width: calc((var(--lyrics-top-w) * 2 + var(--lyrics-mid-w)) / 3);
+}
+
+.lyrics-slot-2 {
+  left: calc((var(--lyrics-top-x) + var(--lyrics-mid-x) * 2) / 3);
+  top: calc((var(--lyrics-top-y) + var(--lyrics-mid-y) * 2) / 3);
+  width: calc((var(--lyrics-top-w) + var(--lyrics-mid-w) * 2) / 3);
+}
+
+.lyrics-slot-3 {
+  left: var(--lyrics-mid-x);
+  top: var(--lyrics-mid-y);
+  width: var(--lyrics-mid-w);
+}
+
+.lyrics-slot-4 {
+  left: calc((var(--lyrics-mid-x) * 2 + var(--lyrics-bottom-x)) / 3);
+  top: calc((var(--lyrics-mid-y) * 2 + var(--lyrics-bottom-y)) / 3);
+  width: calc((var(--lyrics-mid-w) * 2 + var(--lyrics-bottom-w)) / 3);
+}
+
+.lyrics-slot-5 {
+  left: calc((var(--lyrics-mid-x) + var(--lyrics-bottom-x) * 2) / 3);
+  top: calc((var(--lyrics-mid-y) + var(--lyrics-bottom-y) * 2) / 3);
+  width: calc((var(--lyrics-mid-w) + var(--lyrics-bottom-w) * 2) / 3);
+}
+
+.lyrics-slot-6 {
+  left: var(--lyrics-bottom-x);
+  top: var(--lyrics-bottom-y);
+  width: var(--lyrics-bottom-w);
+}
+
+.lyrics-line-blank {
+  visibility: hidden;
 }
 
 .lyrics-line-near {
-  opacity: 0.61 !important;
-  transform: translateY(0) scale(1.00) !important;
+  opacity: 0.58 !important;
+  transform: translateX(-50%) translateY(-50%) scale(1.00) !important;
   filter: blur(0);
 }
 
 .lyrics-line-past {
   opacity: 0.20 !important;
-  transform: translateY(-1px) scale(0.955) !important;
+  transform: translateX(-50%) translateY(-50%) scale(0.94) !important;
 }
 
 .lyrics-line-active {
-  position: relative;
   opacity: 1 !important;
-  transform: translateY(-1px) scale(1.12) !important;
+  transform: translateX(-50%) translateY(-50%) scale(1.10) !important;
   color: rgba(255, 220, 128, 0.98) !important;
-  filter: blur(0) saturate(1.10);
-  animation: lyricFocusSweep 540ms cubic-bezier(.2, .95, .25, 1) both;
+  filter: blur(0) saturate(1.08);
+  animation: lyricFocusSweep 480ms cubic-bezier(.2, .95, .25, 1) both;
   text-shadow:
-    0 0 2px rgba(255, 245, 205, 0.72),
-    0 0 6px rgba(255, 184, 76, 0.90),
-    0 0 13px rgba(255, 128, 42, 0.42),
-    0 0 20px rgba(132, 77, 255, 0.24) !important;
+    0 0 2px rgba(255, 245, 205, 0.75),
+    0 0 5px rgba(255, 184, 76, 0.90),
+    0 0 11px rgba(255, 128, 42, 0.42),
+    0 0 18px rgba(132, 77, 255, 0.22) !important;
 }
 
 .lyrics-line-active::after {
   content: "";
   position: absolute;
-  left: 16%;
-  right: 16%;
-  bottom: -0.28em;
+  left: 18%;
+  right: 18%;
+  bottom: -0.36em;
   height: 1px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(255, 198, 92, 0.62), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 198, 92, 0.66), transparent);
   box-shadow:
-    0 0 7px rgba(255, 184, 76, 0.40),
-    0 0 14px rgba(132, 77, 255, 0.18);
-  opacity: 0.85;
+    0 0 6px rgba(255, 184, 76, 0.38),
+    0 0 12px rgba(132, 77, 255, 0.16);
+  opacity: 0.84;
 }
 
 @keyframes lyricFocusSweep {
   0% {
-    opacity: 0.38;
-    transform: translateY(7px) scale(1.00);
-    filter: blur(1.2px);
-    text-shadow:
-      0 0 3px rgba(255, 184, 76, 0.16),
-      0 0 8px rgba(132, 77, 255, 0.12);
+    opacity: 0.34;
+    transform: translateX(-50%) translateY(calc(-50% + 6px)) scale(0.99);
+    filter: blur(0.9px);
   }
-  52% {
+  60% {
     opacity: 1;
-    transform: translateY(-2px) scale(1.145);
+    transform: translateX(-50%) translateY(calc(-50% - 1px)) scale(1.12);
     filter: blur(0);
   }
   100% {
     opacity: 1;
-    transform: translateY(-1px) scale(1.12);
+    transform: translateX(-50%) translateY(-50%) scale(1.10);
     filter: blur(0);
   }
 }
 
-/* Fullscreen: still wider than compact, but about 8% narrower than the prior version. */
-@media (min-width: 1200px) {
-  .lyrics-ceiling {
-    left: 10% !important;
-    right: 10% !important;
-    top: 3.0% !important;
-    height: 33.5% !important;
-  }
+/* Tunable guide-line overlay. Set guide opacity above 0 in Dev Tools to show. */
+.lyrics-boundary-guides {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transform: rotateX(58deg) skewX(-0.35deg);
+  transform-origin: 50% 0%;
+  opacity: var(--lyrics-guide-opacity);
+  pointer-events: none;
+}
+
+.lyrics-boundary-guide {
+  position: absolute;
+  height: 3px;
+  border-radius: 999px;
+  transform: translateX(-50%) translateY(-50%);
+  background: linear-gradient(90deg, transparent, rgba(255, 42, 42, 0.95), transparent);
+  box-shadow: 0 0 10px rgba(255, 30, 30, 0.65);
+}
+
+.lyrics-boundary-guide-top {
+  left: var(--lyrics-top-x);
+  top: var(--lyrics-top-y);
+  width: var(--lyrics-top-w);
+}
+
+.lyrics-boundary-guide-mid {
+  left: var(--lyrics-mid-x);
+  top: var(--lyrics-mid-y);
+  width: var(--lyrics-mid-w);
+}
+
+.lyrics-boundary-guide-bottom {
+  left: var(--lyrics-bottom-x);
+  top: var(--lyrics-bottom-y);
+  width: var(--lyrics-bottom-w);
+}
+
+.lyrics-boundary-utility {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 184, 76, 0.14);
+}
+
+.utility-subhead {
+  color: #ffd98a;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.utility-help {
+  color: rgba(255, 218, 155, 0.68);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  margin: 0 0 10px;
+}
+
+.lyric-boundary-grid {
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 @media (max-width: 760px) {
   .lyrics-ceiling {
-    left: 9% !important;
-    right: 9% !important;
-    top: 3.6% !important;
-    height: 31% !important;
-  }
-
-  .lyrics-ceiling-inner {
-    transform: rotateX(55deg) !important;
+    height: 40% !important;
   }
 
   .lyrics-block {
-    font-size: clamp(8px, calc(var(--room-w) * 0.0108), 13px) !important;
-    line-height: 1.43 !important;
+    font-size: clamp(8px, calc(var(--room-w) * 0.0102), 13px) !important;
   }
 
-  .lyrics-line-active {
-    transform: translateY(-1px) scale(1.09) !important;
+  .lyric-boundary-grid {
+    grid-template-columns: 1fr;
   }
 }

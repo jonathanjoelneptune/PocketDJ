@@ -68,6 +68,16 @@ type RoomUtilitySettings = {
   vignetteStrength: number;
   shadowOpacity: number;
   tableShadowScale: number;
+  lyricTopX: number;
+  lyricTopY: number;
+  lyricTopW: number;
+  lyricMidX: number;
+  lyricMidY: number;
+  lyricMidW: number;
+  lyricBottomX: number;
+  lyricBottomY: number;
+  lyricBottomW: number;
+  lyricGuideOpacity: number;
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
@@ -85,7 +95,17 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   filterStrength: 0.20,
   vignetteStrength: 0.20,
   shadowOpacity: 1.00,
-  tableShadowScale: 1.16
+  tableShadowScale: 1.16,
+  lyricTopX: 50.0,
+  lyricTopY: 7.5,
+  lyricTopW: 70.0,
+  lyricMidX: 50.0,
+  lyricMidY: 18.0,
+  lyricMidW: 64.0,
+  lyricBottomX: 50.0,
+  lyricBottomY: 29.0,
+  lyricBottomW: 58.0,
+  lyricGuideOpacity: 0.0
 };
 
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v1";
@@ -565,7 +585,17 @@ function bindRoomUtilityControls(): void {
     ["filterStrength", "filterStrengthValue"],
     ["vignetteStrength", "vignetteStrengthValue"],
     ["shadowOpacity", "shadowOpacityValue"],
-    ["tableShadowScale", "tableShadowScaleValue"]
+    ["tableShadowScale", "tableShadowScaleValue"],
+    ["lyricTopX", "lyricTopXValue"],
+    ["lyricTopY", "lyricTopYValue"],
+    ["lyricTopW", "lyricTopWValue"],
+    ["lyricMidX", "lyricMidXValue"],
+    ["lyricMidY", "lyricMidYValue"],
+    ["lyricMidW", "lyricMidWValue"],
+    ["lyricBottomX", "lyricBottomXValue"],
+    ["lyricBottomY", "lyricBottomYValue"],
+    ["lyricBottomW", "lyricBottomWValue"],
+    ["lyricGuideOpacity", "lyricGuideOpacityValue"]
   ] as const;
 
   controls.forEach(([inputId, labelId]) => {
@@ -622,6 +652,16 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength));
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
   root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
+  root.style.setProperty("--lyrics-top-x", `${roomUtility.lyricTopX}%`);
+  root.style.setProperty("--lyrics-top-y", `${roomUtility.lyricTopY}%`);
+  root.style.setProperty("--lyrics-top-w", `${roomUtility.lyricTopW}%`);
+  root.style.setProperty("--lyrics-mid-x", `${roomUtility.lyricMidX}%`);
+  root.style.setProperty("--lyrics-mid-y", `${roomUtility.lyricMidY}%`);
+  root.style.setProperty("--lyrics-mid-w", `${roomUtility.lyricMidW}%`);
+  root.style.setProperty("--lyrics-bottom-x", `${roomUtility.lyricBottomX}%`);
+  root.style.setProperty("--lyrics-bottom-y", `${roomUtility.lyricBottomY}%`);
+  root.style.setProperty("--lyrics-bottom-w", `${roomUtility.lyricBottomW}%`);
+  root.style.setProperty("--lyrics-guide-opacity", String(roomUtility.lyricGuideOpacity));
 
   const overlay = qs<HTMLElement>("#roomFilterOverlay");
   overlay.className = `room-filter-overlay ${roomUtility.sceneFilter}`;
