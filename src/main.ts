@@ -56,6 +56,7 @@ type SceneFilter =
 type LyricAnimationPreset = "focus-sweep" | "vertical-marquee" | "active-horizontal-marquee" | "soft-slide" | "pulse-pop" | "instant";
 type ActiveLyricPreset = "amber-crisp" | "gold-neon" | "warm-white" | "violet-glow";
 type InactiveLyricPreset = "soft-ghost" | "warm-dim" | "clean-readable" | "minimal";
+type LyricActiveLayout = "single-line" | "two-line";
 
 type RoomUtilitySettings = {
   speakerLeftX: number;
@@ -89,6 +90,7 @@ type RoomUtilitySettings = {
   lyricInactivePreset: InactiveLyricPreset;
   lyricActiveZoom: number;
   lyricBaseFontSize: number;
+  lyricActiveLayout: LyricActiveLayout;
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
@@ -108,13 +110,13 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
   lyricTopX: 881,
-  lyricTopY: 40,
+  lyricTopY: 66,
   lyricTopW: 1177,
   lyricMidX: 882,
-  lyricMidY: 220,
+  lyricMidY: 254,
   lyricMidW: 796,
   lyricBottomX: 882,
-  lyricBottomY: 404,
+  lyricBottomY: 432,
   lyricBottomW: 544,
   lyricGuideOpacity: 0.0,
   lyricLineCount: 11,
@@ -122,11 +124,11 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricActivePreset: "amber-crisp",
   lyricInactivePreset: "clean-readable",
   lyricActiveZoom: 1.08,
-  lyricBaseFontSize: 12
+  lyricBaseFontSize: 12,
+  lyricActiveLayout: "two-line"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v1";
-const ROOM_UTILITY_VERSION = 2;
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v2";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -590,11 +592,13 @@ function bindRoomUtilityControls(): void {
   const lyricAnimationPreset = qs<HTMLSelectElement>("#lyricAnimationPreset");
   const lyricActivePreset = qs<HTMLSelectElement>("#lyricActivePreset");
   const lyricInactivePreset = qs<HTMLSelectElement>("#lyricInactivePreset");
+  const lyricActiveLayout = qs<HTMLSelectElement>("#lyricActiveLayout");
 
   sceneFilter.value = roomUtility.sceneFilter;
   lyricAnimationPreset.value = roomUtility.lyricAnimationPreset;
   lyricActivePreset.value = roomUtility.lyricActivePreset;
   lyricInactivePreset.value = roomUtility.lyricInactivePreset;
+  lyricActiveLayout.value = roomUtility.lyricActiveLayout;
 
   const controls = [
     ["speakerLeftX", "speakerLeftXValue"],
@@ -660,6 +664,11 @@ function bindRoomUtilityControls(): void {
     applyRoomUtilitySettings();
   });
 
+  lyricActiveLayout.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, lyricActiveLayout: lyricActiveLayout.value as LyricActiveLayout };
+    applyRoomUtilitySettings();
+  });
+
   qs<HTMLButtonElement>("#saveRoomUtility").addEventListener("click", () => {
     saveRoomUtilitySettings();
     applyRoomUtilitySettings();
@@ -671,6 +680,8 @@ function bindRoomUtilityControls(): void {
     lyricAnimationPreset.value = roomUtility.lyricAnimationPreset;
     lyricActivePreset.value = roomUtility.lyricActivePreset;
     lyricInactivePreset.value = roomUtility.lyricInactivePreset;
+    lyricActiveLayout.value = roomUtility.lyricActiveLayout;
+  lyricActiveLayout.value = roomUtility.lyricActiveLayout;
     controls.forEach(([inputId, labelId]) => {
       const input = qs<HTMLInputElement>(`#${inputId}`);
       const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter">;
@@ -753,6 +764,9 @@ function applyRoomUtilitySettings(): void {
   root.classList.toggle("lyrics-inactive-clean-readable", roomUtility.lyricInactivePreset === "clean-readable");
   root.classList.toggle("lyrics-inactive-minimal", roomUtility.lyricInactivePreset === "minimal");
 
+  root.classList.toggle("lyrics-active-layout-single-line", roomUtility.lyricActiveLayout === "single-line");
+  root.classList.toggle("lyrics-active-layout-two-line", roomUtility.lyricActiveLayout === "two-line");
+
   const overlay = qs<HTMLElement>("#roomFilterOverlay");
   overlay.className = `room-filter-overlay ${roomUtility.sceneFilter}`;
 }
@@ -773,47 +787,41 @@ function setUtilityLabel(id: string, value: number): void {
 function loadRoomUtilitySettings(): RoomUtilitySettings {
   try {
     const raw = window.localStorage.getItem(ROOM_UTILITY_KEY);
-    if (!raw) return { ...DEFAULT_ROOM_UTILITY };
-
-    const parsed = JSON.parse(raw) as Partial<RoomUtilitySettings> & { utilityVersion?: number };
-    const merged = { ...DEFAULT_ROOM_UTILITY, ...parsed };
-
-    // Older browser-saved room utility values can silently override new shipped
-    // lyric defaults. Preserve saved speaker/room utility values, but reset
-    // lyric-specific settings when the saved payload is from an older version.
-    if (parsed.utilityVersion !== ROOM_UTILITY_VERSION) {
-      return {
-        ...merged,
-        lyricTopX: DEFAULT_ROOM_UTILITY.lyricTopX,
-        lyricTopY: DEFAULT_ROOM_UTILITY.lyricTopY,
-        lyricTopW: DEFAULT_ROOM_UTILITY.lyricTopW,
-        lyricMidX: DEFAULT_ROOM_UTILITY.lyricMidX,
-        lyricMidY: DEFAULT_ROOM_UTILITY.lyricMidY,
-        lyricMidW: DEFAULT_ROOM_UTILITY.lyricMidW,
-        lyricBottomX: DEFAULT_ROOM_UTILITY.lyricBottomX,
-        lyricBottomY: DEFAULT_ROOM_UTILITY.lyricBottomY,
-        lyricBottomW: DEFAULT_ROOM_UTILITY.lyricBottomW,
-        lyricGuideOpacity: DEFAULT_ROOM_UTILITY.lyricGuideOpacity,
-        lyricLineCount: DEFAULT_ROOM_UTILITY.lyricLineCount,
-        lyricAnimationPreset: DEFAULT_ROOM_UTILITY.lyricAnimationPreset,
-        lyricActivePreset: DEFAULT_ROOM_UTILITY.lyricActivePreset,
-        lyricInactivePreset: DEFAULT_ROOM_UTILITY.lyricInactivePreset,
-        lyricActiveZoom: DEFAULT_ROOM_UTILITY.lyricActiveZoom,
-        lyricBaseFontSize: DEFAULT_ROOM_UTILITY.lyricBaseFontSize,
-      };
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<RoomUtilitySettings>;
+      return { ...DEFAULT_ROOM_UTILITY, ...parsed };
     }
 
-    return merged;
+    const oldRaw = window.localStorage.getItem("pocketdj-room-utility-v1");
+    if (!oldRaw) return { ...DEFAULT_ROOM_UTILITY };
+
+    const oldParsed = JSON.parse(oldRaw) as Partial<RoomUtilitySettings>;
+    const migratedNonLyricSettings: Partial<RoomUtilitySettings> = {
+      speakerLeftX: oldParsed.speakerLeftX,
+      speakerRightX: oldParsed.speakerRightX,
+      speakerY: oldParsed.speakerY,
+      speakerScale: oldParsed.speakerScale,
+      speakerOpacity: oldParsed.speakerOpacity,
+      speakerPulse: oldParsed.speakerPulse,
+      speakerPulseX: oldParsed.speakerPulseX,
+      speakerPulseY: oldParsed.speakerPulseY,
+      speakerPulseSize: oldParsed.speakerPulseSize,
+      speakerWarpOpacity: oldParsed.speakerWarpOpacity,
+      sceneFilter: oldParsed.sceneFilter,
+      filterStrength: oldParsed.filterStrength,
+      vignetteStrength: oldParsed.vignetteStrength,
+      shadowOpacity: oldParsed.shadowOpacity,
+      tableShadowScale: oldParsed.tableShadowScale,
+    };
+
+    return { ...DEFAULT_ROOM_UTILITY, ...migratedNonLyricSettings };
   } catch {
     return { ...DEFAULT_ROOM_UTILITY };
   }
 }
 
 function saveRoomUtilitySettings(): void {
-  window.localStorage.setItem(
-    ROOM_UTILITY_KEY,
-    JSON.stringify({ ...roomUtility, utilityVersion: ROOM_UTILITY_VERSION }),
-  );
+  window.localStorage.setItem(ROOM_UTILITY_KEY, JSON.stringify(roomUtility));
 }
 
 

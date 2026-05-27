@@ -229,8 +229,8 @@ export function renderShell(state: AppState): void {
               <label>Top X px <span id="lyricTopXValue">881</span>
                 <input id="lyricTopX" type="range" min="0" max="1600" step="1" value="881" />
               </label>
-              <label>Top Y px <span id="lyricTopYValue">40</span>
-                <input id="lyricTopY" type="range" min="0" max="360" step="1" value="40" />
+              <label>Top Y px <span id="lyricTopYValue">66</span>
+                <input id="lyricTopY" type="range" min="0" max="360" step="1" value="66" />
               </label>
               <label>Top width px <span id="lyricTopWValue">1177</span>
                 <input id="lyricTopW" type="range" min="120" max="1600" step="1" value="1177" />
@@ -239,8 +239,8 @@ export function renderShell(state: AppState): void {
               <label>Middle X px <span id="lyricMidXValue">882</span>
                 <input id="lyricMidX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Middle Y px <span id="lyricMidYValue">220</span>
-                <input id="lyricMidY" type="range" min="0" max="420" step="1" value="220" />
+              <label>Middle Y px <span id="lyricMidYValue">254</span>
+                <input id="lyricMidY" type="range" min="0" max="420" step="1" value="254" />
               </label>
               <label>Middle width px <span id="lyricMidWValue">796</span>
                 <input id="lyricMidW" type="range" min="120" max="1600" step="1" value="796" />
@@ -249,8 +249,8 @@ export function renderShell(state: AppState): void {
               <label>Bottom X px <span id="lyricBottomXValue">882</span>
                 <input id="lyricBottomX" type="range" min="0" max="1600" step="1" value="882" />
               </label>
-              <label>Bottom Y px <span id="lyricBottomYValue">404</span>
-                <input id="lyricBottomY" type="range" min="0" max="520" step="1" value="404" />
+              <label>Bottom Y px <span id="lyricBottomYValue">432</span>
+                <input id="lyricBottomY" type="range" min="0" max="520" step="1" value="432" />
               </label>
               <label>Bottom width px <span id="lyricBottomWValue">544</span>
                 <input id="lyricBottomW" type="range" min="120" max="1600" step="1" value="544" />
@@ -297,6 +297,13 @@ export function renderShell(state: AppState): void {
                   <option value="minimal">Minimal</option>
                 </select>
               </label>
+              <label>Active lyric layout
+                <select id="lyricActiveLayout">
+                  <option value="single-line">Single line</option>
+                  <option value="two-line" selected>Two-line wrap</option>
+                </select>
+              </label>
+
             </div>
           </div>
           <div class="button-grid utility-buttons">

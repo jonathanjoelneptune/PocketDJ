@@ -4980,3 +4980,147 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   opacity: 0.13 !important;
   color: rgba(255, 217, 170, 0.36) !important;
 }
+
+
+/* FINAL LYRIC READABILITY PASS: lower, crisper, stronger active line, optional two-line active wrap */
+:root {
+  --lyrics-top-y: 66px;
+  --lyrics-mid-y: 254px;
+  --lyrics-bottom-y: 432px;
+  --lyrics-line-count: 11;
+  --lyrics-base-font-size: 12px;
+  --lyrics-active-zoom: 1.08;
+}
+
+.lyrics-ceiling {
+  opacity: 0.78 !important;
+}
+
+.lyrics-block {
+  font-size: clamp(calc(var(--lyrics-base-font-size) * 0.82), calc(var(--lyrics-base-font-size) * (var(--room-w) / 1500)), calc(var(--lyrics-base-font-size) * 1.24)) !important;
+  letter-spacing: 0.045em !important;
+}
+
+/* Inactive lyrics should feel like a ceiling projection, not compete with the active lyric. */
+.lyrics-line:not(.lyrics-line-active) {
+  color: rgba(255, 205, 151, 0.42) !important;
+  opacity: 0.20 !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.38) !important;
+}
+
+.lyrics-line-near:not(.lyrics-line-active) {
+  opacity: 0.38 !important;
+  color: rgba(255, 215, 170, 0.56) !important;
+}
+
+.lyrics-line-past:not(.lyrics-line-active) {
+  opacity: 0.14 !important;
+}
+
+/* The active lyric gets the marquee treatment: crisp amber text and a subtle black marquee-like backing. */
+.lyrics-line-active {
+  min-height: 1.75em;
+  display: grid !important;
+  place-items: center !important;
+  color: #ffc84f !important;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(5, 2, 8, 0.42) 12%, rgba(8, 3, 11, 0.68) 50%, rgba(5, 2, 8, 0.42) 88%, transparent 100%) !important;
+  border-radius: 12px !important;
+  padding: 0.18em 1.05em !important;
+  line-height: 1.18 !important;
+  font-weight: 900 !important;
+  -webkit-font-smoothing: none;
+  text-rendering: geometricPrecision;
+  text-shadow:
+    0 1px 0 #4a1d03,
+    0 -1px 0 rgba(255, 248, 206, 0.28),
+    0 0 3px rgba(255, 197, 75, 0.90),
+    0 0 7px rgba(255, 136, 24, 0.34) !important;
+  box-shadow:
+    inset 0 0 14px rgba(255, 183, 60, 0.045),
+    0 0 10px rgba(0,0,0,0.18) !important;
+}
+
+.lyrics-line-active::before,
+.lyrics-line-active::after {
+  display: none !important;
+}
+
+/* Optional layout: allow the active lyric to wrap to two lines so long lyrics stop feeling cramped. */
+.lyrics-active-layout-two-line .lyrics-line-active {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  max-width: var(--lyrics-mid-w);
+  min-height: 2.55em;
+}
+
+.lyrics-active-layout-single-line .lyrics-line-active {
+  white-space: nowrap !important;
+}
+
+/* Stronger screen-facing active state. */
+.lyrics-line-active {
+  transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom)) !important;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Make lyric animations visibly different and marquee-like. */
+.lyrics-animation-vertical-marquee .lyrics-line-active {
+  animation: lyricVerticalMarqueeReadable 780ms cubic-bezier(.18, .88, .18, 1) both !important;
+}
+
+@keyframes lyricVerticalMarqueeReadable {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(calc(-50% + 72px)) rotateX(-58deg) skewX(0.35deg) scale(0.96);
+  }
+  72% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(calc(-50% - 5px)) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+.lyrics-animation-active-horizontal-marquee .lyrics-line-active {
+  animation: lyricHorizontalMarqueeReadable 860ms cubic-bezier(.18, .88, .18, 1) both !important;
+}
+
+@keyframes lyricHorizontalMarqueeReadable {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(-50% + 330px)) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(0.98);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(calc(-50% - 14px)) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+.lyrics-animation-focus-sweep .lyrics-line-active {
+  animation: lyricFocusReadable 680ms cubic-bezier(.2, .85, .2, 1) both !important;
+}
+
+@keyframes lyricFocusReadable {
+  0% {
+    opacity: 0.05;
+    transform: translateX(-50%) translateY(calc(-50% + 24px)) rotateX(-58deg) skewX(0.35deg) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotateX(-58deg) skewX(0.35deg) scale(var(--lyrics-active-zoom));
+  }
+}
+
+/* Better utility panel select consistency for the new layout option. */
+.lyric-preset-grid select#lyricActiveLayout {
+  border-color: rgba(255, 184, 76, 0.24);
+}
