@@ -262,6 +262,8 @@ function updateMarquee(track: NormalizedTrack): void {
   marquee.classList.add("marquee-swap");
 
   marqueeSwapTimer = window.setTimeout(() => {
+    titleEl.dataset.marqueeOriginal = payload.title;
+    artistEl.dataset.marqueeOriginal = payload.artist;
     titleEl.textContent = payload.title;
     artistEl.textContent = payload.artist;
     updateMarqueeRowPan(marquee, titleEl, artistEl);
@@ -289,24 +291,62 @@ function updateMarqueeRowPan(marquee: HTMLElement, titleEl: HTMLElement, artistE
   const viewport = marquee.querySelector<HTMLElement>(".marquee-viewport");
   const availableWidth = Math.max(0, (viewport?.clientWidth || marquee.clientWidth) - 10);
 
-  const titleOverflow = getRowOverflowPx(titleEl, availableWidth);
-  const artistOverflow = getRowOverflowPx(artistEl, availableWidth);
+  configureMarqueeRow({
+    marquee,
+    element: titleEl,
+    originalText: titleEl.dataset.marqueeOriginal || titleEl.textContent || "",
+    availableWidth,
+    longClass: "marquee-title-long",
+    shortClass: "marquee-title-short",
+    durationVar: "--marquee-title-duration"
+  });
 
-  titleEl.style.setProperty("--marquee-title-pan", `${-titleOverflow}px`);
-  artistEl.style.setProperty("--marquee-artist-pan", `${-artistOverflow}px`);
-
-  marquee.classList.toggle("marquee-title-long", titleOverflow > 6);
-  marquee.classList.toggle("marquee-artist-long", artistOverflow > 6);
-  marquee.classList.toggle("marquee-title-short", titleOverflow <= 6);
-  marquee.classList.toggle("marquee-artist-short", artistOverflow <= 6);
+  configureMarqueeRow({
+    marquee,
+    element: artistEl,
+    originalText: artistEl.dataset.marqueeOriginal || artistEl.textContent || "",
+    availableWidth,
+    longClass: "marquee-artist-long",
+    shortClass: "marquee-artist-short",
+    durationVar: "--marquee-artist-duration"
+  });
 }
 
-function getRowOverflowPx(element: HTMLElement, availableWidth: number): number {
-  const measuredWidth = element.scrollWidth;
-  const overflow = measuredWidth - availableWidth;
+function configureMarqueeRow(options: {
+  marquee: HTMLElement;
+  element: HTMLElement;
+  originalText: string;
+  availableWidth: number;
+  longClass: string;
+  shortClass: string;
+  durationVar: string;
+}): void {
+  const separator = "     ✦     ";
+  const { marquee, element, originalText, availableWidth, longClass, shortClass, durationVar } = options;
 
-  // Add a small tail so the last characters fully clear the right LED edge before returning.
-  return Math.max(0, Math.ceil(overflow + 36));
+  element.textContent = originalText;
+  element.dataset.marqueeOriginal = originalText;
+
+  const originalWidth = element.scrollWidth;
+  const isLong = originalWidth > availableWidth + 6;
+
+  marquee.classList.toggle(longClass, isLong);
+  marquee.classList.toggle(shortClass, !isLong);
+
+  if (!isLong) {
+    element.textContent = originalText;
+    element.style.setProperty(durationVar, "0s");
+    return;
+  }
+
+  element.textContent = `${originalText}${separator}${originalText}`;
+  const loopDistance = Math.max(1, element.scrollWidth / 2);
+
+  // Constant visual speed for long marquee rows. Higher pxPerSecond = faster.
+  const pxPerSecond = 34;
+  const durationSeconds = Math.max(14, Math.min(48, loopDistance / pxPerSecond));
+
+  element.style.setProperty(durationVar, `${durationSeconds.toFixed(2)}s`);
 }
 
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {

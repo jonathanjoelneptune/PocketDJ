@@ -203,6 +203,8 @@ button {
 .marquee-artist {
   --marquee-title-pan: 0px;
   --marquee-artist-pan: 0px;
+  --marquee-title-duration: 22s;
+  --marquee-artist-duration: 24s;
   width: max-content;
   max-width: none;
   overflow: visible;
@@ -251,7 +253,7 @@ button {
 .marquee-title-long .marquee-title {
   justify-self: start;
   animation:
-    marqueeTitleExitReenter 22s linear infinite,
+    marqueeTitleTrain var(--marquee-title-duration, 22s) linear infinite,
     marqueeLedGlow 920ms ease-in-out infinite alternate;
 }
 
@@ -263,7 +265,7 @@ button {
 .marquee-artist-long .marquee-artist {
   justify-self: start;
   animation:
-    marqueeArtistExitReenter 24s linear 2s infinite,
+    marqueeArtistTrain var(--marquee-artist-duration, 24s) linear infinite,
     marqueeLedGlow 1150ms ease-in-out infinite alternate;
 }
 
@@ -286,57 +288,23 @@ button {
 
 /* Song-change movement is handled by .marquee-exiting and .marquee-entering. */
 
-@keyframes marqueeTitleExitReenter {
-  0%, 16% {
+@keyframes marqueeTitleTrain {
+  from {
     transform: translateX(0);
-    opacity: 1;
   }
 
-  58% {
-    transform: translateX(var(--marquee-title-pan));
-    opacity: 1;
-  }
-
-  72% {
-    transform: translateX(calc(var(--marquee-title-pan) - 110%));
-    opacity: 1;
-  }
-
-  72.1% {
-    transform: translateX(calc(100vw));
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateX(0);
-    opacity: 1;
+  to {
+    transform: translateX(-50%);
   }
 }
 
-@keyframes marqueeArtistExitReenter {
-  0%, 18% {
+@keyframes marqueeArtistTrain {
+  from {
     transform: translateX(0);
-    opacity: 0.82;
   }
 
-  60% {
-    transform: translateX(var(--marquee-artist-pan));
-    opacity: 0.82;
-  }
-
-  74% {
-    transform: translateX(calc(var(--marquee-artist-pan) - 110%));
-    opacity: 0.82;
-  }
-
-  74.1% {
-    transform: translateX(calc(100vw));
-    opacity: 0.82;
-  }
-
-  100% {
-    transform: translateX(0);
-    opacity: 0.82;
+  to {
+    transform: translateX(-50%);
   }
 }
 
@@ -348,7 +316,11 @@ button {
 
 
 
-/* Long rows reveal overflow, exit left, then re-enter from the right. */
+
+
+
+
+/* Long rows use a constant-speed repeated text train with separator icon. */
 @keyframes marqueeTitleCenterHold {
   0% {
     transform: translateX(110%);
