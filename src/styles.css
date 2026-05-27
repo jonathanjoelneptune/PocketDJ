@@ -221,9 +221,9 @@ button {
 }
 
 .marquee-artist {
-  font-size: clamp(6px, 0.62vw, 12px);
+  font-size: clamp(7px, 0.78vw, 15px);
   line-height: 1.2;
-  letter-spacing: 0.065em;
+  letter-spacing: 0.05em;
   color: #fde68a;
   opacity: 0.82;
   text-shadow:
@@ -334,14 +334,19 @@ button {
 
 @keyframes marqueeArtistExitLeft {
   0% {
-    opacity: 0.82;
+    opacity: 0.88;
     transform: translateX(0);
     filter: blur(0) brightness(1);
   }
+  72% {
+    opacity: 0.88;
+    transform: translateX(calc(-34% - 24vw));
+    filter: blur(0) brightness(0.92);
+  }
   100% {
     opacity: 0;
-    transform: translateX(calc(-50% - 35vw));
-    filter: blur(1px) brightness(0.65);
+    transform: translateX(calc(-70% - 48vw));
+    filter: blur(1px) brightness(0.70);
   }
 }
 
