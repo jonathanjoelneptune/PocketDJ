@@ -82,7 +82,10 @@ export function renderShell(state: AppState): void {
 
       <button id="panelToggle" class="panel-toggle" type="button" aria-label="Show Pocket DJ controls" title="Show controls">♪</button>
 
-      <button id="floorControlsToggle" class="floor-controls-toggle" type="button" aria-label="Show floor playback controls" title="Show floor playback controls">Controls</button>
+      <div class="floor-toggle-cluster" id="floorToggleCluster">
+        <button id="floorControlsToggle" class="floor-controls-toggle" type="button" aria-label="Show floor playback controls" title="Show floor playback controls">Controls</button>
+        <button id="floorControlsLock" class="floor-lock-toggle floor-lock-hidden" type="button" aria-label="Lock floor playback controls open" title="Lock controls open">🔒</button>
+      </div>
       <pre id="animationDebugPanel" class="animation-debug-panel" hidden>frame: loading</pre>
 
       <aside id="controlCard" class="control-card control-card-open">

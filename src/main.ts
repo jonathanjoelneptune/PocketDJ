@@ -21,6 +21,7 @@ let dj: DjController;
 let lastPollError = "";
 let panelAutoHiddenAfterConnect = false;
 let floorControlsOpen = false;
+let floorControlsLocked = false;
 let floorControlsHideTimer: number | null = null;
 
 
@@ -161,12 +162,16 @@ function bindFloorPlaybackControls(): void {
     setFloorControlsOpen(!floorControlsOpen);
   });
 
+  qs<HTMLButtonElement>("#floorControlsLock").addEventListener("click", () => {
+    setFloorControlsLocked(!floorControlsLocked);
+  });
+
   floor.addEventListener("mouseenter", () => {
     if (floorControlsHideTimer) window.clearTimeout(floorControlsHideTimer);
   });
 
   floor.addEventListener("mouseleave", () => {
-    scheduleFloorControlsAutoHide();
+    if (!floorControlsLocked) scheduleFloorControlsAutoHide();
   });
 
   qs<HTMLButtonElement>("#floorPlayButton").addEventListener("click", () => {
@@ -194,7 +199,9 @@ function bindFloorPlaybackControls(): void {
   });
 
   qs<HTMLButtonElement>("#floorMoreButton").addEventListener("click", () => {
-    setControlPanelOpen(true);
+    const panel = qs<HTMLElement>("#controlCard");
+    const isPanelOpen = panel.classList.contains("control-card-open");
+    setControlPanelOpen(!isPanelOpen);
     setFloorControlsOpen(true, false);
   });
 }
@@ -203,23 +210,49 @@ function setFloorControlsOpen(open: boolean, autoHide = true): void {
   floorControlsOpen = open;
   const floor = qs<HTMLElement>("#floorPlayer");
   const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
+  const lock = qs<HTMLButtonElement>("#floorControlsLock");
 
   floor.classList.toggle("floor-player-hidden", !open);
   floor.classList.toggle("floor-player-visible", open);
   toggle.classList.toggle("floor-controls-toggle-open", open);
   toggle.setAttribute("aria-expanded", String(open));
 
-  if (open && autoHide) scheduleFloorControlsAutoHide();
-  if (!open && floorControlsHideTimer) {
+  lock.classList.toggle("floor-lock-hidden", !open);
+  lock.classList.toggle("floor-lock-visible", open);
+  lock.setAttribute("aria-hidden", String(!open));
+
+  if (open && autoHide && !floorControlsLocked) scheduleFloorControlsAutoHide();
+  if ((!open || floorControlsLocked) && floorControlsHideTimer) {
     window.clearTimeout(floorControlsHideTimer);
     floorControlsHideTimer = null;
   }
 }
 
+function setFloorControlsLocked(locked: boolean): void {
+  floorControlsLocked = locked;
+  const lock = qs<HTMLButtonElement>("#floorControlsLock");
+  const floor = qs<HTMLElement>("#floorPlayer");
+  const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
+
+  lock.classList.toggle("floor-lock-active", locked);
+  floor.classList.toggle("floor-player-locked", locked);
+  toggle.classList.toggle("floor-controls-toggle-locked", locked);
+  lock.setAttribute("aria-pressed", String(locked));
+  lock.setAttribute("title", locked ? "Unlock auto-hide controls" : "Lock controls open");
+  lock.setAttribute("aria-label", locked ? "Unlock floor playback controls" : "Lock floor playback controls open");
+
+  if (locked) {
+    setFloorControlsOpen(true, false);
+  } else if (floorControlsOpen) {
+    scheduleFloorControlsAutoHide();
+  }
+}
+
 function scheduleFloorControlsAutoHide(): void {
+  if (floorControlsLocked) return;
   if (floorControlsHideTimer) window.clearTimeout(floorControlsHideTimer);
   floorControlsHideTimer = window.setTimeout(() => {
-    setFloorControlsOpen(false);
+    if (!floorControlsLocked) setFloorControlsOpen(false);
   }, 10_000);
 }
 
