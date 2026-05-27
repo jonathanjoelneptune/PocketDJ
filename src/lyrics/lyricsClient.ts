@@ -134,24 +134,27 @@ export function getActiveLyricIndex(lyrics: LyricLine[], playbackMs: number): nu
 }
 
 function parseLrc(raw: string): LyricLine[] {
-  return raw
-    .split(/\r?\n/)
-    .map((line) => {
-      const match = line.match(/^\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\](.*)$/);
-      if (!match) return null;
+  const lines: LyricLine[] = [];
 
-      const minutes = Number(match[1]);
-      const seconds = Number(match[2]);
-      const fraction = match[3] || "0";
-      const ms = Number(fraction.padEnd(3, "0").slice(0, 3));
-      const text = match[4].trim();
+  for (const line of raw.split(/\r?\n/)) {
+    const match = line.match(/^\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\](.*)$/);
+    if (!match) continue;
 
-      return {
-        timeMs: minutes * 60_000 + seconds * 1000 + ms,
-        text,
-      };
-    })
-    .filter((line): line is LyricLine => Boolean(line && line.text));
+    const minutes = Number(match[1]);
+    const seconds = Number(match[2]);
+    const fraction = match[3] || "0";
+    const ms = Number(fraction.padEnd(3, "0").slice(0, 3));
+    const text = match[4].trim();
+
+    if (!text) continue;
+
+    lines.push({
+      timeMs: minutes * 60_000 + seconds * 1000 + ms,
+      text,
+    });
+  }
+
+  return lines;
 }
 
 function pickBestLyricsMatch<T extends { trackName: string; artistName: string; albumName?: string; duration?: number }>(
