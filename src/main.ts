@@ -118,6 +118,7 @@ function bindControls(): void {
   });
 
   bindFloorPlaybackControls();
+  bindSeekControls();
 
   qs<HTMLButtonElement>("#connectSpotify").addEventListener("click", async () => {
     if (loadTokens()) {
@@ -268,6 +269,64 @@ function bindFloorPlaybackControls(): void {
         await previousSpotifyTrack(state.spotifyClientId);
       }
     });
+  });
+}
+
+function bindSeekControls(): void {
+  bindSeekSurface(qs<HTMLElement>("#panelSeekBar"));
+  bindSeekSurface(qs<HTMLElement>("#floorSeekBar"));
+}
+
+function bindSeekSurface(surface: HTMLElement): void {
+  let dragging = false;
+
+  const previewSeek = (clientX: number): number => {
+    const rect = surface.getBoundingClientRect();
+    const ratio = rect.width > 0 ? Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) : 0;
+    const positionMs = Math.round(ratio * (state.playback.durationMs || 0));
+    const percent = ratio * 100;
+
+    if (surface.id === "panelSeekBar") {
+      qs<HTMLDivElement>("#progressFill").style.width = `${percent}%`;
+      qs<HTMLElement>("#panelSeekBar").setAttribute("aria-valuenow", String(Math.round(percent)));
+    } else {
+      qs<HTMLDivElement>("#floorProgressFill").style.width = `${percent}%`;
+      qs<HTMLElement>("#floorSeekBar").setAttribute("aria-valuenow", String(Math.round(percent)));
+    }
+
+    return positionMs;
+  };
+
+  const commitSeek = (clientX: number): void => {
+    if (!state.playback.durationMs) return;
+    const positionMs = previewSeek(clientX);
+    void runSpotifyPlaybackCommand(async () => {
+      await seekSpotify(state.spotifyClientId, positionMs);
+    });
+  };
+
+  surface.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    dragging = true;
+    surface.setPointerCapture(event.pointerId);
+    previewSeek(event.clientX);
+  });
+
+  surface.addEventListener("pointermove", (event) => {
+    if (!dragging) return;
+    previewSeek(event.clientX);
+  });
+
+  surface.addEventListener("pointerup", (event) => {
+    if (!dragging) return;
+    dragging = false;
+    surface.releasePointerCapture(event.pointerId);
+    commitSeek(event.clientX);
+  });
+
+  surface.addEventListener("pointercancel", (event) => {
+    dragging = false;
+    if (surface.hasPointerCapture(event.pointerId)) surface.releasePointerCapture(event.pointerId);
   });
 }
 

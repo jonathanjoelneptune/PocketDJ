@@ -74,7 +74,7 @@ export function renderShell(state: AppState): void {
             <span class="floor-dot"></span>
             <span class="floor-dot"></span>
           </button>
-          <div class="floor-progress" aria-hidden="true">
+          <div id="floorSeekBar" class="floor-progress seek-surface" role="slider" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <div class="floor-progress-fill" id="floorProgressFill"></div>
           </div>
         </div>
@@ -110,7 +110,7 @@ export function renderShell(state: AppState): void {
             <div class="track-artist" id="trackArtist">${state.playback.artist}</div>
             <div class="progress-row">
               <span id="progressNow">0:00</span>
-              <div class="progress"><div id="progressFill"></div></div>
+              <div id="panelSeekBar" class="progress seek-surface" role="slider" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressFill"></div></div>
               <span id="progressEnd">0:00</span>
             </div>
 
@@ -238,6 +238,7 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
 
   const percent = track.durationMs > 0 ? Math.min(100, (getEstimatedProgress(track) / track.durationMs) * 100) : 0;
   qs<HTMLDivElement>("#progressFill").style.width = `${percent}%`;
+  qs<HTMLElement>("#panelSeekBar").setAttribute("aria-valuenow", String(Math.round(percent)));
 
   const art = qs<HTMLDivElement>("#albumArt");
   const wash = qs<HTMLDivElement>("#albumWash");
@@ -294,6 +295,7 @@ function updateFloorControls(track: NormalizedTrack): void {
     ? Math.min(100, (getEstimatedProgress(track) / track.durationMs) * 100)
     : 0;
   progressFill.style.width = `${progressPercent}%`;
+  qs<HTMLElement>("#floorSeekBar").setAttribute("aria-valuenow", String(Math.round(progressPercent)));
 
   [playButton, prevButton, nextButton, panelPlayButton, panelPrevButton, panelNextButton].forEach((button) => {
     button.disabled = !canControl;
