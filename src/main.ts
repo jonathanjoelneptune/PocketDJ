@@ -2,7 +2,7 @@ import "./styles.css";
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, previousSpotifyTrack, startSpotifyLogin } from "./spotify/spotifyClient";
+import { disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, previousSpotifyTrack, seekSpotify, startSpotifyLogin } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import { qs } from "./utils/dom";
 import { renderShell, setControlPanelOpen, updatePlaybackUi } from "./ui";
@@ -184,7 +184,12 @@ function bindFloorPlaybackControls(): void {
 
   qs<HTMLButtonElement>("#floorPrevButton").addEventListener("click", () => {
     void runSpotifyPlaybackCommand(async () => {
-      await previousSpotifyTrack(state.spotifyClientId);
+      const estimatedProgress = getEstimatedPlaybackProgress(state.playback);
+      if (estimatedProgress > 3_000) {
+        await seekSpotify(state.spotifyClientId, 0);
+      } else {
+        await previousSpotifyTrack(state.spotifyClientId);
+      }
     });
   });
 
@@ -216,6 +221,11 @@ function scheduleFloorControlsAutoHide(): void {
   floorControlsHideTimer = window.setTimeout(() => {
     setFloorControlsOpen(false);
   }, 10_000);
+}
+
+function getEstimatedPlaybackProgress(track: AppState["playback"]): number {
+  if (!track.isPlaying) return track.progressMs;
+  return Math.min(track.durationMs || track.progressMs, track.progressMs + (Date.now() - track.updatedAt));
 }
 
 async function runSpotifyPlaybackCommand(command: () => Promise<void>): Promise<void> {

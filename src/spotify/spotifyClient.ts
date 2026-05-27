@@ -169,6 +169,11 @@ export async function previousSpotifyTrack(clientId: string): Promise<void> {
   await spotifyPlayerCommand(clientId, "/previous", { method: "POST" });
 }
 
+export async function seekSpotify(clientId: string, positionMs: number): Promise<void> {
+  const clampedPosition = Math.max(0, Math.round(positionMs));
+  await spotifyPlayerCommand(clientId, `/seek?position_ms=${clampedPosition}`, { method: "PUT" });
+}
+
 export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedTrack> {
   const token = await getUsableToken(clientId);
   if (!token) {

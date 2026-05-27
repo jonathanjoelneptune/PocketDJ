@@ -61,13 +61,13 @@ export function renderShell(state: AppState): void {
 
         <div class="floor-player floor-player-hidden" id="floorPlayer" aria-label="Spotify floor playback controls">
           <button class="floor-control floor-control-prev" id="floorPrevButton" type="button" aria-label="Previous track" title="Previous track">
-            <span class="floor-icon">◀</span>
+            <span class="floor-icon">⏮</span>
           </button>
           <button class="floor-control floor-control-play" id="floorPlayButton" type="button" aria-label="Play or pause" title="Play or pause">
             <span class="floor-icon" id="floorPlayIcon">▶</span>
           </button>
           <button class="floor-control floor-control-next" id="floorNextButton" type="button" aria-label="Next track" title="Next track">
-            <span class="floor-icon">▶</span>
+            <span class="floor-icon">⏭</span>
           </button>
           <button class="floor-control floor-control-more" id="floorMoreButton" type="button" aria-label="More Spotify controls" title="More Spotify controls">
             <span class="floor-dot"></span>
@@ -268,7 +268,7 @@ function updateFloorControls(track: NormalizedTrack): void {
   const canControl = track.source === "spotify" && track.isAuthenticated;
   floor.classList.toggle("floor-player-playing", track.isPlaying);
   toggle.classList.toggle("floor-controls-toggle-playing", track.isPlaying);
-  playIcon.textContent = track.isPlaying ? "❚❚" : "▶";
+  playIcon.textContent = track.isPlaying ? "Ⅱ" : "▶";
   playButton.setAttribute("aria-label", track.isPlaying ? "Pause Spotify" : "Play Spotify");
 
   [playButton, prevButton, nextButton].forEach((button) => {
