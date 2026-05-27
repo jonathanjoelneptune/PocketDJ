@@ -74,6 +74,9 @@ export function renderShell(state: AppState): void {
             <span class="floor-dot"></span>
             <span class="floor-dot"></span>
           </button>
+          <div class="floor-progress" aria-hidden="true">
+            <div class="floor-progress-fill" id="floorProgressFill"></div>
+          </div>
         </div>
       </section>
 
@@ -264,12 +267,18 @@ function updateFloorControls(track: NormalizedTrack): void {
   const playIcon = qs<HTMLElement>("#floorPlayIcon");
   const prevButton = qs<HTMLButtonElement>("#floorPrevButton");
   const nextButton = qs<HTMLButtonElement>("#floorNextButton");
+  const progressFill = qs<HTMLDivElement>("#floorProgressFill");
 
   const canControl = track.source === "spotify" && track.isAuthenticated;
   floor.classList.toggle("floor-player-playing", track.isPlaying);
   toggle.classList.toggle("floor-controls-toggle-playing", track.isPlaying);
   playIcon.textContent = track.isPlaying ? "Ⅱ" : "▶";
   playButton.setAttribute("aria-label", track.isPlaying ? "Pause Spotify" : "Play Spotify");
+
+  const progressPercent = track.durationMs > 0
+    ? Math.min(100, (getEstimatedProgress(track) / track.durationMs) * 100)
+    : 0;
+  progressFill.style.width = `${progressPercent}%`;
 
   [playButton, prevButton, nextButton].forEach((button) => {
     button.disabled = !canControl;
