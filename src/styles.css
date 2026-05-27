@@ -253,9 +253,7 @@ button {
 
 .marquee-title-long .marquee-title {
   justify-self: start;
-  animation:
-    marqueeTitleTrainWithPause var(--marquee-title-duration, 22s) linear infinite,
-    marqueeLedGlow 920ms ease-in-out infinite alternate;
+  animation: marqueeLedGlow 920ms ease-in-out infinite alternate;
 }
 
 .marquee-artist-short .marquee-artist {
@@ -268,6 +266,7 @@ button {
   max-width: 100%;
   overflow: hidden;
   text-overflow: clip;
+  transform: translateX(0);
   animation: marqueeLedGlow 1150ms ease-in-out infinite alternate;
 }
 
@@ -290,15 +289,7 @@ button {
 
 /* Song-change movement is handled by .marquee-exiting and .marquee-entering. */
 
-@keyframes marqueeTitleTrainWithPause {
-  0%, 22% {
-    transform: translateX(0);
-  }
 
-  100% {
-    transform: translateX(-50%);
-  }
-}
 
 
 
@@ -1123,6 +1114,16 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .marquee-content.marquee-entering .marquee-artist,
 .marquee-content.marquee-exiting .marquee-artist {
   justify-self: center;
+}
+
+
+.marquee-artist-long .marquee-artist {
+  justify-self: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  transform: translateX(0);
+  animation: marqueeLedGlow 1150ms ease-in-out infinite alternate;
 }
 
 

@@ -14,6 +14,7 @@ type MarqueePayload = {
 
 let lastMarqueeKey = "";
 let marqueeSwapTimer: number | null = null;
+let marqueeTitleScrollTimer: number | null = null;
 
 export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
@@ -248,10 +249,7 @@ function updateMarquee(track: NormalizedTrack): void {
   marquee.classList.toggle("marquee-title-short", !payload.titleLong);
   marquee.classList.toggle("marquee-artist-short", !payload.artistLong);
 
-  if (payload.key === lastMarqueeKey) {
-    updateMarqueeRowPan(marquee, titleEl, artistEl);
-    return;
-  }
+  if (payload.key === lastMarqueeKey) return;
   lastMarqueeKey = payload.key;
 
   if (marqueeSwapTimer) window.clearTimeout(marqueeSwapTimer);
@@ -315,8 +313,12 @@ function configureTitleMarqueeRow(options: {
   const separator = "     ✦     ";
   const { marquee, element, originalText, availableWidth } = options;
 
+  clearTitleScrollLoop();
+
   element.textContent = originalText;
   element.dataset.marqueeOriginal = originalText;
+  element.style.transition = "none";
+  element.style.transform = "translateX(0)";
 
   const originalWidth = element.scrollWidth;
   const isLong = originalWidth > availableWidth + 6;
@@ -326,22 +328,48 @@ function configureTitleMarqueeRow(options: {
 
   if (!isLong) {
     element.textContent = originalText;
-    element.style.setProperty("--marquee-title-duration", "0s");
     return;
   }
 
   element.textContent = `${originalText}${separator}${originalText}`;
   const loopDistance = Math.max(1, element.scrollWidth / 2);
 
-  // Constant visual speed for long title rows, plus a 5-second hold at the start.
+  // Constant visual speed. The title always pauses for 10 seconds when the T in TITLE is at the left edge.
   const pxPerSecond = 34;
-  const holdSeconds = 5;
   const scrollSeconds = Math.max(10, Math.min(44, loopDistance / pxPerSecond));
-  const totalSeconds = holdSeconds + scrollSeconds;
-  const holdPercent = Math.min(42, Math.max(10, (holdSeconds / totalSeconds) * 100));
 
-  element.style.setProperty("--marquee-title-duration", `${totalSeconds.toFixed(2)}s`);
-  element.style.setProperty("--marquee-title-hold", `${holdPercent.toFixed(2)}%`);
+  startTitleScrollLoop(element, loopDistance, scrollSeconds);
+}
+
+function startTitleScrollLoop(element: HTMLElement, loopDistance: number, scrollSeconds: number): void {
+  clearTitleScrollLoop();
+
+  const holdMs = 10_000;
+  const scrollMs = Math.round(scrollSeconds * 1000);
+
+  element.style.transition = "none";
+  element.style.transform = "translateX(0)";
+  void element.offsetWidth;
+
+  marqueeTitleScrollTimer = window.setTimeout(() => {
+    element.style.transition = `transform ${scrollSeconds.toFixed(2)}s linear`;
+    element.style.transform = `translateX(${-loopDistance}px)`;
+
+    marqueeTitleScrollTimer = window.setTimeout(() => {
+      // At -loopDistance, the repeated title copy is visually at the start. Reset invisibly and hold again.
+      element.style.transition = "none";
+      element.style.transform = "translateX(0)";
+      void element.offsetWidth;
+      startTitleScrollLoop(element, loopDistance, scrollSeconds);
+    }, scrollMs);
+  }, holdMs);
+}
+
+function clearTitleScrollLoop(): void {
+  if (marqueeTitleScrollTimer) {
+    window.clearTimeout(marqueeTitleScrollTimer);
+    marqueeTitleScrollTimer = null;
+  }
 }
 
 function configureStaticArtistRow(options: {
@@ -354,6 +382,8 @@ function configureStaticArtistRow(options: {
 
   element.textContent = originalText;
   element.dataset.marqueeOriginal = originalText;
+  element.style.transition = "none";
+  element.style.transform = "translateX(0)";
 
   const originalWidth = element.scrollWidth;
   const isLong = originalWidth > availableWidth + 6;
@@ -364,7 +394,6 @@ function configureStaticArtistRow(options: {
   // Artist text is intentionally decoupled from title scrolling. If it is too long,
   // it stays static and clips within the marquee instead of running its own animation.
   element.textContent = originalText;
-  element.style.setProperty("--marquee-artist-duration", "0s");
 }
 
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
