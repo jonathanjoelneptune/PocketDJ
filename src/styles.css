@@ -3940,7 +3940,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-short-guide-opacity: 0;
   --lyric-poster-short-tl-x: 221px;
   --lyric-poster-short-tl-y: 18px;
-  --lyric-poster-short-tr-x: 1562px;
+  --lyric-poster-short-tr-x: 1460px;
   --lyric-poster-short-tr-y: 3px;
   --lyric-poster-short-bl-x: 454px;
   --lyric-poster-short-bl-y: 195px;
@@ -4799,6 +4799,65 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   100% {
     opacity: 1;
     transform: translateY(0) scaleY(1) scaleX(1);
+    filter: blur(0);
+  }
+}
+
+
+/* v44 whole ceiling-panel push transition.
+   The previous and next lyric posters are rendered as full panels on the same ceiling plane.
+   The panels move together like a PowerPoint push slide, but in the ceiling direction. */
+.lyric-poster-track-panel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity, filter;
+}
+
+.lyric-poster-transition-back-push .lyric-poster-html-rows {
+  animation: none !important;
+}
+
+.lyric-poster-transition-back-push .lyric-poster-row-svg {
+  animation: none !important;
+}
+
+.lyric-poster-transition-back-push .lyric-poster-track-old {
+  animation: lyricPosterCeilingTrackPushOld 900ms cubic-bezier(0.22, 0.72, 0.18, 1) both;
+}
+
+.lyric-poster-transition-back-push .lyric-poster-track-new {
+  animation: lyricPosterCeilingTrackPushNew 900ms cubic-bezier(0.22, 0.72, 0.18, 1) both;
+}
+
+@keyframes lyricPosterCeilingTrackPushOld {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scaleX(1) scaleY(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-210px) scaleX(0.82) scaleY(0.62);
+    filter: blur(1.4px);
+  }
+}
+
+@keyframes lyricPosterCeilingTrackPushNew {
+  0% {
+    opacity: 0;
+    transform: translateY(210px) scaleX(1.18) scaleY(1.28);
+    filter: blur(1.4px);
+  }
+  52% {
+    opacity: 0.82;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleX(1) scaleY(1);
     filter: blur(0);
   }
 }

@@ -222,7 +222,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterShortGuideOpacity: 0.00,
   lyricPosterShortTopLeftX: 221,
   lyricPosterShortTopLeftY: 18,
-  lyricPosterShortTopRightX: 1562,
+  lyricPosterShortTopRightX: 1460,
   lyricPosterShortTopRightY: 3,
   lyricPosterShortBottomLeftX: 454,
   lyricPosterShortBottomLeftY: 195,
@@ -331,7 +331,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v43";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v44";
 let roomUtility = loadRoomUtilitySettings();
 
 

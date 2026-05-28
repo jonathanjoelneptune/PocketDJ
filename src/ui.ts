@@ -271,8 +271,8 @@ export function renderShell(state: AppState): void {
               <label>Short top left Y px <span id="lyricPosterShortTopLeftYValue">18</span>
                 <input id="lyricPosterShortTopLeftY" type="range" min="-300" max="900" step="1" value="18" />
               </label>
-              <label>Short top right X px <span id="lyricPosterShortTopRightXValue">1562</span>
-                <input id="lyricPosterShortTopRightX" type="range" min="-400" max="2600" step="1" value="1562" />
+              <label>Short top right X px <span id="lyricPosterShortTopRightXValue">1460</span>
+                <input id="lyricPosterShortTopRightX" type="range" min="-400" max="2600" step="1" value="1460" />
               </label>
               <label>Short top right Y px <span id="lyricPosterShortTopRightYValue">3</span>
                 <input id="lyricPosterShortTopRightY" type="range" min="-300" max="900" step="1" value="3" />
@@ -1081,6 +1081,7 @@ export function updateLyricsCeiling(
     return;
   }
 
+  const previousPosterTextForTransition = previousLyricPosterText;
   const lyricTextChanged = activeLine.text !== previousLyricPosterText;
   if (lyricTextChanged) {
     lyricPosterTransitionFlip = !lyricPosterTransitionFlip;
@@ -1092,6 +1093,37 @@ export function updateLyricsCeiling(
 
   const ceilingRect = ceiling.getBoundingClientRect();
   const layout = buildCeilingPosterLayout(activeLine.text, trapezoid, controls, ceilingRect.width, ceilingRect.height);
+  const shouldUseBackPushTrack =
+    controls.transition === "back-push" &&
+    lyricTextChanged &&
+    Boolean(previousPosterTextForTransition?.trim());
+  const previousLayout = shouldUseBackPushTrack
+    ? buildCeilingPosterLayout(previousPosterTextForTransition, trapezoid, controls, ceilingRect.width, ceilingRect.height)
+    : null;
+  const renderPosterRows = (posterLayout: CeilingPosterLayout): string =>
+    posterLayout.rows
+      .map(
+        (row) => `
+            <div
+              class="lyric-poster-html-row"
+              style="width:${row.sourceWidth}px; height:${row.sourceHeight}px; transform:${row.matrix3d};"
+            >
+              <svg class="lyric-poster-row-svg" viewBox="0 0 ${row.sourceWidth} ${row.sourceHeight}" preserveAspectRatio="none" aria-hidden="true">
+                <text
+                  class="lyric-poster-row-text"
+                  x="${row.sourceWidth / 2}"
+                  y="${row.sourceHeight / 2}"
+                  font-size="${row.sourceFontSize}"
+                  textLength="${row.sourceTextLength}"
+                  lengthAdjust="spacingAndGlyphs"
+                  dominant-baseline="middle"
+                  text-anchor="middle"
+                >${escapeHtml(row.text)}</text>
+              </svg>
+            </div>
+          `,
+      )
+      .join("");
   activeBlock.classList.toggle("lyric-poster-transition-none", controls.transition === "none");
   activeBlock.classList.toggle("lyric-poster-transition-push", controls.transition === "push-slide");
   activeBlock.classList.toggle("lyric-poster-transition-fade", controls.transition === "fade-slide");
@@ -1121,29 +1153,14 @@ export function updateLyricsCeiling(
       ${renderBandGuidePolygons(layout.rowBands, layout.rows.length)}
     </svg>
     <div class="lyric-poster-html-rows" style="clip-path: polygon(${clipPolygon});">
-      ${layout.rows
-        .map(
-          (row) => `
-            <div
-              class="lyric-poster-html-row"
-              style="width:${row.sourceWidth}px; height:${row.sourceHeight}px; transform:${row.matrix3d};"
-            >
-              <svg class="lyric-poster-row-svg" viewBox="0 0 ${row.sourceWidth} ${row.sourceHeight}" preserveAspectRatio="none" aria-hidden="true">
-                <text
-                  class="lyric-poster-row-text"
-                  x="${row.sourceWidth / 2}"
-                  y="${row.sourceHeight / 2}"
-                  font-size="${row.sourceFontSize}"
-                  textLength="${row.sourceTextLength}"
-                  lengthAdjust="spacingAndGlyphs"
-                  dominant-baseline="middle"
-                  text-anchor="middle"
-                >${escapeHtml(row.text)}</text>
-              </svg>
-            </div>
-          `,
-        )
-        .join("")}
+      ${
+        shouldUseBackPushTrack && previousLayout
+          ? `
+            <div class="lyric-poster-track-panel lyric-poster-track-old">${renderPosterRows(previousLayout)}</div>
+            <div class="lyric-poster-track-panel lyric-poster-track-new">${renderPosterRows(layout)}</div>
+          `
+          : renderPosterRows(layout)
+      }
     </div>
   `;
 
@@ -1198,7 +1215,7 @@ function readCeilingPosterControls(
     shortGuideOpacity: readNumber("--lyric-poster-short-guide-opacity", 0),
     shortTopLeftX: readNumber("--lyric-poster-short-tl-x", 221),
     shortTopLeftY: readNumber("--lyric-poster-short-tl-y", 18),
-    shortTopRightX: readNumber("--lyric-poster-short-tr-x", 1562),
+    shortTopRightX: readNumber("--lyric-poster-short-tr-x", 1460),
     shortTopRightY: readNumber("--lyric-poster-short-tr-y", 3),
     shortBottomLeftX: readNumber("--lyric-poster-short-bl-x", 454),
     shortBottomLeftY: readNumber("--lyric-poster-short-bl-y", 195),
