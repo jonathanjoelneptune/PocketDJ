@@ -3470,6 +3470,19 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 
+:root {
+  --lyrics-top-x: 50%;
+  --lyrics-top-y: 7.5%;
+  --lyrics-top-w: 70%;
+  --lyrics-mid-x: 50%;
+  --lyrics-mid-y: 18%;
+  --lyrics-mid-w: 64%;
+  --lyrics-bottom-x: 50%;
+  --lyrics-bottom-y: 29%;
+  --lyrics-bottom-w: 58%;
+  --lyrics-guide-opacity: 0;
+}
+
 .utility-subhead {
   color: #ffd98a;
   font-family: "Press Start 2P", monospace;
@@ -3492,6 +3505,21 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   }
 }
 
+
+:root {
+  --lyrics-top-x: 800px;
+  --lyrics-top-y: 70px;
+  --lyrics-top-w: 980px;
+  --lyrics-mid-x: 800px;
+  --lyrics-mid-y: 155px;
+  --lyrics-mid-w: 880px;
+  --lyrics-bottom-x: 800px;
+  --lyrics-bottom-y: 255px;
+  --lyrics-bottom-w: 780px;
+  --lyrics-guide-opacity: 0;
+  --lyrics-line-count: 7;
+  --lyrics-active-zoom: 1.10;
+}
 
 .utility-subhead {
   color: #ffd98a;
@@ -3516,6 +3544,157 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 
+:root {
+  --lyrics-top-x: 881px;
+  --lyrics-top-y: 40px;
+  --lyrics-top-w: 1177px;
+  --lyrics-mid-x: 882px;
+  --lyrics-mid-y: 220px;
+  --lyrics-mid-w: 796px;
+  --lyrics-bottom-x: 882px;
+  --lyrics-bottom-y: 404px;
+  --lyrics-bottom-w: 544px;
+  --lyrics-line-count: 7;
+  --lyrics-active-zoom: 1.10;
+  --lyrics-base-font-size: 15px;
+}
+
+
+:root {
+  --lyrics-line-count: 11;
+  --lyrics-base-font-size: 12px;
+  --lyrics-active-zoom: 1.08;
+  --lyrics-animation-revision: 0;
+}
+
+
+:root {
+  --lyrics-line-count: 11;
+  --lyrics-base-font-size: 12px;
+  --lyrics-active-zoom: 1.08;
+  --lyrics-animation-revision: 0;
+}
+
+
+:root {
+  --lyrics-top-y: 66px;
+  --lyrics-mid-y: 254px;
+  --lyrics-bottom-y: 432px;
+  --lyrics-line-count: 11;
+  --lyrics-base-font-size: 12px;
+  --lyrics-active-zoom: 1.08;
+}
+
+
+:root {
+  --lyrics-top-y: 42px;
+  --lyrics-mid-y: 192px;
+  --lyrics-bottom-y: 346px;
+}
+
+@keyframes activeLyricVerticalMarquee {
+  0% {
+    opacity: 0;
+    transform: translateY(62px) scale(0.96);
+  }
+  72% {
+    opacity: 1;
+    transform: translateY(-5px) scale(var(--lyrics-active-zoom));
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(var(--lyrics-active-zoom));
+  }
+}
+
+@keyframes activeLyricHorizontalMarquee {
+  0% {
+    opacity: 0;
+    transform: translateX(260px) scale(0.98);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(-12px) scale(var(--lyrics-active-zoom));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(var(--lyrics-active-zoom));
+  }
+}
+
+@keyframes activeLyricFocusSweep {
+  0% {
+    opacity: 0.05;
+    transform: translateY(24px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(var(--lyrics-active-zoom));
+  }
+}
+
+@keyframes activeLyricSoftSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(34px) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(var(--lyrics-active-zoom));
+  }
+}
+
+@keyframes activeLyricPulsePop {
+  0% {
+    opacity: 0.32;
+    transform: scale(0.90);
+  }
+  62% {
+    opacity: 1;
+    transform: scale(calc(var(--lyrics-active-zoom) + 0.05));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(var(--lyrics-active-zoom));
+  }
+}
+
+
+:root {
+  --lyrics-past-top-x: 881px;
+  --lyrics-past-top-y: 42px;
+  --lyrics-past-top-w: 1177px;
+  --lyrics-past-bottom-x: 882px;
+  --lyrics-past-bottom-y: 142px;
+  --lyrics-past-bottom-w: 920px;
+
+  --lyrics-future-top-x: 882px;
+  --lyrics-future-top-y: 250px;
+  --lyrics-future-top-w: 860px;
+  --lyrics-future-bottom-x: 882px;
+  --lyrics-future-bottom-y: 346px;
+  --lyrics-future-bottom-w: 544px;
+
+  --lyrics-active-x: 882px;
+  --lyrics-active-y: 192px;
+  --lyrics-active-w: 850px;
+  --lyrics-active-h: 58px;
+  --lyrics-active-zoom: 1.08;
+  --lyrics-active-stroke: 2px;
+  --lyrics-active-bg-opacity: 0.86;
+  --lyrics-active-bg-color: #050208;
+}
+
+@keyframes pastLyricFadeIn {
+  0% { opacity: 0; filter: blur(1px); }
+  100% { opacity: var(--lyrics-past-opacity, 0.18); filter: blur(0); }
+}
+
+@keyframes futureLyricFadeIn {
+  0% { opacity: 0; filter: blur(1px); }
+  100% { opacity: var(--lyrics-future-opacity, 0.26); filter: blur(0); }
+}
+
 /* color-mix fallback for older browsers */
 @supports not (color: color-mix(in srgb, red 50%, transparent)) {
   .active-lyrics-line {
@@ -3538,70 +3717,280 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 
+:root {
+  --lyrics-active-bg-rgb: 5, 2, 8;
+  --lyrics-future-bottom-w: 900px;
+}
+
+
+:root {
+  --lyrics-past-top-x: 881px;
+  --lyrics-past-top-y: 42px;
+  --lyrics-past-top-w: 1177px;
+  --lyrics-past-bottom-x: 882px;
+  --lyrics-past-bottom-y: 168px;
+  --lyrics-past-bottom-w: 920px;
+
+  --lyrics-active-x: 882px;
+  --lyrics-active-y: 88px;
+  --lyrics-active-w: 850px;
+  --lyrics-active-h: 25px;
+  --lyrics-active-zoom: 1.08;
+  --lyrics-active-stroke: 2px;
+  --lyrics-active-bg-opacity: 1;
+  --lyrics-active-bg-color: #000000;
+  --lyrics-active-bg-rgb: 0, 0, 0;
+
+  --lyrics-future-top-x: 932px;
+  --lyrics-future-top-y: 293px;
+  --lyrics-future-top-w: 860px;
+  --lyrics-future-bottom-x: 882px;
+  --lyrics-future-bottom-y: 397px;
+  --lyrics-future-bottom-w: 900px;
+
+  --lyrics-line-count: 9;
+  --lyrics-base-font-size: 12px;
+}
+
+
+:root {
+  --lyrics-past-top-x: 881px;
+  --lyrics-past-top-y: 42px;
+  --lyrics-past-top-w: 1177px;
+  --lyrics-past-bottom-x: 882px;
+  --lyrics-past-bottom-y: 168px;
+  --lyrics-past-bottom-w: 920px;
+
+  --lyrics-active-x: 882px;
+  --lyrics-active-y: 88px;
+  --lyrics-active-w: 850px;
+  --lyrics-active-h: 25px;
+  --lyrics-active-zoom: 1.08;
+  --lyrics-active-stroke: 2px;
+  --lyrics-active-bg-opacity: 1;
+  --lyrics-active-bg-color: #000000;
+  --lyrics-active-bg-rgb: 0, 0, 0;
+
+  --lyrics-future-top-x: 932px;
+  --lyrics-future-top-y: 293px;
+  --lyrics-future-top-w: 860px;
+  --lyrics-future-bottom-x: 882px;
+  --lyrics-future-bottom-y: 397px;
+  --lyrics-future-bottom-w: 900px;
+
+  --lyrics-line-count: 9;
+  --lyrics-base-font-size: 12px;
+}
+
+@keyframes activeLyricVerticalSign {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(calc(var(--lyrics-active-zoom) * 0.96));
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(var(--lyrics-active-zoom));
+  }
+}
+
+@keyframes activeLyricHorizontalSign {
+  0% {
+    opacity: 0;
+    transform: translateX(150px) scale(calc(var(--lyrics-active-zoom) * 0.98));
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(var(--lyrics-active-zoom));
+  }
+}
+
+@keyframes activeLyricFocusSign {
+  0% { opacity: 0.1; }
+  100% { opacity: 1; }
+}
+
+@keyframes activeLyricPulseSign {
+  0% {
+    opacity: 0.35;
+    transform: scale(calc(var(--lyrics-active-zoom) * 0.90));
+  }
+  62% {
+    opacity: 1;
+    transform: scale(calc(var(--lyrics-active-zoom) + 0.05));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(var(--lyrics-active-zoom));
+  }
+}
+
 /* FIX: three-layer past/future slot variables. These are overwritten by room utility settings. */
+:root {
+  --lyrics-past-slot-0-x: 881px;
+  --lyrics-past-slot-0-y: 42px;
+  --lyrics-past-slot-0-w: 1177px;
+  --lyrics-past-slot-1-x: 881px;
+  --lyrics-past-slot-1-y: 84px;
+  --lyrics-past-slot-1-w: 1091px;
+  --lyrics-past-slot-2-x: 882px;
+  --lyrics-past-slot-2-y: 126px;
+  --lyrics-past-slot-2-w: 1006px;
+  --lyrics-past-slot-3-x: 882px;
+  --lyrics-past-slot-3-y: 168px;
+  --lyrics-past-slot-3-w: 920px;
+  --lyrics-past-slot-4-x: 882px;
+  --lyrics-past-slot-4-y: 168px;
+  --lyrics-past-slot-4-w: 920px;
+  --lyrics-past-slot-5-x: 882px;
+  --lyrics-past-slot-5-y: 168px;
+  --lyrics-past-slot-5-w: 920px;
+  --lyrics-past-slot-6-x: 882px;
+  --lyrics-past-slot-6-y: 168px;
+  --lyrics-past-slot-6-w: 920px;
+
+  --lyrics-future-slot-0-x: 932px;
+  --lyrics-future-slot-0-y: 293px;
+  --lyrics-future-slot-0-w: 860px;
+  --lyrics-future-slot-1-x: 915px;
+  --lyrics-future-slot-1-y: 328px;
+  --lyrics-future-slot-1-w: 873px;
+  --lyrics-future-slot-2-x: 899px;
+  --lyrics-future-slot-2-y: 362px;
+  --lyrics-future-slot-2-w: 887px;
+  --lyrics-future-slot-3-x: 882px;
+  --lyrics-future-slot-3-y: 397px;
+  --lyrics-future-slot-3-w: 900px;
+  --lyrics-future-slot-4-x: 882px;
+  --lyrics-future-slot-4-y: 397px;
+  --lyrics-future-slot-4-w: 900px;
+  --lyrics-future-slot-5-x: 882px;
+  --lyrics-future-slot-5-y: 397px;
+  --lyrics-future-slot-5-w: 900px;
+  --lyrics-future-slot-6-x: 882px;
+  --lyrics-future-slot-6-y: 397px;
+  --lyrics-future-slot-6-w: 900px;
+}
+
+
+:root {
+  --lyric-video-x: 882px;
+  --lyric-video-y: 88px;
+  --lyric-video-w: 850px;
+  --lyric-video-h: 34px;
+  --lyric-video-zoom: 1.08;
+  --lyric-video-tilt: 0deg;
+  --lyric-video-base-opacity: 0.24;
+  --lyric-video-fill-opacity: 1;
+  --lyric-video-stroke: 2px;
+  --lyric-video-bg-opacity: 0.86;
+  --lyric-video-bg-color: #000000;
+  --lyric-video-bg-rgb: 0, 0, 0;
+  --lyric-video-fill-color: #ffc84f;
+  --lyric-video-fill-rgb: 255, 200, 79;
+  --lyric-video-glow: 0.5;
+  --lyric-fill-progress: 0%;
+  --lyric-line-visibility: 0;
+}
+
+
+:root {
+  --lyric-poster-x: 882px;
+  --lyric-poster-y: 128px;
+  --lyric-poster-w: 1180px;
+  --lyric-poster-h: 205px;
+  --lyric-poster-zoom: 1;
+  --lyric-poster-tilt: 54deg;
+  --lyric-poster-skew: -4deg;
+  --lyric-poster-stroke: 2.4px;
+  --lyric-poster-stroke-opacity: 0.52;
+  --lyric-poster-fill-opacity: 0.02;
+  --lyric-poster-glow: 0.18;
+  --lyric-poster-row-gap: 0.18;
+  --lyric-line-visibility: 0;
+}
+
+
+:root {
+  --lyric-poster-top-left: 3%;
+  --lyric-poster-top-right: 97%;
+  --lyric-poster-bottom-left: 18%;
+  --lyric-poster-bottom-right: 82%;
+}
+
+
+:root {
+  --lyric-poster-top-left-x: 402px;
+  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-right-x: 1400px;
+  --lyric-poster-top-right-y: 12px;
+  --lyric-poster-bottom-left-x: 582px;
+  --lyric-poster-bottom-left-y: 178px;
+  --lyric-poster-bottom-right-x: 1228px;
+  --lyric-poster-bottom-right-y: 178px;
+}
+
+
+:root {
+  --lyric-poster-guide-opacity: 0;
+}
+
+
+:root {
+  --lyric-poster-top-left-x: 221px;
+  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-right-x: 1637px;
+  --lyric-poster-top-right-y: 12px;
+  --lyric-poster-bottom-left-x: 597px;
+  --lyric-poster-bottom-left-y: 418px;
+  --lyric-poster-bottom-right-x: 1201px;
+  --lyric-poster-bottom-right-y: 415px;
+}
+
+
 /* SVG CEILING POSTER TIGHT ROW + HEIGHT FIT
    Row gap is now pixel-based. Text is scaled down slightly so outlines stay inside the tuned ceiling trapezoid. */
+:root {
+  --lyric-poster-row-gap: 0.5px;
+}
+
+
 /* SVG CEILING POSTER CENTERED TIGHT ROWS
    Uses explicit start-x textLength rows to avoid SVG midpoint anchor drift in fullscreen.
    Rows are vertically centered as a single stacked poster with near-touching visual rows. */
-
-/* V25 CLEAN CEILING LYRIC SVG SYSTEM
-   This is the only active lyric visual path. The text is clipped to the red
-   trapezoid with an SVG clipPath, so it cannot render outside the ceiling guide. */
 :root {
-  --lyric-ceiling-room-height-ratio: 53.326%;
+  --lyric-poster-row-gap: 0.5px;
+}
+
+/* CLEAN SVG CEILING LYRIC POSTER
+   Single active system. No old full-block, karaoke-fill, active-pill, or div-row lyric logic. */
+:root {
   --lyric-poster-top-left-x: 221px;
-  --lyric-poster-top-left-y: 39px;
-  --lyric-poster-top-right-x: 1562px;
-  --lyric-poster-top-right-y: 39px;
-  --lyric-poster-bottom-left-x: 454px;
-  --lyric-poster-bottom-left-y: 164px;
-  --lyric-poster-bottom-right-x: 1343px;
-  --lyric-poster-bottom-right-y: 164px;
-  --lyric-poster-center-x: 878px;
-  --lyric-poster-center-y: 178px;
-  --lyric-poster-guide-opacity: 1;
-  --lyric-poster-center-guide-opacity: 0;
+  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-right-x: 1637px;
+  --lyric-poster-top-right-y: 12px;
+  --lyric-poster-bottom-left-x: 597px;
+  --lyric-poster-bottom-left-y: 418px;
+  --lyric-poster-bottom-right-x: 1201px;
+  --lyric-poster-bottom-right-y: 415px;
+  --lyric-poster-center-x: 882px;
+  --lyric-poster-center-y: 215px;
   --lyric-poster-stroke: 2.4px;
   --lyric-poster-stroke-opacity: 0.52;
-  --lyric-poster-fill-opacity: 0;
-  --lyric-poster-glow: 0;
-  --lyric-poster-row-gap: 30px;
+  --lyric-poster-fill-opacity: 0.02;
+  --lyric-poster-glow: 0.18;
+  --lyric-poster-guide-opacity: 0;
+  --lyric-poster-center-guide-opacity: 0;
+  --lyric-poster-row-gap: 0.5px;
   --lyrics-base-font-size: 12px;
-  --lyric-poster-perspective-depth: 1.35;
-  --lyric-poster-one-row-center-x: 878px;
-  --lyric-poster-one-row-center-y: 178px;
-  --lyric-poster-one-row-vertical-stretch: 1.35;
-  --lyric-poster-one-row-row-gap: 30px;
-  --lyric-poster-one-row-perspective-depth: 1.35;
-  --lyric-poster-two-row-center-x: 878px;
-  --lyric-poster-two-row-center-y: 178px;
-  --lyric-poster-two-row-vertical-stretch: 1.16;
-  --lyric-poster-two-row-row-gap: -6px;
-  --lyric-poster-two-row-perspective-depth: 1.75;
-  --lyric-poster-three-row-center-x: 878px;
-  --lyric-poster-three-row-center-y: 178px;
-  --lyric-poster-three-row-vertical-stretch: 1.02;
-  --lyric-poster-three-row-row-gap: -10px;
-  --lyric-poster-three-row-perspective-depth: 2.05;
   --lyrics-animation-revision: 0;
-  --lyric-line-visibility: 0;
 }
 
 .lyrics-ceiling {
   position: absolute;
-  left: 0 !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: var(--lyric-ceiling-room-height-ratio) !important;
-  right: auto !important;
-  bottom: auto !important;
+  inset: 0;
   z-index: 22;
   pointer-events: none;
   opacity: 0;
-  overflow: visible !important;
-  transform: none !important;
-  transform-origin: 0 0 !important;
   transition: opacity 220ms ease;
 }
 
@@ -3616,33 +4005,20 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .active-lyrics-block,
 .lyric-poster-line {
   position: absolute;
-  left: 0 !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  right: auto !important;
-  bottom: auto !important;
-  overflow: visible !important;
+  left: 0;
+  top: 0;
+  width: 1764px;
+  height: 529px;
+  overflow: visible;
   pointer-events: none;
-  transform: none !important;
-  transform-origin: 0 0 !important;
 }
 
 .lyric-poster-svg {
   position: absolute;
-  left: 0 !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  right: auto !important;
-  bottom: auto !important;
-  overflow: visible !important;
-  pointer-events: none;
-  transform: none !important;
-  transform-origin: 0 0 !important;
-}
-
-.lyric-poster-clipped-rows {
+  inset: 0;
+  width: 1764px;
+  height: 529px;
+  overflow: visible;
   pointer-events: none;
 }
 
@@ -3651,7 +4027,171 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   font-weight: 900;
   font-style: italic;
   text-transform: uppercase;
-  letter-spacing: 0.018em;
+  letter-spacing: 0.014em;
+  fill: rgba(255, 255, 255, var(--lyric-poster-fill-opacity));
+  stroke: rgba(215, 215, 215, var(--lyric-poster-stroke-opacity));
+  stroke-width: var(--lyric-poster-stroke);
+  vector-effect: non-scaling-stroke;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  text-anchor: start;
+  dominant-baseline: middle;
+  filter: drop-shadow(0 0 calc(2px + (var(--lyric-poster-glow) * 10px)) rgba(235, 235, 235, calc(var(--lyric-poster-glow) * 0.35)));
+}
+
+.lyric-poster-svg-guide {
+  fill: rgba(255, 42, 42, calc(var(--lyric-poster-guide-opacity) * 0.11));
+  stroke: rgba(255, 42, 42, calc(var(--lyric-poster-guide-opacity) * 0.82));
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.lyric-poster-center-guide {
+  fill: rgba(102, 178, 74, var(--lyric-poster-center-guide-opacity));
+  stroke: rgba(8, 20, 10, var(--lyric-poster-center-guide-opacity));
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.lyrics-boundary-guides,
+.lyrics-boundary-guide-video {
+  display: none !important;
+}
+
+/* The two transition presets only animate the fresh SVG. */
+.lyric-poster-transition-push .lyric-poster-svg {
+  animation: cleanLyricPosterPush 520ms cubic-bezier(.18, .88, .2, 1) both;
+}
+
+.lyric-poster-transition-fade .lyric-poster-svg {
+  animation: cleanLyricPosterFade 620ms ease both;
+}
+
+@keyframes cleanLyricPosterPush {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(1.012);
+    filter: blur(1px);
+  }
+  76% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes cleanLyricPosterFade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(0.8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+#lyricPosterMaxRows,
+#lyricPosterTransition {
+  width: 100%;
+}
+
+/* ROOM-SCALED SVG LYRIC OVERLAY FIX
+   The SVG coordinate system remains 1764 x 529, but the actual overlay now scales
+   with the 16:9 room width instead of staying 1764 CSS pixels wide. This keeps the
+   trapezoid locked to the ceiling when the browser window changes size. */
+:root {
+  --lyric-ceiling-room-height-ratio: 53.326%;
+}
+
+.lyrics-ceiling {
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: var(--lyric-ceiling-room-height-ratio) !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  overflow: visible !important;
+  transform-origin: 0 0 !important;
+}
+
+.active-lyrics-block,
+.lyric-poster-line {
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  overflow: visible !important;
+  transform-origin: 0 0 !important;
+}
+
+.lyric-poster-svg {
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  overflow: visible !important;
+  transform-origin: 0 0 !important;
+}
+
+/* Keep the clean SVG renderer as the only visible lyric rendering path. */
+.lyric-poster-text,
+.lyric-poster-row,
+.lyrics-boundary-guides,
+.lyrics-boundary-guide-video {
+  display: none !important;
+}
+
+
+
+/* V26 STABLE CEILING LYRIC RECENTER
+   Reverts to the stable v20 center-dot renderer, keeps room-scaled SVG, and only
+   adds a conservative perspective-depth effect. */
+:root {
+  --lyric-poster-top-left-x: 221px;
+  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-right-x: 1562px;
+  --lyric-poster-top-right-y: 3px;
+  --lyric-poster-bottom-left-x: 454px;
+  --lyric-poster-bottom-left-y: 189px;
+  --lyric-poster-bottom-right-x: 1343px;
+  --lyric-poster-bottom-right-y: 189px;
+  --lyric-poster-center-x: 878px;
+  --lyric-poster-center-y: 178px;
+  --lyric-poster-guide-opacity: 1;
+  --lyric-poster-center-guide-opacity: 0;
+  --lyric-poster-perspective-depth: 1.25;
+  --lyric-poster-stroke: 2.4px;
+  --lyric-poster-stroke-opacity: 0.52;
+  --lyric-poster-fill-opacity: 0;
+  --lyric-poster-glow: 0;
+  --lyric-poster-row-gap: 30px;
+  --lyrics-base-font-size: 12px;
+}
+
+.lyric-poster-svg-row {
+  font-family: "Arial Black", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.018em !important;
   fill: rgba(255, 255, 255, var(--lyric-poster-fill-opacity));
   stroke: rgba(215, 215, 215, var(--lyric-poster-stroke-opacity));
   stroke-width: var(--lyric-poster-stroke);
@@ -3661,9 +4201,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   stroke-linecap: round;
   dominant-baseline: middle;
   text-anchor: start;
-  transform-box: view-box;
-  transform-origin: center;
-  filter: drop-shadow(0 0 calc(1px + (var(--lyric-poster-glow) * 8px)) rgba(235, 235, 235, calc(var(--lyric-poster-glow) * 0.32)));
+  transform: none !important;
 }
 
 .lyric-poster-svg-guide {
@@ -3682,75 +4220,19 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   pointer-events: none;
 }
 
-.lyric-poster-transition-push .lyric-poster-svg {
-  animation: lyricPosterPushV25 520ms cubic-bezier(.18, .88, .2, 1) both;
-}
-
-.lyric-poster-transition-fade .lyric-poster-svg {
-  animation: lyricPosterFadeV25 620ms ease both;
-}
-
-@keyframes lyricPosterPushV25 {
-  0% {
-    opacity: 0;
-    transform: translateY(12px) scale(1.006);
-    filter: blur(0.8px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
-
-@keyframes lyricPosterFadeV25 {
-  0% {
-    opacity: 0;
-    transform: translateY(6px);
-    filter: blur(0.7px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-}
-
-.lyrics-boundary-utility .lyric-utility-stack {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 9px !important;
-}
-
-.lyrics-boundary-utility .lyric-utility-stack label {
+.lyrics-boundary-utility label {
   display: grid !important;
   grid-template-columns: 1fr auto !important;
   gap: 4px 10px !important;
   align-items: center !important;
   width: 100% !important;
+  margin-bottom: 8px !important;
 }
 
-.lyrics-boundary-utility .lyric-utility-stack label input,
-.lyrics-boundary-utility .lyric-utility-stack label select {
+.lyrics-boundary-utility label input,
+.lyrics-boundary-utility label select {
   grid-column: 1 / -1 !important;
   width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
 }
-
-.lyrics-boundary-utility .utility-minihead {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 196, 84, 0.18);
-  color: #ffc65a;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-#lyricPosterMaxRows,
-#lyricPosterTransition {
-  width: 100%;
-}
-
