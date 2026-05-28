@@ -230,8 +230,8 @@ export function renderShell(state: AppState): void {
               <label>Top left X px <span id="lyricPosterTopLeftXValue">221</span>
                 <input id="lyricPosterTopLeftX" type="range" min="0" max="1764" step="1" value="221" />
               </label>
-              <label>Top left Y px <span id="lyricPosterTopLeftYValue">17</span>
-                <input id="lyricPosterTopLeftY" type="range" min="0" max="529" step="1" value="17" />
+              <label>Top left Y px <span id="lyricPosterTopLeftYValue">18</span>
+                <input id="lyricPosterTopLeftY" type="range" min="0" max="529" step="1" value="18" />
               </label>
               <label>Top right X px <span id="lyricPosterTopRightXValue">1562</span>
                 <input id="lyricPosterTopRightX" type="range" min="0" max="1764" step="1" value="1562" />
@@ -242,8 +242,8 @@ export function renderShell(state: AppState): void {
               <label>Bottom left X px <span id="lyricPosterBottomLeftXValue">454</span>
                 <input id="lyricPosterBottomLeftX" type="range" min="0" max="1764" step="1" value="454" />
               </label>
-              <label>Bottom left Y px <span id="lyricPosterBottomLeftYValue">189</span>
-                <input id="lyricPosterBottomLeftY" type="range" min="0" max="529" step="1" value="189" />
+              <label>Bottom left Y px <span id="lyricPosterBottomLeftYValue">195</span>
+                <input id="lyricPosterBottomLeftY" type="range" min="0" max="529" step="1" value="195" />
               </label>
               <label>Bottom right X px <span id="lyricPosterBottomRightXValue">1343</span>
                 <input id="lyricPosterBottomRightX" type="range" min="0" max="1764" step="1" value="1343" />
@@ -253,25 +253,25 @@ export function renderShell(state: AppState): void {
               </label>
 
               <div class="utility-minihead">Poster style and fit</div>
-              <label>Stroke px <span id="lyricPosterStrokeValue">2.4</span>
-                <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="2.4" />
+              <label>Stroke px <span id="lyricPosterStrokeValue">7.6</span>
+                <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="7.6" />
               </label>
-              <label>Stroke opacity <span id="lyricPosterStrokeOpacityValue">0.52</span>
-                <input id="lyricPosterStrokeOpacity" type="range" min="0" max="1" step="0.01" value="0.52" />
+              <label>Stroke opacity <span id="lyricPosterStrokeOpacityValue">0.49</span>
+                <input id="lyricPosterStrokeOpacity" type="range" min="0" max="1" step="0.01" value="0.49" />
               </label>
-              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0.00</span>
+              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0</span>
                 <input id="lyricPosterFillOpacity" type="range" min="0" max="0.35" step="0.01" value="0" />
               </label>
-              <label>Glow strength <span id="lyricPosterGlowValue">0.00</span>
+              <label>Glow strength <span id="lyricPosterGlowValue">0</span>
                 <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0" />
               </label>
 
               <div class="utility-minihead">1-row WordArt profile</div>
-              <label>1-row vertical stretch <span id="lyricPosterOneRowVerticalStretchValue">0.87</span>
-                <input id="lyricPosterOneRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.87" />
+              <label>1-row vertical stretch <span id="lyricPosterOneRowVerticalStretchValue">0.86</span>
+                <input id="lyricPosterOneRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.86" />
               </label>
-              <label>1-row row tightness <span id="lyricPosterOneRowTightnessValue">0.00</span>
-                <input id="lyricPosterOneRowTightness" type="range" min="-2.20" max="1.20" step="0.01" value="0.00" />
+              <label>1-row row tightness <span id="lyricPosterOneRowTightnessValue">0.0</span>
+                <input id="lyricPosterOneRowTightness" type="range" min="-2.20" max="1.20" step="0.01" value="0.0" />
               </label>
               <label>1-row perspective amount <span id="lyricPosterOneRowPerspectiveValue">1.33</span>
                 <input id="lyricPosterOneRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.33" />
@@ -282,23 +282,23 @@ export function renderShell(state: AppState): void {
 
               <div class="utility-minihead">1-row projection corner offsets</div>
               <p class="utility-help">These distort only the forced/auto 1-row lyric projection. Use them like draggable WordArt corners.</p>
-              <label>1-row top-left X offset px <span id="lyricPosterOneRowTextTopLeftXValue">0</span>
-                <input id="lyricPosterOneRowTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              <label>1-row top-left X offset px <span id="lyricPosterOneRowTextTopLeftXValue">-242</span>
+                <input id="lyricPosterOneRowTextTopLeftX" type="range" min="-450" max="450" step="1" value="-242" />
               </label>
               <label>1-row top-left Y offset px <span id="lyricPosterOneRowTextTopLeftYValue">0</span>
                 <input id="lyricPosterOneRowTextTopLeftY" type="range" min="-180" max="180" step="1" value="0" />
               </label>
-              <label>1-row top-right X offset px <span id="lyricPosterOneRowTextTopRightXValue">0</span>
-                <input id="lyricPosterOneRowTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
+              <label>1-row top-right X offset px <span id="lyricPosterOneRowTextTopRightXValue">242</span>
+                <input id="lyricPosterOneRowTextTopRightX" type="range" min="-450" max="450" step="1" value="242" />
               </label>
               <label>1-row top-right Y offset px <span id="lyricPosterOneRowTextTopRightYValue">0</span>
                 <input id="lyricPosterOneRowTextTopRightY" type="range" min="-180" max="180" step="1" value="0" />
               </label>
-              <label>1-row bottom-left X offset px <span id="lyricPosterOneRowTextBottomLeftXValue">0</span>
-                <input id="lyricPosterOneRowTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              <label>1-row bottom-left X offset px <span id="lyricPosterOneRowTextBottomLeftXValue">6</span>
+                <input id="lyricPosterOneRowTextBottomLeftX" type="range" min="-450" max="450" step="1" value="6" />
               </label>
-              <label>1-row bottom-left Y offset px <span id="lyricPosterOneRowTextBottomLeftYValue">0</span>
-                <input id="lyricPosterOneRowTextBottomLeftY" type="range" min="-180" max="180" step="1" value="0" />
+              <label>1-row bottom-left Y offset px <span id="lyricPosterOneRowTextBottomLeftYValue">-1</span>
+                <input id="lyricPosterOneRowTextBottomLeftY" type="range" min="-180" max="180" step="1" value="-1" />
               </label>
               <label>1-row bottom-right X offset px <span id="lyricPosterOneRowTextBottomRightXValue">0</span>
                 <input id="lyricPosterOneRowTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
@@ -333,6 +333,132 @@ export function renderShell(state: AppState): void {
               </label>
               <label>3-row letter tilt bias deg <span id="lyricPosterThreeRowTiltValue">-12</span>
                 <input id="lyricPosterThreeRowTilt" type="range" min="-75" max="75" step="1" value="-12" />
+              </label>
+
+              <div class="utility-minihead">2-row top projection corner offsets</div>
+              <label>2-row top top-left X offset px <span id="lyricPosterTwoRowTopTextTopLeftXValue">0</span>
+                <input id="lyricPosterTwoRowTopTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row top top-left Y offset px <span id="lyricPosterTwoRowTopTextTopLeftYValue">0</span>
+                <input id="lyricPosterTwoRowTopTextTopLeftY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row top top-right X offset px <span id="lyricPosterTwoRowTopTextTopRightXValue">0</span>
+                <input id="lyricPosterTwoRowTopTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row top top-right Y offset px <span id="lyricPosterTwoRowTopTextTopRightYValue">0</span>
+                <input id="lyricPosterTwoRowTopTextTopRightY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row top bottom-left X offset px <span id="lyricPosterTwoRowTopTextBottomLeftXValue">0</span>
+                <input id="lyricPosterTwoRowTopTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row top bottom-left Y offset px <span id="lyricPosterTwoRowTopTextBottomLeftYValue">0</span>
+                <input id="lyricPosterTwoRowTopTextBottomLeftY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row top bottom-right X offset px <span id="lyricPosterTwoRowTopTextBottomRightXValue">0</span>
+                <input id="lyricPosterTwoRowTopTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row top bottom-right Y offset px <span id="lyricPosterTwoRowTopTextBottomRightYValue">0</span>
+                <input id="lyricPosterTwoRowTopTextBottomRightY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <div class="utility-minihead">2-row bottom projection corner offsets</div>
+              <label>2-row bottom top-left X offset px <span id="lyricPosterTwoRowBottomTextTopLeftXValue">0</span>
+                <input id="lyricPosterTwoRowBottomTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row bottom top-left Y offset px <span id="lyricPosterTwoRowBottomTextTopLeftYValue">0</span>
+                <input id="lyricPosterTwoRowBottomTextTopLeftY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row bottom top-right X offset px <span id="lyricPosterTwoRowBottomTextTopRightXValue">0</span>
+                <input id="lyricPosterTwoRowBottomTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row bottom top-right Y offset px <span id="lyricPosterTwoRowBottomTextTopRightYValue">0</span>
+                <input id="lyricPosterTwoRowBottomTextTopRightY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row bottom bottom-left X offset px <span id="lyricPosterTwoRowBottomTextBottomLeftXValue">0</span>
+                <input id="lyricPosterTwoRowBottomTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row bottom bottom-left Y offset px <span id="lyricPosterTwoRowBottomTextBottomLeftYValue">0</span>
+                <input id="lyricPosterTwoRowBottomTextBottomLeftY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row bottom bottom-right X offset px <span id="lyricPosterTwoRowBottomTextBottomRightXValue">0</span>
+                <input id="lyricPosterTwoRowBottomTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row bottom bottom-right Y offset px <span id="lyricPosterTwoRowBottomTextBottomRightYValue">0</span>
+                <input id="lyricPosterTwoRowBottomTextBottomRightY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <div class="utility-minihead">3-row top projection corner offsets</div>
+              <label>3-row top top-left X offset px <span id="lyricPosterThreeRowTopTextTopLeftXValue">0</span>
+                <input id="lyricPosterThreeRowTopTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row top top-left Y offset px <span id="lyricPosterThreeRowTopTextTopLeftYValue">0</span>
+                <input id="lyricPosterThreeRowTopTextTopLeftY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row top top-right X offset px <span id="lyricPosterThreeRowTopTextTopRightXValue">0</span>
+                <input id="lyricPosterThreeRowTopTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row top top-right Y offset px <span id="lyricPosterThreeRowTopTextTopRightYValue">0</span>
+                <input id="lyricPosterThreeRowTopTextTopRightY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row top bottom-left X offset px <span id="lyricPosterThreeRowTopTextBottomLeftXValue">0</span>
+                <input id="lyricPosterThreeRowTopTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row top bottom-left Y offset px <span id="lyricPosterThreeRowTopTextBottomLeftYValue">0</span>
+                <input id="lyricPosterThreeRowTopTextBottomLeftY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row top bottom-right X offset px <span id="lyricPosterThreeRowTopTextBottomRightXValue">0</span>
+                <input id="lyricPosterThreeRowTopTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row top bottom-right Y offset px <span id="lyricPosterThreeRowTopTextBottomRightYValue">0</span>
+                <input id="lyricPosterThreeRowTopTextBottomRightY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <div class="utility-minihead">3-row middle projection corner offsets</div>
+              <label>3-row middle top-left X offset px <span id="lyricPosterThreeRowMiddleTextTopLeftXValue">0</span>
+                <input id="lyricPosterThreeRowMiddleTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row middle top-left Y offset px <span id="lyricPosterThreeRowMiddleTextTopLeftYValue">0</span>
+                <input id="lyricPosterThreeRowMiddleTextTopLeftY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row middle top-right X offset px <span id="lyricPosterThreeRowMiddleTextTopRightXValue">0</span>
+                <input id="lyricPosterThreeRowMiddleTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row middle top-right Y offset px <span id="lyricPosterThreeRowMiddleTextTopRightYValue">0</span>
+                <input id="lyricPosterThreeRowMiddleTextTopRightY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row middle bottom-left X offset px <span id="lyricPosterThreeRowMiddleTextBottomLeftXValue">0</span>
+                <input id="lyricPosterThreeRowMiddleTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row middle bottom-left Y offset px <span id="lyricPosterThreeRowMiddleTextBottomLeftYValue">0</span>
+                <input id="lyricPosterThreeRowMiddleTextBottomLeftY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row middle bottom-right X offset px <span id="lyricPosterThreeRowMiddleTextBottomRightXValue">0</span>
+                <input id="lyricPosterThreeRowMiddleTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row middle bottom-right Y offset px <span id="lyricPosterThreeRowMiddleTextBottomRightYValue">0</span>
+                <input id="lyricPosterThreeRowMiddleTextBottomRightY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <div class="utility-minihead">3-row bottom projection corner offsets</div>
+              <label>3-row bottom top-left X offset px <span id="lyricPosterThreeRowBottomTextTopLeftXValue">0</span>
+                <input id="lyricPosterThreeRowBottomTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row bottom top-left Y offset px <span id="lyricPosterThreeRowBottomTextTopLeftYValue">0</span>
+                <input id="lyricPosterThreeRowBottomTextTopLeftY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row bottom top-right X offset px <span id="lyricPosterThreeRowBottomTextTopRightXValue">0</span>
+                <input id="lyricPosterThreeRowBottomTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row bottom top-right Y offset px <span id="lyricPosterThreeRowBottomTextTopRightYValue">0</span>
+                <input id="lyricPosterThreeRowBottomTextTopRightY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row bottom bottom-left X offset px <span id="lyricPosterThreeRowBottomTextBottomLeftXValue">0</span>
+                <input id="lyricPosterThreeRowBottomTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row bottom bottom-left Y offset px <span id="lyricPosterThreeRowBottomTextBottomLeftYValue">0</span>
+                <input id="lyricPosterThreeRowBottomTextBottomLeftY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row bottom bottom-right X offset px <span id="lyricPosterThreeRowBottomTextBottomRightXValue">0</span>
+                <input id="lyricPosterThreeRowBottomTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row bottom bottom-right Y offset px <span id="lyricPosterThreeRowBottomTextBottomRightYValue">0</span>
+                <input id="lyricPosterThreeRowBottomTextBottomRightY" type="range" min="-450" max="450" step="1" value="0" />
               </label>
 
               <div class="utility-minihead">Mode</div>
@@ -914,6 +1040,46 @@ function readCeilingPosterControls(
     threeRowTightness: readNumber("--lyric-poster-three-row-tightness", -0.25),
     threeRowPerspective: readNumber("--lyric-poster-three-row-perspective", 1),
     threeRowTilt: readNumber("--lyric-poster-three-row-tilt", -12),
+    twoRowTopTextTopLeftX: readNumber("--lyric-poster-two-row-top-text-top-left-x", 0),
+    twoRowTopTextTopLeftY: readNumber("--lyric-poster-two-row-top-text-top-left-y", 0),
+    twoRowTopTextTopRightX: readNumber("--lyric-poster-two-row-top-text-top-right-x", 0),
+    twoRowTopTextTopRightY: readNumber("--lyric-poster-two-row-top-text-top-right-y", 0),
+    twoRowTopTextBottomLeftX: readNumber("--lyric-poster-two-row-top-text-bottom-left-x", 0),
+    twoRowTopTextBottomLeftY: readNumber("--lyric-poster-two-row-top-text-bottom-left-y", 0),
+    twoRowTopTextBottomRightX: readNumber("--lyric-poster-two-row-top-text-bottom-right-x", 0),
+    twoRowTopTextBottomRightY: readNumber("--lyric-poster-two-row-top-text-bottom-right-y", 0),
+    twoRowBottomTextTopLeftX: readNumber("--lyric-poster-two-row-bottom-text-top-left-x", 0),
+    twoRowBottomTextTopLeftY: readNumber("--lyric-poster-two-row-bottom-text-top-left-y", 0),
+    twoRowBottomTextTopRightX: readNumber("--lyric-poster-two-row-bottom-text-top-right-x", 0),
+    twoRowBottomTextTopRightY: readNumber("--lyric-poster-two-row-bottom-text-top-right-y", 0),
+    twoRowBottomTextBottomLeftX: readNumber("--lyric-poster-two-row-bottom-text-bottom-left-x", 0),
+    twoRowBottomTextBottomLeftY: readNumber("--lyric-poster-two-row-bottom-text-bottom-left-y", 0),
+    twoRowBottomTextBottomRightX: readNumber("--lyric-poster-two-row-bottom-text-bottom-right-x", 0),
+    twoRowBottomTextBottomRightY: readNumber("--lyric-poster-two-row-bottom-text-bottom-right-y", 0),
+    threeRowTopTextTopLeftX: readNumber("--lyric-poster-three-row-top-text-top-left-x", 0),
+    threeRowTopTextTopLeftY: readNumber("--lyric-poster-three-row-top-text-top-left-y", 0),
+    threeRowTopTextTopRightX: readNumber("--lyric-poster-three-row-top-text-top-right-x", 0),
+    threeRowTopTextTopRightY: readNumber("--lyric-poster-three-row-top-text-top-right-y", 0),
+    threeRowTopTextBottomLeftX: readNumber("--lyric-poster-three-row-top-text-bottom-left-x", 0),
+    threeRowTopTextBottomLeftY: readNumber("--lyric-poster-three-row-top-text-bottom-left-y", 0),
+    threeRowTopTextBottomRightX: readNumber("--lyric-poster-three-row-top-text-bottom-right-x", 0),
+    threeRowTopTextBottomRightY: readNumber("--lyric-poster-three-row-top-text-bottom-right-y", 0),
+    threeRowMiddleTextTopLeftX: readNumber("--lyric-poster-three-row-middle-text-top-left-x", 0),
+    threeRowMiddleTextTopLeftY: readNumber("--lyric-poster-three-row-middle-text-top-left-y", 0),
+    threeRowMiddleTextTopRightX: readNumber("--lyric-poster-three-row-middle-text-top-right-x", 0),
+    threeRowMiddleTextTopRightY: readNumber("--lyric-poster-three-row-middle-text-top-right-y", 0),
+    threeRowMiddleTextBottomLeftX: readNumber("--lyric-poster-three-row-middle-text-bottom-left-x", 0),
+    threeRowMiddleTextBottomLeftY: readNumber("--lyric-poster-three-row-middle-text-bottom-left-y", 0),
+    threeRowMiddleTextBottomRightX: readNumber("--lyric-poster-three-row-middle-text-bottom-right-x", 0),
+    threeRowMiddleTextBottomRightY: readNumber("--lyric-poster-three-row-middle-text-bottom-right-y", 0),
+    threeRowBottomTextTopLeftX: readNumber("--lyric-poster-three-row-bottom-text-top-left-x", 0),
+    threeRowBottomTextTopLeftY: readNumber("--lyric-poster-three-row-bottom-text-top-left-y", 0),
+    threeRowBottomTextTopRightX: readNumber("--lyric-poster-three-row-bottom-text-top-right-x", 0),
+    threeRowBottomTextTopRightY: readNumber("--lyric-poster-three-row-bottom-text-top-right-y", 0),
+    threeRowBottomTextBottomLeftX: readNumber("--lyric-poster-three-row-bottom-text-bottom-left-x", 0),
+    threeRowBottomTextBottomLeftY: readNumber("--lyric-poster-three-row-bottom-text-bottom-left-y", 0),
+    threeRowBottomTextBottomRightX: readNumber("--lyric-poster-three-row-bottom-text-bottom-right-x", 0),
+    threeRowBottomTextBottomRightY: readNumber("--lyric-poster-three-row-bottom-text-bottom-right-y", 0),
   };
 }
 
@@ -988,16 +1154,15 @@ function buildCeilingPosterLayout(
     let bottomLeft = { x: Math.max(bottomBounds.left + pad, centerX - width / 2), y: bottom - pad };
     let bottomRight = { x: Math.min(bottomBounds.right - pad, centerX + width / 2), y: bottom - pad };
 
-    if (n === 1) {
-      topLeft = addPoint(topLeft, controls.oneRowTextTopLeftX, controls.oneRowTextTopLeftY);
-      topRight = addPoint(topRight, controls.oneRowTextTopRightX, controls.oneRowTextTopRightY);
-      bottomLeft = addPoint(bottomLeft, controls.oneRowTextBottomLeftX, controls.oneRowTextBottomLeftY);
-      bottomRight = addPoint(bottomRight, controls.oneRowTextBottomRightX, controls.oneRowTextBottomRightY);
-      [topLeft, topRight, bottomRight, bottomLeft] = centerAndFitQuadInsideTrapezoid(
-        [topLeft, topRight, bottomRight, bottomLeft],
-        trapezoid,
-      );
-    }
+    const cornerOffsets = getRowProjectionOffsets(n, index, controls);
+    topLeft = addPoint(topLeft, cornerOffsets.topLeftX, cornerOffsets.topLeftY);
+    topRight = addPoint(topRight, cornerOffsets.topRightX, cornerOffsets.topRightY);
+    bottomLeft = addPoint(bottomLeft, cornerOffsets.bottomLeftX, cornerOffsets.bottomLeftY);
+    bottomRight = addPoint(bottomRight, cornerOffsets.bottomRightX, cornerOffsets.bottomRightY);
+    [topLeft, topRight, bottomRight, bottomLeft] = centerAndFitQuadInsideTrapezoid(
+      [topLeft, topRight, bottomRight, bottomLeft],
+      trapezoid,
+    );
 
     const destination = [topLeft, topRight, bottomRight, bottomLeft].map((point) => ({
       x: point.x * scaleX,
@@ -1047,6 +1212,89 @@ function getPosterRowProfile(rowCount: 1 | 2 | 3, controls: CeilingPosterControl
     tightness: clamp(controls.threeRowTightness, -1.20, 0.80),
     perspective: clamp(controls.threeRowPerspective, 0, 3),
     tilt: clamp(controls.threeRowTilt, -75, 75),
+  };
+}
+
+
+function getRowProjectionOffsets(
+  rowCount: 1 | 2 | 3,
+  rowIndex: number,
+  controls: CeilingPosterControls,
+): RowProjectionOffsets {
+  if (rowCount === 1) {
+    return {
+      topLeftX: controls.oneRowTextTopLeftX,
+      topLeftY: controls.oneRowTextTopLeftY,
+      topRightX: controls.oneRowTextTopRightX,
+      topRightY: controls.oneRowTextTopRightY,
+      bottomLeftX: controls.oneRowTextBottomLeftX,
+      bottomLeftY: controls.oneRowTextBottomLeftY,
+      bottomRightX: controls.oneRowTextBottomRightX,
+      bottomRightY: controls.oneRowTextBottomRightY,
+    };
+  }
+
+  if (rowCount === 2 && rowIndex === 0) {
+    return {
+      topLeftX: controls.twoRowTopTextTopLeftX,
+      topLeftY: controls.twoRowTopTextTopLeftY,
+      topRightX: controls.twoRowTopTextTopRightX,
+      topRightY: controls.twoRowTopTextTopRightY,
+      bottomLeftX: controls.twoRowTopTextBottomLeftX,
+      bottomLeftY: controls.twoRowTopTextBottomLeftY,
+      bottomRightX: controls.twoRowTopTextBottomRightX,
+      bottomRightY: controls.twoRowTopTextBottomRightY,
+    };
+  }
+
+  if (rowCount === 2 && rowIndex === 1) {
+    return {
+      topLeftX: controls.twoRowBottomTextTopLeftX,
+      topLeftY: controls.twoRowBottomTextTopLeftY,
+      topRightX: controls.twoRowBottomTextTopRightX,
+      topRightY: controls.twoRowBottomTextTopRightY,
+      bottomLeftX: controls.twoRowBottomTextBottomLeftX,
+      bottomLeftY: controls.twoRowBottomTextBottomLeftY,
+      bottomRightX: controls.twoRowBottomTextBottomRightX,
+      bottomRightY: controls.twoRowBottomTextBottomRightY,
+    };
+  }
+
+  if (rowCount === 3 && rowIndex === 0) {
+    return {
+      topLeftX: controls.threeRowTopTextTopLeftX,
+      topLeftY: controls.threeRowTopTextTopLeftY,
+      topRightX: controls.threeRowTopTextTopRightX,
+      topRightY: controls.threeRowTopTextTopRightY,
+      bottomLeftX: controls.threeRowTopTextBottomLeftX,
+      bottomLeftY: controls.threeRowTopTextBottomLeftY,
+      bottomRightX: controls.threeRowTopTextBottomRightX,
+      bottomRightY: controls.threeRowTopTextBottomRightY,
+    };
+  }
+
+  if (rowCount === 3 && rowIndex === 1) {
+    return {
+      topLeftX: controls.threeRowMiddleTextTopLeftX,
+      topLeftY: controls.threeRowMiddleTextTopLeftY,
+      topRightX: controls.threeRowMiddleTextTopRightX,
+      topRightY: controls.threeRowMiddleTextTopRightY,
+      bottomLeftX: controls.threeRowMiddleTextBottomLeftX,
+      bottomLeftY: controls.threeRowMiddleTextBottomLeftY,
+      bottomRightX: controls.threeRowMiddleTextBottomRightX,
+      bottomRightY: controls.threeRowMiddleTextBottomRightY,
+    };
+  }
+
+  return {
+    topLeftX: controls.threeRowBottomTextTopLeftX,
+    topLeftY: controls.threeRowBottomTextTopLeftY,
+    topRightX: controls.threeRowBottomTextTopRightX,
+    topRightY: controls.threeRowBottomTextTopRightY,
+    bottomLeftX: controls.threeRowBottomTextBottomLeftX,
+    bottomLeftY: controls.threeRowBottomTextBottomLeftY,
+    bottomRightX: controls.threeRowBottomTextBottomRightX,
+    bottomRightY: controls.threeRowBottomTextBottomRightY,
   };
 }
 
@@ -1321,6 +1569,46 @@ type CeilingPosterControls = {
   threeRowTightness: number;
   threeRowPerspective: number;
   threeRowTilt: number;
+  twoRowTopTextTopLeftX: number;
+  twoRowTopTextTopLeftY: number;
+  twoRowTopTextTopRightX: number;
+  twoRowTopTextTopRightY: number;
+  twoRowTopTextBottomLeftX: number;
+  twoRowTopTextBottomLeftY: number;
+  twoRowTopTextBottomRightX: number;
+  twoRowTopTextBottomRightY: number;
+  twoRowBottomTextTopLeftX: number;
+  twoRowBottomTextTopLeftY: number;
+  twoRowBottomTextTopRightX: number;
+  twoRowBottomTextTopRightY: number;
+  twoRowBottomTextBottomLeftX: number;
+  twoRowBottomTextBottomLeftY: number;
+  twoRowBottomTextBottomRightX: number;
+  twoRowBottomTextBottomRightY: number;
+  threeRowTopTextTopLeftX: number;
+  threeRowTopTextTopLeftY: number;
+  threeRowTopTextTopRightX: number;
+  threeRowTopTextTopRightY: number;
+  threeRowTopTextBottomLeftX: number;
+  threeRowTopTextBottomLeftY: number;
+  threeRowTopTextBottomRightX: number;
+  threeRowTopTextBottomRightY: number;
+  threeRowMiddleTextTopLeftX: number;
+  threeRowMiddleTextTopLeftY: number;
+  threeRowMiddleTextTopRightX: number;
+  threeRowMiddleTextTopRightY: number;
+  threeRowMiddleTextBottomLeftX: number;
+  threeRowMiddleTextBottomLeftY: number;
+  threeRowMiddleTextBottomRightX: number;
+  threeRowMiddleTextBottomRightY: number;
+  threeRowBottomTextTopLeftX: number;
+  threeRowBottomTextTopLeftY: number;
+  threeRowBottomTextTopRightX: number;
+  threeRowBottomTextTopRightY: number;
+  threeRowBottomTextBottomLeftX: number;
+  threeRowBottomTextBottomLeftY: number;
+  threeRowBottomTextBottomRightX: number;
+  threeRowBottomTextBottomRightY: number;
 };
 
 type PosterRowProfile = {
@@ -1328,6 +1616,18 @@ type PosterRowProfile = {
   tightness: number;
   perspective: number;
   tilt: number;
+};
+
+
+type RowProjectionOffsets = {
+  topLeftX: number;
+  topLeftY: number;
+  topRightX: number;
+  topRightY: number;
+  bottomLeftX: number;
+  bottomLeftY: number;
+  bottomRightX: number;
+  bottomRightY: number;
 };
 
 type CeilingPosterLayout = {

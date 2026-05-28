@@ -3901,10 +3901,10 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-zoom: 1;
   --lyric-poster-tilt: 54deg;
   --lyric-poster-skew: -4deg;
-  --lyric-poster-stroke: 2.4px;
-  --lyric-poster-stroke-opacity: 0.52;
-  --lyric-poster-fill-opacity: 0.02;
-  --lyric-poster-glow: 0.18;
+  --lyric-poster-stroke: 7.6;
+  --lyric-poster-stroke-opacity: 0.49;
+  --lyric-poster-fill-opacity: 0;
+  --lyric-poster-glow: 0;
   --lyric-poster-row-gap: 0.18;
   --lyric-line-visibility: 0;
 }
@@ -3919,14 +3919,14 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 
 :root {
-  --lyric-poster-top-left-x: 402px;
-  --lyric-poster-top-left-y: 17px;
-  --lyric-poster-top-right-x: 1400px;
-  --lyric-poster-top-right-y: 12px;
-  --lyric-poster-bottom-left-x: 582px;
-  --lyric-poster-bottom-left-y: 178px;
-  --lyric-poster-bottom-right-x: 1228px;
-  --lyric-poster-bottom-right-y: 178px;
+  --lyric-poster-top-left-x: 221px;
+  --lyric-poster-top-left-y: 18px;
+  --lyric-poster-top-right-x: 1562px;
+  --lyric-poster-top-right-y: 3px;
+  --lyric-poster-bottom-left-x: 454px;
+  --lyric-poster-bottom-left-y: 195px;
+  --lyric-poster-bottom-right-x: 1343px;
+  --lyric-poster-bottom-right-y: 189px;
 }
 
 
@@ -3937,13 +3937,13 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 :root {
   --lyric-poster-top-left-x: 221px;
-  --lyric-poster-top-left-y: 17px;
-  --lyric-poster-top-right-x: 1637px;
-  --lyric-poster-top-right-y: 12px;
-  --lyric-poster-bottom-left-x: 597px;
-  --lyric-poster-bottom-left-y: 418px;
-  --lyric-poster-bottom-right-x: 1201px;
-  --lyric-poster-bottom-right-y: 415px;
+  --lyric-poster-top-left-y: 18px;
+  --lyric-poster-top-right-x: 1562px;
+  --lyric-poster-top-right-y: 3px;
+  --lyric-poster-bottom-left-x: 454px;
+  --lyric-poster-bottom-left-y: 195px;
+  --lyric-poster-bottom-right-x: 1343px;
+  --lyric-poster-bottom-right-y: 189px;
 }
 
 
@@ -3965,19 +3965,19 @@ html[data-dj-mode="cinematic"] .dj-wrap {
    Single active system. No old full-block, karaoke-fill, active-pill, or div-row lyric logic. */
 :root {
   --lyric-poster-top-left-x: 221px;
-  --lyric-poster-top-left-y: 17px;
-  --lyric-poster-top-right-x: 1637px;
-  --lyric-poster-top-right-y: 12px;
-  --lyric-poster-bottom-left-x: 597px;
-  --lyric-poster-bottom-left-y: 418px;
-  --lyric-poster-bottom-right-x: 1201px;
-  --lyric-poster-bottom-right-y: 415px;
+  --lyric-poster-top-left-y: 18px;
+  --lyric-poster-top-right-x: 1562px;
+  --lyric-poster-top-right-y: 3px;
+  --lyric-poster-bottom-left-x: 454px;
+  --lyric-poster-bottom-left-y: 195px;
+  --lyric-poster-bottom-right-x: 1343px;
+  --lyric-poster-bottom-right-y: 189px;
   --lyric-poster-center-x: 882px;
   --lyric-poster-center-y: 215px;
-  --lyric-poster-stroke: 2.4px;
-  --lyric-poster-stroke-opacity: 0.52;
-  --lyric-poster-fill-opacity: 0.02;
-  --lyric-poster-glow: 0.18;
+  --lyric-poster-stroke: 7.6;
+  --lyric-poster-stroke-opacity: 0.49;
+  --lyric-poster-fill-opacity: 0;
+  --lyric-poster-glow: 0;
   --lyric-poster-guide-opacity: 0;
   --lyric-poster-center-guide-opacity: 0;
   --lyric-poster-row-gap: 0.5px;
@@ -4166,11 +4166,11 @@ html[data-dj-mode="cinematic"] .dj-wrap {
    adds a conservative perspective-depth effect. */
 :root {
   --lyric-poster-top-left-x: 221px;
-  --lyric-poster-top-left-y: 17px;
+  --lyric-poster-top-left-y: 18px;
   --lyric-poster-top-right-x: 1562px;
   --lyric-poster-top-right-y: 3px;
   --lyric-poster-bottom-left-x: 454px;
-  --lyric-poster-bottom-left-y: 189px;
+  --lyric-poster-bottom-left-y: 195px;
   --lyric-poster-bottom-right-x: 1343px;
   --lyric-poster-bottom-right-y: 189px;
   --lyric-poster-center-x: 878px;
@@ -4178,8 +4178,8 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-guide-opacity: 1;
   --lyric-poster-center-guide-opacity: 0;
   --lyric-poster-perspective-depth: 1.25;
-  --lyric-poster-stroke: 2.4px;
-  --lyric-poster-stroke-opacity: 0.52;
+  --lyric-poster-stroke: 7.6;
+  --lyric-poster-stroke-opacity: 0.49;
   --lyric-poster-fill-opacity: 0;
   --lyric-poster-glow: 0;
   --lyric-poster-row-gap: 30px;
@@ -4242,34 +4242,34 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 :root {
   --lyric-ceiling-room-height-ratio: 53.326%;
   --lyric-poster-top-left-x: 221px;
-  --lyric-poster-top-left-y: 17px;
+  --lyric-poster-top-left-y: 18px;
   --lyric-poster-top-right-x: 1562px;
   --lyric-poster-top-right-y: 3px;
   --lyric-poster-bottom-left-x: 454px;
-  --lyric-poster-bottom-left-y: 189px;
+  --lyric-poster-bottom-left-y: 195px;
   --lyric-poster-bottom-right-x: 1343px;
   --lyric-poster-bottom-right-y: 189px;
   --lyric-poster-guide-opacity: 0;
   --lyric-poster-center-guide-opacity: 0;
-  --lyric-poster-stroke: 2.4px;
-  --lyric-poster-stroke-opacity: 0.52;
+  --lyric-poster-stroke: 7.6;
+  --lyric-poster-stroke-opacity: 0.49;
   --lyric-poster-fill-opacity: 0;
   --lyric-poster-glow: 0;
   --lyric-poster-overall-y: 22px;
   --lyric-poster-overall-scale: 0.80;
   --lyric-poster-row-tightness: -0.30;
   --lyric-poster-perspective-strength: 2.25;
-  --lyric-poster-one-row-vertical-stretch: 0.87;
-  --lyric-poster-one-row-tightness: 0;
+  --lyric-poster-one-row-vertical-stretch: 0.86;
+  --lyric-poster-one-row-tightness: 0.0;
   --lyric-poster-one-row-perspective: 1.33;
   --lyric-poster-one-row-tilt: -32;
 
-  --lyric-poster-one-row-text-top-left-x: 0px;
+  --lyric-poster-one-row-text-top-left-x: -242px;
   --lyric-poster-one-row-text-top-left-y: 0px;
-  --lyric-poster-one-row-text-top-right-x: 0px;
+  --lyric-poster-one-row-text-top-right-x: 242px;
   --lyric-poster-one-row-text-top-right-y: 0px;
-  --lyric-poster-one-row-text-bottom-left-x: 0px;
-  --lyric-poster-one-row-text-bottom-left-y: 0px;
+  --lyric-poster-one-row-text-bottom-left-x: 6px;
+  --lyric-poster-one-row-text-bottom-left-y: -1px;
   --lyric-poster-one-row-text-bottom-right-x: 0px;
   --lyric-poster-one-row-text-bottom-right-y: 0px;
   --lyric-poster-two-row-vertical-stretch: 0.93;
@@ -4281,6 +4281,46 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-three-row-perspective: 1;
   --lyric-poster-three-row-tilt: -12;
   --lyric-poster-max-rows: auto;
+  --lyric-poster-two-row-top-text-top-left-x: 0px;
+  --lyric-poster-two-row-top-text-top-left-y: 0px;
+  --lyric-poster-two-row-top-text-top-right-x: 0px;
+  --lyric-poster-two-row-top-text-top-right-y: 0px;
+  --lyric-poster-two-row-top-text-bottom-left-x: 0px;
+  --lyric-poster-two-row-top-text-bottom-left-y: 0px;
+  --lyric-poster-two-row-top-text-bottom-right-x: 0px;
+  --lyric-poster-two-row-top-text-bottom-right-y: 0px;
+  --lyric-poster-two-row-bottom-text-top-left-x: 0px;
+  --lyric-poster-two-row-bottom-text-top-left-y: 0px;
+  --lyric-poster-two-row-bottom-text-top-right-x: 0px;
+  --lyric-poster-two-row-bottom-text-top-right-y: 0px;
+  --lyric-poster-two-row-bottom-text-bottom-left-x: 0px;
+  --lyric-poster-two-row-bottom-text-bottom-left-y: 0px;
+  --lyric-poster-two-row-bottom-text-bottom-right-x: 0px;
+  --lyric-poster-two-row-bottom-text-bottom-right-y: 0px;
+  --lyric-poster-three-row-top-text-top-left-x: 0px;
+  --lyric-poster-three-row-top-text-top-left-y: 0px;
+  --lyric-poster-three-row-top-text-top-right-x: 0px;
+  --lyric-poster-three-row-top-text-top-right-y: 0px;
+  --lyric-poster-three-row-top-text-bottom-left-x: 0px;
+  --lyric-poster-three-row-top-text-bottom-left-y: 0px;
+  --lyric-poster-three-row-top-text-bottom-right-x: 0px;
+  --lyric-poster-three-row-top-text-bottom-right-y: 0px;
+  --lyric-poster-three-row-middle-text-top-left-x: 0px;
+  --lyric-poster-three-row-middle-text-top-left-y: 0px;
+  --lyric-poster-three-row-middle-text-top-right-x: 0px;
+  --lyric-poster-three-row-middle-text-top-right-y: 0px;
+  --lyric-poster-three-row-middle-text-bottom-left-x: 0px;
+  --lyric-poster-three-row-middle-text-bottom-left-y: 0px;
+  --lyric-poster-three-row-middle-text-bottom-right-x: 0px;
+  --lyric-poster-three-row-middle-text-bottom-right-y: 0px;
+  --lyric-poster-three-row-bottom-text-top-left-x: 0px;
+  --lyric-poster-three-row-bottom-text-top-left-y: 0px;
+  --lyric-poster-three-row-bottom-text-top-right-x: 0px;
+  --lyric-poster-three-row-bottom-text-top-right-y: 0px;
+  --lyric-poster-three-row-bottom-text-bottom-left-x: 0px;
+  --lyric-poster-three-row-bottom-text-bottom-left-y: 0px;
+  --lyric-poster-three-row-bottom-text-bottom-right-x: 0px;
+  --lyric-poster-three-row-bottom-text-bottom-right-y: 0px;
   --lyric-poster-transition: push-slide;
   --lyrics-animation-revision: 0;
 }
