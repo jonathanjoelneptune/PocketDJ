@@ -22,8 +22,8 @@ const CINEMATIC_TRIGGER_MS = 30_000;
 /*
  * Important split:
  * - active/playing/demo lives mainly in calm scratch loops that can dwell for short or long organic stretches
- * - the A11/A11m cinematic record moves are reserved for near-song-change triggers
- * - idle/no-track uses only the approved calm idle poses: i6, i7, i8, i9, i1, i10, i11, i12
+ * - the A11/A11m cinematic record moves are used for near-song-change triggers and manual next/previous track changes
+ * - idle/no-track uses only the approved calm idle poses: i6, i7, i9, i1, i10, i11, i12
  * - paused uses the same calm pose family by default so the DJ clearly stops performing
  */
 const quickLoops: AnimationLoop[] = [
@@ -43,7 +43,6 @@ const cinematicLoops: AnimationLoop[] = [
 const idleLoops: AnimationLoop[] = [
   makeLoop("idle-i6", "Idle i6", ["i6.png"], "idle", 30_000, 60_000, 0, 0),
   makeLoop("idle-i7", "Idle i7", ["i7.png"], "idle", 30_000, 60_000, 0, 0),
-  makeLoop("idle-i8", "Idle i8", ["i8.png"], "idle", 30_000, 60_000, 0, 0),
   makeLoop("idle-i9", "Idle i9", ["i9.png"], "idle", 30_000, 60_000, 0, 0),
   makeLoop("idle-i1", "Idle i1", ["i1.png"], "idle", 30_000, 60_000, 0, 0),
   makeLoop("idle-i10", "Idle i10", ["i10.png"], "idle", 30_000, 60_000, 0, 0),
@@ -54,7 +53,6 @@ const idleLoops: AnimationLoop[] = [
 const pausedLoops: AnimationLoop[] = [
   makeLoop("paused-i6", "Paused i6", ["i6.png"], "paused", 25_000, 50_000, 0, 0),
   makeLoop("paused-i7", "Paused i7", ["i7.png"], "paused", 25_000, 50_000, 0, 0),
-  makeLoop("paused-i8", "Paused i8", ["i8.png"], "paused", 25_000, 50_000, 0, 0),
   makeLoop("paused-i9", "Paused i9", ["i9.png"], "paused", 25_000, 50_000, 0, 0),
   makeLoop("paused-i1", "Paused i1", ["i1.png"], "paused", 25_000, 50_000, 0, 0),
   makeLoop("paused-i10", "Paused i10", ["i10.png"], "paused", 25_000, 50_000, 0, 0),
@@ -136,7 +134,8 @@ export class DjController {
       loop: this.currentLoop.label,
       quickLoops: quickLoops.length,
       cinematicLoops: cinematicLoops.length,
-      cinematicOnce: this.cinematicOnce
+      cinematicOnce: this.cinematicOnce,
+      cinematicLabel: this.cinematicOnce ? this.currentLoop.label : ""
     };
   }
 
@@ -153,13 +152,26 @@ export class DjController {
     const trackId = playback.trackId;
 
     if (trackId && trackId !== this.lastTrackId) {
+      const hadPreviousTrack = Boolean(this.lastTrackId);
+      const shouldPlayManualChangeCinematic =
+        hadPreviousTrack &&
+        isActive &&
+        this.controlMode === "normal" &&
+        !this.cinematicOnce;
+
       this.lastTrackId = trackId;
       this.cinematicFiredForTrack = false;
       this.cinematicForCurrentTrack = this.nextCinematicForNewTrack;
       this.nextCinematicForNewTrack = 1 - this.nextCinematicForNewTrack;
 
-      // Do not play the A11/A11m cinematic on every track change.
-      // Those cinematic record moves are reserved for the near-end-of-song trigger below.
+      // When the user skips forward/back or Spotify changes to a new track while active,
+      // play the same record-change cinematic used near the end of a song. This makes the
+      // DJ visually pull/change vinyl in sync with the marquee transition. The first track
+      // loaded after connect is ignored so the DJ does not do a record-change move on boot.
+      if (shouldPlayManualChangeCinematic) {
+        this.triggerCinematicOnce(now);
+        return;
+      }
     }
 
     if (!trackId || !playback.durationMs || !isActive) return;
@@ -281,8 +293,9 @@ export class DjController {
     if (mode === "playing" || mode === "demo") {
       index = randomInt(0, pool.length - 1);
     } else {
-      this.normalLoopIndex = wrapIndex(this.normalLoopIndex + 1, pool.length);
-      index = this.normalLoopIndex;
+      // Idle/paused should feel like a natural jump to a calm resting pose, not a predictable sequence.
+      index = randomInt(0, pool.length - 1);
+      this.normalLoopIndex = index;
     }
 
     this.currentLoop = pool[index];
@@ -397,7 +410,7 @@ export class DjController {
       "active-left": "a4.png",
       "active-right": "a5.png",
       "burst-hands": "a44.png",
-      "paused-lean": "i8.png"
+      "paused-lean": "i9.png"
     };
     return legacyMap[id] || "i1.png";
   }
