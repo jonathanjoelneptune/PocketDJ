@@ -819,29 +819,36 @@ export function updateLyricsCeiling(
 
   activeBlock.innerHTML = `
     <svg class="lyric-poster-svg" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <clipPath id="lyricPosterClip" clipPathUnits="userSpaceOnUse">
+          <polygon points="${trapezoid.topLeftX},${trapezoid.topLeftY} ${trapezoid.topRightX},${trapezoid.topRightY} ${trapezoid.bottomRightX},${trapezoid.bottomRightY} ${trapezoid.bottomLeftX},${trapezoid.bottomLeftY}" />
+        </clipPath>
+      </defs>
       <polygon
         class="lyric-poster-svg-guide"
         points="${trapezoid.topLeftX},${trapezoid.topLeftY} ${trapezoid.topRightX},${trapezoid.topRightY} ${trapezoid.bottomRightX},${trapezoid.bottomRightY} ${trapezoid.bottomLeftX},${trapezoid.bottomLeftY}"
       />
       <circle class="lyric-poster-center-guide" cx="${trapezoid.centerX}" cy="${trapezoid.centerY}" r="8" />
-      ${layout.rows
-        .map(
-          (row) => `
-            <text
-              class="lyric-poster-svg-row"
-              data-row-count="${layout.rows.length}"
-              x="${row.left}"
-              y="${row.centerY}"
-              font-size="${row.fontSize}"
-              textLength="${row.width}"
-              lengthAdjust="spacingAndGlyphs"
-              dominant-baseline="middle"
-              text-anchor="start"
-              transform="translate(${row.centerX} ${row.centerY}) scale(1 ${row.scaleY}) translate(${-row.centerX} ${-row.centerY})"
-            >${escapeHtml(row.text)}</text>
-          `,
-        )
-        .join("")}
+      <g class="lyric-poster-clipped-rows" clip-path="url(#lyricPosterClip)">
+        ${layout.rows
+          .map(
+            (row) => `
+              <text
+                class="lyric-poster-svg-row"
+                data-row-count="${layout.rows.length}"
+                x="${row.left}"
+                y="${row.centerY}"
+                font-size="${row.fontSize}"
+                textLength="${row.width}"
+                lengthAdjust="spacingAndGlyphs"
+                dominant-baseline="middle"
+                text-anchor="start"
+                transform="translate(${row.centerX} ${row.centerY}) scale(1 ${row.scaleY}) translate(${-row.centerX} ${-row.centerY})"
+              >${escapeHtml(row.text)}</text>
+            `,
+          )
+          .join("")}
+      </g>
     </svg>
   `;
 }
@@ -988,21 +995,20 @@ function layoutSvgRowsInsideTrapezoid(
   const rowGapPx = tuning.rowGapPx;
   const depth = Math.max(0.2, Math.min(6, tuning.perspectiveDepth));
 
-  const availableHeight = Math.max(24, height - Math.max(0, n - 1) * rowGapPx);
+  // This renderer now has two layers of protection:
+  // 1) Fit math samples the trapezoid at several vertical points.
+  // 2) A real SVG clipPath is applied to the text group as a final guardrail.
+  // The clipPath is the only way to guarantee 100% confinement during all resize
+  // and transition states.
+  const strokePad = Math.max(12, Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--lyric-poster-stroke")) * 3 || 12);
+  const availableHeight = Math.max(24, height - Math.max(0, n - 1) * rowGapPx - strokePad * 2);
   const rowBand = Math.max(14, availableHeight / n);
+  const targetVisibleHeight = Math.max(12, rowBand * (n === 1 ? 0.88 : 0.82));
+  const baseFontSize = Math.max(10, targetVisibleHeight / (0.72 * stretchY));
+  const nominalHalfHeight = Math.max(6, baseFontSize * 0.40 * stretchY + strokePad);
 
-  // Build the visible height first, then derive font-size from the selected
-  // vertical stretch. This makes the stretch slider visible without letting
-  // the text blast outside the ceiling as easily.
-  const targetVisibleHeight = Math.max(12, rowBand * (n === 1 ? 0.96 : 0.90));
-  const baseFontSize = Math.max(12, targetVisibleHeight / (0.64 * stretchY));
-  const visualHalfHeight = Math.max(6, baseFontSize * 0.32 * stretchY);
+  const baseSpacing = Math.max(2, nominalHalfHeight * 2 + rowGapPx);
 
-  const baseSpacing = Math.max(2, visualHalfHeight * 2 + rowGapPx);
-
-  // Initial center positions use a compact stack centered on the per-count Y
-  // control. The stack is then clamped so the full visible text stays inside
-  // the trapezoid.
   let rowCenters: number[];
   if (n === 1) {
     rowCenters = [tuning.centerY];
@@ -1011,48 +1017,54 @@ function layoutSvgRowsInsideTrapezoid(
     rowCenters = rows.map((_, index) => firstY + index * baseSpacing);
   }
 
-  const minY = Math.min(...rowCenters) - visualHalfHeight;
-  const maxY = Math.max(...rowCenters) + visualHalfHeight;
-  const clampOffset = Math.min(bottomY - maxY, Math.max(topY - minY, 0));
-  rowCenters = rowCenters.map((y) => y + clampOffset);
+  const clampRowsInside = (centers: number[], halfHeight: number): number[] => {
+    const minY = Math.min(...centers) - halfHeight;
+    const maxY = Math.max(...centers) + halfHeight;
+    let offset = 0;
+    if (minY < topY + strokePad) offset = topY + strokePad - minY;
+    if (maxY + offset > bottomY - strokePad) offset = bottomY - strokePad - maxY;
+    return centers.map((y) => y + offset);
+  };
 
-  // Apply a per-count perspective curve as a subtle row distribution change.
-  // Higher values push lower rows forward/down and make the ceiling perspective
-  // feel more dramatic.
+  rowCenters = clampRowsInside(rowCenters, nominalHalfHeight);
+
   if (n > 1) {
     const currentTop = Math.min(...rowCenters);
     const currentBottom = Math.max(...rowCenters);
     const span = Math.max(1, currentBottom - currentTop);
-    const curved = rowCenters.map((y, index) => {
+    const curved = rowCenters.map((_, index) => {
       const rawT = index / Math.max(1, n - 1);
       const curvedT = Math.pow(rawT, depth);
       return currentTop + curvedT * span;
     });
-    const curvedMin = Math.min(...curved) - visualHalfHeight;
-    const curvedMax = Math.max(...curved) + visualHalfHeight;
-    const curvedOffset = Math.min(bottomY - curvedMax, Math.max(topY - curvedMin, 0));
-    rowCenters = curved.map((y) => y + curvedOffset);
+    rowCenters = clampRowsInside(curved, nominalHalfHeight);
   }
 
   return rows.map((row, index) => {
     const rawT = n === 1 ? 0.5 : index / Math.max(1, n - 1);
-    const perspectiveStrength = Math.max(-0.5, Math.min(1.6, (depth - 1) * 0.20));
+    const perspectiveStrength = Math.max(-0.5, Math.min(1.8, (depth - 1) * 0.20));
     const fontPerspectiveScale = n === 1 ? 1 : Math.max(0.45, 1 + perspectiveStrength * (0.5 - rawT));
     const fontSize = baseFontSize * fontPerspectiveScale;
-    const lineVisualHalf = Math.max(6, fontSize * 0.32 * stretchY);
-    const y = Math.max(topY + lineVisualHalf, Math.min(bottomY - lineVisualHalf, rowCenters[index]));
+    const lineHalfHeight = Math.max(6, fontSize * 0.42 * stretchY + strokePad);
+    const y = Math.max(topY + lineHalfHeight, Math.min(bottomY - lineHalfHeight, rowCenters[index]));
 
-    const rowTop = Math.max(topY, y - lineVisualHalf);
-    const rowBottom = Math.min(bottomY, y + lineVisualHalf);
-    const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowTop);
-    const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowBottom);
-    const centerBounds = trapezoidHorizontalBoundsAtY(trapezoid, y);
+    // Sample multiple vertical slices, not just top/middle/bottom. This prevents
+    // long stretched glyphs from leaking through a slanted side of the trapezoid.
+    const sampleYs = [
+      y - lineHalfHeight,
+      y - lineHalfHeight * 0.66,
+      y - lineHalfHeight * 0.33,
+      y,
+      y + lineHalfHeight * 0.33,
+      y + lineHalfHeight * 0.66,
+      y + lineHalfHeight,
+    ].map((sampleY) => Math.max(topY, Math.min(bottomY, sampleY)));
 
-    const strokePad = Math.max(10, fontSize * 0.06);
-    const safeLeft = Math.max(topBounds.left, bottomBounds.left, centerBounds.left) + strokePad;
-    const safeRight = Math.min(topBounds.right, bottomBounds.right, centerBounds.right) - strokePad;
+    const bounds = sampleYs.map((sampleY) => trapezoidHorizontalBoundsAtY(trapezoid, sampleY));
+    const safeLeft = Math.max(...bounds.map((bound) => bound.left)) + strokePad;
+    const safeRight = Math.min(...bounds.map((bound) => bound.right)) - strokePad;
 
-    const halfWidth = Math.max(24, Math.min(anchorX - safeLeft, safeRight - anchorX));
+    const halfWidth = Math.max(20, Math.min(anchorX - safeLeft, safeRight - anchorX));
     const width = halfWidth * 2;
     const left = anchorX - halfWidth;
 
