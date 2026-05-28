@@ -4865,6 +4865,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 /* v45 utility panel, top pills, and always-visible floor controls cleanup */
 :root {
   --floor-controls-idle-opacity: 0.15;
+  --panel-start-y: 20%;
 }
 
 /* The side utility panel must always sit above the ceiling lyric projection. */
@@ -5115,3 +5116,53 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 /* v48 lyric gap behavior is implemented in src/ui.ts. */
+
+
+/* v49 draggable right-side panel tab and panel start height */
+.control-card {
+  top: var(--panel-start-y) !important;
+  max-height: calc(100vh - var(--panel-start-y) - 14px) !important;
+}
+
+.panel-toggle,
+.side-panel-tab {
+  top: var(--panel-start-y) !important;
+}
+
+.side-panel-tab {
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.side-panel-tab-visible {
+  opacity: 0.78;
+  pointer-events: auto;
+}
+
+.side-panel-tab-dragging,
+.side-panel-tab-dragging:hover {
+  opacity: 1 !important;
+  transform: translateY(-50%) translateX(-5px) !important;
+  box-shadow:
+    -12px 0 34px rgba(0,0,0,0.30),
+    0 0 22px rgba(255,191,71,0.24),
+    inset 0 0 20px rgba(255,191,71,0.11) !important;
+}
+
+.side-panel-tab::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  width: 12px;
+  height: 18px;
+  transform: translateX(-50%);
+  opacity: 0.58;
+  background:
+    linear-gradient(currentColor, currentColor) center 3px / 2px 12px no-repeat,
+    linear-gradient(135deg, transparent 50%, currentColor 51%) 2px 0 / 5px 5px no-repeat,
+    linear-gradient(225deg, transparent 50%, currentColor 51%) 5px 0 / 5px 5px no-repeat,
+    linear-gradient(45deg, transparent 50%, currentColor 51%) 2px 13px / 5px 5px no-repeat,
+    linear-gradient(-45deg, transparent 50%, currentColor 51%) 5px 13px / 5px 5px no-repeat;
+}

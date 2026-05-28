@@ -71,6 +71,7 @@ type RoomUtilitySettings = {
   shadowOpacity: number;
   tableShadowScale: number;
   floorControlsIdleOpacity: number;
+  panelStartY: number;
   lyricPosterTopLeftX: number;
   lyricPosterTopLeftY: number;
   lyricPosterTopRightX: number;
@@ -211,6 +212,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
   floorControlsIdleOpacity: 0.15,
+  panelStartY: 20,
   lyricPosterTopLeftX: 221,
   lyricPosterTopLeftY: 18,
   lyricPosterTopRightX: 1562,
@@ -333,7 +335,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v48";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v49";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -400,13 +402,10 @@ function bindControls(): void {
   });
 
   const sideTab = qs<HTMLButtonElement>("#sidePanelTab");
-  sideTab.addEventListener("mouseenter", () => {
-    openSidePanel(true);
-  });
   sideTab.addEventListener("click", (event) => {
     event.stopPropagation();
-    openSidePanel(true);
   });
+  bindDraggableSidePanelTab(sideTab);
 
   document.addEventListener("pointerdown", (event) => {
     closeSidePanelOnOutsidePointer(event);
@@ -490,6 +489,77 @@ function bindControls(): void {
 }
 
 
+
+
+let sidePanelTabDragState: {
+  pointerId: number;
+  startY: number;
+  startPanelY: number;
+  moved: boolean;
+} | null = null;
+
+function clampPanelStartY(value: number): number {
+  return Math.max(4, Math.min(78, value));
+}
+
+function updatePanelStartY(value: number, persist = false): void {
+  const clamped = Math.round(clampPanelStartY(value) * 10) / 10;
+  roomUtility = { ...roomUtility, panelStartY: clamped };
+
+  const slider = document.querySelector<HTMLInputElement>("#panelStartY");
+  const label = document.querySelector<HTMLElement>("#panelStartYValue");
+  if (slider) slider.value = String(clamped);
+  if (label) setUtilityLabel("panelStartYValue", clamped);
+
+  applyRoomUtilitySettings();
+  if (persist) saveRoomUtilitySettings();
+}
+
+function bindDraggableSidePanelTab(tab: HTMLButtonElement): void {
+  tab.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    sidePanelTabDragState = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startPanelY: roomUtility.panelStartY,
+      moved: false,
+    };
+    tab.setPointerCapture(event.pointerId);
+    tab.classList.add("side-panel-tab-dragging");
+  });
+
+  tab.addEventListener("pointermove", (event) => {
+    if (!sidePanelTabDragState || sidePanelTabDragState.pointerId !== event.pointerId) return;
+
+    const deltaY = event.clientY - sidePanelTabDragState.startY;
+    if (Math.abs(deltaY) > 3) sidePanelTabDragState.moved = true;
+
+    const deltaPercent = (deltaY / Math.max(1, window.innerHeight)) * 100;
+    updatePanelStartY(sidePanelTabDragState.startPanelY + deltaPercent, false);
+  });
+
+  const finishDrag = (event: PointerEvent) => {
+    if (!sidePanelTabDragState || sidePanelTabDragState.pointerId !== event.pointerId) return;
+
+    const wasDragged = sidePanelTabDragState.moved;
+    sidePanelTabDragState = null;
+    tab.classList.remove("side-panel-tab-dragging");
+    try {
+      tab.releasePointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture may already be released by the browser.
+    }
+
+    saveRoomUtilitySettings();
+
+    if (!wasDragged) {
+      openSidePanel(true);
+    }
+  };
+
+  tab.addEventListener("pointerup", finishDrag);
+  tab.addEventListener("pointercancel", finishDrag);
+}
 
 
 function closeSidePanelOnOutsidePointer(event: PointerEvent): void {
@@ -801,6 +871,7 @@ function bindRoomUtilityControls(): void {
     ["shadowOpacity", "shadowOpacityValue"],
     ["tableShadowScale", "tableShadowScaleValue"],
     ["floorControlsIdleOpacity", "floorControlsIdleOpacityValue"],
+    ["panelStartY", "panelStartYValue"],
     ["lyricPosterGuideOpacity", "lyricPosterGuideOpacityValue"],
     ["lyricPosterCenterGuideOpacity", "lyricPosterCenterGuideOpacityValue"],
     ["lyricPosterShortGuideOpacity", "lyricPosterShortGuideOpacityValue"],
@@ -1042,6 +1113,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
   root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
   root.style.setProperty("--floor-controls-idle-opacity", String(roomUtility.floorControlsIdleOpacity));
+  root.style.setProperty("--panel-start-y", `${roomUtility.panelStartY}%`);
 
   root.style.setProperty("--lyric-poster-guide-opacity", String(roomUtility.lyricPosterGuideOpacity));
   root.style.setProperty("--lyric-poster-center-guide-opacity", String(roomUtility.lyricPosterCenterGuideOpacity));
