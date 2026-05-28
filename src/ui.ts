@@ -262,6 +262,12 @@ export function renderShell(state: AppState): void {
               <label>Stroke px <span id="lyricPosterStrokeValue">7.6</span>
                 <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="7.6" />
               </label>
+              <label>Stroke color
+                <input id="lyricPosterStrokeColor" type="color" value="#d6d6d6" />
+              </label>
+              <label>Fill color
+                <input id="lyricPosterFillColor" type="color" value="#ffffff" />
+              </label>
               <label>Stroke opacity <span id="lyricPosterStrokeOpacityValue">0.49</span>
                 <input id="lyricPosterStrokeOpacity" type="range" min="0" max="1" step="0.01" value="0.49" />
               </label>
@@ -270,6 +276,23 @@ export function renderShell(state: AppState): void {
               </label>
               <label>Glow strength <span id="lyricPosterGlowValue">0</span>
                 <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0" />
+              </label>
+              <div class="utility-minihead">Ceiling lyric effects</div>
+              <label class="utility-checkbox">
+                <input id="lyricPosterEffectDropShadow" type="checkbox" />
+                Drop shadow
+              </label>
+              <label class="utility-checkbox">
+                <input id="lyricPosterEffectEmboss" type="checkbox" />
+                Emboss
+              </label>
+              <label class="utility-checkbox">
+                <input id="lyricPosterEffectBevel" type="checkbox" />
+                Bevel
+              </label>
+              <label class="utility-checkbox">
+                <input id="lyricPosterEffectSoftBlur" type="checkbox" />
+                Soft blur
               </label>
 
               <div class="utility-minihead">1-row WordArt profile</div>
