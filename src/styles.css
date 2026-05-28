@@ -4197,3 +4197,80 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyrics-base-font-size: 12px;
   --lyric-poster-perspective-depth: 1.35;
 }
+
+
+/* V24 LYRIC UTILITY CLEAN ROWS + PER-ROW-COUNT TUNING */
+:root {
+  --lyric-poster-top-left-x: 221px;
+  --lyric-poster-top-left-y: 39px;
+  --lyric-poster-top-right-x: 1562px;
+  --lyric-poster-top-right-y: 39px;
+  --lyric-poster-bottom-left-x: 454px;
+  --lyric-poster-bottom-left-y: 164px;
+  --lyric-poster-bottom-right-x: 1343px;
+  --lyric-poster-bottom-right-y: 164px;
+  --lyric-poster-center-x: 878px;
+  --lyric-poster-center-y: 178px;
+  --lyric-poster-guide-opacity: 1;
+  --lyric-poster-center-guide-opacity: 0;
+  --lyric-poster-stroke: 2.4px;
+  --lyric-poster-stroke-opacity: 0.52;
+  --lyric-poster-fill-opacity: 0;
+  --lyric-poster-glow: 0;
+  --lyric-poster-row-gap: 30px;
+  --lyrics-base-font-size: 12px;
+  --lyric-poster-perspective-depth: 1.35;
+  --lyric-poster-one-row-center-x: 878px;
+  --lyric-poster-one-row-center-y: 178px;
+  --lyric-poster-one-row-vertical-stretch: 1.35;
+  --lyric-poster-one-row-row-gap: 30px;
+  --lyric-poster-one-row-perspective-depth: 1.35;
+  --lyric-poster-two-row-center-x: 878px;
+  --lyric-poster-two-row-center-y: 178px;
+  --lyric-poster-two-row-vertical-stretch: 1.16;
+  --lyric-poster-two-row-row-gap: -6px;
+  --lyric-poster-two-row-perspective-depth: 1.75;
+  --lyric-poster-three-row-center-x: 878px;
+  --lyric-poster-three-row-center-y: 178px;
+  --lyric-poster-three-row-vertical-stretch: 1.02;
+  --lyric-poster-three-row-row-gap: -10px;
+  --lyric-poster-three-row-perspective-depth: 2.05;
+}
+
+.lyrics-boundary-utility .lyric-utility-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 9px !important;
+}
+
+.lyrics-boundary-utility .lyric-utility-stack label {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 4px 10px !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.lyrics-boundary-utility .lyric-utility-stack label input,
+.lyrics-boundary-utility .lyric-utility-stack label select {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.lyrics-boundary-utility .utility-minihead {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 196, 84, 0.18);
+  color: #ffc65a;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lyric-poster-svg-row {
+  transform-box: view-box !important;
+  transform-origin: center !important;
+}

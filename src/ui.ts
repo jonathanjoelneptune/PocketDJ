@@ -217,48 +217,53 @@ export function renderShell(state: AppState): void {
 
           <div class="lyrics-boundary-utility">
             <div class="utility-subhead">Ceiling lyric poster utility</div>
-            <p class="utility-help">Tune the four corner points in 1764 x 529 ceiling coordinates. The overlay scales with the room, and the center dot anchors every lyric row.</p>
+            <p class="utility-help">Tune the fixed ceiling trapezoid, then tune 1-row, 2-row, and 3-row lyric layouts separately. Every lyric slider is on its own row.</p>
 
             <div class="lyric-utility-stack">
+              <div class="utility-minihead">Ceiling trapezoid and global style</div>
+
               <label>Corner guide opacity <span id="lyricPosterGuideOpacityValue">1.00</span>
                 <input id="lyricPosterGuideOpacity" type="range" min="0" max="1" step="0.01" value="1.00" />
               </label>
               <label>Center guide opacity <span id="lyricPosterCenterGuideOpacityValue">0.00</span>
                 <input id="lyricPosterCenterGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.00" />
               </label>
-              <label>Center X px <span id="lyricPosterCenterXValue">878</span>
+
+              <label>Default center X px <span id="lyricPosterCenterXValue">878</span>
                 <input id="lyricPosterCenterX" type="range" min="0" max="1764" step="1" value="878" />
               </label>
-              <label>Center Y px <span id="lyricPosterCenterYValue">178</span>
+              <label>Default center Y px <span id="lyricPosterCenterYValue">178</span>
                 <input id="lyricPosterCenterY" type="range" min="0" max="529" step="1" value="178" />
               </label>
-              <label>Ceiling perspective depth <span id="lyricPosterPerspectiveDepthValue">1.35</span>
-                <input id="lyricPosterPerspectiveDepth" type="range" min="0.65" max="2.40" step="0.05" value="1.35" />
+              <label>Default perspective depth <span id="lyricPosterPerspectiveDepthValue">1.35</span>
+                <input id="lyricPosterPerspectiveDepth" type="range" min="0.20" max="6.00" step="0.05" value="1.35" />
               </label>
+
               <label>Top left X px <span id="lyricPosterTopLeftXValue">221</span>
                 <input id="lyricPosterTopLeftX" type="range" min="0" max="1764" step="1" value="221" />
               </label>
-              <label>Top left Y px <span id="lyricPosterTopLeftYValue">12</span>
-                <input id="lyricPosterTopLeftY" type="range" min="0" max="529" step="1" value="12" />
+              <label>Top left Y px <span id="lyricPosterTopLeftYValue">39</span>
+                <input id="lyricPosterTopLeftY" type="range" min="0" max="529" step="1" value="39" />
               </label>
               <label>Top right X px <span id="lyricPosterTopRightXValue">1562</span>
                 <input id="lyricPosterTopRightX" type="range" min="0" max="1764" step="1" value="1562" />
               </label>
-              <label>Top right Y px <span id="lyricPosterTopRightYValue">3</span>
-                <input id="lyricPosterTopRightY" type="range" min="0" max="529" step="1" value="3" />
+              <label>Top right Y px <span id="lyricPosterTopRightYValue">39</span>
+                <input id="lyricPosterTopRightY" type="range" min="0" max="529" step="1" value="39" />
               </label>
               <label>Bottom left X px <span id="lyricPosterBottomLeftXValue">454</span>
                 <input id="lyricPosterBottomLeftX" type="range" min="0" max="1764" step="1" value="454" />
               </label>
-              <label>Bottom left Y px <span id="lyricPosterBottomLeftYValue">189</span>
-                <input id="lyricPosterBottomLeftY" type="range" min="0" max="529" step="1" value="189" />
+              <label>Bottom left Y px <span id="lyricPosterBottomLeftYValue">164</span>
+                <input id="lyricPosterBottomLeftY" type="range" min="0" max="529" step="1" value="164" />
               </label>
               <label>Bottom right X px <span id="lyricPosterBottomRightXValue">1343</span>
                 <input id="lyricPosterBottomRightX" type="range" min="0" max="1764" step="1" value="1343" />
               </label>
-              <label>Bottom right Y px <span id="lyricPosterBottomRightYValue">189</span>
-                <input id="lyricPosterBottomRightY" type="range" min="0" max="529" step="1" value="189" />
+              <label>Bottom right Y px <span id="lyricPosterBottomRightYValue">164</span>
+                <input id="lyricPosterBottomRightY" type="range" min="0" max="529" step="1" value="164" />
               </label>
+
               <label>Stroke px <span id="lyricPosterStrokeValue">2.40</span>
                 <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="2.4" />
               </label>
@@ -271,12 +276,64 @@ export function renderShell(state: AppState): void {
               <label>Glow strength <span id="lyricPosterGlowValue">0</span>
                 <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0" />
               </label>
-              <label>Row gap px <span id="lyricPosterRowGapValue">30</span>
-                <input id="lyricPosterRowGap" type="range" min="-40" max="60" step="0.5" value="30" />
+              <label>Default row gap px <span id="lyricPosterRowGapValue">30</span>
+                <input id="lyricPosterRowGap" type="range" min="-120" max="180" step="1" value="30" />
               </label>
               <label>Base lyric font size px <span id="lyricBaseFontSizeValue">12</span>
-                <input id="lyricBaseFontSize" type="range" min="8" max="32" step="1" value="12" />
+                <input id="lyricBaseFontSize" type="range" min="8" max="40" step="1" value="12" />
               </label>
+
+              <div class="utility-minihead">1-row lyric layout</div>
+              <label>1-row center X px <span id="lyricPosterOneRowCenterXValue">878</span>
+                <input id="lyricPosterOneRowCenterX" type="range" min="0" max="1764" step="1" value="878" />
+              </label>
+              <label>1-row center Y px <span id="lyricPosterOneRowCenterYValue">178</span>
+                <input id="lyricPosterOneRowCenterY" type="range" min="0" max="529" step="1" value="178" />
+              </label>
+              <label>1-row vertical stretch <span id="lyricPosterOneRowVerticalStretchValue">1.35</span>
+                <input id="lyricPosterOneRowVerticalStretch" type="range" min="0.35" max="4.00" step="0.05" value="1.35" />
+              </label>
+              <label>1-row row gap px <span id="lyricPosterOneRowRowGapValue">30</span>
+                <input id="lyricPosterOneRowRowGap" type="range" min="-120" max="180" step="1" value="30" />
+              </label>
+              <label>1-row perspective depth <span id="lyricPosterOneRowPerspectiveDepthValue">1.35</span>
+                <input id="lyricPosterOneRowPerspectiveDepth" type="range" min="0.20" max="6.00" step="0.05" value="1.35" />
+              </label>
+
+              <div class="utility-minihead">2-row lyric layout</div>
+              <label>2-row center X px <span id="lyricPosterTwoRowCenterXValue">878</span>
+                <input id="lyricPosterTwoRowCenterX" type="range" min="0" max="1764" step="1" value="878" />
+              </label>
+              <label>2-row center Y px <span id="lyricPosterTwoRowCenterYValue">178</span>
+                <input id="lyricPosterTwoRowCenterY" type="range" min="0" max="529" step="1" value="178" />
+              </label>
+              <label>2-row vertical stretch <span id="lyricPosterTwoRowVerticalStretchValue">1.16</span>
+                <input id="lyricPosterTwoRowVerticalStretch" type="range" min="0.35" max="4.00" step="0.05" value="1.16" />
+              </label>
+              <label>2-row row gap px <span id="lyricPosterTwoRowRowGapValue">-6</span>
+                <input id="lyricPosterTwoRowRowGap" type="range" min="-120" max="180" step="1" value="-6" />
+              </label>
+              <label>2-row perspective depth <span id="lyricPosterTwoRowPerspectiveDepthValue">1.75</span>
+                <input id="lyricPosterTwoRowPerspectiveDepth" type="range" min="0.20" max="6.00" step="0.05" value="1.75" />
+              </label>
+
+              <div class="utility-minihead">3-row lyric layout</div>
+              <label>3-row center X px <span id="lyricPosterThreeRowCenterXValue">878</span>
+                <input id="lyricPosterThreeRowCenterX" type="range" min="0" max="1764" step="1" value="878" />
+              </label>
+              <label>3-row center Y px <span id="lyricPosterThreeRowCenterYValue">178</span>
+                <input id="lyricPosterThreeRowCenterY" type="range" min="0" max="529" step="1" value="178" />
+              </label>
+              <label>3-row vertical stretch <span id="lyricPosterThreeRowVerticalStretchValue">1.02</span>
+                <input id="lyricPosterThreeRowVerticalStretch" type="range" min="0.35" max="4.00" step="0.05" value="1.02" />
+              </label>
+              <label>3-row row gap px <span id="lyricPosterThreeRowRowGapValue">-10</span>
+                <input id="lyricPosterThreeRowRowGap" type="range" min="-120" max="180" step="1" value="-10" />
+              </label>
+              <label>3-row perspective depth <span id="lyricPosterThreeRowPerspectiveDepthValue">2.05</span>
+                <input id="lyricPosterThreeRowPerspectiveDepth" type="range" min="0.20" max="6.00" step="0.05" value="2.05" />
+              </label>
+
               <label>Rows
                 <select id="lyricPosterMaxRows">
                   <option value="auto" selected>Auto</option>
@@ -743,11 +800,12 @@ export function updateLyricsCeiling(
   const maxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || "auto") as "auto" | "1" | "2" | "3";
   const rowGapPx = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-row-gap")) || 30;
   const perspectiveDepth = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-perspective-depth")) || 1.35;
+  const rowTunings = readLyricPosterRowTunings(rootStyles, rowGapPx, perspectiveDepth);
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
 
-  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${JSON.stringify(trapezoid)}|${maxRowsValue}|${rowGapPx}|${perspectiveDepth}|${animationRevision}|${rootClassSignature}`;
+  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${JSON.stringify(trapezoid)}|${maxRowsValue}|${rowGapPx}|${perspectiveDepth}|${JSON.stringify(rowTunings)}|${animationRevision}|${rootClassSignature}`;
 
   if (renderSignature === lastLyricsRenderSignature) {
     activeBlock.style.setProperty("--lyric-line-visibility", "1");
@@ -757,7 +815,7 @@ export function updateLyricsCeiling(
   lastLyricsRenderSignature = renderSignature;
   activeBlock.style.setProperty("--lyric-line-visibility", "1");
 
-  const layout = buildPosterLyricLayout(activeLine.text, trapezoid, maxRowsValue, rowGapPx, perspectiveDepth);
+  const layout = buildPosterLyricLayout(activeLine.text, trapezoid, maxRowsValue, rowGapPx, perspectiveDepth, rowTunings);
 
   activeBlock.innerHTML = `
     <svg class="lyric-poster-svg" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true">
@@ -771,6 +829,7 @@ export function updateLyricsCeiling(
           (row) => `
             <text
               class="lyric-poster-svg-row"
+              data-row-count="${layout.rows.length}"
               x="${row.left}"
               y="${row.centerY}"
               font-size="${row.fontSize}"
@@ -778,6 +837,7 @@ export function updateLyricsCeiling(
               lengthAdjust="spacingAndGlyphs"
               dominant-baseline="middle"
               text-anchor="start"
+              transform="translate(${row.centerX} ${row.centerY}) scale(1 ${row.scaleY}) translate(${-row.centerX} ${-row.centerY})"
             >${escapeHtml(row.text)}</text>
           `,
         )
@@ -806,6 +866,15 @@ type LyricPosterSvgRowLayout = {
   centerY: number;
   width: number;
   fontSize: number;
+  scaleY: number;
+};
+
+type LyricPosterRowTuning = {
+  centerX: number;
+  centerY: number;
+  verticalStretch: number;
+  rowGapPx: number;
+  perspectiveDepth: number;
 };
 
 function readLyricPosterTrapezoid(rootStyles: CSSStyleDeclaration): LyricPosterTrapezoid {
@@ -823,12 +892,37 @@ function readLyricPosterTrapezoid(rootStyles: CSSStyleDeclaration): LyricPosterT
   };
 }
 
+function readLyricPosterRowTunings(
+  rootStyles: CSSStyleDeclaration,
+  defaultRowGapPx: number,
+  defaultPerspectiveDepth: number,
+): Record<1 | 2 | 3, LyricPosterRowTuning> {
+  const fallbackCenterX = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-center-x")) || 878;
+  const fallbackCenterY = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-center-y")) || 178;
+
+  const readCountTuning = (count: 1 | 2 | 3, prefix: string): LyricPosterRowTuning => ({
+    centerX: Number.parseFloat(rootStyles.getPropertyValue(`--lyric-poster-${prefix}-row-center-x`)) || fallbackCenterX,
+    centerY: Number.parseFloat(rootStyles.getPropertyValue(`--lyric-poster-${prefix}-row-center-y`)) || fallbackCenterY,
+    verticalStretch: Number.parseFloat(rootStyles.getPropertyValue(`--lyric-poster-${prefix}-row-vertical-stretch`)) || 1,
+    rowGapPx: Number.parseFloat(rootStyles.getPropertyValue(`--lyric-poster-${prefix}-row-row-gap`)) || defaultRowGapPx,
+    perspectiveDepth: Number.parseFloat(rootStyles.getPropertyValue(`--lyric-poster-${prefix}-row-perspective-depth`)) || defaultPerspectiveDepth,
+  });
+
+  return {
+    1: readCountTuning(1, "one"),
+    2: readCountTuning(2, "two"),
+    3: readCountTuning(3, "three"),
+  };
+}
+
+
 function buildPosterLyricLayout(
   text: string,
   trapezoid: LyricPosterTrapezoid,
   maxRowsValue: "auto" | "1" | "2" | "3",
   rowGapPx: number,
   perspectiveDepth: number,
+  rowTunings: Record<1 | 2 | 3, LyricPosterRowTuning>,
 ): { rows: LyricPosterSvgRowLayout[] } {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return { rows: [] };
@@ -845,7 +939,8 @@ function buildPosterLyricLayout(
     const rowTexts = balanceWordsIntoRows(words, rowCount);
     if (rowTexts.length !== rowCount) continue;
 
-    const rows = layoutSvgRowsInsideTrapezoid(rowTexts, trapezoid, rowGapPx, perspectiveDepth);
+    const tuning = rowTunings[Math.min(3, Math.max(1, rowCount)) as 1 | 2 | 3];
+    const rows = layoutSvgRowsInsideTrapezoid(rowTexts, trapezoid, tuning);
     const minStretch = Math.min(...rows.map((row) => row.width / Math.max(1, weightedPosterLength(row.text))));
     const balancePenalty = getRowBalancePenalty(rowTexts);
     const compressionPenalty = rows.reduce((sum, row) => {
@@ -860,7 +955,8 @@ function buildPosterLyricLayout(
   if (best.rows.length) return { rows: best.rows };
 
   const fallbackRows = balanceWordsIntoRows(words, Math.min(3, words.length));
-  return { rows: layoutSvgRowsInsideTrapezoid(fallbackRows, trapezoid, rowGapPx, perspectiveDepth) };
+  const fallbackTuning = rowTunings[Math.min(3, Math.max(1, fallbackRows.length)) as 1 | 2 | 3];
+  return { rows: layoutSvgRowsInsideTrapezoid(fallbackRows, trapezoid, fallbackTuning) };
 }
 
 function getPosterRowCandidates(words: string[], trapezoid: LyricPosterTrapezoid): number[] {
@@ -880,39 +976,79 @@ function getPosterRowCandidates(words: string[], trapezoid: LyricPosterTrapezoid
 function layoutSvgRowsInsideTrapezoid(
   rows: string[],
   trapezoid: LyricPosterTrapezoid,
-  rowGapPx: number,
-  perspectiveDepth: number,
+  tuning: LyricPosterRowTuning,
 ): LyricPosterSvgRowLayout[] {
   const n = Math.max(1, rows.length);
   const topY = getTrapezoidTopY(trapezoid);
   const bottomY = getTrapezoidBottomY(trapezoid);
   const height = Math.max(20, bottomY - topY);
 
-  const anchorX = Math.max(0, Math.min(1764, trapezoid.centerX));
-  const safeGap = rowGapPx;
+  const anchorX = Math.max(0, Math.min(1764, tuning.centerX));
+  const stretchY = Math.max(0.35, Math.min(4, tuning.verticalStretch));
+  const rowGapPx = tuning.rowGapPx;
+  const depth = Math.max(0.2, Math.min(6, tuning.perspectiveDepth));
 
-  // Use the full trapezoid height. First row is pinned close to the top edge,
-  // and lower rows are pushed down with a perspective curve so the poster reads
-  // like it is painted on the ceiling, not floating in front of the room.
-  const depth = Math.max(0.65, Math.min(2.4, perspectiveDepth));
-  const rowBand = Math.max(18, (height - Math.max(0, n - 1) * safeGap) / n);
-  const fontSize = Math.max(18, rowBand * (n === 1 ? 0.92 : 0.86));
-  const visualHalfHeight = Math.max(8, fontSize * 0.32);
+  const availableHeight = Math.max(24, height - Math.max(0, n - 1) * rowGapPx);
+  const rowBand = Math.max(14, availableHeight / n);
+
+  // Build the visible height first, then derive font-size from the selected
+  // vertical stretch. This makes the stretch slider visible without letting
+  // the text blast outside the ceiling as easily.
+  const targetVisibleHeight = Math.max(12, rowBand * (n === 1 ? 0.96 : 0.90));
+  const baseFontSize = Math.max(12, targetVisibleHeight / (0.64 * stretchY));
+  const visualHalfHeight = Math.max(6, baseFontSize * 0.32 * stretchY);
+
+  const baseSpacing = Math.max(2, visualHalfHeight * 2 + rowGapPx);
+
+  // Initial center positions use a compact stack centered on the per-count Y
+  // control. The stack is then clamped so the full visible text stays inside
+  // the trapezoid.
+  let rowCenters: number[];
+  if (n === 1) {
+    rowCenters = [tuning.centerY];
+  } else {
+    const firstY = tuning.centerY - (baseSpacing * (n - 1)) / 2;
+    rowCenters = rows.map((_, index) => firstY + index * baseSpacing);
+  }
+
+  const minY = Math.min(...rowCenters) - visualHalfHeight;
+  const maxY = Math.max(...rowCenters) + visualHalfHeight;
+  const clampOffset = Math.min(bottomY - maxY, Math.max(topY - minY, 0));
+  rowCenters = rowCenters.map((y) => y + clampOffset);
+
+  // Apply a per-count perspective curve as a subtle row distribution change.
+  // Higher values push lower rows forward/down and make the ceiling perspective
+  // feel more dramatic.
+  if (n > 1) {
+    const currentTop = Math.min(...rowCenters);
+    const currentBottom = Math.max(...rowCenters);
+    const span = Math.max(1, currentBottom - currentTop);
+    const curved = rowCenters.map((y, index) => {
+      const rawT = index / Math.max(1, n - 1);
+      const curvedT = Math.pow(rawT, depth);
+      return currentTop + curvedT * span;
+    });
+    const curvedMin = Math.min(...curved) - visualHalfHeight;
+    const curvedMax = Math.max(...curved) + visualHalfHeight;
+    const curvedOffset = Math.min(bottomY - curvedMax, Math.max(topY - curvedMin, 0));
+    rowCenters = curved.map((y) => y + curvedOffset);
+  }
 
   return rows.map((row, index) => {
-    const rawT = n === 1 ? 0.50 : index / Math.max(1, n - 1);
-    // A higher depth creates more separation lower on the ceiling and makes the
-    // top of the lyric feel farther away, closer to the reference perspective.
-    const curvedT = n === 1 ? 0.50 : Math.pow(rawT, depth);
-    const y = topY + visualHalfHeight + curvedT * Math.max(1, height - visualHalfHeight * 2);
+    const rawT = n === 1 ? 0.5 : index / Math.max(1, n - 1);
+    const perspectiveStrength = Math.max(-0.5, Math.min(1.6, (depth - 1) * 0.20));
+    const fontPerspectiveScale = n === 1 ? 1 : Math.max(0.45, 1 + perspectiveStrength * (0.5 - rawT));
+    const fontSize = baseFontSize * fontPerspectiveScale;
+    const lineVisualHalf = Math.max(6, fontSize * 0.32 * stretchY);
+    const y = Math.max(topY + lineVisualHalf, Math.min(bottomY - lineVisualHalf, rowCenters[index]));
 
-    const rowTop = Math.max(topY, y - visualHalfHeight);
-    const rowBottom = Math.min(bottomY, y + visualHalfHeight);
+    const rowTop = Math.max(topY, y - lineVisualHalf);
+    const rowBottom = Math.min(bottomY, y + lineVisualHalf);
     const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowTop);
     const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowBottom);
     const centerBounds = trapezoidHorizontalBoundsAtY(trapezoid, y);
 
-    const strokePad = Math.max(12, fontSize * 0.07);
+    const strokePad = Math.max(10, fontSize * 0.06);
     const safeLeft = Math.max(topBounds.left, bottomBounds.left, centerBounds.left) + strokePad;
     const safeRight = Math.min(topBounds.right, bottomBounds.right, centerBounds.right) - strokePad;
 
@@ -927,6 +1063,7 @@ function layoutSvgRowsInsideTrapezoid(
       centerY: y,
       width,
       fontSize,
+      scaleY: stretchY,
     };
   });
 }
