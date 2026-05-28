@@ -3920,7 +3920,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 :root {
   --lyric-poster-top-left-x: 402px;
-  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-left-y: 17px;
   --lyric-poster-top-right-x: 1400px;
   --lyric-poster-top-right-y: 12px;
   --lyric-poster-bottom-left-x: 582px;
@@ -3937,7 +3937,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 :root {
   --lyric-poster-top-left-x: 221px;
-  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-left-y: 17px;
   --lyric-poster-top-right-x: 1637px;
   --lyric-poster-top-right-y: 12px;
   --lyric-poster-bottom-left-x: 597px;
@@ -3965,7 +3965,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
    Single active system. No old full-block, karaoke-fill, active-pill, or div-row lyric logic. */
 :root {
   --lyric-poster-top-left-x: 221px;
-  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-left-y: 17px;
   --lyric-poster-top-right-x: 1637px;
   --lyric-poster-top-right-y: 12px;
   --lyric-poster-bottom-left-x: 597px;
@@ -4166,7 +4166,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
    adds a conservative perspective-depth effect. */
 :root {
   --lyric-poster-top-left-x: 221px;
-  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-left-y: 17px;
   --lyric-poster-top-right-x: 1562px;
   --lyric-poster-top-right-y: 3px;
   --lyric-poster-bottom-left-x: 454px;
@@ -4242,7 +4242,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 :root {
   --lyric-ceiling-room-height-ratio: 53.326%;
   --lyric-poster-top-left-x: 221px;
-  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-left-y: 17px;
   --lyric-poster-top-right-x: 1562px;
   --lyric-poster-top-right-y: 3px;
   --lyric-poster-bottom-left-x: 454px;
@@ -4255,10 +4255,22 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-stroke-opacity: 0.52;
   --lyric-poster-fill-opacity: 0;
   --lyric-poster-glow: 0;
-  --lyric-poster-overall-y: 0px;
-  --lyric-poster-overall-scale: 1;
-  --lyric-poster-row-tightness: 0.04;
-  --lyric-poster-perspective-strength: 1.15;
+  --lyric-poster-overall-y: 22px;
+  --lyric-poster-overall-scale: 0.80;
+  --lyric-poster-row-tightness: -0.30;
+  --lyric-poster-perspective-strength: 2.25;
+  --lyric-poster-one-row-vertical-stretch: 1.35;
+  --lyric-poster-one-row-tightness: 0;
+  --lyric-poster-one-row-perspective: 1;
+  --lyric-poster-one-row-tilt: -8;
+  --lyric-poster-two-row-vertical-stretch: 1.10;
+  --lyric-poster-two-row-tightness: -0.20;
+  --lyric-poster-two-row-perspective: 1;
+  --lyric-poster-two-row-tilt: -10;
+  --lyric-poster-three-row-vertical-stretch: 0.95;
+  --lyric-poster-three-row-tightness: -0.25;
+  --lyric-poster-three-row-perspective: 1;
+  --lyric-poster-three-row-tilt: -12;
   --lyric-poster-max-rows: auto;
   --lyric-poster-transition: push-slide;
   --lyrics-animation-revision: 0;

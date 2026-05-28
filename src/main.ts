@@ -88,6 +88,18 @@ type RoomUtilitySettings = {
   lyricPosterOverallScale: number;
   lyricPosterRowTightness: number;
   lyricPosterPerspectiveStrength: number;
+  lyricPosterOneRowVerticalStretch: number;
+  lyricPosterOneRowTightness: number;
+  lyricPosterOneRowPerspective: number;
+  lyricPosterOneRowTilt: number;
+  lyricPosterTwoRowVerticalStretch: number;
+  lyricPosterTwoRowTightness: number;
+  lyricPosterTwoRowPerspective: number;
+  lyricPosterTwoRowTilt: number;
+  lyricPosterThreeRowVerticalStretch: number;
+  lyricPosterThreeRowTightness: number;
+  lyricPosterThreeRowPerspective: number;
+  lyricPosterThreeRowTilt: number;
   lyricPosterMaxRows: "auto" | "1" | "2" | "3";
   lyricPosterTransition: "push-slide" | "fade-slide";
 };
@@ -109,7 +121,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
   lyricPosterTopLeftX: 221,
-  lyricPosterTopLeftY: 12,
+  lyricPosterTopLeftY: 17,
   lyricPosterTopRightX: 1562,
   lyricPosterTopRightY: 3,
   lyricPosterBottomLeftX: 454,
@@ -122,15 +134,27 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterStrokeOpacity: 0.52,
   lyricPosterFillOpacity: 0,
   lyricPosterGlow: 0,
-  lyricPosterOverallY: 0,
-  lyricPosterOverallScale: 1,
-  lyricPosterRowTightness: 0.04,
-  lyricPosterPerspectiveStrength: 1.15,
+  lyricPosterOverallY: 22,
+  lyricPosterOverallScale: 0.80,
+  lyricPosterRowTightness: -0.30,
+  lyricPosterPerspectiveStrength: 2.25,
+  lyricPosterOneRowVerticalStretch: 1.35,
+  lyricPosterOneRowTightness: 0.00,
+  lyricPosterOneRowPerspective: 1.00,
+  lyricPosterOneRowTilt: -8,
+  lyricPosterTwoRowVerticalStretch: 1.10,
+  lyricPosterTwoRowTightness: -0.20,
+  lyricPosterTwoRowPerspective: 1.00,
+  lyricPosterTwoRowTilt: -10,
+  lyricPosterThreeRowVerticalStretch: 0.95,
+  lyricPosterThreeRowTightness: -0.25,
+  lyricPosterThreeRowPerspective: 1.00,
+  lyricPosterThreeRowTilt: -12,
   lyricPosterMaxRows: "auto",
   lyricPosterTransition: "push-slide"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v27";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v28";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -630,7 +654,19 @@ function bindRoomUtilityControls(): void {
     ["lyricPosterOverallY", "lyricPosterOverallYValue"],
     ["lyricPosterOverallScale", "lyricPosterOverallScaleValue"],
     ["lyricPosterRowTightness", "lyricPosterRowTightnessValue"],
-    ["lyricPosterPerspectiveStrength", "lyricPosterPerspectiveStrengthValue"]
+    ["lyricPosterPerspectiveStrength", "lyricPosterPerspectiveStrengthValue"],
+    ["lyricPosterOneRowVerticalStretch", "lyricPosterOneRowVerticalStretchValue"],
+    ["lyricPosterOneRowTightness", "lyricPosterOneRowTightnessValue"],
+    ["lyricPosterOneRowPerspective", "lyricPosterOneRowPerspectiveValue"],
+    ["lyricPosterOneRowTilt", "lyricPosterOneRowTiltValue"],
+    ["lyricPosterTwoRowVerticalStretch", "lyricPosterTwoRowVerticalStretchValue"],
+    ["lyricPosterTwoRowTightness", "lyricPosterTwoRowTightnessValue"],
+    ["lyricPosterTwoRowPerspective", "lyricPosterTwoRowPerspectiveValue"],
+    ["lyricPosterTwoRowTilt", "lyricPosterTwoRowTiltValue"],
+    ["lyricPosterThreeRowVerticalStretch", "lyricPosterThreeRowVerticalStretchValue"],
+    ["lyricPosterThreeRowTightness", "lyricPosterThreeRowTightnessValue"],
+    ["lyricPosterThreeRowPerspective", "lyricPosterThreeRowPerspectiveValue"],
+    ["lyricPosterThreeRowTilt", "lyricPosterThreeRowTiltValue"]
   ] as const;
 
   controls.forEach(([inputId, labelId]) => {
@@ -748,6 +784,18 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-overall-scale", String(roomUtility.lyricPosterOverallScale));
   root.style.setProperty("--lyric-poster-row-tightness", String(roomUtility.lyricPosterRowTightness));
   root.style.setProperty("--lyric-poster-perspective-strength", String(roomUtility.lyricPosterPerspectiveStrength));
+  root.style.setProperty("--lyric-poster-one-row-vertical-stretch", String(roomUtility.lyricPosterOneRowVerticalStretch));
+  root.style.setProperty("--lyric-poster-one-row-tightness", String(roomUtility.lyricPosterOneRowTightness));
+  root.style.setProperty("--lyric-poster-one-row-perspective", String(roomUtility.lyricPosterOneRowPerspective));
+  root.style.setProperty("--lyric-poster-one-row-tilt", String(roomUtility.lyricPosterOneRowTilt));
+  root.style.setProperty("--lyric-poster-two-row-vertical-stretch", String(roomUtility.lyricPosterTwoRowVerticalStretch));
+  root.style.setProperty("--lyric-poster-two-row-tightness", String(roomUtility.lyricPosterTwoRowTightness));
+  root.style.setProperty("--lyric-poster-two-row-perspective", String(roomUtility.lyricPosterTwoRowPerspective));
+  root.style.setProperty("--lyric-poster-two-row-tilt", String(roomUtility.lyricPosterTwoRowTilt));
+  root.style.setProperty("--lyric-poster-three-row-vertical-stretch", String(roomUtility.lyricPosterThreeRowVerticalStretch));
+  root.style.setProperty("--lyric-poster-three-row-tightness", String(roomUtility.lyricPosterThreeRowTightness));
+  root.style.setProperty("--lyric-poster-three-row-perspective", String(roomUtility.lyricPosterThreeRowPerspective));
+  root.style.setProperty("--lyric-poster-three-row-tilt", String(roomUtility.lyricPosterThreeRowTilt));
   root.style.setProperty("--lyric-poster-max-rows", roomUtility.lyricPosterMaxRows);
   root.style.setProperty("--lyric-poster-transition", roomUtility.lyricPosterTransition);
   root.style.setProperty("--lyrics-animation-revision", String(lyricAnimationRevision));
@@ -768,7 +816,9 @@ function setUtilityLabel(id: string, value: number): void {
     id.includes("Opacity") ||
     id.includes("Scale") ||
     id.includes("Tightness") ||
-    id.includes("Strength")
+    id.includes("Strength") ||
+    id.includes("Stretch") ||
+    id.includes("Perspective")
       ? 2
       : id.includes("Stroke")
         ? 1

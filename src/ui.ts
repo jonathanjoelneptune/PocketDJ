@@ -217,7 +217,7 @@ export function renderShell(state: AppState): void {
 
           <div class="lyrics-boundary-utility">
             <div class="utility-subhead">Ceiling lyric poster utility</div>
-            <p class="utility-help">Single active lyric poster system. Old karaoke, past/future, background-box, and per-row systems have been removed.</p>
+            <p class="utility-help">Single active lyric poster system. Old karaoke, past/future, background-box, and deprecated lyric block systems have been removed.</p>
 
             <div class="lyric-utility-stack">
               <div class="utility-minihead">Ceiling boundary</div>
@@ -230,8 +230,8 @@ export function renderShell(state: AppState): void {
               <label>Top left X px <span id="lyricPosterTopLeftXValue">221</span>
                 <input id="lyricPosterTopLeftX" type="range" min="0" max="1764" step="1" value="221" />
               </label>
-              <label>Top left Y px <span id="lyricPosterTopLeftYValue">12</span>
-                <input id="lyricPosterTopLeftY" type="range" min="0" max="529" step="1" value="12" />
+              <label>Top left Y px <span id="lyricPosterTopLeftYValue">17</span>
+                <input id="lyricPosterTopLeftY" type="range" min="0" max="529" step="1" value="17" />
               </label>
               <label>Top right X px <span id="lyricPosterTopRightXValue">1562</span>
                 <input id="lyricPosterTopRightX" type="range" min="0" max="1764" step="1" value="1562" />
@@ -265,18 +265,62 @@ export function renderShell(state: AppState): void {
               <label>Glow strength <span id="lyricPosterGlowValue">0.00</span>
                 <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0" />
               </label>
-              <label>Overall lyric Y offset px <span id="lyricPosterOverallYValue">0</span>
-                <input id="lyricPosterOverallY" type="range" min="-120" max="120" step="1" value="0" />
+              <label>Overall lyric Y offset px <span id="lyricPosterOverallYValue">22</span>
+                <input id="lyricPosterOverallY" type="range" min="-120" max="120" step="1" value="22" />
               </label>
-              <label>Overall lyric scale <span id="lyricPosterOverallScaleValue">1.00</span>
-                <input id="lyricPosterOverallScale" type="range" min="0.5" max="1.25" step="0.01" value="1" />
+              <label>Overall lyric scale <span id="lyricPosterOverallScaleValue">0.80</span>
+                <input id="lyricPosterOverallScale" type="range" min="0.45" max="1.35" step="0.01" value="0.80" />
               </label>
-              <label>Row tightness <span id="lyricPosterRowTightnessValue">0.04</span>
-                <input id="lyricPosterRowTightness" type="range" min="-0.20" max="0.40" step="0.01" value="0.04" />
+              <label>Global row tightness <span id="lyricPosterRowTightnessValue">-0.30</span>
+                <input id="lyricPosterRowTightness" type="range" min="-0.90" max="0.60" step="0.01" value="-0.30" />
               </label>
-              <label>Perspective strength <span id="lyricPosterPerspectiveStrengthValue">1.15</span>
-                <input id="lyricPosterPerspectiveStrength" type="range" min="0.40" max="2.80" step="0.05" value="1.15" />
+              <label>Global perspective strength <span id="lyricPosterPerspectiveStrengthValue">2.25</span>
+                <input id="lyricPosterPerspectiveStrength" type="range" min="0.20" max="5.00" step="0.05" value="2.25" />
               </label>
+
+              <div class="utility-minihead">1-row WordArt profile</div>
+              <label>1-row vertical stretch <span id="lyricPosterOneRowVerticalStretchValue">1.35</span>
+                <input id="lyricPosterOneRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="1.35" />
+              </label>
+              <label>1-row row tightness <span id="lyricPosterOneRowTightnessValue">0.00</span>
+                <input id="lyricPosterOneRowTightness" type="range" min="-1.20" max="0.80" step="0.01" value="0.00" />
+              </label>
+              <label>1-row perspective amount <span id="lyricPosterOneRowPerspectiveValue">1.00</span>
+                <input id="lyricPosterOneRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.00" />
+              </label>
+              <label>1-row letter tilt deg <span id="lyricPosterOneRowTiltValue">-8</span>
+                <input id="lyricPosterOneRowTilt" type="range" min="-35" max="35" step="1" value="-8" />
+              </label>
+
+              <div class="utility-minihead">2-row WordArt profile</div>
+              <label>2-row vertical stretch <span id="lyricPosterTwoRowVerticalStretchValue">1.10</span>
+                <input id="lyricPosterTwoRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="1.10" />
+              </label>
+              <label>2-row row tightness <span id="lyricPosterTwoRowTightnessValue">-0.20</span>
+                <input id="lyricPosterTwoRowTightness" type="range" min="-1.20" max="0.80" step="0.01" value="-0.20" />
+              </label>
+              <label>2-row perspective amount <span id="lyricPosterTwoRowPerspectiveValue">1.00</span>
+                <input id="lyricPosterTwoRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.00" />
+              </label>
+              <label>2-row letter tilt deg <span id="lyricPosterTwoRowTiltValue">-10</span>
+                <input id="lyricPosterTwoRowTilt" type="range" min="-35" max="35" step="1" value="-10" />
+              </label>
+
+              <div class="utility-minihead">3-row WordArt profile</div>
+              <label>3-row vertical stretch <span id="lyricPosterThreeRowVerticalStretchValue">0.95</span>
+                <input id="lyricPosterThreeRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.95" />
+              </label>
+              <label>3-row row tightness <span id="lyricPosterThreeRowTightnessValue">-0.25</span>
+                <input id="lyricPosterThreeRowTightness" type="range" min="-1.20" max="0.80" step="0.01" value="-0.25" />
+              </label>
+              <label>3-row perspective amount <span id="lyricPosterThreeRowPerspectiveValue">1.00</span>
+                <input id="lyricPosterThreeRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.00" />
+              </label>
+              <label>3-row letter tilt deg <span id="lyricPosterThreeRowTiltValue">-12</span>
+                <input id="lyricPosterThreeRowTilt" type="range" min="-35" max="35" step="1" value="-12" />
+              </label>
+
+              <div class="utility-minihead">Mode</div>
               <label>Rows
                 <select id="lyricPosterMaxRows">
                   <option value="auto" selected>Auto</option>
@@ -773,7 +817,7 @@ export function updateLyricsCeiling(
                 lengthAdjust="spacingAndGlyphs"
                 dominant-baseline="middle"
                 text-anchor="start"
-                transform="translate(${row.centerX} ${row.centerY}) scale(1 ${row.scaleY}) translate(${-row.centerX} ${-row.centerY})"
+                transform="translate(${row.centerX} ${row.centerY}) skewX(${row.tilt}) scale(1 ${row.scaleY}) translate(${-row.centerX} ${-row.centerY})"
               >${escapeHtml(row.text)}</text>
             `,
           )
@@ -827,10 +871,22 @@ function readCeilingPosterControls(
   return {
     maxRows: maxRowsValue,
     transition: transitionValue,
-    overallY: readNumber("--lyric-poster-overall-y", 0),
-    overallScale: readNumber("--lyric-poster-overall-scale", 1),
-    rowTightness: readNumber("--lyric-poster-row-tightness", 0.04),
-    perspectiveStrength: readNumber("--lyric-poster-perspective-strength", 1.15),
+    overallY: readNumber("--lyric-poster-overall-y", 22),
+    overallScale: readNumber("--lyric-poster-overall-scale", 0.80),
+    rowTightness: readNumber("--lyric-poster-row-tightness", -0.30),
+    perspectiveStrength: readNumber("--lyric-poster-perspective-strength", 2.25),
+    oneRowVerticalStretch: readNumber("--lyric-poster-one-row-vertical-stretch", 1.35),
+    oneRowTightness: readNumber("--lyric-poster-one-row-tightness", 0),
+    oneRowPerspective: readNumber("--lyric-poster-one-row-perspective", 1),
+    oneRowTilt: readNumber("--lyric-poster-one-row-tilt", -8),
+    twoRowVerticalStretch: readNumber("--lyric-poster-two-row-vertical-stretch", 1.10),
+    twoRowTightness: readNumber("--lyric-poster-two-row-tightness", -0.20),
+    twoRowPerspective: readNumber("--lyric-poster-two-row-perspective", 1),
+    twoRowTilt: readNumber("--lyric-poster-two-row-tilt", -10),
+    threeRowVerticalStretch: readNumber("--lyric-poster-three-row-vertical-stretch", 0.95),
+    threeRowTightness: readNumber("--lyric-poster-three-row-tightness", -0.25),
+    threeRowPerspective: readNumber("--lyric-poster-three-row-perspective", 1),
+    threeRowTilt: readNumber("--lyric-poster-three-row-tilt", -12),
   };
 }
 
@@ -847,34 +903,44 @@ function buildCeilingPosterLayout(
   const bottomY = Math.max(trapezoid.bottomLeftY, trapezoid.bottomRightY);
   const height = Math.max(24, bottomY - topY);
   const centerX = trapezoid.centerX;
-  const centerY = Math.max(topY, Math.min(bottomY, trapezoid.centerY + controls.overallY));
-  const n = Math.max(1, rowTexts.length);
-  const perspectiveStrength = Math.max(0.4, Math.min(2.8, controls.perspectiveStrength));
-  const overallScale = Math.max(0.5, Math.min(1.25, controls.overallScale));
-  const rowTightness = Math.max(-0.2, Math.min(0.4, controls.rowTightness));
+  const n = Math.max(1, rowTexts.length) as 1 | 2 | 3;
+  const profile = getPosterRowProfile(n, controls);
+  const overallScale = clamp(controls.overallScale, 0.45, 1.35);
+  const totalTightness = clamp(controls.rowTightness + profile.tightness, -1.20, 0.80);
+  const effectivePerspective = clamp(controls.perspectiveStrength * profile.perspective, 0, 8);
+  const baseCenterY = clamp(trapezoid.centerY + controls.overallY, topY, bottomY);
 
-  const band = height / n;
-  const targetVisibleHeight = band * (1.02 - rowTightness) * overallScale;
-  const baseFontSize = Math.max(14, targetVisibleHeight / 0.72);
-  const centerSpacing = n === 1 ? 0 : Math.max(2, targetVisibleHeight * (0.60 - rowTightness));
-  const groupHalf = n === 1 ? targetVisibleHeight / 2 : ((n - 1) * centerSpacing) / 2 + targetVisibleHeight / 2;
-  const clampedCenterY = Math.max(topY + groupHalf * 0.55, Math.min(bottomY - groupHalf * 0.55, centerY));
+  const rowPerspectiveScales = rowTexts.map((_, index) => {
+    const t = n === 1 ? 0.5 : index / Math.max(1, n - 1);
+    return clamp(1 + (0.5 - t) * 0.44 * effectivePerspective, 0.28, 2.65);
+  });
+
+  const rowScaleYs = rowPerspectiveScales.map((scale) => clamp(profile.verticalStretch * scale, 0.28, 4.00));
+  const baselineSpacingCoeff = n === 1 ? 0 : clamp(0.62 + totalTightness, 0.04, 1.35);
+  const verticalCoeff = n === 1
+    ? 0.74 * rowScaleYs[0]
+    : (n - 1) * baselineSpacingCoeff + 0.37 * rowScaleYs[0] + 0.37 * rowScaleYs[rowScaleYs.length - 1];
+  const fontSize = clamp((height * 0.96 * overallScale) / Math.max(0.01, verticalCoeff), 10, 420);
+  const centerSpacing = fontSize * baselineSpacingCoeff;
+  const groupHalf = n === 1
+    ? fontSize * 0.37 * rowScaleYs[0]
+    : ((n - 1) * centerSpacing) / 2 + fontSize * 0.37 * Math.max(rowScaleYs[0], rowScaleYs[rowScaleYs.length - 1]);
+  const clampedCenterY = clamp(baseCenterY, topY + groupHalf, bottomY - groupHalf);
   const firstY = clampedCenterY - ((n - 1) * centerSpacing) / 2;
 
   const rows = rowTexts.map((rowText, index) => {
-    const t = n === 1 ? 0.5 : index / Math.max(1, n - 1);
     const y = firstY + index * centerSpacing;
-    const perspectiveScale = n === 1 ? 1 : Math.max(0.62, 1 + (0.5 - t) * 0.34 * perspectiveStrength);
-    const fontSize = baseFontSize * perspectiveScale;
-    const scaleY = Math.max(0.62, Math.min(1.7, perspectiveScale * 1.02));
-    const visualHalfHeight = Math.max(8, fontSize * 0.40 * scaleY);
+    const scaleY = rowScaleYs[index];
+    const visualHalfHeight = Math.max(4, fontSize * 0.37 * scaleY);
+    const rowTilt = profile.tilt;
+    const skewPad = Math.abs(Math.tan((rowTilt * Math.PI) / 180)) * visualHalfHeight;
     const bounds = [
-      trapezoidHorizontalBoundsAtY(trapezoid, Math.max(topY, y - visualHalfHeight)),
+      trapezoidHorizontalBoundsAtY(trapezoid, clamp(y - visualHalfHeight, topY, bottomY)),
       trapezoidHorizontalBoundsAtY(trapezoid, y),
-      trapezoidHorizontalBoundsAtY(trapezoid, Math.min(bottomY, y + visualHalfHeight)),
+      trapezoidHorizontalBoundsAtY(trapezoid, clamp(y + visualHalfHeight, topY, bottomY)),
     ];
 
-    const strokePad = Math.max(10, fontSize * 0.055);
+    const strokePad = Math.max(8, fontSize * 0.050) + skewPad;
     const safeLeft = Math.max(...bounds.map((b) => b.left)) + strokePad;
     const safeRight = Math.min(...bounds.map((b) => b.right)) - strokePad;
     const halfWidth = Math.max(24, Math.min(centerX - safeLeft, safeRight - centerX));
@@ -888,10 +954,38 @@ function buildCeilingPosterLayout(
       width,
       fontSize,
       scaleY,
+      tilt: rowTilt,
     };
   });
 
   return { rows, centerX, centerY: clampedCenterY };
+}
+
+function getPosterRowProfile(rowCount: 1 | 2 | 3, controls: CeilingPosterControls): PosterRowProfile {
+  if (rowCount === 1) {
+    return {
+      verticalStretch: clamp(controls.oneRowVerticalStretch, 0.40, 3.00),
+      tightness: clamp(controls.oneRowTightness, -1.20, 0.80),
+      perspective: clamp(controls.oneRowPerspective, 0, 3),
+      tilt: clamp(controls.oneRowTilt, -35, 35),
+    };
+  }
+
+  if (rowCount === 2) {
+    return {
+      verticalStretch: clamp(controls.twoRowVerticalStretch, 0.40, 3.00),
+      tightness: clamp(controls.twoRowTightness, -1.20, 0.80),
+      perspective: clamp(controls.twoRowPerspective, 0, 3),
+      tilt: clamp(controls.twoRowTilt, -35, 35),
+    };
+  }
+
+  return {
+    verticalStretch: clamp(controls.threeRowVerticalStretch, 0.40, 3.00),
+    tightness: clamp(controls.threeRowTightness, -1.20, 0.80),
+    perspective: clamp(controls.threeRowPerspective, 0, 3),
+    tilt: clamp(controls.threeRowTilt, -35, 35),
+  };
 }
 
 function choosePosterRowCount(words: string[]): 1 | 2 | 3 {
@@ -977,6 +1071,10 @@ function lerp(start: number, end: number, t: number): number {
   return start + (end - start) * t;
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
 function hashString(value: string): number {
   let hash = 0;
   for (let index = 0; index < value.length; index += 1) {
@@ -1006,6 +1104,25 @@ type CeilingPosterControls = {
   overallScale: number;
   rowTightness: number;
   perspectiveStrength: number;
+  oneRowVerticalStretch: number;
+  oneRowTightness: number;
+  oneRowPerspective: number;
+  oneRowTilt: number;
+  twoRowVerticalStretch: number;
+  twoRowTightness: number;
+  twoRowPerspective: number;
+  twoRowTilt: number;
+  threeRowVerticalStretch: number;
+  threeRowTightness: number;
+  threeRowPerspective: number;
+  threeRowTilt: number;
+};
+
+type PosterRowProfile = {
+  verticalStretch: number;
+  tightness: number;
+  perspective: number;
+  tilt: number;
 };
 
 type CeilingPosterLayout = {
@@ -1022,6 +1139,7 @@ type LyricPosterSvgRowLayout = {
   width: number;
   fontSize: number;
   scaleY: number;
+  tilt: number;
 };
 
 export function updateLyricsToggleUi(status: LyricsPayload["status"], enabled: boolean): void {
