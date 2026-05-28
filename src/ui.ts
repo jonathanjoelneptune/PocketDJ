@@ -872,16 +872,20 @@ function layoutSvgRowsInsideTrapezoid(
   const height = Math.max(20, bottomY - topY);
   const centerY = topY + height / 2;
 
-  // The user's visual target is a stacked poster: the visible bottom of one row
-  // should nearly touch the visible top of the next row. SVG font metrics do not
-  // map directly to visible cap height, so this factor sets the center-to-center
-  // spacing relative to font size.
+  // Lock the lyric poster to the visual center of the 16:9 room artwork.
+  // The ceiling guide points may be asymmetric, but the words should still feel
+  // centered in the room, not centered inside the side-panel-affected viewport.
+  const roomCenterX = 1764 / 2;
+
+  // Tight stacked-poster geometry. The visible bottom of one row should nearly
+  // touch the visible top of the next row. SVG cap height is much smaller than
+  // font-size, so the center spacing intentionally uses a compact factor.
   const safeGap = rowGapPx;
-  const visualLineFactor = 0.58;
-  const heightSafety = 0.88;
+  const visualLineFactor = 0.40;
+  const heightSafety = 0.76;
   const maxFontByHeight =
     n === 1
-      ? height * 0.86
+      ? height * 0.80
       : ((height - Math.max(0, n - 1) * safeGap) / (1 + (n - 1) * visualLineFactor)) * heightSafety;
 
   const baseFontSize = Math.max(18, maxFontByHeight);
@@ -891,25 +895,30 @@ function layoutSvgRowsInsideTrapezoid(
   return rows.map((row, index) => {
     const y = firstCenterY + index * centerSpacing;
 
-    // Estimate the real visible row height, then use those vertical edges to choose
-    // a safe width inside the trapezoid. That keeps the whole outlined glyph inside
-    // the ceiling instead of clipping the stroke at the sides.
-    const visualHalfHeight = Math.max(8, baseFontSize * 0.34);
+    // Use the likely visible glyph height, then measure the trapezoid at the top,
+    // center, and bottom of that row. This keeps the complete outlined text inside
+    // the ceiling while avoiding hard clipping as the primary fit method.
+    const visualHalfHeight = Math.max(8, baseFontSize * 0.30);
     const rowTop = Math.max(topY, y - visualHalfHeight);
     const rowBottom = Math.min(bottomY, y + visualHalfHeight);
     const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowTop);
     const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowBottom);
     const centerBounds = trapezoidHorizontalBoundsAtY(trapezoid, y);
 
-    const strokePad = Math.max(12, baseFontSize * 0.08);
+    const strokePad = Math.max(12, baseFontSize * 0.07);
     const safeLeft = Math.max(topBounds.left, bottomBounds.left, centerBounds.left) + strokePad;
     const safeRight = Math.min(topBounds.right, bottomBounds.right, centerBounds.right) - strokePad;
-    const safeWidth = Math.max(28, safeRight - safeLeft);
+
+    // Center every row on the fixed room center. Width expands equally left/right
+    // until it reaches the closest safe trapezoid edge.
+    const centeredHalfWidth = Math.max(14, Math.min(roomCenterX - safeLeft, safeRight - roomCenterX));
+    const safeWidth = centeredHalfWidth * 2;
+    const left = roomCenterX - centeredHalfWidth;
 
     return {
       text: row,
-      left: safeLeft,
-      centerX: safeLeft + safeWidth / 2,
+      left,
+      centerX: roomCenterX,
       centerY: y,
       width: safeWidth,
       fontSize: baseFontSize,

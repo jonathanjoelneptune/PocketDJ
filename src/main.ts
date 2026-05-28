@@ -143,7 +143,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricBaseFontSize: 12
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v17";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v18";
 let roomUtility = loadRoomUtilitySettings();
 
 

@@ -6613,3 +6613,14 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   stroke-linejoin: round !important;
   stroke-linecap: round !important;
 }
+
+
+/* SVG LYRIC POSTER ROOM-CENTER LOCK
+   Rows are centered on the fixed 16:9 room artwork center and stacked tightly. */
+.lyric-poster-svg-row {
+  text-anchor: start !important;
+  dominant-baseline: middle !important;
+  letter-spacing: 0.014em !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
+}
