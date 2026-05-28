@@ -272,52 +272,52 @@ export function renderShell(state: AppState): void {
                 <input id="lyricPosterOverallScale" type="range" min="0.45" max="1.35" step="0.01" value="0.80" />
               </label>
               <label>Global row tightness <span id="lyricPosterRowTightnessValue">-0.30</span>
-                <input id="lyricPosterRowTightness" type="range" min="-0.90" max="0.60" step="0.01" value="-0.30" />
+                <input id="lyricPosterRowTightness" type="range" min="-1.80" max="0.80" step="0.01" value="-0.30" />
               </label>
               <label>Global perspective strength <span id="lyricPosterPerspectiveStrengthValue">2.25</span>
                 <input id="lyricPosterPerspectiveStrength" type="range" min="0.20" max="5.00" step="0.05" value="2.25" />
               </label>
 
               <div class="utility-minihead">1-row WordArt profile</div>
-              <label>1-row vertical stretch <span id="lyricPosterOneRowVerticalStretchValue">1.35</span>
-                <input id="lyricPosterOneRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="1.35" />
+              <label>1-row vertical stretch <span id="lyricPosterOneRowVerticalStretchValue">0.87</span>
+                <input id="lyricPosterOneRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.87" />
               </label>
               <label>1-row row tightness <span id="lyricPosterOneRowTightnessValue">0.00</span>
-                <input id="lyricPosterOneRowTightness" type="range" min="-1.20" max="0.80" step="0.01" value="0.00" />
+                <input id="lyricPosterOneRowTightness" type="range" min="-2.20" max="1.20" step="0.01" value="0.00" />
               </label>
-              <label>1-row perspective amount <span id="lyricPosterOneRowPerspectiveValue">1.00</span>
-                <input id="lyricPosterOneRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.00" />
+              <label>1-row perspective amount <span id="lyricPosterOneRowPerspectiveValue">1.33</span>
+                <input id="lyricPosterOneRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.33" />
               </label>
-              <label>1-row letter tilt deg <span id="lyricPosterOneRowTiltValue">-8</span>
-                <input id="lyricPosterOneRowTilt" type="range" min="-35" max="35" step="1" value="-8" />
+              <label>1-row letter tilt bias deg <span id="lyricPosterOneRowTiltValue">-32</span>
+                <input id="lyricPosterOneRowTilt" type="range" min="-75" max="75" step="1" value="-32" />
               </label>
 
               <div class="utility-minihead">2-row WordArt profile</div>
-              <label>2-row vertical stretch <span id="lyricPosterTwoRowVerticalStretchValue">1.10</span>
-                <input id="lyricPosterTwoRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="1.10" />
+              <label>2-row vertical stretch <span id="lyricPosterTwoRowVerticalStretchValue">0.93</span>
+                <input id="lyricPosterTwoRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.93" />
               </label>
-              <label>2-row row tightness <span id="lyricPosterTwoRowTightnessValue">-0.20</span>
-                <input id="lyricPosterTwoRowTightness" type="range" min="-1.20" max="0.80" step="0.01" value="-0.20" />
+              <label>2-row row tightness <span id="lyricPosterTwoRowTightnessValue">0.45</span>
+                <input id="lyricPosterTwoRowTightness" type="range" min="-2.20" max="1.20" step="0.01" value="0.45" />
               </label>
               <label>2-row perspective amount <span id="lyricPosterTwoRowPerspectiveValue">1.00</span>
                 <input id="lyricPosterTwoRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.00" />
               </label>
-              <label>2-row letter tilt deg <span id="lyricPosterTwoRowTiltValue">-10</span>
-                <input id="lyricPosterTwoRowTilt" type="range" min="-35" max="35" step="1" value="-10" />
+              <label>2-row letter tilt bias deg <span id="lyricPosterTwoRowTiltValue">-10</span>
+                <input id="lyricPosterTwoRowTilt" type="range" min="-75" max="75" step="1" value="-10" />
               </label>
 
               <div class="utility-minihead">3-row WordArt profile</div>
-              <label>3-row vertical stretch <span id="lyricPosterThreeRowVerticalStretchValue">0.95</span>
-                <input id="lyricPosterThreeRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.95" />
+              <label>3-row vertical stretch <span id="lyricPosterThreeRowVerticalStretchValue">0.51</span>
+                <input id="lyricPosterThreeRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.51" />
               </label>
-              <label>3-row row tightness <span id="lyricPosterThreeRowTightnessValue">-0.25</span>
-                <input id="lyricPosterThreeRowTightness" type="range" min="-1.20" max="0.80" step="0.01" value="-0.25" />
+              <label>3-row row tightness <span id="lyricPosterThreeRowTightnessValue">0.52</span>
+                <input id="lyricPosterThreeRowTightness" type="range" min="-2.20" max="1.20" step="0.01" value="0.52" />
               </label>
               <label>3-row perspective amount <span id="lyricPosterThreeRowPerspectiveValue">1.00</span>
                 <input id="lyricPosterThreeRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.00" />
               </label>
-              <label>3-row letter tilt deg <span id="lyricPosterThreeRowTiltValue">-12</span>
-                <input id="lyricPosterThreeRowTilt" type="range" min="-35" max="35" step="1" value="-12" />
+              <label>3-row letter tilt bias deg <span id="lyricPosterThreeRowTiltValue">-12</span>
+                <input id="lyricPosterThreeRowTilt" type="range" min="-75" max="75" step="1" value="-12" />
               </label>
 
               <div class="utility-minihead">Mode</div>
@@ -928,11 +928,14 @@ function buildCeilingPosterLayout(
   const clampedCenterY = clamp(baseCenterY, topY + groupHalf, bottomY - groupHalf);
   const firstY = clampedCenterY - ((n - 1) * centerSpacing) / 2;
 
+  const autoCeilingTilt = getCeilingSideTiltDegrees(trapezoid);
+  const perspectiveTilt = autoCeilingTilt * clamp(controls.perspectiveStrength / 2.25, 0.05, 2.80);
+
   const rows = rowTexts.map((rowText, index) => {
     const y = firstY + index * centerSpacing;
     const scaleY = rowScaleYs[index];
     const visualHalfHeight = Math.max(4, fontSize * 0.37 * scaleY);
-    const rowTilt = profile.tilt;
+    const rowTilt = clamp(perspectiveTilt + profile.tilt, -76, 76);
     const skewPad = Math.abs(Math.tan((rowTilt * Math.PI) / 180)) * visualHalfHeight;
     const bounds = [
       trapezoidHorizontalBoundsAtY(trapezoid, clamp(y - visualHalfHeight, topY, bottomY)),
@@ -1049,6 +1052,16 @@ function weightedPosterLength(word: string): number {
     if (".,:;".includes(char)) return sum + 0.28;
     return sum + 1;
   }, 0);
+}
+
+function getCeilingSideTiltDegrees(trapezoid: LyricPosterTrapezoid): number {
+  const leftDy = trapezoid.bottomLeftY - trapezoid.topLeftY;
+  const rightDy = trapezoid.bottomRightY - trapezoid.topRightY;
+  const leftDx = trapezoid.bottomLeftX - trapezoid.topLeftX;
+  const rightDx = trapezoid.bottomRightX - trapezoid.topRightX;
+  const leftTilt = Math.atan2(leftDx, Math.max(1, Math.abs(leftDy))) * (180 / Math.PI);
+  const rightTilt = Math.atan2(-rightDx, Math.max(1, Math.abs(rightDy))) * (180 / Math.PI);
+  return clamp((leftTilt + rightTilt) / 2, -64, 64);
 }
 
 function trapezoidHorizontalBoundsAtY(
