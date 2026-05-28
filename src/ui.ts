@@ -260,6 +260,69 @@ export function renderShell(state: AppState): void {
                 <input id="lyricPosterBottomRightY" type="range" min="0" max="529" step="1" value="189" />
               </label>
 
+              <div class="utility-minihead">Short lyric profile (&le; 6 chars)</div>
+              <p class="utility-help">Use this for tiny lyrics like "OH" so they can have their own safe area and WordArt skew.</p>
+              <label>Short guide opacity <span id="lyricPosterShortGuideOpacityValue">0.00</span>
+                <input id="lyricPosterShortGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.00" />
+              </label>
+              <label>Short top left X px <span id="lyricPosterShortTopLeftXValue">221</span>
+                <input id="lyricPosterShortTopLeftX" type="range" min="-400" max="2200" step="1" value="221" />
+              </label>
+              <label>Short top left Y px <span id="lyricPosterShortTopLeftYValue">18</span>
+                <input id="lyricPosterShortTopLeftY" type="range" min="-300" max="900" step="1" value="18" />
+              </label>
+              <label>Short top right X px <span id="lyricPosterShortTopRightXValue">1562</span>
+                <input id="lyricPosterShortTopRightX" type="range" min="-400" max="2600" step="1" value="1562" />
+              </label>
+              <label>Short top right Y px <span id="lyricPosterShortTopRightYValue">3</span>
+                <input id="lyricPosterShortTopRightY" type="range" min="-300" max="900" step="1" value="3" />
+              </label>
+              <label>Short bottom left X px <span id="lyricPosterShortBottomLeftXValue">454</span>
+                <input id="lyricPosterShortBottomLeftX" type="range" min="-400" max="2200" step="1" value="454" />
+              </label>
+              <label>Short bottom left Y px <span id="lyricPosterShortBottomLeftYValue">195</span>
+                <input id="lyricPosterShortBottomLeftY" type="range" min="-300" max="900" step="1" value="195" />
+              </label>
+              <label>Short bottom right X px <span id="lyricPosterShortBottomRightXValue">1343</span>
+                <input id="lyricPosterShortBottomRightX" type="range" min="-400" max="2600" step="1" value="1343" />
+              </label>
+              <label>Short bottom right Y px <span id="lyricPosterShortBottomRightYValue">189</span>
+                <input id="lyricPosterShortBottomRightY" type="range" min="-300" max="900" step="1" value="189" />
+              </label>
+              <label>Short vertical stretch <span id="lyricPosterShortVerticalStretchValue">0.78</span>
+                <input id="lyricPosterShortVerticalStretch" type="range" min="0.1" max="3" step="0.01" value="0.78" />
+              </label>
+              <label>Short perspective amount <span id="lyricPosterShortPerspectiveValue">1.20</span>
+                <input id="lyricPosterShortPerspective" type="range" min="-4" max="4" step="0.01" value="1.20" />
+              </label>
+              <label>Short letter tilt bias deg <span id="lyricPosterShortTiltValue">-26</span>
+                <input id="lyricPosterShortTilt" type="range" min="-85" max="85" step="1" value="-26" />
+              </label>
+              <label>Short top-left X offset px <span id="lyricPosterShortTextTopLeftXValue">-160</span>
+                <input id="lyricPosterShortTextTopLeftX" type="range" min="-900" max="900" step="1" value="-160" />
+              </label>
+              <label>Short top-left Y offset px <span id="lyricPosterShortTextTopLeftYValue">0</span>
+                <input id="lyricPosterShortTextTopLeftY" type="range" min="-500" max="500" step="1" value="0" />
+              </label>
+              <label>Short top-right X offset px <span id="lyricPosterShortTextTopRightXValue">160</span>
+                <input id="lyricPosterShortTextTopRightX" type="range" min="-900" max="900" step="1" value="160" />
+              </label>
+              <label>Short top-right Y offset px <span id="lyricPosterShortTextTopRightYValue">0</span>
+                <input id="lyricPosterShortTextTopRightY" type="range" min="-500" max="500" step="1" value="0" />
+              </label>
+              <label>Short bottom-left X offset px <span id="lyricPosterShortTextBottomLeftXValue">0</span>
+                <input id="lyricPosterShortTextBottomLeftX" type="range" min="-900" max="900" step="1" value="0" />
+              </label>
+              <label>Short bottom-left Y offset px <span id="lyricPosterShortTextBottomLeftYValue">0</span>
+                <input id="lyricPosterShortTextBottomLeftY" type="range" min="-500" max="500" step="1" value="0" />
+              </label>
+              <label>Short bottom-right X offset px <span id="lyricPosterShortTextBottomRightXValue">0</span>
+                <input id="lyricPosterShortTextBottomRightX" type="range" min="-900" max="900" step="1" value="0" />
+              </label>
+              <label>Short bottom-right Y offset px <span id="lyricPosterShortTextBottomRightYValue">0</span>
+                <input id="lyricPosterShortTextBottomRightY" type="range" min="-500" max="500" step="1" value="0" />
+              </label>
+
               <div class="utility-minihead">Poster style and fit</div>
               <label>Stroke px <span id="lyricPosterStrokeValue">7.6</span>
                 <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="7.6" />
@@ -273,7 +336,7 @@ export function renderShell(state: AppState): void {
               <label>Stroke opacity <span id="lyricPosterStrokeOpacityValue">0.30</span>
                 <input id="lyricPosterStrokeOpacity" type="range" min="0" max="1" step="0.01" value="0.30" />
               </label>
-              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0.25</span>
+              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0.35</span>
                 <input id="lyricPosterFillOpacity" type="range" min="0" max="0.35" step="0.01" value="0" />
               </label>
               <label>Glow strength <span id="lyricPosterGlowValue">0</span>
@@ -559,11 +622,12 @@ export function renderShell(state: AppState): void {
               <p class="utility-help">Auto mode uses 1 row below this character count and 2 rows at or above it, including spaces.</p>
               <label>Transition
                 <select id="lyricPosterTransition">
-                  <option value="push-slide" selected>Quick push slide</option>
+                  <option value="none">No transition</option>
+                  <option value="push-slide">Quick push slide</option>
                   <option value="fade-slide">Subtle fade slide</option>
                   <option value="shadow-slide">Shadow slide</option>
                   <option value="ceiling-stamp">Ceiling stamp</option>
-                  <option value="soft-dissolve">Soft dissolve</option>
+                  <option value="soft-dissolve" selected>Soft dissolve</option>
                   <option value="ghost-drift">Ghost drift</option>
                 </select>
               </label>
@@ -1005,7 +1069,7 @@ export function updateLyricsCeiling(
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
   const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
   const maxRowsValue = rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue;
-  const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "push-slide") as LyricPosterTransitionMode;
+  const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "soft-dissolve") as LyricPosterTransitionMode;
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, transitionValue);
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
@@ -1027,6 +1091,7 @@ export function updateLyricsCeiling(
 
   const ceilingRect = ceiling.getBoundingClientRect();
   const layout = buildCeilingPosterLayout(activeLine.text, trapezoid, controls, ceilingRect.width, ceilingRect.height);
+  activeBlock.classList.toggle("lyric-poster-transition-none", controls.transition === "none");
   activeBlock.classList.toggle("lyric-poster-transition-push", controls.transition === "push-slide");
   activeBlock.classList.toggle("lyric-poster-transition-fade", controls.transition === "fade-slide");
   activeBlock.classList.toggle("lyric-poster-transition-shadow-slide", controls.transition === "shadow-slide");
@@ -1128,6 +1193,26 @@ function readCeilingPosterControls(
     rowBreakpoint: readNumber("--lyric-poster-row-breakpoint", 28),
     twoRowBandGuideOpacity: readNumber("--lyric-poster-two-row-band-guide-opacity", 0),
     threeRowBandGuideOpacity: readNumber("--lyric-poster-three-row-band-guide-opacity", 0),
+    shortGuideOpacity: readNumber("--lyric-poster-short-guide-opacity", 0),
+    shortTopLeftX: readNumber("--lyric-poster-short-tl-x", 221),
+    shortTopLeftY: readNumber("--lyric-poster-short-tl-y", 18),
+    shortTopRightX: readNumber("--lyric-poster-short-tr-x", 1562),
+    shortTopRightY: readNumber("--lyric-poster-short-tr-y", 3),
+    shortBottomLeftX: readNumber("--lyric-poster-short-bl-x", 454),
+    shortBottomLeftY: readNumber("--lyric-poster-short-bl-y", 195),
+    shortBottomRightX: readNumber("--lyric-poster-short-br-x", 1343),
+    shortBottomRightY: readNumber("--lyric-poster-short-br-y", 189),
+    shortVerticalStretch: readNumber("--lyric-poster-short-vertical-stretch", 0.78),
+    shortPerspective: readNumber("--lyric-poster-short-perspective", 1.2),
+    shortTilt: readNumber("--lyric-poster-short-tilt", -26),
+    shortTextTopLeftX: readNumber("--lyric-poster-short-text-tl-x", -160),
+    shortTextTopLeftY: readNumber("--lyric-poster-short-text-tl-y", 0),
+    shortTextTopRightX: readNumber("--lyric-poster-short-text-tr-x", 160),
+    shortTextTopRightY: readNumber("--lyric-poster-short-text-tr-y", 0),
+    shortTextBottomLeftX: readNumber("--lyric-poster-short-text-bl-x", 0),
+    shortTextBottomLeftY: readNumber("--lyric-poster-short-text-bl-y", 0),
+    shortTextBottomRightX: readNumber("--lyric-poster-short-text-br-x", 0),
+    shortTextBottomRightY: readNumber("--lyric-poster-short-text-br-y", 0),
     twoRowTopBandTopY: readNumber("--lyric-poster-two-row-top-band-top-y", 18),
     twoRowTopBandBottomY: readNumber("--lyric-poster-two-row-top-band-bottom-y", 106),
     twoRowBottomBandTopY: readNumber("--lyric-poster-two-row-bottom-band-top-y", 106),
@@ -1214,16 +1299,45 @@ function buildCeilingPosterLayout(
   ceilingHeight: number,
 ): CeilingPosterLayout {
   const words = normalizePosterWords(text);
-  const requestedRows = controls.maxRows === "auto" ? choosePosterRowCount(words, controls.rowBreakpoint) : Number.parseInt(controls.maxRows, 10);
+  const isShortLyric = text.trim().length <= 6;
+  const activeTrapezoid = isShortLyric
+    ? {
+        topLeftX: controls.shortTopLeftX,
+        topLeftY: controls.shortTopLeftY,
+        topRightX: controls.shortTopRightX,
+        topRightY: controls.shortTopRightY,
+        bottomLeftX: controls.shortBottomLeftX,
+        bottomLeftY: controls.shortBottomLeftY,
+        bottomRightX: controls.shortBottomRightX,
+        bottomRightY: controls.shortBottomRightY,
+      }
+    : trapezoid;
+  const activeControls = isShortLyric
+    ? {
+        ...controls,
+        oneRowVerticalStretch: controls.shortVerticalStretch,
+        oneRowPerspective: controls.shortPerspective,
+        oneRowTilt: controls.shortTilt,
+        oneRowTextTopLeftX: controls.shortTextTopLeftX,
+        oneRowTextTopLeftY: controls.shortTextTopLeftY,
+        oneRowTextTopRightX: controls.shortTextTopRightX,
+        oneRowTextTopRightY: controls.shortTextTopRightY,
+        oneRowTextBottomLeftX: controls.shortTextBottomLeftX,
+        oneRowTextBottomLeftY: controls.shortTextBottomLeftY,
+        oneRowTextBottomRightX: controls.shortTextBottomRightX,
+        oneRowTextBottomRightY: controls.shortTextBottomRightY,
+      }
+    : controls;
+  const requestedRows = isShortLyric ? 1 : (controls.maxRows === "auto" ? choosePosterRowCount(words, controls.rowBreakpoint) : Number.parseInt(controls.maxRows, 10));
   const rowCount = Math.max(1, Math.min(2, requestedRows));
   const rowTexts = balanceWordsIntoRows(words, rowCount);
   const n = Math.max(1, Math.min(2, rowTexts.length)) as 1 | 2;
-  const profile = getPosterRowProfile(n, controls);
+  const profile = getPosterRowProfile(n, activeControls);
   const scaleX = Math.max(0.001, ceilingWidth / 1764);
   const scaleY = Math.max(0.001, ceilingHeight / 529);
-  const rowBands = getRowBandTrapezoids(n, trapezoid, controls);
+  const rowBands = getRowBandTrapezoids(n, activeTrapezoid, activeControls);
 
-  const autoCeilingTilt = getCeilingSideTiltDegrees(trapezoid);
+  const autoCeilingTilt = getCeilingSideTiltDegrees(activeTrapezoid);
   const perspectiveTilt = autoCeilingTilt * clamp(profile.perspective / 2.25, 0.10, 2.80);
 
   const rows = rowTexts.map((rowText, index) => {
@@ -1715,7 +1829,7 @@ type LyricPosterTrapezoid = {
   centerY: number;
 };
 
-type LyricPosterTransitionMode = "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
+type LyricPosterTransitionMode = "none" | "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
 
 type CeilingPosterControls = {
   maxRows: "auto" | "1" | "2" | "3";
@@ -1723,6 +1837,26 @@ type CeilingPosterControls = {
   rowBreakpoint: number;
   twoRowBandGuideOpacity: number;
   threeRowBandGuideOpacity: number;
+  shortGuideOpacity: number;
+  shortTopLeftX: number;
+  shortTopLeftY: number;
+  shortTopRightX: number;
+  shortTopRightY: number;
+  shortBottomLeftX: number;
+  shortBottomLeftY: number;
+  shortBottomRightX: number;
+  shortBottomRightY: number;
+  shortVerticalStretch: number;
+  shortPerspective: number;
+  shortTilt: number;
+  shortTextTopLeftX: number;
+  shortTextTopLeftY: number;
+  shortTextTopRightX: number;
+  shortTextTopRightY: number;
+  shortTextBottomLeftX: number;
+  shortTextBottomLeftY: number;
+  shortTextBottomRightX: number;
+  shortTextBottomRightY: number;
   twoRowTopBandTopY: number;
   twoRowTopBandBottomY: number;
   twoRowBottomBandTopY: number;

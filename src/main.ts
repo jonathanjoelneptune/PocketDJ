@@ -80,6 +80,26 @@ type RoomUtilitySettings = {
   lyricPosterBottomRightY: number;
   lyricPosterGuideOpacity: number;
   lyricPosterCenterGuideOpacity: number;
+  lyricPosterShortGuideOpacity: number;
+  lyricPosterShortTopLeftX: number;
+  lyricPosterShortTopLeftY: number;
+  lyricPosterShortTopRightX: number;
+  lyricPosterShortTopRightY: number;
+  lyricPosterShortBottomLeftX: number;
+  lyricPosterShortBottomLeftY: number;
+  lyricPosterShortBottomRightX: number;
+  lyricPosterShortBottomRightY: number;
+  lyricPosterShortVerticalStretch: number;
+  lyricPosterShortPerspective: number;
+  lyricPosterShortTilt: number;
+  lyricPosterShortTextTopLeftX: number;
+  lyricPosterShortTextTopLeftY: number;
+  lyricPosterShortTextTopRightX: number;
+  lyricPosterShortTextTopRightY: number;
+  lyricPosterShortTextBottomLeftX: number;
+  lyricPosterShortTextBottomLeftY: number;
+  lyricPosterShortTextBottomRightX: number;
+  lyricPosterShortTextBottomRightY: number;
   lyricPosterTwoRowBandGuideOpacity: number;
   lyricPosterThreeRowBandGuideOpacity: number;
   lyricPosterStroke: number;
@@ -170,7 +190,7 @@ type RoomUtilitySettings = {
   lyricPosterThreeRowBottomTextBottomRightY: number;
   lyricPosterMaxRows: "auto" | "1" | "2" | "3";
   lyricPosterRowBreakpoint: number;
-  lyricPosterTransition: "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
+  lyricPosterTransition: "soft-dissolve" | "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
@@ -199,13 +219,33 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterBottomRightY: 189,
   lyricPosterGuideOpacity: 0.00,
   lyricPosterCenterGuideOpacity: 0.00,
+  lyricPosterShortGuideOpacity: 0.00,
+  lyricPosterShortTopLeftX: 221,
+  lyricPosterShortTopLeftY: 18,
+  lyricPosterShortTopRightX: 1562,
+  lyricPosterShortTopRightY: 3,
+  lyricPosterShortBottomLeftX: 454,
+  lyricPosterShortBottomLeftY: 195,
+  lyricPosterShortBottomRightX: 1343,
+  lyricPosterShortBottomRightY: 189,
+  lyricPosterShortVerticalStretch: 0.78,
+  lyricPosterShortPerspective: 1.20,
+  lyricPosterShortTilt: -26,
+  lyricPosterShortTextTopLeftX: -160,
+  lyricPosterShortTextTopLeftY: 0,
+  lyricPosterShortTextTopRightX: 160,
+  lyricPosterShortTextTopRightY: 0,
+  lyricPosterShortTextBottomLeftX: 0,
+  lyricPosterShortTextBottomLeftY: 0,
+  lyricPosterShortTextBottomRightX: 0,
+  lyricPosterShortTextBottomRightY: 0,
   lyricPosterTwoRowBandGuideOpacity: 0.00,
   lyricPosterThreeRowBandGuideOpacity: 0.00,
   lyricPosterStroke: 7.6,
   lyricPosterStrokeColor: "#000000",
   lyricPosterFillColor: "#000000",
   lyricPosterStrokeOpacity: 0.30,
-  lyricPosterFillOpacity: 0.25,
+  lyricPosterFillOpacity: 0.35,
   lyricPosterGlow: 0,
   lyricPosterEffectDropShadow: false,
   lyricPosterEffectEmboss: false,
@@ -291,7 +331,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "push-slide"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v41-1";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v42";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -790,6 +830,26 @@ function bindRoomUtilityControls(): void {
     ["tableShadowScale", "tableShadowScaleValue"],
     ["lyricPosterGuideOpacity", "lyricPosterGuideOpacityValue"],
     ["lyricPosterCenterGuideOpacity", "lyricPosterCenterGuideOpacityValue"],
+    ["lyricPosterShortGuideOpacity", "lyricPosterShortGuideOpacityValue"],
+    ["lyricPosterShortTopLeftX", "lyricPosterShortTopLeftXValue"],
+    ["lyricPosterShortTopLeftY", "lyricPosterShortTopLeftYValue"],
+    ["lyricPosterShortTopRightX", "lyricPosterShortTopRightXValue"],
+    ["lyricPosterShortTopRightY", "lyricPosterShortTopRightYValue"],
+    ["lyricPosterShortBottomLeftX", "lyricPosterShortBottomLeftXValue"],
+    ["lyricPosterShortBottomLeftY", "lyricPosterShortBottomLeftYValue"],
+    ["lyricPosterShortBottomRightX", "lyricPosterShortBottomRightXValue"],
+    ["lyricPosterShortBottomRightY", "lyricPosterShortBottomRightYValue"],
+    ["lyricPosterShortVerticalStretch", "lyricPosterShortVerticalStretchValue"],
+    ["lyricPosterShortPerspective", "lyricPosterShortPerspectiveValue"],
+    ["lyricPosterShortTilt", "lyricPosterShortTiltValue"],
+    ["lyricPosterShortTextTopLeftX", "lyricPosterShortTextTopLeftXValue"],
+    ["lyricPosterShortTextTopLeftY", "lyricPosterShortTextTopLeftYValue"],
+    ["lyricPosterShortTextTopRightX", "lyricPosterShortTextTopRightXValue"],
+    ["lyricPosterShortTextTopRightY", "lyricPosterShortTextTopRightYValue"],
+    ["lyricPosterShortTextBottomLeftX", "lyricPosterShortTextBottomLeftXValue"],
+    ["lyricPosterShortTextBottomLeftY", "lyricPosterShortTextBottomLeftYValue"],
+    ["lyricPosterShortTextBottomRightX", "lyricPosterShortTextBottomRightXValue"],
+    ["lyricPosterShortTextBottomRightY", "lyricPosterShortTextBottomRightYValue"],
     ["lyricPosterTwoRowBandGuideOpacity", "lyricPosterTwoRowBandGuideOpacityValue"],
     ["lyricPosterThreeRowBandGuideOpacity", "lyricPosterThreeRowBandGuideOpacityValue"],
     ["lyricPosterTopLeftX", "lyricPosterTopLeftXValue"],
@@ -1011,6 +1071,26 @@ function applyRoomUtilitySettings(): void {
 
   root.style.setProperty("--lyric-poster-guide-opacity", String(roomUtility.lyricPosterGuideOpacity));
   root.style.setProperty("--lyric-poster-center-guide-opacity", String(roomUtility.lyricPosterCenterGuideOpacity));
+  root.style.setProperty("--lyric-poster-short-guide-opacity", String(roomUtility.lyricPosterShortGuideOpacity));
+  root.style.setProperty("--lyric-poster-short-tl-x", `${roomUtility.lyricPosterShortTopLeftX}px`);
+  root.style.setProperty("--lyric-poster-short-tl-y", `${roomUtility.lyricPosterShortTopLeftY}px`);
+  root.style.setProperty("--lyric-poster-short-tr-x", `${roomUtility.lyricPosterShortTopRightX}px`);
+  root.style.setProperty("--lyric-poster-short-tr-y", `${roomUtility.lyricPosterShortTopRightY}px`);
+  root.style.setProperty("--lyric-poster-short-bl-x", `${roomUtility.lyricPosterShortBottomLeftX}px`);
+  root.style.setProperty("--lyric-poster-short-bl-y", `${roomUtility.lyricPosterShortBottomLeftY}px`);
+  root.style.setProperty("--lyric-poster-short-br-x", `${roomUtility.lyricPosterShortBottomRightX}px`);
+  root.style.setProperty("--lyric-poster-short-br-y", `${roomUtility.lyricPosterShortBottomRightY}px`);
+  root.style.setProperty("--lyric-poster-short-vertical-stretch", String(roomUtility.lyricPosterShortVerticalStretch));
+  root.style.setProperty("--lyric-poster-short-perspective", String(roomUtility.lyricPosterShortPerspective));
+  root.style.setProperty("--lyric-poster-short-tilt", `${roomUtility.lyricPosterShortTilt}deg`);
+  root.style.setProperty("--lyric-poster-short-text-tl-x", `${roomUtility.lyricPosterShortTextTopLeftX}px`);
+  root.style.setProperty("--lyric-poster-short-text-tl-y", `${roomUtility.lyricPosterShortTextTopLeftY}px`);
+  root.style.setProperty("--lyric-poster-short-text-tr-x", `${roomUtility.lyricPosterShortTextTopRightX}px`);
+  root.style.setProperty("--lyric-poster-short-text-tr-y", `${roomUtility.lyricPosterShortTextTopRightY}px`);
+  root.style.setProperty("--lyric-poster-short-text-bl-x", `${roomUtility.lyricPosterShortTextBottomLeftX}px`);
+  root.style.setProperty("--lyric-poster-short-text-bl-y", `${roomUtility.lyricPosterShortTextBottomLeftY}px`);
+  root.style.setProperty("--lyric-poster-short-text-br-x", `${roomUtility.lyricPosterShortTextBottomRightX}px`);
+  root.style.setProperty("--lyric-poster-short-text-br-y", `${roomUtility.lyricPosterShortTextBottomRightY}px`);
   root.style.setProperty("--lyric-poster-two-row-band-guide-opacity", String(roomUtility.lyricPosterTwoRowBandGuideOpacity));
   root.style.setProperty("--lyric-poster-three-row-band-guide-opacity", String(roomUtility.lyricPosterThreeRowBandGuideOpacity));
   root.style.setProperty("--lyric-poster-top-left-x", `${roomUtility.lyricPosterTopLeftX}px`);
@@ -1108,6 +1188,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyrics-animation-revision", String(lyricAnimationRevision));
 
   root.classList.toggle("lyric-poster-transition-push", roomUtility.lyricPosterTransition === "push-slide");
+  root.classList.toggle("lyric-poster-transition-none", roomUtility.lyricPosterTransition === "none");
   root.classList.toggle("lyric-poster-transition-fade", roomUtility.lyricPosterTransition === "fade-slide");
   root.classList.toggle("lyric-poster-transition-shadow-slide", roomUtility.lyricPosterTransition === "shadow-slide");
   root.classList.toggle("lyric-poster-transition-ceiling-stamp", roomUtility.lyricPosterTransition === "ceiling-stamp");

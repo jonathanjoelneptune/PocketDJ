@@ -3903,7 +3903,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-skew: -4deg;
   --lyric-poster-stroke: 7.6;
   --lyric-poster-stroke-opacity: 0.30;
-  --lyric-poster-fill-opacity: 0.25;
+  --lyric-poster-fill-opacity: 0.35;
   --lyric-poster-glow: 0;
   --lyric-poster-effect-drop-shadow-filter: ;
   --lyric-poster-effect-emboss-filter: ;
@@ -3937,6 +3937,26 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 :root {
   --lyric-poster-guide-opacity: 0;
+  --lyric-poster-short-guide-opacity: 0;
+  --lyric-poster-short-tl-x: 221px;
+  --lyric-poster-short-tl-y: 18px;
+  --lyric-poster-short-tr-x: 1562px;
+  --lyric-poster-short-tr-y: 3px;
+  --lyric-poster-short-bl-x: 454px;
+  --lyric-poster-short-bl-y: 195px;
+  --lyric-poster-short-br-x: 1343px;
+  --lyric-poster-short-br-y: 189px;
+  --lyric-poster-short-vertical-stretch: 0.78;
+  --lyric-poster-short-perspective: 1.2;
+  --lyric-poster-short-tilt: -26deg;
+  --lyric-poster-short-text-tl-x: -160px;
+  --lyric-poster-short-text-tl-y: 0px;
+  --lyric-poster-short-text-tr-x: 160px;
+  --lyric-poster-short-text-tr-y: 0px;
+  --lyric-poster-short-text-bl-x: 0px;
+  --lyric-poster-short-text-bl-y: 0px;
+  --lyric-poster-short-text-br-x: 0px;
+  --lyric-poster-short-text-br-y: 0px;
 }
 
 
@@ -3981,7 +4001,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-center-y: 215px;
   --lyric-poster-stroke: 7.6;
   --lyric-poster-stroke-opacity: 0.30;
-  --lyric-poster-fill-opacity: 0.25;
+  --lyric-poster-fill-opacity: 0.35;
   --lyric-poster-glow: 0;
   --lyric-poster-guide-opacity: 0;
   --lyric-poster-center-guide-opacity: 0;
@@ -4187,7 +4207,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-perspective-depth: 1.25;
   --lyric-poster-stroke: 7.6;
   --lyric-poster-stroke-opacity: 0.30;
-  --lyric-poster-fill-opacity: 0.25;
+  --lyric-poster-fill-opacity: 0.35;
   --lyric-poster-glow: 0;
   --lyric-poster-row-gap: 30px;
   --lyrics-base-font-size: 12px;
@@ -4260,7 +4280,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-center-guide-opacity: 0;
   --lyric-poster-stroke: 7.6;
   --lyric-poster-stroke-opacity: 0.30;
-  --lyric-poster-fill-opacity: 0.25;
+  --lyric-poster-fill-opacity: 0.35;
   --lyric-poster-glow: 0;
   --lyric-poster-overall-y: 22px;
   --lyric-poster-overall-scale: 0.80;
@@ -4730,3 +4750,27 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   from { opacity: 0; transform: translateY(-24px) skewX(-4deg); filter: blur(2.5px); }
   to { opacity: 1; transform: translateY(0) skewX(0deg); filter: blur(0); }
 }
+
+
+/* v42 calmer lyric poster transitions */
+.lyric-poster-transition-none .lyric-poster-row-svg { animation: none !important; }
+.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-b .lyric-poster-row-svg { animation-duration: 760ms; animation-timing-function: cubic-bezier(0.22, 0.72, 0.28, 1); animation-fill-mode: both; }
+.lyric-poster-transition-b .lyric-poster-row-svg,
+.lyric-poster-transition-a .lyric-poster-row-svg { animation-name: lyricPosterCalmRiseIn; }
+.lyric-poster-transition-fade.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-fade.lyric-poster-transition-b .lyric-poster-row-svg { animation-name: lyricPosterCalmFadeIn; animation-duration: 900ms; }
+.lyric-poster-transition-shadow-slide.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-shadow-slide.lyric-poster-transition-b .lyric-poster-row-svg { animation-name: lyricPosterCalmShadowSlideIn; animation-duration: 940ms; }
+.lyric-poster-transition-ceiling-stamp.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-ceiling-stamp.lyric-poster-transition-b .lyric-poster-row-svg { animation-name: lyricPosterCalmStampIn; animation-duration: 820ms; }
+.lyric-poster-transition-soft-dissolve.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-soft-dissolve.lyric-poster-transition-b .lyric-poster-row-svg { animation-name: lyricPosterCalmSoftDissolveIn; animation-duration: 1100ms; }
+.lyric-poster-transition-ghost-drift.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-ghost-drift.lyric-poster-transition-b .lyric-poster-row-svg { animation-name: lyricPosterCalmGhostDriftIn; animation-duration: 1200ms; }
+@keyframes lyricPosterCalmRiseIn { from { opacity: 0; transform: translateY(10px); filter: blur(0.8px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+@keyframes lyricPosterCalmFadeIn { from { opacity: 0; transform: translateY(4px); filter: blur(1px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+@keyframes lyricPosterCalmShadowSlideIn { from { opacity: 0; transform: translateY(12px) translateX(-3px); filter: blur(0.8px) drop-shadow(12px 16px 12px rgba(0,0,0,0.30)); } to { opacity: 1; transform: translateY(0) translateX(0); filter: blur(0) drop-shadow(8px 10px 9px rgba(0,0,0,0.22)); } }
+@keyframes lyricPosterCalmStampIn { 0% { opacity: 0; transform: scale(1.018); filter: blur(0.9px); } 100% { opacity: 1; transform: scale(1); filter: blur(0); } }
+@keyframes lyricPosterCalmSoftDissolveIn { from { opacity: 0; filter: blur(1.4px); } to { opacity: 1; filter: blur(0); } }
+@keyframes lyricPosterCalmGhostDriftIn { from { opacity: 0; transform: translateY(-8px) translateX(3px); filter: blur(1.2px); } to { opacity: 1; transform: translateY(0) translateX(0); filter: blur(0); } }
