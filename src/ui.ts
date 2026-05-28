@@ -813,11 +813,6 @@ export function updateLyricsCeiling(
   lastLyricsRenderSignature = renderSignature;
   activeBlock.style.setProperty("--lyric-line-visibility", "1");
 
-  const layout = buildCeilingPosterLayout(activeLine.text, trapezoid, controls);
-  activeBlock.classList.toggle("lyric-poster-transition-push", controls.transition === "push-slide");
-  activeBlock.classList.toggle("lyric-poster-transition-fade", controls.transition === "fade-slide");
-  activeBlock.dataset.lyricRows = String(layout.rows.length);
-
   const ceilingRect = ceiling.getBoundingClientRect();
   const layout = buildCeilingPosterLayout(activeLine.text, trapezoid, controls, ceilingRect.width, ceilingRect.height);
   activeBlock.classList.toggle("lyric-poster-transition-push", controls.transition === "push-slide");
@@ -906,6 +901,14 @@ function readCeilingPosterControls(
     oneRowTightness: readNumber("--lyric-poster-one-row-tightness", 0),
     oneRowPerspective: readNumber("--lyric-poster-one-row-perspective", 1),
     oneRowTilt: readNumber("--lyric-poster-one-row-tilt", -8),
+    oneRowTextTopLeftX: readNumber("--lyric-poster-one-row-text-top-left-x", 0),
+    oneRowTextTopLeftY: readNumber("--lyric-poster-one-row-text-top-left-y", 0),
+    oneRowTextTopRightX: readNumber("--lyric-poster-one-row-text-top-right-x", 0),
+    oneRowTextTopRightY: readNumber("--lyric-poster-one-row-text-top-right-y", 0),
+    oneRowTextBottomLeftX: readNumber("--lyric-poster-one-row-text-bottom-left-x", 0),
+    oneRowTextBottomLeftY: readNumber("--lyric-poster-one-row-text-bottom-left-y", 0),
+    oneRowTextBottomRightX: readNumber("--lyric-poster-one-row-text-bottom-right-x", 0),
+    oneRowTextBottomRightY: readNumber("--lyric-poster-one-row-text-bottom-right-y", 0),
     twoRowVerticalStretch: readNumber("--lyric-poster-two-row-vertical-stretch", 1.10),
     twoRowTightness: readNumber("--lyric-poster-two-row-tightness", -0.20),
     twoRowPerspective: readNumber("--lyric-poster-two-row-perspective", 1),
