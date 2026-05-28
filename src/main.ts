@@ -210,7 +210,6 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterEffectDropShadow: false,
   lyricPosterEffectEmboss: false,
   lyricPosterEffectInsetEmboss: false,
-  lyricPosterEffectInsetEmboss: false,
   lyricPosterEffectBevel: true,
   lyricPosterEffectSoftBlur: false,
   lyricPosterOneRowVerticalStretch: 0.86,
@@ -290,10 +289,9 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterThreeRowBottomTextBottomRightY: 0,
   lyricPosterMaxRows: "auto",
   lyricPosterRowBreakpoint: 28,
-  lyricPosterTransition: "push-slide"
-};
+  lyricPosterTransition: "push-slide"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v40";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v40-1";
 let roomUtility = loadRoomUtilitySettings();
 
 
