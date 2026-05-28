@@ -217,29 +217,11 @@ export function renderShell(state: AppState): void {
 
           <div class="lyrics-boundary-utility">
             <div class="utility-subhead">Ceiling lyric poster utility</div>
-            <p class="utility-help">Poster mode shows only the active lyric as a huge transparent ceiling projection with a gray stroke. Tune the four green-dot corner points so the text fills the ceiling trapezoid without clipping.</p>
+            <p class="utility-help">Tune the four green-dot corner points to define the ceiling trapezoid. The lyric will stay centered in that shape and will resize/split into rows instead of clipping.</p>
 
             <div class="lyric-utility-stack">
-              <label>Poster X px <span id="lyricPosterXValue">882</span>
-                <input id="lyricPosterX" type="range" min="0" max="1600" step="1" value="882" />
-              </label>
-              <label>Poster Y px <span id="lyricPosterYValue">128</span>
-                <input id="lyricPosterY" type="range" min="0" max="520" step="1" value="128" />
-              </label>
-              <label>Poster width px <span id="lyricPosterWValue">1180</span>
-                <input id="lyricPosterW" type="range" min="240" max="1600" step="1" value="1180" />
-              </label>
-              <label>Poster height px <span id="lyricPosterHValue">205</span>
-                <input id="lyricPosterH" type="range" min="60" max="420" step="1" value="205" />
-              </label>
-              <label>Poster zoom <span id="lyricPosterZoomValue">1.00</span>
-                <input id="lyricPosterZoom" type="range" min="0.55" max="1.8" step="0.01" value="1.00" />
-              </label>
-              <label>Ceiling tilt deg <span id="lyricPosterTiltValue">54.00</span>
-                <input id="lyricPosterTilt" type="range" min="0" max="75" step="0.5" value="54" />
-              </label>
-              <label>Ceiling skew deg <span id="lyricPosterSkewValue">-4.00</span>
-                <input id="lyricPosterSkew" type="range" min="-25" max="25" step="0.5" value="-4" />
+              <label>Corner guide opacity <span id="lyricPosterGuideOpacityValue">0.00</span>
+                <input id="lyricPosterGuideOpacity" type="range" min="0" max="1" step="0.01" value="0" />
               </label>
               <label>Top left X px <span id="lyricPosterTopLeftXValue">402</span>
                 <input id="lyricPosterTopLeftX" type="range" min="0" max="1764" step="1" value="402" />
@@ -283,9 +265,9 @@ export function renderShell(state: AppState): void {
               <label>Base lyric font size px <span id="lyricBaseFontSizeValue">12</span>
                 <input id="lyricBaseFontSize" type="range" min="8" max="32" step="1" value="12" />
               </label>
-              <label>Max rows
+              <label>Rows
                 <select id="lyricPosterMaxRows">
-                  <option value="auto" selected>Auto 1 to 3 rows</option>
+                  <option value="auto" selected>Auto</option>
                   <option value="1">Force 1 row</option>
                   <option value="2">Force 2 rows</option>
                   <option value="3">Force 3 rows</option>
@@ -829,32 +811,45 @@ function buildPosterLyricLayout(
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return { rows: [] };
 
-  const forcedRows = maxRowsValue === "auto" ? 0 : Number(maxRowsValue);
+  const forcedRows = maxRowsValue === "auto" ? 0 : Math.max(1, Math.min(Number(maxRowsValue), words.length));
   const candidateRowCounts =
     forcedRows > 0
       ? [forcedRows]
-      : words.length <= 3
+      : words.length <= 4
         ? [1, 2]
-        : words.length <= 7
-          ? [1, 2, 3]
-          : [2, 3];
+        : [1, 2, 3].filter((count) => count <= words.length);
 
   let best: { rows: LyricPosterRowLayout[]; score: number } = { rows: [], score: -Infinity };
 
   for (const rowCount of candidateRowCounts) {
-    const rows = balanceWordsIntoRows(words, Math.max(1, Math.min(rowCount, words.length)));
+    const rows = balanceWordsIntoRows(words, rowCount);
     const rowLayouts = layoutRowsInsideTrapezoid(rows, trapezoid, baseFontSize);
-    const avgFill = rowLayouts.reduce((sum, row) => {
+    if (rowLayouts.length !== rowCount) continue;
+
+    const coverage = rowLayouts.reduce((sum, row) => {
       const estimate = weightedPosterLength(row.text) * row.fontSize * 0.64;
       return sum + Math.min(1, estimate / Math.max(1, row.width));
     }, 0) / Math.max(1, rowLayouts.length);
+
     const minFont = Math.min(...rowLayouts.map((row) => row.fontSize));
-    const score = minFont * 0.75 + avgFill * 120 - Math.abs(rowLayouts.length - rows.length) * 80 - rowLayouts.length * 4;
+    const avgFont = rowLayouts.reduce((sum, row) => sum + row.fontSize, 0) / rowLayouts.length;
+    const balancePenalty = getRowBalancePenalty(rows);
+
+    // Favor fewer rows unless another layout clearly fills the ceiling better.
+    const score =
+      minFont * 0.95 +
+      avgFont * 0.20 +
+      coverage * 70 -
+      rowLayouts.length * 30 -
+      balancePenalty * 2.5;
 
     if (score > best.score) best = { rows: rowLayouts, score };
   }
 
-  return { rows: best.rows };
+  if (best.rows.length) return { rows: best.rows };
+
+  const fallbackRows = balanceWordsIntoRows(words, Math.min(3, words.length));
+  return { rows: layoutRowsInsideTrapezoid(fallbackRows, trapezoid, baseFontSize) };
 }
 
 function layoutRowsInsideTrapezoid(
@@ -866,23 +861,23 @@ function layoutRowsInsideTrapezoid(
   const bottomY = (trapezoid.bottomLeftY + trapezoid.bottomRightY) / 2;
   const height = Math.max(20, bottomY - topY);
   const n = rows.length;
-  const verticalPad = Math.max(4, height * 0.08);
-  const rowGapRatio = 0.16;
+  const rowGapRatio = 0.18;
 
   const candidateYs = rows.map((_, index) => {
-    const t = n === 1 ? 0.50 : index / (n - 1);
-    return topY + verticalPad + t * Math.max(1, height - verticalPad * 2);
+    const t = (index + 0.5) / Math.max(1, n);
+    return topY + t * height;
   });
 
   const maxByHeight = height / Math.max(1, n + Math.max(0, n - 1) * rowGapRatio);
-  const safeRows = rows.map((row, index) => {
+  return rows.map((row, index) => {
     const y = candidateYs[index];
     const bounds = trapezoidHorizontalBoundsAtY(trapezoid, y);
-    const safeLeft = bounds.left + Math.max(6, bounds.width * 0.035);
-    const safeWidth = Math.max(20, bounds.width - Math.max(12, bounds.width * 0.07));
+    const sidePad = Math.max(10, bounds.width * 0.045);
+    const safeLeft = bounds.left + sidePad;
+    const safeWidth = Math.max(20, bounds.width - sidePad * 2);
     const textWeight = Math.max(1, weightedPosterLength(row));
     const maxByWidth = safeWidth / (textWeight * 0.64);
-    const fontSize = Math.max(baseFontSize * 1.35, Math.min(maxByWidth, maxByHeight * 0.98));
+    const fontSize = Math.max(baseFontSize * 1.25, Math.min(maxByWidth, maxByHeight * 0.95));
 
     return {
       text: row,
@@ -892,8 +887,6 @@ function layoutRowsInsideTrapezoid(
       fontSize,
     };
   });
-
-  return safeRows;
 }
 
 function trapezoidHorizontalBoundsAtY(trapezoid: LyricPosterTrapezoid, y: number): { left: number; right: number; width: number } {
@@ -907,31 +900,31 @@ function trapezoidHorizontalBoundsAtY(trapezoid: LyricPosterTrapezoid, y: number
   return { left, right, width: Math.max(1, right - left) };
 }
 
-
 function balanceWordsIntoRows(words: string[], rowCount: number): string[] {
-  if (rowCount <= 1) return [words.join(" ")];
-
   const safeRowCount = Math.max(1, Math.min(rowCount, words.length));
+  if (safeRowCount <= 1) return [words.join(" ")];
+
   const totalWeight = words.reduce((sum, word) => sum + weightedPosterLength(word), 0);
   const targetWeight = totalWeight / safeRowCount;
   const rows: string[][] = [];
   let currentRow: string[] = [];
   let currentWeight = 0;
-  let rowsRemaining = safeRowCount;
 
   words.forEach((word, index) => {
-    const remainingWords = words.length - index;
     const wordWeight = weightedPosterLength(word);
-    const shouldBreak =
+    const remainingWords = words.length - index;
+    const remainingRowsAfterBreak = safeRowCount - rows.length - 1;
+    const canBreak = rows.length < safeRowCount - 1 && remainingWords > remainingRowsAfterBreak;
+
+    if (
+      canBreak &&
       currentRow.length > 0 &&
       currentWeight + wordWeight > targetWeight &&
-      remainingWords >= rowsRemaining;
-
-    if (shouldBreak) {
+      currentRow.length + remainingWords > 1
+    ) {
       rows.push(currentRow);
       currentRow = [];
       currentWeight = 0;
-      rowsRemaining -= 1;
     }
 
     currentRow.push(word);
@@ -940,9 +933,44 @@ function balanceWordsIntoRows(words: string[], rowCount: number): string[] {
 
   if (currentRow.length) rows.push(currentRow);
 
+  // If the greedy split produced too few rows, split the heaviest rows until the requested count is reached.
+  while (rows.length < safeRowCount) {
+    const splitIndex = rows
+      .map((row, index) => ({ index, weight: weightedPosterLength(row.join(" ")), length: row.length }))
+      .filter((item) => item.length > 1)
+      .sort((a, b) => b.weight - a.weight)[0]?.index;
+
+    if (splitIndex === undefined) break;
+
+    const row = rows[splitIndex];
+    const midpoint = Math.ceil(row.length / 2);
+    rows.splice(splitIndex, 1, row.slice(0, midpoint), row.slice(midpoint));
+  }
+
+  // If there are somehow too many rows, merge the lightest adjacent pair.
+  while (rows.length > safeRowCount) {
+    let mergeIndex = 0;
+    let bestWeight = Infinity;
+    for (let index = 0; index < rows.length - 1; index += 1) {
+      const combinedWeight = weightedPosterLength(`${rows[index].join(" ")} ${rows[index + 1].join(" ")}`);
+      if (combinedWeight < bestWeight) {
+        bestWeight = combinedWeight;
+        mergeIndex = index;
+      }
+    }
+    rows.splice(mergeIndex, 2, [...rows[mergeIndex], ...rows[mergeIndex + 1]]);
+  }
+
   return rows
     .filter((row) => row.length > 0)
     .map((row) => row.join(" "));
+}
+
+function getRowBalancePenalty(rows: string[]): number {
+  if (rows.length <= 1) return 0;
+  const weights = rows.map(weightedPosterLength);
+  const average = weights.reduce((sum, value) => sum + value, 0) / weights.length;
+  return weights.reduce((sum, value) => sum + Math.abs(value - average), 0) / weights.length;
 }
 
 function weightedPosterLength(value: string): number {

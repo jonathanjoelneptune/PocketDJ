@@ -6474,3 +6474,42 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   top: var(--lyric-poster-top-left-y);
   transform: translate(-50%, -50%);
 }
+
+
+/* LYRIC POSTER CORNER VISIBILITY + CENTERED ROW FIT FIX
+   The four-corner trapezoid now drives the perspective. Manual angle/skew controls are retired. */
+:root {
+  --lyric-poster-guide-opacity: 0;
+}
+
+.lyric-poster-text {
+  /* Use the four-corner row math for perspective. No global rotate/skew offset. */
+  transform: none !important;
+  transform-origin: 0 0 !important;
+}
+
+.lyric-poster-row {
+  text-align: center !important;
+  transform: translateY(-50%) !important;
+  transform-origin: 50% 50% !important;
+}
+
+/* The guide can be turned up while tuning and then set back to zero. */
+.lyrics-boundary-guide-video {
+  opacity: var(--lyric-poster-guide-opacity, 0) !important;
+  pointer-events: none !important;
+}
+
+.lyrics-boundary-guide-video::before {
+  opacity: var(--lyric-poster-guide-opacity, 0) !important;
+}
+
+.lyrics-boundary-guide-video::after {
+  opacity: var(--lyric-poster-guide-opacity, 0) !important;
+}
+
+/* Hide any older angle controls if stale markup exists from a cached copy. */
+#lyricPosterTilt,
+#lyricPosterSkew {
+  display: none !important;
+}
