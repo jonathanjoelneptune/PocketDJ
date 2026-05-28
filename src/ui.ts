@@ -217,35 +217,44 @@ export function renderShell(state: AppState): void {
 
           <div class="lyrics-boundary-utility">
             <div class="utility-subhead">Ceiling lyric poster utility</div>
-            <p class="utility-help">Tune the four green-dot corner points to define the ceiling trapezoid. The lyric will stay centered in that shape and will resize/split into rows instead of clipping.</p>
+            <p class="utility-help">Tune the four corner points to define the ceiling trapezoid. The center dot is the anchor for every lyric row, so the text stays visually centered in the room.</p>
 
             <div class="lyric-utility-stack">
               <label>Corner guide opacity <span id="lyricPosterGuideOpacityValue">0.00</span>
                 <input id="lyricPosterGuideOpacity" type="range" min="0" max="1" step="0.01" value="0" />
               </label>
+              <label>Center guide opacity <span id="lyricPosterCenterGuideOpacityValue">0.00</span>
+                <input id="lyricPosterCenterGuideOpacity" type="range" min="0" max="1" step="0.01" value="0" />
+              </label>
+              <label>Center X px <span id="lyricPosterCenterXValue">882</span>
+                <input id="lyricPosterCenterX" type="range" min="0" max="1764" step="1" value="882" />
+              </label>
+              <label>Center Y px <span id="lyricPosterCenterYValue">215</span>
+                <input id="lyricPosterCenterY" type="range" min="0" max="529" step="1" value="215" />
+              </label>
               <label>Top left X px <span id="lyricPosterTopLeftXValue">221</span>
                 <input id="lyricPosterTopLeftX" type="range" min="0" max="1764" step="1" value="221" />
               </label>
               <label>Top left Y px <span id="lyricPosterTopLeftYValue">12</span>
-                <input id="lyricPosterTopLeftY" type="range" min="0" max="520" step="1" value="12" />
+                <input id="lyricPosterTopLeftY" type="range" min="0" max="529" step="1" value="12" />
               </label>
               <label>Top right X px <span id="lyricPosterTopRightXValue">1637</span>
                 <input id="lyricPosterTopRightX" type="range" min="0" max="1764" step="1" value="1637" />
               </label>
               <label>Top right Y px <span id="lyricPosterTopRightYValue">12</span>
-                <input id="lyricPosterTopRightY" type="range" min="0" max="520" step="1" value="12" />
+                <input id="lyricPosterTopRightY" type="range" min="0" max="529" step="1" value="12" />
               </label>
               <label>Bottom left X px <span id="lyricPosterBottomLeftXValue">597</span>
                 <input id="lyricPosterBottomLeftX" type="range" min="0" max="1764" step="1" value="597" />
               </label>
               <label>Bottom left Y px <span id="lyricPosterBottomLeftYValue">418</span>
-                <input id="lyricPosterBottomLeftY" type="range" min="0" max="520" step="1" value="418" />
+                <input id="lyricPosterBottomLeftY" type="range" min="0" max="529" step="1" value="418" />
               </label>
               <label>Bottom right X px <span id="lyricPosterBottomRightXValue">1201</span>
                 <input id="lyricPosterBottomRightX" type="range" min="0" max="1764" step="1" value="1201" />
               </label>
               <label>Bottom right Y px <span id="lyricPosterBottomRightYValue">415</span>
-                <input id="lyricPosterBottomRightY" type="range" min="0" max="520" step="1" value="415" />
+                <input id="lyricPosterBottomRightY" type="range" min="0" max="529" step="1" value="415" />
               </label>
               <label>Stroke px <span id="lyricPosterStrokeValue">2.40</span>
                 <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="2.4" />
@@ -260,7 +269,7 @@ export function renderShell(state: AppState): void {
                 <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0.18" />
               </label>
               <label>Row gap px <span id="lyricPosterRowGapValue">0.5</span>
-                <input id="lyricPosterRowGap" type="range" min="-30" max="40" step="0.5" value="0.5" />
+                <input id="lyricPosterRowGap" type="range" min="-40" max="40" step="0.5" value="0.5" />
               </label>
               <label>Base lyric font size px <span id="lyricBaseFontSizeValue">12</span>
                 <input id="lyricBaseFontSize" type="range" min="8" max="32" step="1" value="12" />
@@ -748,29 +757,27 @@ export function updateLyricsCeiling(
 
   activeBlock.innerHTML = `
     <svg class="lyric-poster-svg" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <clipPath id="lyricPosterClip">
-          <polygon points="${trapezoid.topLeftX},${trapezoid.topLeftY} ${trapezoid.topRightX},${trapezoid.topRightY} ${trapezoid.bottomRightX},${trapezoid.bottomRightY} ${trapezoid.bottomLeftX},${trapezoid.bottomLeftY}" />
-        </clipPath>
-      </defs>
-      <g class="lyric-poster-svg-rows" clip-path="url(#lyricPosterClip)">
-        ${layout.rows
-          .map(
-            (row) => `
-              <text
-                class="lyric-poster-svg-row"
-                x="${row.left}"
-                y="${row.centerY}"
-                font-size="${row.fontSize}"
-                textLength="${row.width}"
-                lengthAdjust="spacingAndGlyphs"
-                dominant-baseline="middle"
-                text-anchor="start"
-              >${escapeHtml(row.text)}</text>
-            `,
-          )
-          .join("")}
-      </g>
+      <polygon
+        class="lyric-poster-svg-guide"
+        points="${trapezoid.topLeftX},${trapezoid.topLeftY} ${trapezoid.topRightX},${trapezoid.topRightY} ${trapezoid.bottomRightX},${trapezoid.bottomRightY} ${trapezoid.bottomLeftX},${trapezoid.bottomLeftY}"
+      />
+      <circle class="lyric-poster-center-guide" cx="${trapezoid.centerX}" cy="${trapezoid.centerY}" r="8" />
+      ${layout.rows
+        .map(
+          (row) => `
+            <text
+              class="lyric-poster-svg-row"
+              x="${row.left}"
+              y="${row.centerY}"
+              font-size="${row.fontSize}"
+              textLength="${row.width}"
+              lengthAdjust="spacingAndGlyphs"
+              dominant-baseline="middle"
+              text-anchor="start"
+            >${escapeHtml(row.text)}</text>
+          `,
+        )
+        .join("")}
     </svg>
   `;
 }
@@ -784,6 +791,8 @@ type LyricPosterTrapezoid = {
   bottomLeftY: number;
   bottomRightX: number;
   bottomRightY: number;
+  centerX: number;
+  centerY: number;
 };
 
 type LyricPosterSvgRowLayout = {
@@ -805,6 +814,8 @@ function readLyricPosterTrapezoid(rootStyles: CSSStyleDeclaration): LyricPosterT
     bottomLeftY: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-left-y")) || 418,
     bottomRightX: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-right-x")) || 1201,
     bottomRightY: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-right-y")) || 415,
+    centerX: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-center-x")) || 882,
+    centerY: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-center-y")) || 215,
   };
 }
 
@@ -870,58 +881,53 @@ function layoutSvgRowsInsideTrapezoid(
   const topY = getTrapezoidTopY(trapezoid);
   const bottomY = getTrapezoidBottomY(trapezoid);
   const height = Math.max(20, bottomY - topY);
-  const centerY = topY + height / 2;
 
-  // Lock the lyric poster to the visual center of the 16:9 room artwork.
-  // The ceiling guide points may be asymmetric, but the words should still feel
-  // centered in the room, not centered inside the side-panel-affected viewport.
-  const roomCenterX = 1764 / 2;
+  // The center dot is the only horizontal/vertical anchor. This prevents viewport,
+  // side-panel, and asymmetric-trapezoid drift.
+  const anchorX = Math.max(0, Math.min(1764, trapezoid.centerX));
+  const anchorY = Math.max(topY, Math.min(bottomY, trapezoid.centerY));
 
-  // Tight stacked-poster geometry. The visible bottom of one row should nearly
-  // touch the visible top of the next row. SVG cap height is much smaller than
-  // font-size, so the center spacing intentionally uses a compact factor.
+  // Keep the stacked group centered on the dot while still inside the ceiling.
   const safeGap = rowGapPx;
-  const visualLineFactor = 0.40;
-  const heightSafety = 0.76;
+  const visualLineFactor = 0.36;
+  const heightSafety = 0.72;
   const maxFontByHeight =
     n === 1
-      ? height * 0.80
+      ? height * 0.78
       : ((height - Math.max(0, n - 1) * safeGap) / (1 + (n - 1) * visualLineFactor)) * heightSafety;
 
-  const baseFontSize = Math.max(18, maxFontByHeight);
-  const centerSpacing = n === 1 ? 0 : baseFontSize * visualLineFactor + safeGap;
-  const firstCenterY = centerY - (centerSpacing * (n - 1)) / 2;
+  const fontSize = Math.max(18, maxFontByHeight);
+  const centerSpacing = n === 1 ? 0 : fontSize * visualLineFactor + safeGap;
+  const groupHalfHeight = (centerSpacing * (n - 1)) / 2 + fontSize * 0.30;
+  const clampedCenterY = Math.max(topY + groupHalfHeight, Math.min(bottomY - groupHalfHeight, anchorY));
+  const firstCenterY = clampedCenterY - (centerSpacing * (n - 1)) / 2;
 
   return rows.map((row, index) => {
     const y = firstCenterY + index * centerSpacing;
-
-    // Use the likely visible glyph height, then measure the trapezoid at the top,
-    // center, and bottom of that row. This keeps the complete outlined text inside
-    // the ceiling while avoiding hard clipping as the primary fit method.
-    const visualHalfHeight = Math.max(8, baseFontSize * 0.30);
+    const visualHalfHeight = Math.max(8, fontSize * 0.30);
     const rowTop = Math.max(topY, y - visualHalfHeight);
     const rowBottom = Math.min(bottomY, y + visualHalfHeight);
     const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowTop);
     const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowBottom);
     const centerBounds = trapezoidHorizontalBoundsAtY(trapezoid, y);
 
-    const strokePad = Math.max(12, baseFontSize * 0.07);
+    const strokePad = Math.max(12, fontSize * 0.07);
     const safeLeft = Math.max(topBounds.left, bottomBounds.left, centerBounds.left) + strokePad;
     const safeRight = Math.min(topBounds.right, bottomBounds.right, centerBounds.right) - strokePad;
 
-    // Center every row on the fixed room center. Width expands equally left/right
-    // until it reaches the closest safe trapezoid edge.
-    const centeredHalfWidth = Math.max(14, Math.min(roomCenterX - safeLeft, safeRight - roomCenterX));
-    const safeWidth = centeredHalfWidth * 2;
-    const left = roomCenterX - centeredHalfWidth;
+    // Anchor every row to the center dot, then fit symmetrically to the closest
+    // trapezoid edge. This is the source of truth for centering.
+    const halfWidth = Math.max(24, Math.min(anchorX - safeLeft, safeRight - anchorX));
+    const width = halfWidth * 2;
+    const left = anchorX - halfWidth;
 
     return {
       text: row,
       left,
-      centerX: roomCenterX,
+      centerX: anchorX,
       centerY: y,
-      width: safeWidth,
-      fontSize: baseFontSize,
+      width,
+      fontSize,
     };
   });
 }
