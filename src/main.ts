@@ -82,10 +82,14 @@ type RoomUtilitySettings = {
   lyricPosterZoom: number;
   lyricPosterTilt: number;
   lyricPosterSkew: number;
-  lyricPosterTopLeft: number;
-  lyricPosterTopRight: number;
-  lyricPosterBottomLeft: number;
-  lyricPosterBottomRight: number;
+  lyricPosterTopLeftX: number;
+  lyricPosterTopLeftY: number;
+  lyricPosterTopRightX: number;
+  lyricPosterTopRightY: number;
+  lyricPosterBottomLeftX: number;
+  lyricPosterBottomLeftY: number;
+  lyricPosterBottomRightX: number;
+  lyricPosterBottomRightY: number;
   lyricPosterStroke: number;
   lyricPosterStrokeOpacity: number;
   lyricPosterFillOpacity: number;
@@ -119,10 +123,14 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterZoom: 1.00,
   lyricPosterTilt: 54,
   lyricPosterSkew: -4,
-  lyricPosterTopLeft: 3,
-  lyricPosterTopRight: 97,
-  lyricPosterBottomLeft: 18,
-  lyricPosterBottomRight: 82,
+  lyricPosterTopLeftX: 402,
+  lyricPosterTopLeftY: 12,
+  lyricPosterTopRightX: 1400,
+  lyricPosterTopRightY: 12,
+  lyricPosterBottomLeftX: 582,
+  lyricPosterBottomLeftY: 178,
+  lyricPosterBottomRightX: 1228,
+  lyricPosterBottomRightY: 178,
   lyricPosterStroke: 2.4,
   lyricPosterStrokeOpacity: 0.52,
   lyricPosterFillOpacity: 0.02,
@@ -133,7 +141,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricBaseFontSize: 12
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v11";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v12";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -623,10 +631,14 @@ function bindRoomUtilityControls(): void {
     ["lyricPosterZoom", "lyricPosterZoomValue"],
     ["lyricPosterTilt", "lyricPosterTiltValue"],
     ["lyricPosterSkew", "lyricPosterSkewValue"],
-    ["lyricPosterTopLeft", "lyricPosterTopLeftValue"],
-    ["lyricPosterTopRight", "lyricPosterTopRightValue"],
-    ["lyricPosterBottomLeft", "lyricPosterBottomLeftValue"],
-    ["lyricPosterBottomRight", "lyricPosterBottomRightValue"],
+    ["lyricPosterTopLeftX", "lyricPosterTopLeftXValue"],
+    ["lyricPosterTopLeftY", "lyricPosterTopLeftYValue"],
+    ["lyricPosterTopRightX", "lyricPosterTopRightXValue"],
+    ["lyricPosterTopRightY", "lyricPosterTopRightYValue"],
+    ["lyricPosterBottomLeftX", "lyricPosterBottomLeftXValue"],
+    ["lyricPosterBottomLeftY", "lyricPosterBottomLeftYValue"],
+    ["lyricPosterBottomRightX", "lyricPosterBottomRightXValue"],
+    ["lyricPosterBottomRightY", "lyricPosterBottomRightYValue"],
     ["lyricPosterStroke", "lyricPosterStrokeValue"],
     ["lyricPosterStrokeOpacity", "lyricPosterStrokeOpacityValue"],
     ["lyricPosterFillOpacity", "lyricPosterFillOpacityValue"],
@@ -738,10 +750,14 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-zoom", String(roomUtility.lyricPosterZoom));
   root.style.setProperty("--lyric-poster-tilt", `${roomUtility.lyricPosterTilt}deg`);
   root.style.setProperty("--lyric-poster-skew", `${roomUtility.lyricPosterSkew}deg`);
-  root.style.setProperty("--lyric-poster-top-left", `${roomUtility.lyricPosterTopLeft}%`);
-  root.style.setProperty("--lyric-poster-top-right", `${roomUtility.lyricPosterTopRight}%`);
-  root.style.setProperty("--lyric-poster-bottom-left", `${roomUtility.lyricPosterBottomLeft}%`);
-  root.style.setProperty("--lyric-poster-bottom-right", `${roomUtility.lyricPosterBottomRight}%`);
+  root.style.setProperty("--lyric-poster-top-left-x", `${roomUtility.lyricPosterTopLeftX}px`);
+  root.style.setProperty("--lyric-poster-top-left-y", `${roomUtility.lyricPosterTopLeftY}px`);
+  root.style.setProperty("--lyric-poster-top-right-x", `${roomUtility.lyricPosterTopRightX}px`);
+  root.style.setProperty("--lyric-poster-top-right-y", `${roomUtility.lyricPosterTopRightY}px`);
+  root.style.setProperty("--lyric-poster-bottom-left-x", `${roomUtility.lyricPosterBottomLeftX}px`);
+  root.style.setProperty("--lyric-poster-bottom-left-y", `${roomUtility.lyricPosterBottomLeftY}px`);
+  root.style.setProperty("--lyric-poster-bottom-right-x", `${roomUtility.lyricPosterBottomRightX}px`);
+  root.style.setProperty("--lyric-poster-bottom-right-y", `${roomUtility.lyricPosterBottomRightY}px`);
   root.style.setProperty("--lyric-poster-stroke", `${roomUtility.lyricPosterStroke}px`);
   root.style.setProperty("--lyric-poster-stroke-opacity", String(roomUtility.lyricPosterStrokeOpacity));
   root.style.setProperty("--lyric-poster-fill-opacity", String(roomUtility.lyricPosterFillOpacity));
