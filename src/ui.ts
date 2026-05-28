@@ -793,7 +793,7 @@ export function updateLyricsCeiling(
 
   const clipId = `lyricPosterClip-${Math.abs(hashString(renderSignature))}`;
   activeBlock.innerHTML = `
-    <svg class="lyric-poster-svg" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true">
+    <svg class="lyric-poster-svg lyric-poster-svg-v30" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true">
       <defs>
         <clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">
           <polygon points="${trapezoid.topLeftX},${trapezoid.topLeftY} ${trapezoid.topRightX},${trapezoid.topRightY} ${trapezoid.bottomRightX},${trapezoid.bottomRightY} ${trapezoid.bottomLeftX},${trapezoid.bottomLeftY}" />
@@ -809,15 +809,15 @@ export function updateLyricsCeiling(
           .map(
             (row) => `
               <text
-                class="lyric-poster-svg-row"
-                x="${row.left}"
-                y="${row.centerY}"
-                font-size="${row.fontSize}"
-                textLength="${row.width}"
+                class="lyric-poster-svg-row lyric-poster-svg-row-v30"
+                x="0"
+                y="${row.sourceBaseline}"
+                font-size="${row.sourceFontSize}"
+                textLength="${row.sourceWidth}"
                 lengthAdjust="spacingAndGlyphs"
-                dominant-baseline="middle"
+                dominant-baseline="alphabetic"
                 text-anchor="start"
-                transform="translate(${row.centerX} ${row.centerY}) skewX(${row.tilt}) scale(1 ${row.scaleY}) translate(${-row.centerX} ${-row.centerY})"
+                style="transform-box: view-box; transform-origin: 0 0; transform: ${row.matrix3d};"
               >${escapeHtml(row.text)}</text>
             `,
           )
@@ -906,62 +906,155 @@ function buildCeilingPosterLayout(
   const n = Math.max(1, rowTexts.length) as 1 | 2 | 3;
   const profile = getPosterRowProfile(n, controls);
   const overallScale = clamp(controls.overallScale, 0.45, 1.35);
-  const totalTightness = clamp(controls.rowTightness + profile.tightness, -1.20, 0.80);
-  const effectivePerspective = clamp(controls.perspectiveStrength * profile.perspective, 0, 8);
-  const baseCenterY = clamp(trapezoid.centerY + controls.overallY, topY, bottomY);
+  const totalTightness = clamp(controls.rowTightness + profile.tightness, -1.60, 0.90);
+  const effectivePerspective = clamp(controls.perspectiveStrength * profile.perspective, 0.20, 9.00);
+  const centerY = clamp(trapezoid.centerY + controls.overallY, topY, bottomY);
 
-  const rowPerspectiveScales = rowTexts.map((_, index) => {
-    const t = n === 1 ? 0.5 : index / Math.max(1, n - 1);
-    return clamp(1 + (0.5 - t) * 0.44 * effectivePerspective, 0.28, 2.65);
-  });
+  // In v30, the line itself is warped into a quadrilateral. This is the
+  // important change: the text no longer remains a perfect rectangle.
+  // Each row owns a slice of the ceiling trapezoid, and the matrix3d maps
+  // a simple text rectangle into that slice.
+  const visibleHeight = height * overallScale;
+  const groupTop = clamp(centerY - visibleHeight / 2, topY, bottomY);
+  const groupBottom = clamp(groupTop + visibleHeight, topY, bottomY);
+  const finalTop = groupBottom - groupTop < visibleHeight ? Math.max(topY, groupBottom - visibleHeight) : groupTop;
+  const finalBottom = Math.min(bottomY, finalTop + visibleHeight);
 
-  const rowScaleYs = rowPerspectiveScales.map((scale) => clamp(profile.verticalStretch * scale, 0.28, 4.00));
-  const baselineSpacingCoeff = n === 1 ? 0 : clamp(0.62 + totalTightness, 0.04, 1.35);
-  const verticalCoeff = n === 1
-    ? 0.74 * rowScaleYs[0]
-    : (n - 1) * baselineSpacingCoeff + 0.37 * rowScaleYs[0] + 0.37 * rowScaleYs[rowScaleYs.length - 1];
-  const fontSize = clamp((height * 0.96 * overallScale) / Math.max(0.01, verticalCoeff), 10, 420);
-  const centerSpacing = fontSize * baselineSpacingCoeff;
-  const groupHalf = n === 1
-    ? fontSize * 0.37 * rowScaleYs[0]
-    : ((n - 1) * centerSpacing) / 2 + fontSize * 0.37 * Math.max(rowScaleYs[0], rowScaleYs[rowScaleYs.length - 1]);
-  const clampedCenterY = clamp(baseCenterY, topY + groupHalf, bottomY - groupHalf);
-  const firstY = clampedCenterY - ((n - 1) * centerSpacing) / 2;
-
-  const autoCeilingTilt = getCeilingSideTiltDegrees(trapezoid);
-  const perspectiveTilt = autoCeilingTilt * clamp(controls.perspectiveStrength / 2.25, 0.05, 2.80);
+  const bandHeight = Math.max(8, (finalBottom - finalTop) / n);
+  const overlapPx = clamp(-totalTightness, 0, 1.6) * bandHeight * 0.20;
+  const gapPx = clamp(totalTightness, 0, 0.9) * bandHeight * 0.22;
 
   const rows = rowTexts.map((rowText, index) => {
-    const y = firstY + index * centerSpacing;
-    const scaleY = rowScaleYs[index];
-    const visualHalfHeight = Math.max(4, fontSize * 0.37 * scaleY);
-    const rowTilt = clamp(perspectiveTilt + profile.tilt, -76, 76);
-    const skewPad = Math.abs(Math.tan((rowTilt * Math.PI) / 180)) * visualHalfHeight;
-    const bounds = [
-      trapezoidHorizontalBoundsAtY(trapezoid, clamp(y - visualHalfHeight, topY, bottomY)),
-      trapezoidHorizontalBoundsAtY(trapezoid, y),
-      trapezoidHorizontalBoundsAtY(trapezoid, clamp(y + visualHalfHeight, topY, bottomY)),
-    ];
+    const rawTop = finalTop + index * bandHeight + (index > 0 ? gapPx : 0) - overlapPx;
+    const rawBottom = finalTop + (index + 1) * bandHeight - (index < n - 1 ? gapPx : 0) + overlapPx;
+    const rowTop = clamp(rawTop, topY, bottomY);
+    const rowBottom = clamp(rawBottom, topY, bottomY);
+    const rowHeight = Math.max(8, rowBottom - rowTop);
 
-    const strokePad = Math.max(8, fontSize * 0.050) + skewPad;
-    const safeLeft = Math.max(...bounds.map((b) => b.left)) + strokePad;
-    const safeRight = Math.min(...bounds.map((b) => b.right)) - strokePad;
-    const halfWidth = Math.max(24, Math.min(centerX - safeLeft, safeRight - centerX));
-    const width = halfWidth * 2;
+    const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowTop);
+    const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowBottom);
+
+    const pad = Math.max(5, rowHeight * 0.030);
+    const topLeft = { x: topBounds.left + pad, y: rowTop + pad };
+    const topRight = { x: topBounds.right - pad, y: rowTop + pad };
+    const bottomRight = { x: bottomBounds.right - pad, y: rowBottom - pad };
+    const bottomLeft = { x: bottomBounds.left + pad, y: rowBottom - pad };
+
+    // Perspective strength subtly increases the top-vs-bottom contrast without
+    // escaping the ceiling clip. It pulls the lower edge inward more than the top.
+    const t = n === 1 ? 0.5 : index / Math.max(1, n - 1);
+    const lowerInward = clamp((effectivePerspective - 1) * 0.018 * (0.85 + t * 0.30), 0, 0.18);
+    const upperOutward = clamp((effectivePerspective - 1) * 0.006 * (1.15 - t * 0.30), 0, 0.06);
+    const rowCenterX = (topLeft.x + topRight.x + bottomLeft.x + bottomRight.x) / 4;
+
+    const adjustedTopLeft = pullPointFromCenter(topLeft, rowCenterX, -upperOutward);
+    const adjustedTopRight = pullPointFromCenter(topRight, rowCenterX, -upperOutward);
+    const adjustedBottomLeft = pullPointFromCenter(bottomLeft, rowCenterX, lowerInward);
+    const adjustedBottomRight = pullPointFromCenter(bottomRight, rowCenterX, lowerInward);
+
+    const sourceWidth = 1200;
+    const sourceHeight = 180;
+    const sourceFontSize = sourceHeight * clamp(profile.verticalStretch, 0.40, 3.00);
+    const sourceBaseline = sourceHeight * 0.70;
+    const matrix3d = quadToCssMatrix3d(
+      sourceWidth,
+      sourceHeight,
+      adjustedTopLeft,
+      adjustedTopRight,
+      adjustedBottomRight,
+      adjustedBottomLeft,
+    );
 
     return {
       text: rowText,
-      left: centerX - halfWidth,
-      centerX,
-      centerY: y,
-      width,
-      fontSize,
-      scaleY,
-      tilt: rowTilt,
+      sourceWidth,
+      sourceHeight,
+      sourceFontSize,
+      sourceBaseline,
+      matrix3d,
     };
   });
 
-  return { rows, centerX, centerY: clampedCenterY };
+  return { rows, centerX, centerY };
+}
+
+function pullPointFromCenter(point: Point2D, centerX: number, inwardAmount: number): Point2D {
+  return {
+    x: point.x + (centerX - point.x) * inwardAmount,
+    y: point.y,
+  };
+}
+
+function quadToCssMatrix3d(
+  sourceWidth: number,
+  sourceHeight: number,
+  topLeft: Point2D,
+  topRight: Point2D,
+  bottomRight: Point2D,
+  bottomLeft: Point2D,
+): string {
+  // Homography from source rectangle to destination quadrilateral.
+  // CSS matrix3d is used here because SVG skewX can only make a parallelogram,
+  // while this maps into a true four-corner perspective shape.
+  const x0 = topLeft.x;
+  const y0 = topLeft.y;
+  const x1 = topRight.x;
+  const y1 = topRight.y;
+  const x2 = bottomRight.x;
+  const y2 = bottomRight.y;
+  const x3 = bottomLeft.x;
+  const y3 = bottomLeft.y;
+
+  const dx1 = x1 - x2;
+  const dy1 = y1 - y2;
+  const dx2 = x3 - x2;
+  const dy2 = y3 - y2;
+  const sx = x0 - x1 + x2 - x3;
+  const sy = y0 - y1 + y2 - y3;
+  const denominator = dx1 * dy2 - dx2 * dy1;
+
+  let a: number;
+  let b: number;
+  let c: number;
+  let d: number;
+  let e: number;
+  let f: number;
+  let g: number;
+  let h: number;
+
+  if (Math.abs(denominator) < 0.0001) {
+    a = x1 - x0;
+    b = y1 - y0;
+    c = x3 - x0;
+    d = y3 - y0;
+    e = x0;
+    f = y0;
+    g = 0;
+    h = 0;
+  } else {
+    g = (sx * dy2 - dx2 * sy) / denominator;
+    h = (dx1 * sy - sx * dy1) / denominator;
+    a = x1 - x0 + g * x1;
+    b = y1 - y0 + g * y1;
+    c = x3 - x0 + h * x3;
+    d = y3 - y0 + h * y3;
+    e = x0;
+    f = y0;
+  }
+
+  // Include source rect normalization inside the matrix.
+  const m11 = a / sourceWidth;
+  const m12 = b / sourceWidth;
+  const m14 = g / sourceWidth;
+  const m21 = c / sourceHeight;
+  const m22 = d / sourceHeight;
+  const m24 = h / sourceHeight;
+
+  return `matrix3d(${formatMatrixNumber(m11)}, ${formatMatrixNumber(m12)}, 0, ${formatMatrixNumber(m14)}, ${formatMatrixNumber(m21)}, ${formatMatrixNumber(m22)}, 0, ${formatMatrixNumber(m24)}, 0, 0, 1, 0, ${formatMatrixNumber(e)}, ${formatMatrixNumber(f)}, 0, 1)`;
+}
+
+function formatMatrixNumber(value: number): string {
+  return Number.isFinite(value) ? value.toFixed(8).replace(/\.?0+$/, "") : "0";
 }
 
 function getPosterRowProfile(rowCount: 1 | 2 | 3, controls: CeilingPosterControls): PosterRowProfile {
@@ -1146,13 +1239,16 @@ type CeilingPosterLayout = {
 
 type LyricPosterSvgRowLayout = {
   text: string;
-  left: number;
-  centerX: number;
-  centerY: number;
-  width: number;
-  fontSize: number;
-  scaleY: number;
-  tilt: number;
+  sourceWidth: number;
+  sourceHeight: number;
+  sourceFontSize: number;
+  sourceBaseline: number;
+  matrix3d: string;
+};
+
+type Point2D = {
+  x: number;
+  y: number;
 };
 
 export function updateLyricsToggleUi(status: LyricsPayload["status"], enabled: boolean): void {

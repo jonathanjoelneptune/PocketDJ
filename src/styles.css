@@ -4406,3 +4406,22 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 #lyricPosterMaxRows,
 #lyricPosterTransition { width: 100% !important; }
+
+
+/* V30 true quad-warp ceiling text.
+   This supplements the v29 WordArt controls with a real matrix3d four-corner
+   warp per row, so text no longer has to remain a perfect rectangle. */
+.lyric-poster-svg-v30 {
+  overflow: visible !important;
+}
+
+.lyric-poster-svg-row-v30 {
+  transform-origin: 0 0 !important;
+  transform-box: view-box !important;
+  will-change: transform, opacity;
+  dominant-baseline: alphabetic;
+}
+
+.lyric-poster-svg-v30 .lyric-poster-rows {
+  transform: none !important;
+}
