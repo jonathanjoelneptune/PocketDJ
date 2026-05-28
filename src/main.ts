@@ -190,7 +190,7 @@ type RoomUtilitySettings = {
   lyricPosterThreeRowBottomTextBottomRightY: number;
   lyricPosterMaxRows: "auto" | "1" | "2" | "3";
   lyricPosterRowBreakpoint: number;
-  lyricPosterTransition: "soft-dissolve" | "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
+  lyricPosterTransition: "soft-dissolve" | "none" | "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {

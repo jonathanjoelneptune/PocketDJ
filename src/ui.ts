@@ -1300,7 +1300,7 @@ function buildCeilingPosterLayout(
 ): CeilingPosterLayout {
   const words = normalizePosterWords(text);
   const isShortLyric = text.trim().length <= 6;
-  const activeTrapezoid = isShortLyric
+  const activeTrapezoid: LyricPosterTrapezoid = isShortLyric
     ? {
         topLeftX: controls.shortTopLeftX,
         topLeftY: controls.shortTopLeftY,
@@ -1310,6 +1310,18 @@ function buildCeilingPosterLayout(
         bottomLeftY: controls.shortBottomLeftY,
         bottomRightX: controls.shortBottomRightX,
         bottomRightY: controls.shortBottomRightY,
+        centerX:
+          (controls.shortTopLeftX +
+            controls.shortTopRightX +
+            controls.shortBottomLeftX +
+            controls.shortBottomRightX) /
+          4,
+        centerY:
+          (controls.shortTopLeftY +
+            controls.shortTopRightY +
+            controls.shortBottomLeftY +
+            controls.shortBottomRightY) /
+          4,
       }
     : trapezoid;
   const activeControls = isShortLyric
