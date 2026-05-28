@@ -311,6 +311,12 @@ export function renderShell(state: AppState): void {
               <label>2-row vertical stretch <span id="lyricPosterTwoRowVerticalStretchValue">0.93</span>
                 <input id="lyricPosterTwoRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.93" />
               </label>
+              <label>2-row top row vertical placement px <span id="lyricPosterTwoRowTopYValue">0</span>
+                <input id="lyricPosterTwoRowTopY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>2-row bottom row vertical placement px <span id="lyricPosterTwoRowBottomYValue">0</span>
+                <input id="lyricPosterTwoRowBottomY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
               <label>2-row row tightness <span id="lyricPosterTwoRowTightnessValue">0.45</span>
                 <input id="lyricPosterTwoRowTightness" type="range" min="-2.20" max="1.20" step="0.01" value="0.45" />
               </label>
@@ -324,6 +330,15 @@ export function renderShell(state: AppState): void {
               <div class="utility-minihead">3-row WordArt profile</div>
               <label>3-row vertical stretch <span id="lyricPosterThreeRowVerticalStretchValue">0.51</span>
                 <input id="lyricPosterThreeRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.51" />
+              </label>
+              <label>3-row top row vertical placement px <span id="lyricPosterThreeRowTopYValue">0</span>
+                <input id="lyricPosterThreeRowTopY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row middle row vertical placement px <span id="lyricPosterThreeRowMiddleYValue">0</span>
+                <input id="lyricPosterThreeRowMiddleY" type="range" min="-450" max="450" step="1" value="0" />
+              </label>
+              <label>3-row bottom row vertical placement px <span id="lyricPosterThreeRowBottomYValue">0</span>
+                <input id="lyricPosterThreeRowBottomY" type="range" min="-450" max="450" step="1" value="0" />
               </label>
               <label>3-row row tightness <span id="lyricPosterThreeRowTightnessValue">0.52</span>
                 <input id="lyricPosterThreeRowTightness" type="range" min="-2.20" max="1.20" step="0.01" value="0.52" />
@@ -1033,10 +1048,15 @@ function readCeilingPosterControls(
     oneRowTextBottomRightX: readNumber("--lyric-poster-one-row-text-bottom-right-x", 0),
     oneRowTextBottomRightY: readNumber("--lyric-poster-one-row-text-bottom-right-y", 0),
     twoRowVerticalStretch: readNumber("--lyric-poster-two-row-vertical-stretch", 1.10),
+    twoRowTopY: readNumber("--lyric-poster-two-row-top-y", 0),
+    twoRowBottomY: readNumber("--lyric-poster-two-row-bottom-y", 0),
     twoRowTightness: readNumber("--lyric-poster-two-row-tightness", -0.20),
     twoRowPerspective: readNumber("--lyric-poster-two-row-perspective", 1),
     twoRowTilt: readNumber("--lyric-poster-two-row-tilt", -10),
     threeRowVerticalStretch: readNumber("--lyric-poster-three-row-vertical-stretch", 0.95),
+    threeRowTopY: readNumber("--lyric-poster-three-row-top-y", 0),
+    threeRowMiddleY: readNumber("--lyric-poster-three-row-middle-y", 0),
+    threeRowBottomY: readNumber("--lyric-poster-three-row-bottom-y", 0),
     threeRowTightness: readNumber("--lyric-poster-three-row-tightness", -0.25),
     threeRowPerspective: readNumber("--lyric-poster-three-row-perspective", 1),
     threeRowTilt: readNumber("--lyric-poster-three-row-tilt", -12),
@@ -1125,7 +1145,7 @@ function buildCeilingPosterLayout(
   const perspectiveTilt = autoCeilingTilt * clamp(profile.perspective / 2.25, 0.10, 2.80);
 
   const rows = rowTexts.map((rowText, index) => {
-    const y = firstY + index * centerSpacing;
+    const y = firstY + index * centerSpacing + getRowVerticalOffset(n, index, controls);
     const scaleYForRow = rowScaleYs[index];
     const visualHalfHeight = Math.max(4, fontSize * 0.39 * scaleYForRow);
     const rowTilt = clamp(perspectiveTilt + profile.tilt, -76, 76);
@@ -1215,6 +1235,20 @@ function getPosterRowProfile(rowCount: 1 | 2 | 3, controls: CeilingPosterControl
   };
 }
 
+
+
+function getRowVerticalOffset(
+  rowCount: 1 | 2 | 3,
+  rowIndex: number,
+  controls: CeilingPosterControls,
+): number {
+  if (rowCount === 2 && rowIndex === 0) return controls.twoRowTopY;
+  if (rowCount === 2 && rowIndex === 1) return controls.twoRowBottomY;
+  if (rowCount === 3 && rowIndex === 0) return controls.threeRowTopY;
+  if (rowCount === 3 && rowIndex === 1) return controls.threeRowMiddleY;
+  if (rowCount === 3 && rowIndex === 2) return controls.threeRowBottomY;
+  return 0;
+}
 
 function getRowProjectionOffsets(
   rowCount: 1 | 2 | 3,
@@ -1562,10 +1596,15 @@ type CeilingPosterControls = {
   oneRowTextBottomRightX: number;
   oneRowTextBottomRightY: number;
   twoRowVerticalStretch: number;
+  twoRowTopY: number;
+  twoRowBottomY: number;
   twoRowTightness: number;
   twoRowPerspective: number;
   twoRowTilt: number;
   threeRowVerticalStretch: number;
+  threeRowTopY: number;
+  threeRowMiddleY: number;
+  threeRowBottomY: number;
   threeRowTightness: number;
   threeRowPerspective: number;
   threeRowTilt: number;

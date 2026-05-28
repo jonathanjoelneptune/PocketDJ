@@ -4273,10 +4273,15 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-one-row-text-bottom-right-x: 0px;
   --lyric-poster-one-row-text-bottom-right-y: 0px;
   --lyric-poster-two-row-vertical-stretch: 0.93;
+  --lyric-poster-two-row-top-y: 0px;
+  --lyric-poster-two-row-bottom-y: 0px;
   --lyric-poster-two-row-tightness: 0.45;
   --lyric-poster-two-row-perspective: 1;
   --lyric-poster-two-row-tilt: -10;
   --lyric-poster-three-row-vertical-stretch: 0.51;
+  --lyric-poster-three-row-top-y: 0px;
+  --lyric-poster-three-row-middle-y: 0px;
+  --lyric-poster-three-row-bottom-y: 0px;
   --lyric-poster-three-row-tightness: 0.52;
   --lyric-poster-three-row-perspective: 1;
   --lyric-poster-three-row-tilt: -12;
