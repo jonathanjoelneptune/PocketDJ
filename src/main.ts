@@ -191,6 +191,8 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterBottomRightY: 189,
   lyricPosterGuideOpacity: 0.00,
   lyricPosterCenterGuideOpacity: 0.00,
+  lyricPosterTwoRowBandGuideOpacity: 0.00,
+  lyricPosterThreeRowBandGuideOpacity: 0.00,
   lyricPosterStroke: 7.6,
   lyricPosterStrokeOpacity: 0.49,
   lyricPosterFillOpacity: 0,
@@ -208,12 +210,22 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterOneRowTextBottomRightX: 0,
   lyricPosterOneRowTextBottomRightY: 0,
   lyricPosterTwoRowVerticalStretch: 0.93,
+  lyricPosterTwoRowTopBandTopY: 18,
+  lyricPosterTwoRowTopBandBottomY: 106,
+  lyricPosterTwoRowBottomBandTopY: 106,
+  lyricPosterTwoRowBottomBandBottomY: 195,
   lyricPosterTwoRowTopY: 0,
   lyricPosterTwoRowBottomY: 0,
   lyricPosterTwoRowTightness: 0.45,
   lyricPosterTwoRowPerspective: 1.00,
   lyricPosterTwoRowTilt: -10,
   lyricPosterThreeRowVerticalStretch: 0.51,
+  lyricPosterThreeRowTopBandTopY: 18,
+  lyricPosterThreeRowTopBandBottomY: 76,
+  lyricPosterThreeRowMiddleBandTopY: 76,
+  lyricPosterThreeRowMiddleBandBottomY: 136,
+  lyricPosterThreeRowBottomBandTopY: 136,
+  lyricPosterThreeRowBottomBandBottomY: 195,
   lyricPosterThreeRowTopY: 0,
   lyricPosterThreeRowMiddleY: 0,
   lyricPosterThreeRowBottomY: 0,
@@ -264,7 +276,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTransition: "push-slide"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v35";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v35-1";
 let roomUtility = loadRoomUtilitySettings();
 
 

@@ -1268,16 +1268,18 @@ function makeBandTrapezoid(full: LyricPosterTrapezoid, rawTopY: number, rawBotto
   const safeBottomY = Math.max(bottomY, topY + 4);
   const topBounds = trapezoidHorizontalBoundsAtY(full, topY);
   const bottomBounds = trapezoidHorizontalBoundsAtY(full, safeBottomY);
-  return makeLyricPosterTrapezoid(
-    topBounds.left,
-    topY,
-    topBounds.right,
-    topY,
-    bottomBounds.left,
-    safeBottomY,
-    bottomBounds.right,
-    safeBottomY,
-  );
+  return {
+    topLeftX: topBounds.left,
+    topLeftY: topY,
+    topRightX: topBounds.right,
+    topRightY: topY,
+    bottomLeftX: bottomBounds.left,
+    bottomLeftY: safeBottomY,
+    bottomRightX: bottomBounds.right,
+    bottomRightY: safeBottomY,
+    centerX: (topBounds.left + topBounds.right + bottomBounds.left + bottomBounds.right) / 4,
+    centerY: (topY + safeBottomY) / 2,
+  };
 }
 
 function renderBandGuidePolygons(rowBands: LyricPosterTrapezoid[], rowCount: number): string {
@@ -1767,6 +1769,7 @@ type CeilingPosterLayout = {
   rows: LyricPosterSvgRowLayout[];
   centerX: number;
   centerY: number;
+  rowBands: LyricPosterTrapezoid[];
 };
 
 type LyricPosterSvgRowLayout = {
