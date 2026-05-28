@@ -1067,9 +1067,14 @@ export function updateLyricsCeiling(
     return;
   }
 
+  if (activeIndex < 0) {
+    clearLyrics();
+    return;
+  }
+
   const centerIndex = Math.max(0, Math.min(activeIndex, lyrics.syncedLyrics.length - 1));
   const activeLine = lyrics.syncedLyrics[centerIndex];
-  if (!activeLine?.text?.trim()) {
+  if (!activeLine?.text?.trim() || !isLyricLineCurrentlyVisible(lyrics.syncedLyrics, centerIndex, playbackMs)) {
     clearLyrics();
     return;
   }
@@ -1174,6 +1179,43 @@ export function updateLyricsCeiling(
 
   void playbackMs;
 }
+
+function isLyricLineCurrentlyVisible(
+  lines: LyricsPayload["syncedLyrics"],
+  index: number,
+  playbackMs: number,
+): boolean {
+  const line = lines[index];
+  const startMs = typeof line?.timeMs === "number" ? line.timeMs : null;
+  if (startMs === null) return true;
+  if (playbackMs < startMs) return false;
+
+  const nextTimedLine = lines.slice(index + 1).find((candidate) => typeof candidate.timeMs === "number");
+  const nextStartMs = typeof nextTimedLine?.timeMs === "number" ? nextTimedLine.timeMs : null;
+  const gapToNext = nextStartMs === null ? Number.POSITIVE_INFINITY : Math.max(0, nextStartMs - startMs);
+
+  // If the next lyric arrives quickly, keep the current lyric visible until that next line takes over.
+  // If there is a long instrumental/singing gap, only hold the current line briefly, then clear the ceiling.
+  const longGapThresholdMs = 8_000;
+  const naturalHoldMs = estimateLyricLineHoldMs(line.text);
+  const visibleUntilMs = gapToNext > longGapThresholdMs
+    ? startMs + naturalHoldMs
+    : (nextStartMs ?? startMs + naturalHoldMs);
+
+  return playbackMs < visibleUntilMs;
+}
+
+function estimateLyricLineHoldMs(text: string): number {
+  const normalized = text.trim();
+  if (!normalized) return 0;
+
+  // Short lines like "oh" should not vanish instantly, but long lines should not sit through a 30 second gap.
+  const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+  const characterWeightMs = normalized.length * 95;
+  const wordWeightMs = wordCount * 280;
+  return Math.max(1_800, Math.min(6_500, 900 + characterWeightMs + wordWeightMs));
+}
+
 
 function readLyricPosterTrapezoid(rootStyles: CSSStyleDeclaration): LyricPosterTrapezoid {
   const readPx = (name: string, fallback: number) => {
