@@ -4263,6 +4263,15 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-one-row-tightness: 0;
   --lyric-poster-one-row-perspective: 1.33;
   --lyric-poster-one-row-tilt: -32;
+
+  --lyric-poster-one-row-text-top-left-x: 0px;
+  --lyric-poster-one-row-text-top-left-y: 0px;
+  --lyric-poster-one-row-text-top-right-x: 0px;
+  --lyric-poster-one-row-text-top-right-y: 0px;
+  --lyric-poster-one-row-text-bottom-left-x: 0px;
+  --lyric-poster-one-row-text-bottom-left-y: 0px;
+  --lyric-poster-one-row-text-bottom-right-x: 0px;
+  --lyric-poster-one-row-text-bottom-right-y: 0px;
   --lyric-poster-two-row-vertical-stretch: 0.93;
   --lyric-poster-two-row-tightness: 0.45;
   --lyric-poster-two-row-perspective: 1;
@@ -4408,20 +4417,58 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 #lyricPosterTransition { width: 100% !important; }
 
 
-/* V30 true quad-warp ceiling text.
-   This supplements the v29 WordArt controls with a real matrix3d four-corner
-   warp per row, so text no longer has to remain a perfect rectangle. */
-.lyric-poster-svg-v30 {
-  overflow: visible !important;
-}
-
-.lyric-poster-svg-row-v30 {
-  transform-origin: 0 0 !important;
-  transform-box: view-box !important;
-  will-change: transform, opacity;
-  dominant-baseline: alphabetic;
-}
-
-.lyric-poster-svg-v30 .lyric-poster-rows {
+/* V31 one-row projection corner warp.
+   This returns to the v29 row profile behavior, but renders lyric text as
+   HTML rows that can be mapped into real four-corner WordArt-style shapes. */
+.lyric-poster-html-rows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
   transform: none !important;
+  transform-origin: 0 0 !important;
+}
+
+.lyric-poster-html-row {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  will-change: transform;
+}
+
+.lyric-poster-html-row span {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  text-align: center;
+  font-family: "Arial Black", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  line-height: 0.86;
+  letter-spacing: 0.018em;
+  color: rgba(255, 255, 255, var(--lyric-poster-fill-opacity));
+  -webkit-text-stroke: var(--lyric-poster-stroke) rgba(218, 218, 218, var(--lyric-poster-stroke-opacity));
+  paint-order: stroke fill;
+  filter: drop-shadow(0 0 calc(1px + (var(--lyric-poster-glow) * 8px)) rgba(235, 235, 235, calc(var(--lyric-poster-glow) * 0.32)));
+}
+
+.lyric-poster-guide-svg {
+  z-index: 2;
+}
+
+.lyric-poster-transition-push .lyric-poster-html-rows {
+  animation: lyricPosterPushV29 440ms cubic-bezier(.18, .88, .2, 1) both;
+}
+
+.lyric-poster-transition-fade .lyric-poster-html-rows {
+  animation: lyricPosterFadeV29 560ms ease both;
 }
