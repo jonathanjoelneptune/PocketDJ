@@ -4,6 +4,8 @@ import { formatMs, qs } from "./utils/dom";
 
 
 let lastLyricsRenderSignature = "";
+let previousLyricPosterText = "";
+let lyricPosterTransitionFlip = false;
 
 type MarqueeState = "empty" | "paused" | "playing";
 
@@ -263,15 +265,15 @@ export function renderShell(state: AppState): void {
                 <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="7.6" />
               </label>
               <label>Stroke color
-                <input id="lyricPosterStrokeColor" type="color" value="#d6d6d6" />
+                <input id="lyricPosterStrokeColor" type="color" value="#4d4c4c" />
               </label>
               <label>Fill color
-                <input id="lyricPosterFillColor" type="color" value="#ffffff" />
+                <input id="lyricPosterFillColor" type="color" value="#000000" />
               </label>
-              <label>Stroke opacity <span id="lyricPosterStrokeOpacityValue">0.49</span>
-                <input id="lyricPosterStrokeOpacity" type="range" min="0" max="1" step="0.01" value="0.49" />
+              <label>Stroke opacity <span id="lyricPosterStrokeOpacityValue">0.30</span>
+                <input id="lyricPosterStrokeOpacity" type="range" min="0" max="1" step="0.01" value="0.30" />
               </label>
-              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0</span>
+              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0.35</span>
                 <input id="lyricPosterFillOpacity" type="range" min="0" max="0.35" step="0.01" value="0" />
               </label>
               <label>Glow strength <span id="lyricPosterGlowValue">0</span>
@@ -285,6 +287,10 @@ export function renderShell(state: AppState): void {
               <label class="utility-checkbox">
                 <input id="lyricPosterEffectEmboss" type="checkbox" />
                 Emboss
+              </label>
+              <label class="utility-checkbox">
+                <input id="lyricPosterEffectInsetEmboss" type="checkbox" />
+                Inset emboss
               </label>
               <label class="utility-checkbox">
                 <input id="lyricPosterEffectBevel" type="checkbox" />
@@ -1576,6 +1582,12 @@ function constrainPointToTrapezoid(point: Point2D, trapezoid: LyricPosterTrapezo
 
 function choosePosterRowCount(words: string[], breakpoint: number): 1 | 2 {
   const lyricText = words.join(" ");
+  const lyricPosterTransitionClass = lyricPosterTransitionFlip ? "lyric-poster-transition-b" : "lyric-poster-transition-a";
+  const lyricPosterChanged = lyricText !== previousLyricPosterText;
+  if (lyricPosterChanged) {
+    lyricPosterTransitionFlip = !lyricPosterTransitionFlip;
+    previousLyricPosterText = lyricText;
+  }
   const safeBreakpoint = Math.max(10, Math.min(80, Math.round(breakpoint || 28)));
   if (lyricText.length >= safeBreakpoint) return 2;
   return 1;
@@ -1695,7 +1707,7 @@ type LyricPosterTrapezoid = {
 
 type CeilingPosterControls = {
   maxRows: "auto" | "1" | "2" | "3";
-  transition: "push-slide" | "fade-slide";
+  transition: "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
   rowBreakpoint: number;
   twoRowBandGuideOpacity: number;
   threeRowBandGuideOpacity: number;

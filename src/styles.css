@@ -3902,11 +3902,12 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-tilt: 54deg;
   --lyric-poster-skew: -4deg;
   --lyric-poster-stroke: 7.6;
-  --lyric-poster-stroke-opacity: 0.49;
-  --lyric-poster-fill-opacity: 0;
+  --lyric-poster-stroke-opacity: 0.30;
+  --lyric-poster-fill-opacity: 0.35;
   --lyric-poster-glow: 0;
   --lyric-poster-effect-drop-shadow-filter: ;
   --lyric-poster-effect-emboss-filter: ;
+  --lyric-poster-effect-inset-emboss-filter: ;
   --lyric-poster-effect-bevel-filter: ;
   --lyric-poster-effect-soft-blur-filter: ;
   --lyric-poster-row-gap: 0.18;
@@ -3979,8 +3980,8 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-center-x: 882px;
   --lyric-poster-center-y: 215px;
   --lyric-poster-stroke: 7.6;
-  --lyric-poster-stroke-opacity: 0.49;
-  --lyric-poster-fill-opacity: 0;
+  --lyric-poster-stroke-opacity: 0.30;
+  --lyric-poster-fill-opacity: 0.35;
   --lyric-poster-glow: 0;
   --lyric-poster-guide-opacity: 0;
   --lyric-poster-center-guide-opacity: 0;
@@ -4043,7 +4044,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   stroke-linecap: round;
   text-anchor: start;
   dominant-baseline: middle;
-  filter: var(--lyric-poster-effect-drop-shadow-filter) var(--lyric-poster-effect-emboss-filter) var(--lyric-poster-effect-bevel-filter) var(--lyric-poster-effect-soft-blur-filter) drop-shadow(0 0 calc(2px + (var(--lyric-poster-glow) * 10px)) color-mix(in srgb, var(--lyric-poster-stroke-color) calc(var(--lyric-poster-glow) * 35%), transparent));
+  filter: var(--lyric-poster-effect-drop-shadow-filter) var(--lyric-poster-effect-emboss-filter) var(--lyric-poster-effect-inset-emboss-filter) var(--lyric-poster-effect-bevel-filter) var(--lyric-poster-effect-soft-blur-filter) drop-shadow(0 0 calc(2px + (var(--lyric-poster-glow) * 10px)) color-mix(in srgb, var(--lyric-poster-stroke-color) calc(var(--lyric-poster-glow) * 35%), transparent));
 }
 
 .lyric-poster-svg-guide {
@@ -4185,8 +4186,8 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-center-guide-opacity: 0;
   --lyric-poster-perspective-depth: 1.25;
   --lyric-poster-stroke: 7.6;
-  --lyric-poster-stroke-opacity: 0.49;
-  --lyric-poster-fill-opacity: 0;
+  --lyric-poster-stroke-opacity: 0.30;
+  --lyric-poster-fill-opacity: 0.35;
   --lyric-poster-glow: 0;
   --lyric-poster-row-gap: 30px;
   --lyrics-base-font-size: 12px;
@@ -4258,8 +4259,8 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-guide-opacity: 0;
   --lyric-poster-center-guide-opacity: 0;
   --lyric-poster-stroke: 7.6;
-  --lyric-poster-stroke-opacity: 0.49;
-  --lyric-poster-fill-opacity: 0;
+  --lyric-poster-stroke-opacity: 0.30;
+  --lyric-poster-fill-opacity: 0.35;
   --lyric-poster-glow: 0;
   --lyric-poster-overall-y: 22px;
   --lyric-poster-overall-scale: 0.80;
@@ -4520,7 +4521,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   color: rgba(255, 255, 255, var(--lyric-poster-fill-opacity));
   -webkit-text-stroke: var(--lyric-poster-stroke) rgba(218, 218, 218, var(--lyric-poster-stroke-opacity));
   paint-order: stroke fill;
-  filter: var(--lyric-poster-effect-drop-shadow-filter) var(--lyric-poster-effect-emboss-filter) var(--lyric-poster-effect-bevel-filter) var(--lyric-poster-effect-soft-blur-filter) drop-shadow(0 0 calc(1px + (var(--lyric-poster-glow) * 8px)) color-mix(in srgb, var(--lyric-poster-stroke-color) calc(var(--lyric-poster-glow) * 32%), transparent));
+  filter: var(--lyric-poster-effect-drop-shadow-filter) var(--lyric-poster-effect-emboss-filter) var(--lyric-poster-effect-inset-emboss-filter) var(--lyric-poster-effect-bevel-filter) var(--lyric-poster-effect-soft-blur-filter) drop-shadow(0 0 calc(1px + (var(--lyric-poster-glow) * 8px)) color-mix(in srgb, var(--lyric-poster-stroke-color) calc(var(--lyric-poster-glow) * 32%), transparent));
 }
 
 .lyric-poster-guide-svg {
@@ -4576,7 +4577,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   stroke-linejoin: round;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
-  filter: var(--lyric-poster-effect-drop-shadow-filter) var(--lyric-poster-effect-emboss-filter) var(--lyric-poster-effect-bevel-filter) var(--lyric-poster-effect-soft-blur-filter) drop-shadow(0 0 calc(1px + (var(--lyric-poster-glow) * 8px)) color-mix(in srgb, var(--lyric-poster-stroke-color) calc(var(--lyric-poster-glow) * 32%), transparent));
+  filter: var(--lyric-poster-effect-drop-shadow-filter) var(--lyric-poster-effect-emboss-filter) var(--lyric-poster-effect-inset-emboss-filter) var(--lyric-poster-effect-bevel-filter) var(--lyric-poster-effect-soft-blur-filter) drop-shadow(0 0 calc(1px + (var(--lyric-poster-glow) * 8px)) color-mix(in srgb, var(--lyric-poster-stroke-color) calc(var(--lyric-poster-glow) * 32%), transparent));
 }
 
 .lyric-poster-html-row span {
@@ -4634,4 +4635,98 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   border: 1px solid rgba(255, 194, 71, 0.35);
   border-radius: 8px;
   background: rgba(10, 3, 20, 0.62);
+}
+
+
+.lyric-poster-effect-inset-emboss {
+  --lyric-poster-effect-inset-emboss-filter: drop-shadow(1px 1px 0 rgba(255, 255, 255, 0.16)) drop-shadow(-2px -2px 0 rgba(0, 0, 0, 0.30));
+}
+
+
+/* v40 lyric poster transition set */
+.lyric-poster-stage,
+.ceiling-lyric-poster,
+.lyric-poster {
+  will-change: transform, opacity, filter;
+}
+
+.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-b .lyric-poster-row-svg {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.16, 0.84, 0.26, 1);
+  animation-fill-mode: both;
+}
+
+.lyric-poster-transition-b .lyric-poster-row-svg {
+  animation-name: lyricPosterPushSlideIn;
+}
+
+.lyric-poster-transition-a .lyric-poster-row-svg {
+  animation-name: lyricPosterPushSlideInAlt;
+}
+
+.lyric-poster-transition-fade .lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-fade .lyric-poster-transition-b .lyric-poster-row-svg {
+  animation-name: lyricPosterFadeSlideIn;
+  animation-duration: 620ms;
+}
+
+.lyric-poster-transition-shadow-slide .lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-shadow-slide .lyric-poster-transition-b .lyric-poster-row-svg {
+  animation-name: lyricPosterShadowSlideIn;
+  animation-duration: 680ms;
+}
+
+.lyric-poster-transition-ceiling-stamp .lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-ceiling-stamp .lyric-poster-transition-b .lyric-poster-row-svg {
+  animation-name: lyricPosterCeilingStampIn;
+  animation-duration: 460ms;
+}
+
+.lyric-poster-transition-soft-dissolve .lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-soft-dissolve .lyric-poster-transition-b .lyric-poster-row-svg {
+  animation-name: lyricPosterSoftDissolveIn;
+  animation-duration: 760ms;
+}
+
+.lyric-poster-transition-ghost-drift .lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-ghost-drift .lyric-poster-transition-b .lyric-poster-row-svg {
+  animation-name: lyricPosterGhostDriftIn;
+  animation-duration: 820ms;
+}
+
+@keyframes lyricPosterPushSlideIn {
+  from { opacity: 0; transform: translateY(42px) scale(0.985); filter: blur(1.5px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes lyricPosterPushSlideInAlt {
+  from { opacity: 0; transform: translateY(42px) scale(0.985); filter: blur(1.5px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes lyricPosterFadeSlideIn {
+  from { opacity: 0; transform: translateY(18px); filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes lyricPosterShadowSlideIn {
+  from { opacity: 0; transform: translateY(34px) translateX(-10px); filter: blur(1px) drop-shadow(24px 28px 16px rgba(0,0,0,0.48)); }
+  to { opacity: 1; transform: translateY(0) translateX(0); filter: blur(0) drop-shadow(12px 14px 10px rgba(0,0,0,0.30)); }
+}
+
+@keyframes lyricPosterCeilingStampIn {
+  0% { opacity: 0; transform: scale(1.08); filter: blur(2px); }
+  58% { opacity: 1; transform: scale(0.985); filter: blur(0); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+@keyframes lyricPosterSoftDissolveIn {
+  from { opacity: 0; filter: blur(4px); }
+  to { opacity: 1; filter: blur(0); }
+}
+
+@keyframes lyricPosterGhostDriftIn {
+  from { opacity: 0; transform: translateY(-24px) skewX(-4deg); filter: blur(2.5px); }
+  to { opacity: 1; transform: translateY(0) skewX(0deg); filter: blur(0); }
 }

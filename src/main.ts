@@ -90,6 +90,7 @@ type RoomUtilitySettings = {
   lyricPosterGlow: number;
   lyricPosterEffectDropShadow: boolean;
   lyricPosterEffectEmboss: boolean;
+  lyricPosterEffectInsetEmboss: boolean;
   lyricPosterEffectBevel: boolean;
   lyricPosterEffectSoftBlur: boolean;
   lyricPosterOneRowVerticalStretch: number;
@@ -169,7 +170,7 @@ type RoomUtilitySettings = {
   lyricPosterThreeRowBottomTextBottomRightY: number;
   lyricPosterMaxRows: "auto" | "1" | "2" | "3";
   lyricPosterRowBreakpoint: number;
-  lyricPosterTransition: "push-slide" | "fade-slide";
+  lyricPosterTransition: "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
@@ -201,14 +202,16 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTwoRowBandGuideOpacity: 0.00,
   lyricPosterThreeRowBandGuideOpacity: 0.00,
   lyricPosterStroke: 7.6,
-  lyricPosterStrokeColor: "#d6d6d6",
-  lyricPosterFillColor: "#ffffff",
-  lyricPosterStrokeOpacity: 0.49,
-  lyricPosterFillOpacity: 0,
+  lyricPosterStrokeColor: "#4d4c4c",
+  lyricPosterFillColor: "#000000",
+  lyricPosterStrokeOpacity: 0.30,
+  lyricPosterFillOpacity: 0.35,
   lyricPosterGlow: 0,
   lyricPosterEffectDropShadow: false,
   lyricPosterEffectEmboss: false,
-  lyricPosterEffectBevel: false,
+  lyricPosterEffectInsetEmboss: false,
+  lyricPosterEffectInsetEmboss: false,
+  lyricPosterEffectBevel: true,
   lyricPosterEffectSoftBlur: false,
   lyricPosterOneRowVerticalStretch: 0.86,
   lyricPosterOneRowTightness: 0.00,
@@ -290,7 +293,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTransition: "push-slide"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v39";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v40";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -757,6 +760,7 @@ function bindRoomUtilityControls(): void {
   const lyricPosterFillColor = qs<HTMLInputElement>("#lyricPosterFillColor");
   const lyricPosterEffectDropShadow = qs<HTMLInputElement>("#lyricPosterEffectDropShadow");
   const lyricPosterEffectEmboss = qs<HTMLInputElement>("#lyricPosterEffectEmboss");
+  const lyricPosterEffectInsetEmboss = qs<HTMLInputElement>("#lyricPosterEffectInsetEmboss");
   const lyricPosterEffectBevel = qs<HTMLInputElement>("#lyricPosterEffectBevel");
   const lyricPosterEffectSoftBlur = qs<HTMLInputElement>("#lyricPosterEffectSoftBlur");
 
@@ -767,6 +771,7 @@ function bindRoomUtilityControls(): void {
   lyricPosterFillColor.value = roomUtility.lyricPosterFillColor;
   lyricPosterEffectDropShadow.checked = roomUtility.lyricPosterEffectDropShadow;
   lyricPosterEffectEmboss.checked = roomUtility.lyricPosterEffectEmboss;
+  lyricPosterEffectInsetEmboss.checked = roomUtility.lyricPosterEffectInsetEmboss;
   lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
   lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
 
@@ -923,6 +928,7 @@ function bindRoomUtilityControls(): void {
   [
     [lyricPosterEffectDropShadow, "lyricPosterEffectDropShadow"],
     [lyricPosterEffectEmboss, "lyricPosterEffectEmboss"],
+    [lyricPosterEffectInsetEmboss, "lyricPosterEffectInsetEmboss"],
     [lyricPosterEffectBevel, "lyricPosterEffectBevel"],
     [lyricPosterEffectSoftBlur, "lyricPosterEffectSoftBlur"],
   ].forEach(([checkbox, key]) => {
@@ -946,6 +952,7 @@ function bindRoomUtilityControls(): void {
     lyricPosterFillColor.value = roomUtility.lyricPosterFillColor;
     lyricPosterEffectDropShadow.checked = roomUtility.lyricPosterEffectDropShadow;
     lyricPosterEffectEmboss.checked = roomUtility.lyricPosterEffectEmboss;
+    lyricPosterEffectInsetEmboss.checked = roomUtility.lyricPosterEffectInsetEmboss;
     lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
     lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
 
@@ -1104,8 +1111,13 @@ function applyRoomUtilitySettings(): void {
 
   root.classList.toggle("lyric-poster-transition-push", roomUtility.lyricPosterTransition === "push-slide");
   root.classList.toggle("lyric-poster-transition-fade", roomUtility.lyricPosterTransition === "fade-slide");
+  root.classList.toggle("lyric-poster-transition-shadow-slide", roomUtility.lyricPosterTransition === "shadow-slide");
+  root.classList.toggle("lyric-poster-transition-ceiling-stamp", roomUtility.lyricPosterTransition === "ceiling-stamp");
+  root.classList.toggle("lyric-poster-transition-soft-dissolve", roomUtility.lyricPosterTransition === "soft-dissolve");
+  root.classList.toggle("lyric-poster-transition-ghost-drift", roomUtility.lyricPosterTransition === "ghost-drift");
   root.classList.toggle("lyric-poster-effect-drop-shadow", roomUtility.lyricPosterEffectDropShadow);
   root.classList.toggle("lyric-poster-effect-emboss", roomUtility.lyricPosterEffectEmboss);
+  root.classList.toggle("lyric-poster-effect-inset-emboss", roomUtility.lyricPosterEffectInsetEmboss);
   root.classList.toggle("lyric-poster-effect-bevel", roomUtility.lyricPosterEffectBevel);
   root.classList.toggle("lyric-poster-effect-soft-blur", roomUtility.lyricPosterEffectSoftBlur);
 }
