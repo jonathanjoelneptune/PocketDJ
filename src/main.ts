@@ -70,6 +70,7 @@ type RoomUtilitySettings = {
   vignetteStrength: number;
   shadowOpacity: number;
   tableShadowScale: number;
+  floorControlsIdleOpacity: number;
   lyricPosterTopLeftX: number;
   lyricPosterTopLeftY: number;
   lyricPosterTopRightX: number;
@@ -209,6 +210,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   vignetteStrength: 0.20,
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
+  floorControlsIdleOpacity: 0.15,
   lyricPosterTopLeftX: 221,
   lyricPosterTopLeftY: 18,
   lyricPosterTopRightX: 1562,
@@ -561,24 +563,19 @@ function updateSidePanelLockUi(): void {
 }
 
 function bindFloorPlaybackControls(): void {
-  const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
   const floor = qs<HTMLElement>("#floorPlayer");
-
-  toggle.addEventListener("click", () => {
-    setFloorControlsOpen(!floorControlsOpen);
-  });
-
-  qs<HTMLButtonElement>("#floorControlsLock").addEventListener("click", () => {
-    setFloorControlsLocked(!floorControlsLocked);
-  });
 
   floor.addEventListener("mouseenter", () => {
     if (floorControlsHideTimer) window.clearTimeout(floorControlsHideTimer);
+    floorControlsHideTimer = null;
+    setFloorControlsOpen(true, false);
   });
 
   floor.addEventListener("mouseleave", () => {
-    if (!floorControlsLocked) scheduleFloorControlsAutoHide();
+    scheduleFloorControlsAutoHide();
   });
+
+  setFloorControlsOpen(true);
 
   qs<HTMLButtonElement>("#floorPlayButton").addEventListener("click", () => {
     void runSpotifyPlaybackCommand(async () => {
@@ -696,52 +693,27 @@ function bindSeekSurface(surface: HTMLElement): void {
 }
 
 function setFloorControlsOpen(open: boolean, autoHide = true): void {
-  floorControlsOpen = open;
+  floorControlsOpen = true;
   const floor = qs<HTMLElement>("#floorPlayer");
-  const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
-  const lock = qs<HTMLButtonElement>("#floorControlsLock");
 
-  floor.classList.toggle("floor-player-hidden", !open);
-  floor.classList.toggle("floor-player-visible", open);
-  toggle.classList.toggle("floor-controls-toggle-open", open);
-  toggle.setAttribute("aria-expanded", String(open));
+  floor.classList.remove("floor-player-hidden");
+  floor.classList.add("floor-player-visible");
+  floor.classList.toggle("floor-player-idle", !open);
 
-  lock.classList.toggle("floor-lock-hidden", !open);
-  lock.classList.toggle("floor-lock-visible", open);
-  lock.setAttribute("aria-hidden", String(!open));
-
-  if (open && autoHide && !floorControlsLocked) scheduleFloorControlsAutoHide();
-  if ((!open || floorControlsLocked) && floorControlsHideTimer) {
-    window.clearTimeout(floorControlsHideTimer);
-    floorControlsHideTimer = null;
-  }
+  if (autoHide) scheduleFloorControlsAutoHide();
 }
 
-function setFloorControlsLocked(locked: boolean): void {
-  floorControlsLocked = locked;
-  const lock = qs<HTMLButtonElement>("#floorControlsLock");
-  const floor = qs<HTMLElement>("#floorPlayer");
-  const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
-
-  lock.classList.toggle("floor-lock-active", locked);
-  floor.classList.toggle("floor-player-locked", locked);
-  toggle.classList.toggle("floor-controls-toggle-locked", locked);
-  lock.setAttribute("aria-pressed", String(locked));
-  lock.setAttribute("title", locked ? "Unlock auto-hide controls" : "Lock controls open");
-  lock.setAttribute("aria-label", locked ? "Unlock floor playback controls" : "Lock floor playback controls open");
-
-  if (locked) {
-    setFloorControlsOpen(true, false);
-  } else if (floorControlsOpen) {
-    scheduleFloorControlsAutoHide();
-  }
+function setFloorControlsLocked(_locked: boolean): void {
+  // Deprecated. Floor controls are now always visible and dim automatically.
+  floorControlsLocked = false;
+  setFloorControlsOpen(true);
 }
 
 function scheduleFloorControlsAutoHide(): void {
-  if (floorControlsLocked) return;
   if (floorControlsHideTimer) window.clearTimeout(floorControlsHideTimer);
   floorControlsHideTimer = window.setTimeout(() => {
-    if (!floorControlsLocked) setFloorControlsOpen(false);
+    const floor = qs<HTMLElement>("#floorPlayer");
+    floor.classList.add("floor-player-idle");
   }, 10_000);
 }
 
@@ -828,6 +800,7 @@ function bindRoomUtilityControls(): void {
     ["vignetteStrength", "vignetteStrengthValue"],
     ["shadowOpacity", "shadowOpacityValue"],
     ["tableShadowScale", "tableShadowScaleValue"],
+    ["floorControlsIdleOpacity", "floorControlsIdleOpacityValue"],
     ["lyricPosterGuideOpacity", "lyricPosterGuideOpacityValue"],
     ["lyricPosterCenterGuideOpacity", "lyricPosterCenterGuideOpacityValue"],
     ["lyricPosterShortGuideOpacity", "lyricPosterShortGuideOpacityValue"],
@@ -1068,6 +1041,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength));
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
   root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
+  root.style.setProperty("--floor-controls-idle-opacity", String(roomUtility.floorControlsIdleOpacity));
 
   root.style.setProperty("--lyric-poster-guide-opacity", String(roomUtility.lyricPosterGuideOpacity));
   root.style.setProperty("--lyric-poster-center-guide-opacity", String(roomUtility.lyricPosterCenterGuideOpacity));

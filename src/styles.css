@@ -4861,3 +4861,112 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     filter: blur(0);
   }
 }
+
+/* v45 utility panel, top pills, and always-visible floor controls cleanup */
+:root {
+  --floor-controls-idle-opacity: 0.15;
+}
+
+/* The side utility panel must always sit above the ceiling lyric projection. */
+.control-card {
+  z-index: 90 !important;
+}
+.side-panel-tab {
+  z-index: 91 !important;
+}
+.connect-dropdown {
+  z-index: 120 !important;
+}
+
+/* Lyrics stay behind the utility panel but above the room art. */
+.lyrics-ceiling {
+  z-index: 22 !important;
+}
+
+/* Top-row pill family. Lyrics and Playing now use the same filled/lit state language as Connected. */
+.lyrics-toggle {
+  min-height: 28px !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  max-height: 34px !important;
+  min-width: calc(var(--room-w) * 0.051) !important;
+  padding: 0 calc(var(--room-w) * 0.0065) !important;
+  border-radius: 999px !important;
+  box-sizing: border-box !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+  font-family: "Press Start 2P", monospace !important;
+  font-size: clamp(0.42rem, calc(var(--room-w) * 0.00345), 0.58rem) !important;
+  letter-spacing: 0.025em !important;
+  white-space: nowrap !important;
+  text-transform: uppercase !important;
+  border: 1px solid rgba(255, 184, 76, 0.24) !important;
+  background: rgba(36, 23, 38, 0.54) !important;
+  color: rgba(255, 218, 155, 0.90) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255,184,76,0.035),
+    0 0 12px rgba(0,0,0,0.14) !important;
+}
+
+.lyrics-toggle-on.lyrics-toggle-found,
+.mode-pill.mode-pill-playing,
+.mode-pill[data-state="playing"] {
+  color: #f7d68c !important;
+  border-color: rgba(255, 184, 76, 0.38) !important;
+  background: rgba(72, 43, 21, 0.44) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255,184,76,0.050),
+    0 0 12px rgba(255,184,76,0.10) !important;
+}
+
+.lyrics-toggle-searching {
+  color: #ffe3a3 !important;
+  border-color: rgba(255, 184, 76, 0.32) !important;
+  background: rgba(92, 59, 12, 0.26) !important;
+}
+
+.lyrics-toggle-off,
+.lyrics-toggle-missing,
+.mode-pill.mode-pill-idle {
+  color: rgba(255, 218, 155, 0.66) !important;
+  border-color: rgba(255, 184, 76, 0.18) !important;
+  background: rgba(36, 23, 38, 0.36) !important;
+}
+
+.mode-pill.mode-pill-paused {
+  color: rgba(255, 218, 155, 0.88) !important;
+  border-color: rgba(255, 184, 76, 0.28) !important;
+  background: rgba(60, 37, 63, 0.42) !important;
+}
+
+/* Retire the bottom-left Controls/lock cluster. Floor playback controls are always available now. */
+.floor-toggle-cluster,
+.floor-controls-toggle,
+.floor-lock-toggle {
+  display: none !important;
+}
+
+.floor-player {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  transition:
+    opacity 420ms ease,
+    transform 260ms ease,
+    filter 260ms ease !important;
+}
+
+.floor-player.floor-player-hidden {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+.floor-player.floor-player-idle:not(:hover) {
+  opacity: var(--floor-controls-idle-opacity) !important;
+}
+
+.floor-player:hover,
+.floor-player.floor-player-playing {
+  opacity: 1 !important;
+}

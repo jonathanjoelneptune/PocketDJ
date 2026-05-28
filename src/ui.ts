@@ -72,7 +72,7 @@ export function renderShell(state: AppState): void {
           />
         </div>
 
-        <div class="floor-player floor-player-hidden" id="floorPlayer" aria-label="Spotify floor playback controls">
+        <div class="floor-player floor-player-visible" id="floorPlayer" aria-label="Spotify floor playback controls">
           <button class="floor-control floor-control-prev" id="floorPrevButton" type="button" aria-label="Previous track" title="Previous track">
             <span class="floor-icon">⏮</span>
           </button>
@@ -95,10 +95,6 @@ export function renderShell(state: AppState): void {
 
       <button id="panelToggle" class="panel-toggle" type="button" aria-label="Show Pocket DJ controls" title="Show controls">♪</button>
 
-      <div class="floor-toggle-cluster" id="floorToggleCluster">
-        <button id="floorControlsToggle" class="floor-controls-toggle" type="button" aria-label="Show floor playback controls" title="Show floor playback controls">Controls</button>
-        <button id="floorControlsLock" class="floor-lock-toggle floor-lock-hidden" type="button" aria-label="Lock floor playback controls open" title="Lock controls open">🔒</button>
-      </div>
       <pre id="animationDebugPanel" class="animation-debug-panel" hidden>frame: loading</pre>
 
       <aside id="controlCard" class="control-card control-card-open">
@@ -214,6 +210,9 @@ export function renderShell(state: AppState): void {
             </label>
             <label>Table shadow size <span id="tableShadowScaleValue">1.16</span>
               <input id="tableShadowScale" type="range" min="0.4" max="1.8" step="0.01" value="1.16" />
+            </label>
+            <label>Floor controls idle opacity <span id="floorControlsIdleOpacityValue">0.15</span>
+              <input id="floorControlsIdleOpacity" type="range" min="0" max="1" step="0.01" value="0.15" />
             </label>
           </div>
 
@@ -2013,8 +2012,16 @@ export function updateLyricsToggleUi(status: LyricsPayload["status"], enabled: b
   toggle.classList.toggle("lyrics-toggle-found", enabled && status === "found");
   toggle.classList.toggle("lyrics-toggle-missing", enabled && (status === "not-found" || status === "instrumental" || status === "error"));
   toggle.classList.toggle("lyrics-toggle-searching", enabled && status === "loading");
-  toggle.classList.toggle("lyrics-toggle-unknown", enabled && (status === "idle" || status === "loading"));
+  toggle.classList.toggle("lyrics-toggle-unknown", enabled && status === "idle");
 
+  let label = "LYRICS";
+  if (!enabled) label = "OFF";
+  else if (status === "found") label = "LYRICS";
+  else if (status === "loading") label = "LOAD";
+  else if (status === "not-found" || status === "instrumental") label = "NO LYR";
+  else if (status === "error") label = "ERR";
+
+  toggle.textContent = label;
   toggle.setAttribute("aria-pressed", String(enabled));
   toggle.setAttribute("title", enabled ? "Hide ceiling lyrics" : "Show ceiling lyrics");
 }
