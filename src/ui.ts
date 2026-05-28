@@ -841,7 +841,7 @@ export function updateLyricsCeiling(
             <div
               class="lyric-poster-html-row"
               style="width:${row.sourceWidth}px; height:${row.sourceHeight}px; transform:${row.matrix3d};"
-            ><span style="font-size:${row.sourceFontSize}px;">${escapeHtml(row.text)}</span></div>
+            ><span style="font-size:${row.sourceFontSize}px; transform: scaleX(${row.textScaleX});">${escapeHtml(row.text)}</span></div>
           `,
         )
         .join("")}
@@ -1003,6 +1003,8 @@ function buildCeilingPosterLayout(
       topRight = constrainPointToTrapezoid(addPoint(topRight, controls.oneRowTextTopRightX, controls.oneRowTextTopRightY), trapezoid);
       bottomLeft = constrainPointToTrapezoid(addPoint(bottomLeft, controls.oneRowTextBottomLeftX, controls.oneRowTextBottomLeftY), trapezoid);
       bottomRight = constrainPointToTrapezoid(addPoint(bottomRight, controls.oneRowTextBottomRightX, controls.oneRowTextBottomRightY), trapezoid);
+      const recentered = recenterQuadInsideTrapezoid([topLeft, topRight, bottomRight, bottomLeft], trapezoid);
+      [topLeft, topRight, bottomRight, bottomLeft] = recentered;
     }
 
     const destination = [topLeft, topRight, bottomRight, bottomLeft].map((point) => ({
@@ -1013,6 +1015,8 @@ function buildCeilingPosterLayout(
     const sourceWidth = 1200;
     const sourceHeight = 180;
     const sourceFontSize = sourceHeight * clamp(profile.verticalStretch, 0.40, 3.00);
+    const estimatedTextWidth = Math.max(1, weightedPosterLength(rowText) * sourceFontSize * 0.58);
+    const textScaleX = clamp((sourceWidth * 0.94) / estimatedTextWidth, 0.18, 8.0);
     const matrix3d = quadToCssMatrix3d(sourceWidth, sourceHeight, destination[0], destination[1], destination[2], destination[3]);
 
     return {
@@ -1020,6 +1024,7 @@ function buildCeilingPosterLayout(
       sourceWidth,
       sourceHeight,
       sourceFontSize,
+      textScaleX,
       matrix3d,
     };
   });
@@ -1052,6 +1057,55 @@ function getPosterRowProfile(rowCount: 1 | 2 | 3, controls: CeilingPosterControl
     perspective: clamp(controls.threeRowPerspective, 0, 3),
     tilt: clamp(controls.threeRowTilt, -75, 75),
   };
+}
+
+function recenterQuadInsideTrapezoid(
+  points: [Point2D, Point2D, Point2D, Point2D],
+  trapezoid: LyricPosterTrapezoid,
+): [Point2D, Point2D, Point2D, Point2D] {
+  const currentCenterX = points.reduce((sum, point) => sum + point.x, 0) / points.length;
+  const currentCenterY = points.reduce((sum, point) => sum + point.y, 0) / points.length;
+  const targetCenterX = trapezoid.centerX;
+  const targetCenterY = trapezoid.centerY;
+  let translated = translatePoints(points, targetCenterX - currentCenterX, targetCenterY - currentCenterY);
+
+  const allowedXShift = getAllowedHorizontalShift(translated, trapezoid);
+  translated = translatePoints(translated, allowedXShift, 0);
+
+  const allowedYShift = getAllowedVerticalShift(translated, trapezoid);
+  translated = translatePoints(translated, 0, allowedYShift);
+
+  return translated.map((point) => constrainPointToTrapezoid(point, trapezoid)) as [Point2D, Point2D, Point2D, Point2D];
+}
+
+function translatePoints(points: Point2D[], x: number, y: number): [Point2D, Point2D, Point2D, Point2D] {
+  return points.map((point) => ({ x: point.x + x, y: point.y + y })) as [Point2D, Point2D, Point2D, Point2D];
+}
+
+function getAllowedHorizontalShift(points: Point2D[], trapezoid: LyricPosterTrapezoid): number {
+  let minShift = Number.NEGATIVE_INFINITY;
+  let maxShift = Number.POSITIVE_INFINITY;
+
+  points.forEach((point) => {
+    const bounds = trapezoidHorizontalBoundsAtY(trapezoid, point.y);
+    minShift = Math.max(minShift, bounds.left - point.x);
+    maxShift = Math.min(maxShift, bounds.right - point.x);
+  });
+
+  if (minShift > maxShift) return 0;
+  if (0 < minShift) return minShift;
+  if (0 > maxShift) return maxShift;
+  return 0;
+}
+
+function getAllowedVerticalShift(points: Point2D[], trapezoid: LyricPosterTrapezoid): number {
+  const topY = Math.min(trapezoid.topLeftY, trapezoid.topRightY);
+  const bottomY = Math.max(trapezoid.bottomLeftY, trapezoid.bottomRightY);
+  const minY = Math.min(...points.map((point) => point.y));
+  const maxY = Math.max(...points.map((point) => point.y));
+  if (minY < topY) return topY - minY;
+  if (maxY > bottomY) return bottomY - maxY;
+  return 0;
 }
 
 function quadToCssMatrix3d(
@@ -1303,6 +1357,7 @@ type LyricPosterSvgRowLayout = {
   sourceWidth: number;
   sourceHeight: number;
   sourceFontSize: number;
+  textScaleX: number;
   matrix3d: string;
 };
 

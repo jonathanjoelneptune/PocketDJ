@@ -4472,3 +4472,16 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .lyric-poster-transition-fade .lyric-poster-html-rows {
   animation: lyricPosterFadeV29 560ms ease both;
 }
+
+
+/* V31b projection fit fix: center and fit text inside the warped source box before the box is transformed. */
+.lyric-poster-html-row {
+  overflow: hidden !important;
+  contain: layout paint;
+}
+
+.lyric-poster-html-row span {
+  max-width: none !important;
+  transform-origin: center center !important;
+  overflow: visible !important;
+}
