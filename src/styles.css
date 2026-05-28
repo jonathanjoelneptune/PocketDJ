@@ -4106,3 +4106,56 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   width: 100%;
 }
 
+/* ROOM-SCALED SVG LYRIC OVERLAY FIX
+   The SVG coordinate system remains 1764 x 529, but the actual overlay now scales
+   with the 16:9 room width instead of staying 1764 CSS pixels wide. This keeps the
+   trapezoid locked to the ceiling when the browser window changes size. */
+:root {
+  --lyric-ceiling-room-height-ratio: 53.326%;
+}
+
+.lyrics-ceiling {
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: var(--lyric-ceiling-room-height-ratio) !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  overflow: visible !important;
+  transform-origin: 0 0 !important;
+}
+
+.active-lyrics-block,
+.lyric-poster-line {
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  overflow: visible !important;
+  transform-origin: 0 0 !important;
+}
+
+.lyric-poster-svg {
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  overflow: visible !important;
+  transform-origin: 0 0 !important;
+}
+
+/* Keep the clean SVG renderer as the only visible lyric rendering path. */
+.lyric-poster-text,
+.lyric-poster-row,
+.lyrics-boundary-guides,
+.lyrics-boundary-guide-video {
+  display: none !important;
+}
+

@@ -217,7 +217,7 @@ export function renderShell(state: AppState): void {
 
           <div class="lyrics-boundary-utility">
             <div class="utility-subhead">Ceiling lyric poster utility</div>
-            <p class="utility-help">Tune the four corner points to define the ceiling trapezoid. The center dot is the anchor for every lyric row, so the text stays visually centered in the room.</p>
+            <p class="utility-help">Tune the four corner points in 1764 x 529 ceiling coordinates. The overlay scales with the room, and the center dot anchors every lyric row.</p>
 
             <div class="lyric-utility-stack">
               <label>Corner guide opacity <span id="lyricPosterGuideOpacityValue">0.00</span>
