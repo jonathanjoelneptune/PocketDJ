@@ -522,7 +522,6 @@ export function renderShell(state: AppState): void {
                   <option value="auto" selected>Auto</option>
                   <option value="1">Force 1 row</option>
                   <option value="2">Force 2 rows</option>
-                  <option value="3">Force 3 rows</option>
                 </select>
               </label>
               <label>Transition
@@ -967,7 +966,8 @@ export function updateLyricsCeiling(
 
   const rootStyles = getComputedStyle(document.documentElement);
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
-  const maxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
+  const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
+  const maxRowsValue = rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue;
   const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "push-slide") as "push-slide" | "fade-slide";
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, transitionValue);
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
@@ -1164,9 +1164,10 @@ function buildCeilingPosterLayout(
   ceilingHeight: number,
 ): CeilingPosterLayout {
   const words = normalizePosterWords(text);
-  const rowCount = controls.maxRows === "auto" ? choosePosterRowCount(words) : Number.parseInt(controls.maxRows, 10);
-  const rowTexts = balanceWordsIntoRows(words, Math.max(1, Math.min(3, rowCount)));
-  const n = Math.max(1, rowTexts.length) as 1 | 2 | 3;
+  const requestedRows = controls.maxRows === "auto" ? choosePosterRowCount(words) : Number.parseInt(controls.maxRows, 10);
+  const rowCount = Math.max(1, Math.min(2, requestedRows));
+  const rowTexts = balanceWordsIntoRows(words, rowCount);
+  const n = Math.max(1, Math.min(2, rowTexts.length)) as 1 | 2;
   const profile = getPosterRowProfile(n, controls);
   const scaleX = Math.max(0.001, ceilingWidth / 1764);
   const scaleY = Math.max(0.001, ceilingHeight / 529);
@@ -1545,11 +1546,13 @@ function constrainPointToTrapezoid(point: Point2D, trapezoid: LyricPosterTrapezo
   };
 }
 
-function choosePosterRowCount(words: string[]): 1 | 2 | 3 {
+function choosePosterRowCount(words: string[]): 1 | 2 {
+  const lyricText = words.join(" ");
+  if (lyricText.length <= 25) return 1;
+
   const weightedLength = words.reduce((sum, word) => sum + weightedPosterLength(word), 0) + Math.max(0, words.length - 1) * 1.2;
-  if (weightedLength <= 18) return 1;
-  if (weightedLength <= 42) return 2;
-  return 3;
+  if (weightedLength <= 42) return 1;
+  return 2;
 }
 
 function normalizePosterWords(text: string): string[] {
