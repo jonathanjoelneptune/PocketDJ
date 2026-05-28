@@ -141,7 +141,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricBaseFontSize: 12
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v12";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v13";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -792,7 +792,7 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
     }
 
     const oldRaw =
-      window.localStorage.getItem("pocketdj-room-utility-v10") ?? window.localStorage.getItem("pocketdj-room-utility-v9") ?? window.localStorage.getItem("pocketdj-room-utility-v8") ?? window.localStorage.getItem("pocketdj-room-utility-v7") ?? window.localStorage.getItem("pocketdj-room-utility-v6") ?? window.localStorage.getItem("pocketdj-room-utility-v5") ?? window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1") ??
+      window.localStorage.getItem("pocketdj-room-utility-v12") ?? window.localStorage.getItem("pocketdj-room-utility-v11") ?? window.localStorage.getItem("pocketdj-room-utility-v10") ?? window.localStorage.getItem("pocketdj-room-utility-v9") ?? window.localStorage.getItem("pocketdj-room-utility-v8") ?? window.localStorage.getItem("pocketdj-room-utility-v7") ?? window.localStorage.getItem("pocketdj-room-utility-v6") ?? window.localStorage.getItem("pocketdj-room-utility-v5") ?? window.localStorage.getItem("pocketdj-room-utility-v4") ?? window.localStorage.getItem("pocketdj-room-utility-v3") ?? window.localStorage.getItem("pocketdj-room-utility-v2") ?? window.localStorage.getItem("pocketdj-room-utility-v1") ??
       window.localStorage.getItem("pocketdj-room-utility-v7") ??
       window.localStorage.getItem("pocketdj-room-utility-v6") ??
       window.localStorage.getItem("pocketdj-room-utility-v5") ??

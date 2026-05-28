@@ -908,6 +908,60 @@ function trapezoidHorizontalBoundsAtY(trapezoid: LyricPosterTrapezoid, y: number
 }
 
 
+function balanceWordsIntoRows(words: string[], rowCount: number): string[] {
+  if (rowCount <= 1) return [words.join(" ")];
+
+  const safeRowCount = Math.max(1, Math.min(rowCount, words.length));
+  const totalWeight = words.reduce((sum, word) => sum + weightedPosterLength(word), 0);
+  const targetWeight = totalWeight / safeRowCount;
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentWeight = 0;
+  let rowsRemaining = safeRowCount;
+
+  words.forEach((word, index) => {
+    const remainingWords = words.length - index;
+    const wordWeight = weightedPosterLength(word);
+    const shouldBreak =
+      currentRow.length > 0 &&
+      currentWeight + wordWeight > targetWeight &&
+      remainingWords >= rowsRemaining;
+
+    if (shouldBreak) {
+      rows.push(currentRow);
+      currentRow = [];
+      currentWeight = 0;
+      rowsRemaining -= 1;
+    }
+
+    currentRow.push(word);
+    currentWeight += wordWeight;
+  });
+
+  if (currentRow.length) rows.push(currentRow);
+
+  return rows
+    .filter((row) => row.length > 0)
+    .map((row) => row.join(" "));
+}
+
+function weightedPosterLength(value: string): number {
+  return value
+    .replace(/[il.,'’!|]/gi, "x")
+    .split("")
+    .reduce((sum, char) => {
+      if (char === " ") return sum + 0.55;
+      if (/[MW@#%&]/.test(char)) return sum + 1.35;
+      if (/[A-Z0-9]/.test(char)) return sum + 1.08;
+      return sum + 1;
+    }, 0);
+}
+
+function lerp(start: number, end: number, t: number): number {
+  return start + (end - start) * t;
+}
+
+
 function getLyricLineScale(textLength: number, isActive: boolean): number {
   const activeAllowance = isActive ? 44 : 34;
   const softLimit = isActive ? 62 : 46;
