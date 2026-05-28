@@ -190,7 +190,7 @@ type RoomUtilitySettings = {
   lyricPosterThreeRowBottomTextBottomRightY: number;
   lyricPosterMaxRows: "auto" | "1" | "2" | "3";
   lyricPosterRowBreakpoint: number;
-  lyricPosterTransition: "soft-dissolve" | "none" | "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
+  lyricPosterTransition: "none" | "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift" | "back-push";
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
@@ -329,9 +329,9 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterThreeRowBottomTextBottomRightY: 0,
   lyricPosterMaxRows: "auto",
   lyricPosterRowBreakpoint: 28,
-  lyricPosterTransition: "push-slide"};
+  lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v42";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v43";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -1187,17 +1187,14 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-transition", roomUtility.lyricPosterTransition);
   root.style.setProperty("--lyrics-animation-revision", String(lyricAnimationRevision));
 
-  root.classList.toggle("lyric-poster-transition-push", roomUtility.lyricPosterTransition === "push-slide");
   root.classList.toggle("lyric-poster-transition-none", roomUtility.lyricPosterTransition === "none");
+  root.classList.toggle("lyric-poster-transition-push", roomUtility.lyricPosterTransition === "push-slide");
   root.classList.toggle("lyric-poster-transition-fade", roomUtility.lyricPosterTransition === "fade-slide");
   root.classList.toggle("lyric-poster-transition-shadow-slide", roomUtility.lyricPosterTransition === "shadow-slide");
   root.classList.toggle("lyric-poster-transition-ceiling-stamp", roomUtility.lyricPosterTransition === "ceiling-stamp");
   root.classList.toggle("lyric-poster-transition-soft-dissolve", roomUtility.lyricPosterTransition === "soft-dissolve");
   root.classList.toggle("lyric-poster-transition-ghost-drift", roomUtility.lyricPosterTransition === "ghost-drift");
-  root.classList.toggle("lyric-poster-transition-shadow-slide", roomUtility.lyricPosterTransition === "shadow-slide");
-  root.classList.toggle("lyric-poster-transition-ceiling-stamp", roomUtility.lyricPosterTransition === "ceiling-stamp");
-  root.classList.toggle("lyric-poster-transition-soft-dissolve", roomUtility.lyricPosterTransition === "soft-dissolve");
-  root.classList.toggle("lyric-poster-transition-ghost-drift", roomUtility.lyricPosterTransition === "ghost-drift");
+  root.classList.toggle("lyric-poster-transition-back-push", roomUtility.lyricPosterTransition === "back-push");
   root.classList.toggle("lyric-poster-effect-drop-shadow", roomUtility.lyricPosterEffectDropShadow);
   root.classList.toggle("lyric-poster-effect-emboss", roomUtility.lyricPosterEffectEmboss);
   root.classList.toggle("lyric-poster-effect-inset-emboss", roomUtility.lyricPosterEffectInsetEmboss);

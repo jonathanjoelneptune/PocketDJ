@@ -4774,3 +4774,31 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 @keyframes lyricPosterCalmStampIn { 0% { opacity: 0; transform: scale(1.018); filter: blur(0.9px); } 100% { opacity: 1; transform: scale(1); filter: blur(0); } }
 @keyframes lyricPosterCalmSoftDissolveIn { from { opacity: 0; filter: blur(1.4px); } to { opacity: 1; filter: blur(0); } }
 @keyframes lyricPosterCalmGhostDriftIn { from { opacity: 0; transform: translateY(-8px) translateX(3px); filter: blur(1.2px); } to { opacity: 1; transform: translateY(0) translateX(0); filter: blur(0); } }
+
+
+/* v43 back ceiling push transition */
+.lyric-poster-transition-back-push.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-back-push.lyric-poster-transition-b .lyric-poster-row-svg {
+  animation-name: lyricPosterBackCeilingPushIn;
+  animation-duration: 980ms;
+  animation-timing-function: cubic-bezier(0.18, 0.72, 0.22, 1);
+  animation-fill-mode: both;
+}
+
+@keyframes lyricPosterBackCeilingPushIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-34px) scaleY(0.58) scaleX(0.82);
+    filter: blur(1.6px);
+  }
+  42% {
+    opacity: 0.42;
+    transform: translateY(-12px) scaleY(0.78) scaleX(0.92);
+    filter: blur(0.9px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1) scaleX(1);
+    filter: blur(0);
+  }
+}

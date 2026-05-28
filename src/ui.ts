@@ -622,13 +622,14 @@ export function renderShell(state: AppState): void {
               <p class="utility-help">Auto mode uses 1 row below this character count and 2 rows at or above it, including spaces.</p>
               <label>Transition
                 <select id="lyricPosterTransition">
-                  <option value="none">No transition</option>
-                  <option value="push-slide">Quick push slide</option>
+                  <option value="none" selected>No transition</option>
+                  <option value="soft-dissolve">Soft dissolve</option>
+                  <option value="ghost-drift">Ghost drift</option>
+                  <option value="back-push">Back ceiling push</option>
                   <option value="fade-slide">Subtle fade slide</option>
                   <option value="shadow-slide">Shadow slide</option>
                   <option value="ceiling-stamp">Ceiling stamp</option>
-                  <option value="soft-dissolve" selected>Soft dissolve</option>
-                  <option value="ghost-drift">Ghost drift</option>
+                  <option value="push-slide">Quick push slide</option>
                 </select>
               </label>
             </div>
@@ -1069,7 +1070,7 @@ export function updateLyricsCeiling(
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
   const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
   const maxRowsValue = rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue;
-  const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "soft-dissolve") as LyricPosterTransitionMode;
+  const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "none") as LyricPosterTransitionMode;
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, transitionValue);
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
@@ -1098,6 +1099,7 @@ export function updateLyricsCeiling(
   activeBlock.classList.toggle("lyric-poster-transition-ceiling-stamp", controls.transition === "ceiling-stamp");
   activeBlock.classList.toggle("lyric-poster-transition-soft-dissolve", controls.transition === "soft-dissolve");
   activeBlock.classList.toggle("lyric-poster-transition-ghost-drift", controls.transition === "ghost-drift");
+  activeBlock.classList.toggle("lyric-poster-transition-back-push", controls.transition === "back-push");
   activeBlock.classList.toggle("lyric-poster-transition-a", !lyricPosterTransitionFlip);
   activeBlock.classList.toggle("lyric-poster-transition-b", lyricPosterTransitionFlip);
   activeBlock.dataset.lyricRows = String(layout.rows.length);
@@ -1841,7 +1843,7 @@ type LyricPosterTrapezoid = {
   centerY: number;
 };
 
-type LyricPosterTransitionMode = "none" | "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
+type LyricPosterTransitionMode = "none" | "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift" | "back-push";
 
 type CeilingPosterControls = {
   maxRows: "auto" | "1" | "2" | "3";
