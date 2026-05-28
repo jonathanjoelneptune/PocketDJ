@@ -259,8 +259,8 @@ export function renderShell(state: AppState): void {
               <label>Glow strength <span id="lyricPosterGlowValue">0.18</span>
                 <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0.18" />
               </label>
-              <label>Row spacing <span id="lyricPosterRowGapValue">0.18</span>
-                <input id="lyricPosterRowGap" type="range" min="-0.15" max="0.8" step="0.01" value="0.18" />
+              <label>Row gap px <span id="lyricPosterRowGapValue">0.5</span>
+                <input id="lyricPosterRowGap" type="range" min="0" max="40" step="0.5" value="0.5" />
               </label>
               <label>Base lyric font size px <span id="lyricBaseFontSizeValue">12</span>
                 <input id="lyricBaseFontSize" type="range" min="8" max="32" step="1" value="12" />
@@ -729,11 +729,12 @@ export function updateLyricsCeiling(
   const activeLine = cleanLines[centerIndex];
   const rootStyles = getComputedStyle(document.documentElement);
   const maxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || "auto") as "auto" | "1" | "2" | "3";
+  const rowGapPx = Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-row-gap")) || 0.5;
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
 
-  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${JSON.stringify(trapezoid)}|${maxRowsValue}|${animationRevision}|${rootClassSignature}`;
+  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${JSON.stringify(trapezoid)}|${maxRowsValue}|${rowGapPx}|${animationRevision}|${rootClassSignature}`;
 
   if (renderSignature === lastLyricsRenderSignature) {
     activeBlock.style.setProperty("--lyric-line-visibility", "1");
@@ -743,7 +744,7 @@ export function updateLyricsCeiling(
   lastLyricsRenderSignature = renderSignature;
   activeBlock.style.setProperty("--lyric-line-visibility", "1");
 
-  const layout = buildPosterLyricLayout(activeLine.text, trapezoid, maxRowsValue);
+  const layout = buildPosterLyricLayout(activeLine.text, trapezoid, maxRowsValue, rowGapPx);
 
   activeBlock.innerHTML = `
     <svg class="lyric-poster-svg" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true">
@@ -810,6 +811,7 @@ function buildPosterLyricLayout(
   text: string,
   trapezoid: LyricPosterTrapezoid,
   maxRowsValue: "auto" | "1" | "2" | "3",
+  rowGapPx: number,
 ): { rows: LyricPosterSvgRowLayout[] } {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return { rows: [] };
@@ -826,7 +828,7 @@ function buildPosterLyricLayout(
     const rowTexts = balanceWordsIntoRows(words, rowCount);
     if (rowTexts.length !== rowCount) continue;
 
-    const rows = layoutSvgRowsInsideTrapezoid(rowTexts, trapezoid);
+    const rows = layoutSvgRowsInsideTrapezoid(rowTexts, trapezoid, rowGapPx);
     const minStretch = Math.min(...rows.map((row) => row.width / Math.max(1, weightedPosterLength(row.text))));
     const balancePenalty = getRowBalancePenalty(rowTexts);
     const compressionPenalty = rows.reduce((sum, row) => {
@@ -841,7 +843,7 @@ function buildPosterLyricLayout(
   if (best.rows.length) return { rows: best.rows };
 
   const fallbackRows = balanceWordsIntoRows(words, Math.min(3, words.length));
-  return { rows: layoutSvgRowsInsideTrapezoid(fallbackRows, trapezoid) };
+  return { rows: layoutSvgRowsInsideTrapezoid(fallbackRows, trapezoid, rowGapPx) };
 }
 
 function getPosterRowCandidates(words: string[], trapezoid: LyricPosterTrapezoid): number[] {
@@ -853,32 +855,45 @@ function getPosterRowCandidates(words: string[], trapezoid: LyricPosterTrapezoid
   const compressionRatio = roughNaturalWidth / availableCenterWidth;
 
   if (words.length <= 3) return [1, 2].filter((count) => count <= words.length);
-  if (compressionRatio < 1.35) return [1, 2, 3].filter((count) => count <= words.length);
-  if (compressionRatio < 2.35) return [2, 1, 3].filter((count) => count <= words.length);
+  if (compressionRatio < 1.55) return [1, 2].filter((count) => count <= words.length);
+  if (compressionRatio < 2.65) return [2, 1, 3].filter((count) => count <= words.length);
   return [3, 2, 1].filter((count) => count <= words.length);
 }
 
 function layoutSvgRowsInsideTrapezoid(
   rows: string[],
   trapezoid: LyricPosterTrapezoid,
+  rowGapPx: number,
 ): LyricPosterSvgRowLayout[] {
   const n = Math.max(1, rows.length);
   const topY = getTrapezoidTopY(trapezoid);
   const bottomY = getTrapezoidBottomY(trapezoid);
   const height = Math.max(20, bottomY - topY);
-  const sliceHeight = height / n;
-  const verticalPad = Math.max(4, sliceHeight * 0.04);
+
+  // Tight stacked poster layout. A selected 1-line lyric uses the whole ceiling height;
+  // 2 and 3 line lyrics split that same height with only the configured pixel gap.
+  const safeGap = Math.max(0, rowGapPx);
+  const totalGap = safeGap * Math.max(0, n - 1);
+  const rowBandHeight = Math.max(12, (height - totalGap) / n);
+
+  // A cap-height safety factor keeps outlined italic glyphs inside the ceiling instead
+  // of relying on clipping. This is intentionally a little conservative.
+  const fontSize = Math.max(18, rowBandHeight * 0.74);
 
   return rows.map((row, index) => {
-    const sliceTop = topY + index * sliceHeight + verticalPad;
-    const sliceBottom = topY + (index + 1) * sliceHeight - verticalPad;
-    const y = (sliceTop + sliceBottom) / 2;
-    const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, sliceTop);
-    const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, sliceBottom);
+    const bandTop = topY + index * (rowBandHeight + safeGap);
+    const bandBottom = bandTop + rowBandHeight;
+    const y = (bandTop + bandBottom) / 2;
+
+    // Use the row band edges, not just the center, so each row fits inside the
+    // trapezoid through its full height.
+    const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, bandTop);
+    const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, bandBottom);
     const centerBounds = trapezoidHorizontalBoundsAtY(trapezoid, y);
 
-    const safeLeft = Math.max(topBounds.left, bottomBounds.left, centerBounds.left) + 10;
-    const safeRight = Math.min(topBounds.right, bottomBounds.right, centerBounds.right) - 10;
+    const strokePad = Math.max(12, fontSize * 0.10);
+    const safeLeft = Math.max(topBounds.left, bottomBounds.left, centerBounds.left) + strokePad;
+    const safeRight = Math.min(topBounds.right, bottomBounds.right, centerBounds.right) - strokePad;
     const safeWidth = Math.max(28, safeRight - safeLeft);
 
     return {
@@ -886,7 +901,7 @@ function layoutSvgRowsInsideTrapezoid(
       centerX: safeLeft + safeWidth / 2,
       centerY: y,
       width: safeWidth,
-      fontSize: Math.max(18, (sliceBottom - sliceTop) * 0.84),
+      fontSize,
     };
   });
 }

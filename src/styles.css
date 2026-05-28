@@ -6578,3 +6578,22 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .lyrics-boundary-guide-video::after {
   opacity: var(--lyric-poster-guide-opacity, 0) !important;
 }
+
+
+/* SVG CEILING POSTER TIGHT ROW + HEIGHT FIT
+   Row gap is now pixel-based. Text is scaled down slightly so outlines stay inside the tuned ceiling trapezoid. */
+:root {
+  --lyric-poster-row-gap: 0.5px;
+}
+
+.lyric-poster-svg {
+  overflow: visible !important;
+}
+
+.lyric-poster-svg-row {
+  dominant-baseline: middle;
+  text-anchor: middle;
+  letter-spacing: 0.025em;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}

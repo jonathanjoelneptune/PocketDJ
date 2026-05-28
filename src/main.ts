@@ -137,13 +137,13 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterFillOpacity: 0.02,
   lyricPosterGlow: 0.18,
   lyricPosterGuideOpacity: 0.00,
-  lyricPosterRowGap: 0.18,
+  lyricPosterRowGap: 0.5,
   lyricPosterMaxRows: "auto",
   lyricPosterTransition: "push-slide",
   lyricBaseFontSize: 12
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v15";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v16";
 let roomUtility = loadRoomUtilitySettings();
 
 
