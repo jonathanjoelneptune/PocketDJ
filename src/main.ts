@@ -84,10 +84,6 @@ type RoomUtilitySettings = {
   lyricPosterStrokeOpacity: number;
   lyricPosterFillOpacity: number;
   lyricPosterGlow: number;
-  lyricPosterOverallY: number;
-  lyricPosterOverallScale: number;
-  lyricPosterRowTightness: number;
-  lyricPosterPerspectiveStrength: number;
   lyricPosterOneRowVerticalStretch: number;
   lyricPosterOneRowTightness: number;
   lyricPosterOneRowPerspective: number;
@@ -142,10 +138,6 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterStrokeOpacity: 0.52,
   lyricPosterFillOpacity: 0,
   lyricPosterGlow: 0,
-  lyricPosterOverallY: 22,
-  lyricPosterOverallScale: 0.80,
-  lyricPosterRowTightness: -0.30,
-  lyricPosterPerspectiveStrength: 2.25,
   lyricPosterOneRowVerticalStretch: 0.87,
   lyricPosterOneRowTightness: 0.00,
   lyricPosterOneRowPerspective: 1.33,
@@ -170,7 +162,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTransition: "push-slide"
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v31";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v32";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -667,10 +659,6 @@ function bindRoomUtilityControls(): void {
     ["lyricPosterStrokeOpacity", "lyricPosterStrokeOpacityValue"],
     ["lyricPosterFillOpacity", "lyricPosterFillOpacityValue"],
     ["lyricPosterGlow", "lyricPosterGlowValue"],
-    ["lyricPosterOverallY", "lyricPosterOverallYValue"],
-    ["lyricPosterOverallScale", "lyricPosterOverallScaleValue"],
-    ["lyricPosterRowTightness", "lyricPosterRowTightnessValue"],
-    ["lyricPosterPerspectiveStrength", "lyricPosterPerspectiveStrengthValue"],
     ["lyricPosterOneRowVerticalStretch", "lyricPosterOneRowVerticalStretchValue"],
     ["lyricPosterOneRowTightness", "lyricPosterOneRowTightnessValue"],
     ["lyricPosterOneRowPerspective", "lyricPosterOneRowPerspectiveValue"],
@@ -804,10 +792,6 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-stroke-opacity", String(roomUtility.lyricPosterStrokeOpacity));
   root.style.setProperty("--lyric-poster-fill-opacity", String(roomUtility.lyricPosterFillOpacity));
   root.style.setProperty("--lyric-poster-glow", String(roomUtility.lyricPosterGlow));
-  root.style.setProperty("--lyric-poster-overall-y", `${roomUtility.lyricPosterOverallY}px`);
-  root.style.setProperty("--lyric-poster-overall-scale", String(roomUtility.lyricPosterOverallScale));
-  root.style.setProperty("--lyric-poster-row-tightness", String(roomUtility.lyricPosterRowTightness));
-  root.style.setProperty("--lyric-poster-perspective-strength", String(roomUtility.lyricPosterPerspectiveStrength));
   root.style.setProperty("--lyric-poster-one-row-vertical-stretch", String(roomUtility.lyricPosterOneRowVerticalStretch));
   root.style.setProperty("--lyric-poster-one-row-tightness", String(roomUtility.lyricPosterOneRowTightness));
   root.style.setProperty("--lyric-poster-one-row-perspective", String(roomUtility.lyricPosterOneRowPerspective));

@@ -4485,3 +4485,38 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   transform-origin: center center !important;
   overflow: visible !important;
 }
+
+
+/* V32 row-specific WordArt projection cleanup.
+   Uses row-count profiles only for lyric fit. Text inside each warped row is SVG textLength fitted,
+   so it centers and fits before the projection warp is applied. */
+.lyric-poster-html-row {
+  overflow: visible !important;
+}
+
+.lyric-poster-row-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.lyric-poster-row-text {
+  font-family: "Arial Black", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.018em;
+  fill: rgba(255, 255, 255, var(--lyric-poster-fill-opacity));
+  stroke: rgba(218, 218, 218, var(--lyric-poster-stroke-opacity));
+  stroke-width: var(--lyric-poster-stroke);
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 calc(1px + (var(--lyric-poster-glow) * 8px)) rgba(235, 235, 235, calc(var(--lyric-poster-glow) * 0.32)));
+}
+
+.lyric-poster-html-row span {
+  display: none !important;
+}

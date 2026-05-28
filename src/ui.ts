@@ -265,18 +265,6 @@ export function renderShell(state: AppState): void {
               <label>Glow strength <span id="lyricPosterGlowValue">0.00</span>
                 <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0" />
               </label>
-              <label>Overall lyric Y offset px <span id="lyricPosterOverallYValue">22</span>
-                <input id="lyricPosterOverallY" type="range" min="-120" max="120" step="1" value="22" />
-              </label>
-              <label>Overall lyric scale <span id="lyricPosterOverallScaleValue">0.80</span>
-                <input id="lyricPosterOverallScale" type="range" min="0.45" max="1.35" step="0.01" value="0.80" />
-              </label>
-              <label>Global row tightness <span id="lyricPosterRowTightnessValue">-0.30</span>
-                <input id="lyricPosterRowTightness" type="range" min="-1.80" max="0.80" step="0.01" value="-0.30" />
-              </label>
-              <label>Global perspective strength <span id="lyricPosterPerspectiveStrengthValue">2.25</span>
-                <input id="lyricPosterPerspectiveStrength" type="range" min="0.20" max="5.00" step="0.05" value="2.25" />
-              </label>
 
               <div class="utility-minihead">1-row WordArt profile</div>
               <label>1-row vertical stretch <span id="lyricPosterOneRowVerticalStretchValue">0.87</span>
@@ -841,7 +829,20 @@ export function updateLyricsCeiling(
             <div
               class="lyric-poster-html-row"
               style="width:${row.sourceWidth}px; height:${row.sourceHeight}px; transform:${row.matrix3d};"
-            ><span style="font-size:${row.sourceFontSize}px; transform: scaleX(${row.textScaleX});">${escapeHtml(row.text)}</span></div>
+            >
+              <svg class="lyric-poster-row-svg" viewBox="0 0 ${row.sourceWidth} ${row.sourceHeight}" preserveAspectRatio="none" aria-hidden="true">
+                <text
+                  class="lyric-poster-row-text"
+                  x="${row.sourceWidth / 2}"
+                  y="${row.sourceHeight / 2}"
+                  font-size="${row.sourceFontSize}"
+                  textLength="${row.sourceTextLength}"
+                  lengthAdjust="spacingAndGlyphs"
+                  dominant-baseline="middle"
+                  text-anchor="middle"
+                >${escapeHtml(row.text)}</text>
+              </svg>
+            </div>
           `,
         )
         .join("")}
@@ -893,10 +894,6 @@ function readCeilingPosterControls(
   return {
     maxRows: maxRowsValue,
     transition: transitionValue,
-    overallY: readNumber("--lyric-poster-overall-y", 22),
-    overallScale: readNumber("--lyric-poster-overall-scale", 0.80),
-    rowTightness: readNumber("--lyric-poster-row-tightness", -0.30),
-    perspectiveStrength: readNumber("--lyric-poster-perspective-strength", 2.25),
     oneRowVerticalStretch: readNumber("--lyric-poster-one-row-vertical-stretch", 1.35),
     oneRowTightness: readNumber("--lyric-poster-one-row-tightness", 0),
     oneRowPerspective: readNumber("--lyric-poster-one-row-perspective", 1),
@@ -935,40 +932,36 @@ function buildCeilingPosterLayout(
   const bottomY = Math.max(trapezoid.bottomLeftY, trapezoid.bottomRightY);
   const height = Math.max(24, bottomY - topY);
   const centerX = trapezoid.centerX;
+  const centerY = trapezoid.centerY;
   const n = Math.max(1, rowTexts.length) as 1 | 2 | 3;
   const profile = getPosterRowProfile(n, controls);
-  const overallScale = clamp(controls.overallScale, 0.45, 1.35);
-  const totalTightness = clamp(controls.rowTightness + profile.tightness, -1.60, 0.90);
-  const effectivePerspective = clamp(controls.perspectiveStrength * profile.perspective, 0.20, 9.00);
-  const baseCenterY = clamp(trapezoid.centerY + controls.overallY, topY, bottomY);
-
-  const rowPerspectiveScales = rowTexts.map((_, index) => {
-    const t = n === 1 ? 0.5 : index / Math.max(1, n - 1);
-    return clamp(1 + (0.5 - t) * 0.44 * effectivePerspective, 0.28, 2.65);
-  });
-
-  const rowScaleYs = rowPerspectiveScales.map((scale) => clamp(profile.verticalStretch * scale, 0.28, 4.00));
-  const baselineSpacingCoeff = n === 1 ? 0 : clamp(0.62 + totalTightness, 0.04, 1.35);
-  const verticalCoeff = n === 1
-    ? 0.74 * rowScaleYs[0]
-    : (n - 1) * baselineSpacingCoeff + 0.37 * rowScaleYs[0] + 0.37 * rowScaleYs[rowScaleYs.length - 1];
-  const fontSize = clamp((height * 0.96 * overallScale) / Math.max(0.01, verticalCoeff), 10, 420);
-  const centerSpacing = fontSize * baselineSpacingCoeff;
-  const groupHalf = n === 1
-    ? fontSize * 0.37 * rowScaleYs[0]
-    : ((n - 1) * centerSpacing) / 2 + fontSize * 0.37 * Math.max(rowScaleYs[0], rowScaleYs[rowScaleYs.length - 1]);
-  const clampedCenterY = clamp(baseCenterY, topY + groupHalf, bottomY - groupHalf);
-  const firstY = clampedCenterY - ((n - 1) * centerSpacing) / 2;
   const scaleX = Math.max(0.001, ceilingWidth / 1764);
   const scaleY = Math.max(0.001, ceilingHeight / 529);
 
+  const rowPerspectiveScales = rowTexts.map((_, index) => {
+    const t = n === 1 ? 0.5 : index / Math.max(1, n - 1);
+    return clamp(1 + (0.5 - t) * 0.44 * profile.perspective, 0.30, 2.65);
+  });
+
+  const rowScaleYs = rowPerspectiveScales.map((scale) => clamp(profile.verticalStretch * scale, 0.28, 4.00));
+  const baselineSpacingCoeff = n === 1 ? 0 : clamp(0.62 + profile.tightness, 0.02, 1.35);
+  const verticalCoeff = n === 1
+    ? 0.78 * rowScaleYs[0]
+    : (n - 1) * baselineSpacingCoeff + 0.39 * rowScaleYs[0] + 0.39 * rowScaleYs[rowScaleYs.length - 1];
+  const fontSize = clamp((height * 0.97) / Math.max(0.01, verticalCoeff), 10, 460);
+  const centerSpacing = fontSize * baselineSpacingCoeff;
+  const groupHalf = n === 1
+    ? fontSize * 0.39 * rowScaleYs[0]
+    : ((n - 1) * centerSpacing) / 2 + fontSize * 0.39 * Math.max(rowScaleYs[0], rowScaleYs[rowScaleYs.length - 1]);
+  const clampedCenterY = clamp(centerY, topY + groupHalf, bottomY - groupHalf);
+  const firstY = clampedCenterY - ((n - 1) * centerSpacing) / 2;
   const autoCeilingTilt = getCeilingSideTiltDegrees(trapezoid);
-  const perspectiveTilt = autoCeilingTilt * clamp(controls.perspectiveStrength / 2.25, 0.05, 2.80);
+  const perspectiveTilt = autoCeilingTilt * clamp(profile.perspective / 2.25, 0.10, 2.80);
 
   const rows = rowTexts.map((rowText, index) => {
     const y = firstY + index * centerSpacing;
     const scaleYForRow = rowScaleYs[index];
-    const visualHalfHeight = Math.max(4, fontSize * 0.37 * scaleYForRow);
+    const visualHalfHeight = Math.max(4, fontSize * 0.39 * scaleYForRow);
     const rowTilt = clamp(perspectiveTilt + profile.tilt, -76, 76);
     const skewPad = Math.abs(Math.tan((rowTilt * Math.PI) / 180)) * visualHalfHeight;
     const bounds = [
@@ -977,34 +970,33 @@ function buildCeilingPosterLayout(
       trapezoidHorizontalBoundsAtY(trapezoid, clamp(y + visualHalfHeight, topY, bottomY)),
     ];
 
-    const strokePad = Math.max(8, fontSize * 0.050) + skewPad;
+    const strokePad = Math.max(8, fontSize * 0.045) + skewPad;
     const safeLeft = Math.max(...bounds.map((b) => b.left)) + strokePad;
     const safeRight = Math.min(...bounds.map((b) => b.right)) - strokePad;
     const halfWidth = Math.max(24, Math.min(centerX - safeLeft, safeRight - centerX));
     const width = halfWidth * 2;
-    const rowHeight = Math.max(12, visualHalfHeight * 2.0);
+    const rowHeight = Math.max(12, visualHalfHeight * 2.02);
     const top = clamp(y - rowHeight / 2, topY, bottomY);
     const bottom = clamp(y + rowHeight / 2, topY, bottomY);
 
     const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, top);
     const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, bottom);
-    const pad = Math.max(5, fontSize * 0.035);
+    const pad = Math.max(5, fontSize * 0.026);
 
     let topLeft = { x: Math.max(topBounds.left + pad, centerX - width / 2), y: top + pad };
     let topRight = { x: Math.min(topBounds.right - pad, centerX + width / 2), y: top + pad };
     let bottomLeft = { x: Math.max(bottomBounds.left + pad, centerX - width / 2), y: bottom - pad };
     let bottomRight = { x: Math.min(bottomBounds.right - pad, centerX + width / 2), y: bottom - pad };
 
-    // The important v31 change: when the lyric is a 1-row projection,
-    // you can distort the four text corners independently, like WordArt
-    // transform handles. This does not force other lyrics into one row.
     if (n === 1) {
-      topLeft = constrainPointToTrapezoid(addPoint(topLeft, controls.oneRowTextTopLeftX, controls.oneRowTextTopLeftY), trapezoid);
-      topRight = constrainPointToTrapezoid(addPoint(topRight, controls.oneRowTextTopRightX, controls.oneRowTextTopRightY), trapezoid);
-      bottomLeft = constrainPointToTrapezoid(addPoint(bottomLeft, controls.oneRowTextBottomLeftX, controls.oneRowTextBottomLeftY), trapezoid);
-      bottomRight = constrainPointToTrapezoid(addPoint(bottomRight, controls.oneRowTextBottomRightX, controls.oneRowTextBottomRightY), trapezoid);
-      const recentered = recenterQuadInsideTrapezoid([topLeft, topRight, bottomRight, bottomLeft], trapezoid);
-      [topLeft, topRight, bottomRight, bottomLeft] = recentered;
+      topLeft = addPoint(topLeft, controls.oneRowTextTopLeftX, controls.oneRowTextTopLeftY);
+      topRight = addPoint(topRight, controls.oneRowTextTopRightX, controls.oneRowTextTopRightY);
+      bottomLeft = addPoint(bottomLeft, controls.oneRowTextBottomLeftX, controls.oneRowTextBottomLeftY);
+      bottomRight = addPoint(bottomRight, controls.oneRowTextBottomRightX, controls.oneRowTextBottomRightY);
+      [topLeft, topRight, bottomRight, bottomLeft] = centerAndFitQuadInsideTrapezoid(
+        [topLeft, topRight, bottomRight, bottomLeft],
+        trapezoid,
+      );
     }
 
     const destination = [topLeft, topRight, bottomRight, bottomLeft].map((point) => ({
@@ -1015,8 +1007,7 @@ function buildCeilingPosterLayout(
     const sourceWidth = 1200;
     const sourceHeight = 180;
     const sourceFontSize = sourceHeight * clamp(profile.verticalStretch, 0.40, 3.00);
-    const estimatedTextWidth = Math.max(1, weightedPosterLength(rowText) * sourceFontSize * 0.58);
-    const textScaleX = clamp((sourceWidth * 0.94) / estimatedTextWidth, 0.18, 8.0);
+    const sourceTextLength = sourceWidth * 0.965;
     const matrix3d = quadToCssMatrix3d(sourceWidth, sourceHeight, destination[0], destination[1], destination[2], destination[3]);
 
     return {
@@ -1024,7 +1015,7 @@ function buildCeilingPosterLayout(
       sourceWidth,
       sourceHeight,
       sourceFontSize,
-      textScaleX,
+      sourceTextLength,
       matrix3d,
     };
   });
@@ -1059,53 +1050,50 @@ function getPosterRowProfile(rowCount: 1 | 2 | 3, controls: CeilingPosterControl
   };
 }
 
-function recenterQuadInsideTrapezoid(
+function centerAndFitQuadInsideTrapezoid(
   points: [Point2D, Point2D, Point2D, Point2D],
   trapezoid: LyricPosterTrapezoid,
 ): [Point2D, Point2D, Point2D, Point2D] {
-  const currentCenterX = points.reduce((sum, point) => sum + point.x, 0) / points.length;
-  const currentCenterY = points.reduce((sum, point) => sum + point.y, 0) / points.length;
-  const targetCenterX = trapezoid.centerX;
-  const targetCenterY = trapezoid.centerY;
-  let translated = translatePoints(points, targetCenterX - currentCenterX, targetCenterY - currentCenterY);
+  const targetCenter = { x: trapezoid.centerX, y: trapezoid.centerY };
+  const currentCenter = getPointAverage(points);
+  const centered = translatePoints(points, targetCenter.x - currentCenter.x, targetCenter.y - currentCenter.y);
 
-  const allowedXShift = getAllowedHorizontalShift(translated, trapezoid);
-  translated = translatePoints(translated, allowedXShift, 0);
+  for (let scale = 1; scale >= 0.12; scale -= 0.015) {
+    const candidate = centered.map((point) => scalePointAbout(point, targetCenter, scale)) as [Point2D, Point2D, Point2D, Point2D];
+    if (isQuadInsideTrapezoid(candidate, trapezoid)) return candidate;
+  }
 
-  const allowedYShift = getAllowedVerticalShift(translated, trapezoid);
-  translated = translatePoints(translated, 0, allowedYShift);
+  return centered.map((point) => constrainPointToTrapezoid(point, trapezoid)) as [Point2D, Point2D, Point2D, Point2D];
+}
 
-  return translated.map((point) => constrainPointToTrapezoid(point, trapezoid)) as [Point2D, Point2D, Point2D, Point2D];
+function getPointAverage(points: Point2D[]): Point2D {
+  return {
+    x: points.reduce((sum, point) => sum + point.x, 0) / points.length,
+    y: points.reduce((sum, point) => sum + point.y, 0) / points.length,
+  };
 }
 
 function translatePoints(points: Point2D[], x: number, y: number): [Point2D, Point2D, Point2D, Point2D] {
   return points.map((point) => ({ x: point.x + x, y: point.y + y })) as [Point2D, Point2D, Point2D, Point2D];
 }
 
-function getAllowedHorizontalShift(points: Point2D[], trapezoid: LyricPosterTrapezoid): number {
-  let minShift = Number.NEGATIVE_INFINITY;
-  let maxShift = Number.POSITIVE_INFINITY;
-
-  points.forEach((point) => {
-    const bounds = trapezoidHorizontalBoundsAtY(trapezoid, point.y);
-    minShift = Math.max(minShift, bounds.left - point.x);
-    maxShift = Math.min(maxShift, bounds.right - point.x);
-  });
-
-  if (minShift > maxShift) return 0;
-  if (0 < minShift) return minShift;
-  if (0 > maxShift) return maxShift;
-  return 0;
+function scalePointAbout(point: Point2D, center: Point2D, scale: number): Point2D {
+  return {
+    x: center.x + (point.x - center.x) * scale,
+    y: center.y + (point.y - center.y) * scale,
+  };
 }
 
-function getAllowedVerticalShift(points: Point2D[], trapezoid: LyricPosterTrapezoid): number {
+function isQuadInsideTrapezoid(points: Point2D[], trapezoid: LyricPosterTrapezoid): boolean {
+  return points.every((point) => isPointInsideTrapezoid(point, trapezoid));
+}
+
+function isPointInsideTrapezoid(point: Point2D, trapezoid: LyricPosterTrapezoid): boolean {
   const topY = Math.min(trapezoid.topLeftY, trapezoid.topRightY);
   const bottomY = Math.max(trapezoid.bottomLeftY, trapezoid.bottomRightY);
-  const minY = Math.min(...points.map((point) => point.y));
-  const maxY = Math.max(...points.map((point) => point.y));
-  if (minY < topY) return topY - minY;
-  if (maxY > bottomY) return bottomY - maxY;
-  return 0;
+  if (point.y < topY || point.y > bottomY) return false;
+  const bounds = trapezoidHorizontalBoundsAtY(trapezoid, point.y);
+  return point.x >= bounds.left && point.x <= bounds.right;
 }
 
 function quadToCssMatrix3d(
@@ -1313,10 +1301,6 @@ type LyricPosterTrapezoid = {
 type CeilingPosterControls = {
   maxRows: "auto" | "1" | "2" | "3";
   transition: "push-slide" | "fade-slide";
-  overallY: number;
-  overallScale: number;
-  rowTightness: number;
-  perspectiveStrength: number;
   oneRowVerticalStretch: number;
   oneRowTightness: number;
   oneRowPerspective: number;
@@ -1357,7 +1341,7 @@ type LyricPosterSvgRowLayout = {
   sourceWidth: number;
   sourceHeight: number;
   sourceFontSize: number;
-  textScaleX: number;
+  sourceTextLength: number;
   matrix3d: string;
 };
 
