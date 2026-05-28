@@ -4865,7 +4865,8 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 /* v45 utility panel, top pills, and always-visible floor controls cleanup */
 :root {
   --floor-controls-idle-opacity: 0.15;
-  --panel-start-y: 20%;
+  --panel-start-y: 39%;
+  --panel-start-y-ratio: 0.39;
 }
 
 /* The side utility panel must always sit above the ceiling lyric projection. */
@@ -5165,4 +5166,42 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     linear-gradient(225deg, transparent 50%, currentColor 51%) 5px 0 / 5px 5px no-repeat,
     linear-gradient(45deg, transparent 50%, currentColor 51%) 2px 13px / 5px 5px no-repeat,
     linear-gradient(-45deg, transparent 50%, currentColor 51%) 5px 13px / 5px 5px no-repeat;
+}
+
+
+/* v50 panel height adjust mode and 16:9 room-bounded panel height */
+.control-card {
+  top: calc(((100vh - var(--room-h)) / 2) + (var(--room-h) * var(--panel-start-y-ratio))) !important;
+  max-height: calc(var(--room-h) * (1 - var(--panel-start-y-ratio))) !important;
+  overflow-y: auto !important;
+}
+
+.panel-toggle,
+.side-panel-tab {
+  top: calc(((100vh - var(--room-h)) / 2) + (var(--room-h) * var(--panel-start-y-ratio))) !important;
+}
+
+.side-panel-tab {
+  cursor: pointer;
+}
+
+.panel-height-adjust-enabled .side-panel-tab {
+  cursor: ns-resize;
+}
+
+.panel-height-adjust-enabled .side-panel-tab::before {
+  content: "DRAG";
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 6px;
+  border-radius: 999px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.42rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 218, 155, 0.82);
+  background: rgba(20, 13, 25, 0.58);
+  border: 1px solid rgba(255, 191, 71, 0.18);
+  pointer-events: none;
 }

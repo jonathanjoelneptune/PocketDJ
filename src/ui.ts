@@ -214,9 +214,14 @@ export function renderShell(state: AppState): void {
             <label>Floor controls idle opacity <span id="floorControlsIdleOpacityValue">0.15</span>
               <input id="floorControlsIdleOpacity" type="range" min="0" max="1" step="0.01" value="0.15" />
             </label>
-            <label>Panel starting Y % <span id="panelStartYValue">20</span>
-              <input id="panelStartY" type="range" min="4" max="78" step="0.1" value="20" />
+            <label>Panel starting Y % <span id="panelStartYValue">39</span>
+              <input id="panelStartY" type="range" min="4" max="86" step="0.1" value="39" />
             </label>
+
+          <label class="utility-checkbox">
+            <input id="panelHeightAdjustEnabled" type="checkbox" />
+            Adjust panel height by dragging side tab
+          </label>
           </div>
 
           <div class="lyrics-boundary-utility">

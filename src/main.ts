@@ -72,6 +72,7 @@ type RoomUtilitySettings = {
   tableShadowScale: number;
   floorControlsIdleOpacity: number;
   panelStartY: number;
+  panelHeightAdjustEnabled: boolean;
   lyricPosterTopLeftX: number;
   lyricPosterTopLeftY: number;
   lyricPosterTopRightX: number;
@@ -212,7 +213,8 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
   floorControlsIdleOpacity: 0.15,
-  panelStartY: 20,
+  panelStartY: 39,
+  panelHeightAdjustEnabled: false,
   lyricPosterTopLeftX: 221,
   lyricPosterTopLeftY: 18,
   lyricPosterTopRightX: 1562,
@@ -335,7 +337,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v49";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v50";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -402,8 +404,12 @@ function bindControls(): void {
   });
 
   const sideTab = qs<HTMLButtonElement>("#sidePanelTab");
+  sideTab.addEventListener("mouseenter", () => {
+    if (!roomUtility.panelHeightAdjustEnabled) openSidePanel(true);
+  });
   sideTab.addEventListener("click", (event) => {
     event.stopPropagation();
+    if (!roomUtility.panelHeightAdjustEnabled) openSidePanel(true);
   });
   bindDraggableSidePanelTab(sideTab);
 
@@ -499,7 +505,7 @@ let sidePanelTabDragState: {
 } | null = null;
 
 function clampPanelStartY(value: number): number {
-  return Math.max(4, Math.min(78, value));
+  return Math.max(4, Math.min(86, value));
 }
 
 function updatePanelStartY(value: number, persist = false): void {
@@ -517,6 +523,7 @@ function updatePanelStartY(value: number, persist = false): void {
 
 function bindDraggableSidePanelTab(tab: HTMLButtonElement): void {
   tab.addEventListener("pointerdown", (event) => {
+    if (!roomUtility.panelHeightAdjustEnabled) return;
     if (event.button !== 0) return;
     sidePanelTabDragState = {
       pointerId: event.pointerId,
@@ -552,7 +559,7 @@ function bindDraggableSidePanelTab(tab: HTMLButtonElement): void {
 
     saveRoomUtilitySettings();
 
-    if (!wasDragged) {
+    if (!wasDragged && !roomUtility.panelHeightAdjustEnabled) {
       openSidePanel(true);
     }
   };
@@ -843,6 +850,7 @@ function bindRoomUtilityControls(): void {
   const lyricPosterEffectInsetEmboss = qs<HTMLInputElement>("#lyricPosterEffectInsetEmboss");
   const lyricPosterEffectBevel = qs<HTMLInputElement>("#lyricPosterEffectBevel");
   const lyricPosterEffectSoftBlur = qs<HTMLInputElement>("#lyricPosterEffectSoftBlur");
+  const panelHeightAdjustEnabled = qs<HTMLInputElement>("#panelHeightAdjustEnabled");
 
   sceneFilter.value = roomUtility.sceneFilter;
   lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
@@ -854,6 +862,13 @@ function bindRoomUtilityControls(): void {
   lyricPosterEffectInsetEmboss.checked = roomUtility.lyricPosterEffectInsetEmboss;
   lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
   lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
+  panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
+
+  panelHeightAdjustEnabled.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, panelHeightAdjustEnabled: panelHeightAdjustEnabled.checked };
+    applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
+  });
 
   const controls = [
     ["speakerLeftX", "speakerLeftXValue"],
@@ -1067,6 +1082,7 @@ function bindRoomUtilityControls(): void {
 
     lyricAnimationRevision += 1;
     saveRoomUtilitySettings();
+        panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
     applyRoomUtilitySettings();
   });
 }
@@ -1114,6 +1130,8 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
   root.style.setProperty("--floor-controls-idle-opacity", String(roomUtility.floorControlsIdleOpacity));
   root.style.setProperty("--panel-start-y", `${roomUtility.panelStartY}%`);
+  root.style.setProperty("--panel-start-y-ratio", String(roomUtility.panelStartY / 100));
+  root.classList.toggle("panel-height-adjust-enabled", roomUtility.panelHeightAdjustEnabled);
 
   root.style.setProperty("--lyric-poster-guide-opacity", String(roomUtility.lyricPosterGuideOpacity));
   root.style.setProperty("--lyric-poster-center-guide-opacity", String(roomUtility.lyricPosterCenterGuideOpacity));
