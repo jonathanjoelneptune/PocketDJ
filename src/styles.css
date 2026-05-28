@@ -3980,6 +3980,8 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-glow: 0;
   --lyric-poster-guide-opacity: 0;
   --lyric-poster-center-guide-opacity: 0;
+  --lyric-poster-two-row-band-guide-opacity: 0;
+  --lyric-poster-three-row-band-guide-opacity: 0;
   --lyric-poster-row-gap: 0.5px;
   --lyrics-base-font-size: 12px;
   --lyrics-animation-revision: 0;
@@ -4273,12 +4275,22 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-one-row-text-bottom-right-x: 0px;
   --lyric-poster-one-row-text-bottom-right-y: 0px;
   --lyric-poster-two-row-vertical-stretch: 0.93;
+  --lyric-poster-two-row-top-band-top-y: 18px;
+  --lyric-poster-two-row-top-band-bottom-y: 106px;
+  --lyric-poster-two-row-bottom-band-top-y: 106px;
+  --lyric-poster-two-row-bottom-band-bottom-y: 195px;
   --lyric-poster-two-row-top-y: 0px;
   --lyric-poster-two-row-bottom-y: 0px;
   --lyric-poster-two-row-tightness: 0.45;
   --lyric-poster-two-row-perspective: 1;
   --lyric-poster-two-row-tilt: -10;
   --lyric-poster-three-row-vertical-stretch: 0.51;
+  --lyric-poster-three-row-top-band-top-y: 18px;
+  --lyric-poster-three-row-top-band-bottom-y: 76px;
+  --lyric-poster-three-row-middle-band-top-y: 76px;
+  --lyric-poster-three-row-middle-band-bottom-y: 136px;
+  --lyric-poster-three-row-bottom-band-top-y: 136px;
+  --lyric-poster-three-row-bottom-band-bottom-y: 195px;
   --lyric-poster-three-row-top-y: 0px;
   --lyric-poster-three-row-middle-y: 0px;
   --lyric-poster-three-row-bottom-y: 0px;
@@ -4564,4 +4576,17 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 .lyric-poster-html-row span {
   display: none !important;
+}
+
+
+.lyric-poster-row-band-guide {
+  fill: rgba(255, 212, 92, 0.035);
+  stroke: rgba(255, 212, 92, 0.95);
+  stroke-width: 2.25;
+  vector-effect: non-scaling-stroke;
+  opacity: var(--lyric-poster-two-row-band-guide-opacity);
+}
+
+.lyric-poster-row-band-guide.three-row {
+  opacity: var(--lyric-poster-three-row-band-guide-opacity);
 }

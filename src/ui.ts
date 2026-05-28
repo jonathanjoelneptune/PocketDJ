@@ -227,6 +227,12 @@ export function renderShell(state: AppState): void {
               <label>Center guide opacity <span id="lyricPosterCenterGuideOpacityValue">0.00</span>
                 <input id="lyricPosterCenterGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.00" />
               </label>
+              <label>2-row band guide opacity <span id="lyricPosterTwoRowBandGuideOpacityValue">0.00</span>
+                <input id="lyricPosterTwoRowBandGuideOpacity" type="range" min="0" max="1" step="0.01" value="0" />
+              </label>
+              <label>3-row band guide opacity <span id="lyricPosterThreeRowBandGuideOpacityValue">0.00</span>
+                <input id="lyricPosterThreeRowBandGuideOpacity" type="range" min="0" max="1" step="0.01" value="0" />
+              </label>
               <label>Top left X px <span id="lyricPosterTopLeftXValue">221</span>
                 <input id="lyricPosterTopLeftX" type="range" min="0" max="1764" step="1" value="221" />
               </label>
@@ -311,6 +317,20 @@ export function renderShell(state: AppState): void {
               <label>2-row vertical stretch <span id="lyricPosterTwoRowVerticalStretchValue">0.93</span>
                 <input id="lyricPosterTwoRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.93" />
               </label>
+              <div class="utility-minihead">2-row band trapezoids</div>
+              <p class="utility-help">These split the full ceiling trapezoid into separate physical ceiling zones before corner warping.</p>
+              <label>2-row top band top Y px <span id="lyricPosterTwoRowTopBandTopYValue">18</span>
+                <input id="lyricPosterTwoRowTopBandTopY" type="range" min="0" max="529" step="1" value="18" />
+              </label>
+              <label>2-row top band bottom Y px <span id="lyricPosterTwoRowTopBandBottomYValue">106</span>
+                <input id="lyricPosterTwoRowTopBandBottomY" type="range" min="0" max="529" step="1" value="106" />
+              </label>
+              <label>2-row bottom band top Y px <span id="lyricPosterTwoRowBottomBandTopYValue">106</span>
+                <input id="lyricPosterTwoRowBottomBandTopY" type="range" min="0" max="529" step="1" value="106" />
+              </label>
+              <label>2-row bottom band bottom Y px <span id="lyricPosterTwoRowBottomBandBottomYValue">195</span>
+                <input id="lyricPosterTwoRowBottomBandBottomY" type="range" min="0" max="529" step="1" value="195" />
+              </label>
               <label>2-row top row vertical placement px <span id="lyricPosterTwoRowTopYValue">0</span>
                 <input id="lyricPosterTwoRowTopY" type="range" min="-450" max="450" step="1" value="0" />
               </label>
@@ -330,6 +350,26 @@ export function renderShell(state: AppState): void {
               <div class="utility-minihead">3-row WordArt profile</div>
               <label>3-row vertical stretch <span id="lyricPosterThreeRowVerticalStretchValue">0.51</span>
                 <input id="lyricPosterThreeRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.51" />
+              </label>
+              <div class="utility-minihead">3-row band trapezoids</div>
+              <p class="utility-help">Each row gets its own mini-trapezoid band before the row corner offsets are applied.</p>
+              <label>3-row top band top Y px <span id="lyricPosterThreeRowTopBandTopYValue">18</span>
+                <input id="lyricPosterThreeRowTopBandTopY" type="range" min="0" max="529" step="1" value="18" />
+              </label>
+              <label>3-row top band bottom Y px <span id="lyricPosterThreeRowTopBandBottomYValue">76</span>
+                <input id="lyricPosterThreeRowTopBandBottomY" type="range" min="0" max="529" step="1" value="76" />
+              </label>
+              <label>3-row middle band top Y px <span id="lyricPosterThreeRowMiddleBandTopYValue">76</span>
+                <input id="lyricPosterThreeRowMiddleBandTopY" type="range" min="0" max="529" step="1" value="76" />
+              </label>
+              <label>3-row middle band bottom Y px <span id="lyricPosterThreeRowMiddleBandBottomYValue">136</span>
+                <input id="lyricPosterThreeRowMiddleBandBottomY" type="range" min="0" max="529" step="1" value="136" />
+              </label>
+              <label>3-row bottom band top Y px <span id="lyricPosterThreeRowBottomBandTopYValue">136</span>
+                <input id="lyricPosterThreeRowBottomBandTopY" type="range" min="0" max="529" step="1" value="136" />
+              </label>
+              <label>3-row bottom band bottom Y px <span id="lyricPosterThreeRowBottomBandBottomYValue">195</span>
+                <input id="lyricPosterThreeRowBottomBandBottomY" type="range" min="0" max="529" step="1" value="195" />
               </label>
               <label>3-row top row vertical placement px <span id="lyricPosterThreeRowTopYValue">0</span>
                 <input id="lyricPosterThreeRowTopY" type="range" min="-450" max="450" step="1" value="0" />
@@ -962,6 +1002,7 @@ export function updateLyricsCeiling(
         points="${trapezoid.topLeftX},${trapezoid.topLeftY} ${trapezoid.topRightX},${trapezoid.topRightY} ${trapezoid.bottomRightX},${trapezoid.bottomRightY} ${trapezoid.bottomLeftX},${trapezoid.bottomLeftY}"
       />
       <circle class="lyric-poster-center-guide" cx="${layout.centerX}" cy="${layout.centerY}" r="8" />
+      ${renderBandGuidePolygons(layout.rowBands, layout.rows.length)}
     </svg>
     <div class="lyric-poster-html-rows" style="clip-path: polygon(${clipPolygon});">
       ${layout.rows
@@ -1035,6 +1076,18 @@ function readCeilingPosterControls(
   return {
     maxRows: maxRowsValue,
     transition: transitionValue,
+    twoRowBandGuideOpacity: readNumber("--lyric-poster-two-row-band-guide-opacity", 0),
+    threeRowBandGuideOpacity: readNumber("--lyric-poster-three-row-band-guide-opacity", 0),
+    twoRowTopBandTopY: readNumber("--lyric-poster-two-row-top-band-top-y", 18),
+    twoRowTopBandBottomY: readNumber("--lyric-poster-two-row-top-band-bottom-y", 106),
+    twoRowBottomBandTopY: readNumber("--lyric-poster-two-row-bottom-band-top-y", 106),
+    twoRowBottomBandBottomY: readNumber("--lyric-poster-two-row-bottom-band-bottom-y", 195),
+    threeRowTopBandTopY: readNumber("--lyric-poster-three-row-top-band-top-y", 18),
+    threeRowTopBandBottomY: readNumber("--lyric-poster-three-row-top-band-bottom-y", 76),
+    threeRowMiddleBandTopY: readNumber("--lyric-poster-three-row-middle-band-top-y", 76),
+    threeRowMiddleBandBottomY: readNumber("--lyric-poster-three-row-middle-band-bottom-y", 136),
+    threeRowBottomBandTopY: readNumber("--lyric-poster-three-row-bottom-band-top-y", 136),
+    threeRowBottomBandBottomY: readNumber("--lyric-poster-three-row-bottom-band-bottom-y", 195),
     oneRowVerticalStretch: readNumber("--lyric-poster-one-row-vertical-stretch", 1.35),
     oneRowTightness: readNumber("--lyric-poster-one-row-tightness", 0),
     oneRowPerspective: readNumber("--lyric-poster-one-row-perspective", 1),
@@ -1113,66 +1166,43 @@ function buildCeilingPosterLayout(
   const words = normalizePosterWords(text);
   const rowCount = controls.maxRows === "auto" ? choosePosterRowCount(words) : Number.parseInt(controls.maxRows, 10);
   const rowTexts = balanceWordsIntoRows(words, Math.max(1, Math.min(3, rowCount)));
-
-  const topY = Math.min(trapezoid.topLeftY, trapezoid.topRightY);
-  const bottomY = Math.max(trapezoid.bottomLeftY, trapezoid.bottomRightY);
-  const height = Math.max(24, bottomY - topY);
-  const centerX = trapezoid.centerX;
-  const centerY = trapezoid.centerY;
   const n = Math.max(1, rowTexts.length) as 1 | 2 | 3;
   const profile = getPosterRowProfile(n, controls);
   const scaleX = Math.max(0.001, ceilingWidth / 1764);
   const scaleY = Math.max(0.001, ceilingHeight / 529);
+  const rowBands = getRowBandTrapezoids(n, trapezoid, controls);
 
-  const rowPerspectiveScales = rowTexts.map((_, index) => {
-    const t = n === 1 ? 0.5 : index / Math.max(1, n - 1);
-    return clamp(1 + (0.5 - t) * 0.44 * profile.perspective, 0.30, 2.65);
-  });
-
-  const rowScaleYs = rowPerspectiveScales.map((scale) => clamp(profile.verticalStretch * scale, 0.28, 4.00));
-  const baselineSpacingCoeff = n === 1 ? 0 : clamp(0.62 + profile.tightness, 0.02, 1.35);
-  const verticalCoeff = n === 1
-    ? 0.78 * rowScaleYs[0]
-    : (n - 1) * baselineSpacingCoeff + 0.39 * rowScaleYs[0] + 0.39 * rowScaleYs[rowScaleYs.length - 1];
-  const fontSize = clamp((height * 0.97) / Math.max(0.01, verticalCoeff), 10, 460);
-  const centerSpacing = fontSize * baselineSpacingCoeff;
-  const groupHalf = n === 1
-    ? fontSize * 0.39 * rowScaleYs[0]
-    : ((n - 1) * centerSpacing) / 2 + fontSize * 0.39 * Math.max(rowScaleYs[0], rowScaleYs[rowScaleYs.length - 1]);
-  const clampedCenterY = clamp(centerY, topY + groupHalf, bottomY - groupHalf);
-  const firstY = clampedCenterY - ((n - 1) * centerSpacing) / 2;
   const autoCeilingTilt = getCeilingSideTiltDegrees(trapezoid);
   const perspectiveTilt = autoCeilingTilt * clamp(profile.perspective / 2.25, 0.10, 2.80);
 
   const rows = rowTexts.map((rowText, index) => {
-    const y = firstY + index * centerSpacing + getRowVerticalOffset(n, index, controls);
-    const scaleYForRow = rowScaleYs[index];
-    const visualHalfHeight = Math.max(4, fontSize * 0.39 * scaleYForRow);
+    const band = rowBands[index] ?? rowBands[rowBands.length - 1] ?? trapezoid;
+    const bandTopY = Math.min(band.topLeftY, band.topRightY);
+    const bandBottomY = Math.max(band.bottomLeftY, band.bottomRightY);
+    const bandHeight = Math.max(12, bandBottomY - bandTopY);
+    const bandCenterY = (bandTopY + bandBottomY) / 2;
+    const bandCenterX = (band.topLeftX + band.topRightX + band.bottomLeftX + band.bottomRightX) / 4;
+
+    const scaleYForRow = clamp(profile.verticalStretch, 0.28, 4.00);
+    const visualHalfHeight = Math.max(4, bandHeight * 0.50 * scaleYForRow);
     const rowTilt = clamp(perspectiveTilt + profile.tilt, -76, 76);
     const skewPad = Math.abs(Math.tan((rowTilt * Math.PI) / 180)) * visualHalfHeight;
-    const bounds = [
-      trapezoidHorizontalBoundsAtY(trapezoid, clamp(y - visualHalfHeight, topY, bottomY)),
-      trapezoidHorizontalBoundsAtY(trapezoid, y),
-      trapezoidHorizontalBoundsAtY(trapezoid, clamp(y + visualHalfHeight, topY, bottomY)),
-    ];
+    const strokePad = Math.max(6, bandHeight * 0.035) + skewPad * 0.18;
+    const top = clamp(bandCenterY - bandHeight * 0.50, bandTopY, bandBottomY);
+    const bottom = clamp(bandCenterY + bandHeight * 0.50, bandTopY, bandBottomY);
+    const topBounds = trapezoidHorizontalBoundsAtY(band, top);
+    const bottomBounds = trapezoidHorizontalBoundsAtY(band, bottom);
+    const safeLeft = Math.max(topBounds.left, bottomBounds.left) + strokePad;
+    const safeRight = Math.min(topBounds.right, bottomBounds.right) - strokePad;
+    const halfWidth = Math.max(24, Math.min(bandCenterX - safeLeft, safeRight - bandCenterX));
+    const left = bandCenterX - halfWidth;
+    const right = bandCenterX + halfWidth;
+    const padY = Math.max(2, bandHeight * 0.018);
 
-    const strokePad = Math.max(8, fontSize * 0.045) + skewPad;
-    const safeLeft = Math.max(...bounds.map((b) => b.left)) + strokePad;
-    const safeRight = Math.min(...bounds.map((b) => b.right)) - strokePad;
-    const halfWidth = Math.max(24, Math.min(centerX - safeLeft, safeRight - centerX));
-    const width = halfWidth * 2;
-    const rowHeight = Math.max(12, visualHalfHeight * 2.02);
-    const top = clamp(y - rowHeight / 2, topY, bottomY);
-    const bottom = clamp(y + rowHeight / 2, topY, bottomY);
-
-    const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, top);
-    const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, bottom);
-    const pad = Math.max(5, fontSize * 0.026);
-
-    let topLeft = { x: Math.max(topBounds.left + pad, centerX - width / 2), y: top + pad };
-    let topRight = { x: Math.min(topBounds.right - pad, centerX + width / 2), y: top + pad };
-    let bottomLeft = { x: Math.max(bottomBounds.left + pad, centerX - width / 2), y: bottom - pad };
-    let bottomRight = { x: Math.min(bottomBounds.right - pad, centerX + width / 2), y: bottom - pad };
+    let topLeft = { x: left, y: top + padY };
+    let topRight = { x: right, y: top + padY };
+    let bottomLeft = { x: left, y: bottom - padY };
+    let bottomRight = { x: right, y: bottom - padY };
 
     const cornerOffsets = getRowProjectionOffsets(n, index, controls);
     topLeft = addPoint(topLeft, cornerOffsets.topLeftX, cornerOffsets.topLeftY);
@@ -1181,7 +1211,7 @@ function buildCeilingPosterLayout(
     bottomRight = addPoint(bottomRight, cornerOffsets.bottomRightX, cornerOffsets.bottomRightY);
     [topLeft, topRight, bottomRight, bottomLeft] = centerAndFitQuadInsideTrapezoid(
       [topLeft, topRight, bottomRight, bottomLeft],
-      trapezoid,
+      band,
     );
 
     const destination = [topLeft, topRight, bottomRight, bottomLeft].map((point) => ({
@@ -1205,7 +1235,59 @@ function buildCeilingPosterLayout(
     };
   });
 
-  return { rows, centerX, centerY: clampedCenterY };
+  return { rows, centerX: trapezoid.centerX, centerY: trapezoid.centerY, rowBands };
+}
+
+
+function getRowBandTrapezoids(
+  rowCount: 1 | 2 | 3,
+  full: LyricPosterTrapezoid,
+  controls: CeilingPosterControls,
+): LyricPosterTrapezoid[] {
+  if (rowCount === 1) return [full];
+
+  if (rowCount === 2) {
+    return [
+      makeBandTrapezoid(full, controls.twoRowTopBandTopY, controls.twoRowTopBandBottomY),
+      makeBandTrapezoid(full, controls.twoRowBottomBandTopY, controls.twoRowBottomBandBottomY),
+    ];
+  }
+
+  return [
+    makeBandTrapezoid(full, controls.threeRowTopBandTopY, controls.threeRowTopBandBottomY),
+    makeBandTrapezoid(full, controls.threeRowMiddleBandTopY, controls.threeRowMiddleBandBottomY),
+    makeBandTrapezoid(full, controls.threeRowBottomBandTopY, controls.threeRowBottomBandBottomY),
+  ];
+}
+
+function makeBandTrapezoid(full: LyricPosterTrapezoid, rawTopY: number, rawBottomY: number): LyricPosterTrapezoid {
+  const fullTop = Math.min(full.topLeftY, full.topRightY);
+  const fullBottom = Math.max(full.bottomLeftY, full.bottomRightY);
+  const topY = clamp(Math.min(rawTopY, rawBottomY), fullTop, fullBottom);
+  const bottomY = clamp(Math.max(rawTopY, rawBottomY), fullTop, fullBottom);
+  const safeBottomY = Math.max(bottomY, topY + 4);
+  const topBounds = trapezoidHorizontalBoundsAtY(full, topY);
+  const bottomBounds = trapezoidHorizontalBoundsAtY(full, safeBottomY);
+  return makeLyricPosterTrapezoid(
+    topBounds.left,
+    topY,
+    topBounds.right,
+    topY,
+    bottomBounds.left,
+    safeBottomY,
+    bottomBounds.right,
+    safeBottomY,
+  );
+}
+
+function renderBandGuidePolygons(rowBands: LyricPosterTrapezoid[], rowCount: number): string {
+  if (rowCount < 2) return "";
+  const className = rowCount === 3 ? "lyric-poster-row-band-guide three-row" : "lyric-poster-row-band-guide";
+  return rowBands
+    .map(
+      (band) => `<polygon class="${className}" points="${band.topLeftX},${band.topLeftY} ${band.topRightX},${band.topRightY} ${band.bottomRightX},${band.bottomRightY} ${band.bottomLeftX},${band.bottomLeftY}" />`,
+    )
+    .join("");
 }
 
 function getPosterRowProfile(rowCount: 1 | 2 | 3, controls: CeilingPosterControls): PosterRowProfile {
@@ -1583,6 +1665,18 @@ type LyricPosterTrapezoid = {
 type CeilingPosterControls = {
   maxRows: "auto" | "1" | "2" | "3";
   transition: "push-slide" | "fade-slide";
+  twoRowBandGuideOpacity: number;
+  threeRowBandGuideOpacity: number;
+  twoRowTopBandTopY: number;
+  twoRowTopBandBottomY: number;
+  twoRowBottomBandTopY: number;
+  twoRowBottomBandBottomY: number;
+  threeRowTopBandTopY: number;
+  threeRowTopBandBottomY: number;
+  threeRowMiddleBandTopY: number;
+  threeRowMiddleBandBottomY: number;
+  threeRowBottomBandTopY: number;
+  threeRowBottomBandBottomY: number;
   oneRowVerticalStretch: number;
   oneRowTightness: number;
   oneRowPerspective: number;
