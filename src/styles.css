@@ -4158,3 +4158,42 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .lyrics-boundary-guide-video {
   display: none !important;
 }
+
+
+
+/* CEILING LYRIC PERSPECTIVE FILL
+   Rows now use the full trapezoid height and a perspective-depth utility to push
+   the stack into a stronger ceiling-poster look. */
+:root {
+  --lyric-poster-perspective-depth: 1.35;
+}
+
+.lyric-poster-svg-row {
+  font-stretch: expanded;
+  letter-spacing: 0.018em !important;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* V23 LOCKED CEILING LYRIC DEFAULTS */
+:root {
+  --lyric-poster-top-left-x: 221px;
+  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-right-x: 1562px;
+  --lyric-poster-top-right-y: 3px;
+  --lyric-poster-bottom-left-x: 454px;
+  --lyric-poster-bottom-left-y: 189px;
+  --lyric-poster-bottom-right-x: 1343px;
+  --lyric-poster-bottom-right-y: 189px;
+  --lyric-poster-center-x: 878px;
+  --lyric-poster-center-y: 178px;
+  --lyric-poster-stroke: 2.4px;
+  --lyric-poster-stroke-opacity: 0.52;
+  --lyric-poster-fill-opacity: 0;
+  --lyric-poster-glow: 0;
+  --lyric-poster-guide-opacity: 1;
+  --lyric-poster-center-guide-opacity: 0;
+  --lyric-poster-row-gap: 30px;
+  --lyrics-base-font-size: 12px;
+  --lyric-poster-perspective-depth: 1.35;
+}
