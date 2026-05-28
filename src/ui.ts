@@ -524,6 +524,10 @@ export function renderShell(state: AppState): void {
                   <option value="2">Force 2 rows</option>
                 </select>
               </label>
+              <label>1-to-2 row breakpoint chars <span id="lyricPosterRowBreakpointValue">28</span>
+                <input id="lyricPosterRowBreakpoint" type="range" min="10" max="80" step="1" value="28" />
+              </label>
+              <p class="utility-help">Auto mode uses 1 row below this character count and 2 rows at or above it, including spaces.</p>
               <label>Transition
                 <select id="lyricPosterTransition">
                   <option value="push-slide" selected>Quick push slide</option>
@@ -1076,6 +1080,7 @@ function readCeilingPosterControls(
   return {
     maxRows: maxRowsValue,
     transition: transitionValue,
+    rowBreakpoint: readNumber("--lyric-poster-row-breakpoint", 28),
     twoRowBandGuideOpacity: readNumber("--lyric-poster-two-row-band-guide-opacity", 0),
     threeRowBandGuideOpacity: readNumber("--lyric-poster-three-row-band-guide-opacity", 0),
     twoRowTopBandTopY: readNumber("--lyric-poster-two-row-top-band-top-y", 18),
@@ -1164,7 +1169,7 @@ function buildCeilingPosterLayout(
   ceilingHeight: number,
 ): CeilingPosterLayout {
   const words = normalizePosterWords(text);
-  const requestedRows = controls.maxRows === "auto" ? choosePosterRowCount(words) : Number.parseInt(controls.maxRows, 10);
+  const requestedRows = controls.maxRows === "auto" ? choosePosterRowCount(words, controls.rowBreakpoint) : Number.parseInt(controls.maxRows, 10);
   const rowCount = Math.max(1, Math.min(2, requestedRows));
   const rowTexts = balanceWordsIntoRows(words, rowCount);
   const n = Math.max(1, Math.min(2, rowTexts.length)) as 1 | 2;
@@ -1546,13 +1551,11 @@ function constrainPointToTrapezoid(point: Point2D, trapezoid: LyricPosterTrapezo
   };
 }
 
-function choosePosterRowCount(words: string[]): 1 | 2 {
+function choosePosterRowCount(words: string[], breakpoint: number): 1 | 2 {
   const lyricText = words.join(" ");
-  if (lyricText.length <= 25) return 1;
-
-  const weightedLength = words.reduce((sum, word) => sum + weightedPosterLength(word), 0) + Math.max(0, words.length - 1) * 1.2;
-  if (weightedLength <= 42) return 1;
-  return 2;
+  const safeBreakpoint = Math.max(10, Math.min(80, Math.round(breakpoint || 28)));
+  if (lyricText.length >= safeBreakpoint) return 2;
+  return 1;
 }
 
 function normalizePosterWords(text: string): string[] {
@@ -1670,6 +1673,7 @@ type LyricPosterTrapezoid = {
 type CeilingPosterControls = {
   maxRows: "auto" | "1" | "2" | "3";
   transition: "push-slide" | "fade-slide";
+  rowBreakpoint: number;
   twoRowBandGuideOpacity: number;
   threeRowBandGuideOpacity: number;
   twoRowTopBandTopY: number;

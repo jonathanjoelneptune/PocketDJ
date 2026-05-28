@@ -4298,6 +4298,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-three-row-perspective: 1;
   --lyric-poster-three-row-tilt: -12;
   --lyric-poster-max-rows: auto;
+  --lyric-poster-row-breakpoint: 28;
   --lyric-poster-two-row-top-text-top-left-x: 0px;
   --lyric-poster-two-row-top-text-top-left-y: 0px;
   --lyric-poster-two-row-top-text-top-right-x: 0px;
