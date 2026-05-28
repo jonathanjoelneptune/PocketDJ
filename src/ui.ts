@@ -260,7 +260,7 @@ export function renderShell(state: AppState): void {
                 <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0.18" />
               </label>
               <label>Row gap px <span id="lyricPosterRowGapValue">0.5</span>
-                <input id="lyricPosterRowGap" type="range" min="0" max="40" step="0.5" value="0.5" />
+                <input id="lyricPosterRowGap" type="range" min="-30" max="40" step="0.5" value="0.5" />
               </label>
               <label>Base lyric font size px <span id="lyricBaseFontSizeValue">12</span>
                 <input id="lyricBaseFontSize" type="range" min="8" max="32" step="1" value="12" />
@@ -759,13 +759,13 @@ export function updateLyricsCeiling(
             (row) => `
               <text
                 class="lyric-poster-svg-row"
-                x="${row.centerX}"
+                x="${row.left}"
                 y="${row.centerY}"
                 font-size="${row.fontSize}"
                 textLength="${row.width}"
                 lengthAdjust="spacingAndGlyphs"
                 dominant-baseline="middle"
-                text-anchor="middle"
+                text-anchor="start"
               >${escapeHtml(row.text)}</text>
             `,
           )
@@ -788,6 +788,7 @@ type LyricPosterTrapezoid = {
 
 type LyricPosterSvgRowLayout = {
   text: string;
+  left: number;
   centerX: number;
   centerY: number;
   width: number;
@@ -869,39 +870,49 @@ function layoutSvgRowsInsideTrapezoid(
   const topY = getTrapezoidTopY(trapezoid);
   const bottomY = getTrapezoidBottomY(trapezoid);
   const height = Math.max(20, bottomY - topY);
+  const centerY = topY + height / 2;
 
-  // Tight stacked poster layout. A selected 1-line lyric uses the whole ceiling height;
-  // 2 and 3 line lyrics split that same height with only the configured pixel gap.
-  const safeGap = Math.max(0, rowGapPx);
-  const totalGap = safeGap * Math.max(0, n - 1);
-  const rowBandHeight = Math.max(12, (height - totalGap) / n);
+  // The user's visual target is a stacked poster: the visible bottom of one row
+  // should nearly touch the visible top of the next row. SVG font metrics do not
+  // map directly to visible cap height, so this factor sets the center-to-center
+  // spacing relative to font size.
+  const safeGap = rowGapPx;
+  const visualLineFactor = 0.58;
+  const heightSafety = 0.88;
+  const maxFontByHeight =
+    n === 1
+      ? height * 0.86
+      : ((height - Math.max(0, n - 1) * safeGap) / (1 + (n - 1) * visualLineFactor)) * heightSafety;
 
-  // A cap-height safety factor keeps outlined italic glyphs inside the ceiling instead
-  // of relying on clipping. This is intentionally a little conservative.
-  const fontSize = Math.max(18, rowBandHeight * 0.74);
+  const baseFontSize = Math.max(18, maxFontByHeight);
+  const centerSpacing = n === 1 ? 0 : baseFontSize * visualLineFactor + safeGap;
+  const firstCenterY = centerY - (centerSpacing * (n - 1)) / 2;
 
   return rows.map((row, index) => {
-    const bandTop = topY + index * (rowBandHeight + safeGap);
-    const bandBottom = bandTop + rowBandHeight;
-    const y = (bandTop + bandBottom) / 2;
+    const y = firstCenterY + index * centerSpacing;
 
-    // Use the row band edges, not just the center, so each row fits inside the
-    // trapezoid through its full height.
-    const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, bandTop);
-    const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, bandBottom);
+    // Estimate the real visible row height, then use those vertical edges to choose
+    // a safe width inside the trapezoid. That keeps the whole outlined glyph inside
+    // the ceiling instead of clipping the stroke at the sides.
+    const visualHalfHeight = Math.max(8, baseFontSize * 0.34);
+    const rowTop = Math.max(topY, y - visualHalfHeight);
+    const rowBottom = Math.min(bottomY, y + visualHalfHeight);
+    const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowTop);
+    const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, rowBottom);
     const centerBounds = trapezoidHorizontalBoundsAtY(trapezoid, y);
 
-    const strokePad = Math.max(12, fontSize * 0.10);
+    const strokePad = Math.max(12, baseFontSize * 0.08);
     const safeLeft = Math.max(topBounds.left, bottomBounds.left, centerBounds.left) + strokePad;
     const safeRight = Math.min(topBounds.right, bottomBounds.right, centerBounds.right) - strokePad;
     const safeWidth = Math.max(28, safeRight - safeLeft);
 
     return {
       text: row,
+      left: safeLeft,
       centerX: safeLeft + safeWidth / 2,
       centerY: y,
       width: safeWidth,
-      fontSize,
+      fontSize: baseFontSize,
     };
   });
 }

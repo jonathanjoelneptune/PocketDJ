@@ -6597,3 +6597,19 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   stroke-linejoin: round;
   stroke-linecap: round;
 }
+
+
+/* SVG CEILING POSTER CENTERED TIGHT ROWS
+   Uses explicit start-x textLength rows to avoid SVG midpoint anchor drift in fullscreen.
+   Rows are vertically centered as a single stacked poster with near-touching visual rows. */
+:root {
+  --lyric-poster-row-gap: 0.5px;
+}
+
+.lyric-poster-svg-row {
+  text-anchor: start !important;
+  dominant-baseline: middle !important;
+  letter-spacing: 0.018em !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
+}
