@@ -6513,3 +6513,68 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 #lyricPosterSkew {
   display: none !important;
 }
+
+
+/* SVG STRETCH CEILING LYRIC POSTER
+   Uses SVG textLength to stretch each lyric row horizontally across its available trapezoid slice. */
+:root {
+  --lyric-poster-top-left-x: 221px;
+  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-right-x: 1637px;
+  --lyric-poster-top-right-y: 12px;
+  --lyric-poster-bottom-left-x: 597px;
+  --lyric-poster-bottom-left-y: 418px;
+  --lyric-poster-bottom-right-x: 1201px;
+  --lyric-poster-bottom-right-y: 415px;
+}
+
+.lyric-poster-line {
+  left: 0 !important;
+  top: 0 !important;
+  width: 1764px !important;
+  height: 529px !important;
+  transform: none !important;
+  clip-path: none !important;
+  overflow: visible !important;
+  display: block !important;
+}
+
+.lyric-poster-text,
+.lyric-poster-row {
+  display: none !important;
+}
+
+.lyric-poster-svg {
+  position: absolute;
+  inset: 0;
+  width: 1764px;
+  height: 529px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.lyric-poster-svg-row {
+  font-family: "Arial Black", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  fill: rgba(255, 255, 255, var(--lyric-poster-fill-opacity));
+  stroke: rgba(215, 215, 215, var(--lyric-poster-stroke-opacity));
+  stroke-width: var(--lyric-poster-stroke);
+  paint-order: stroke fill;
+  vector-effect: non-scaling-stroke;
+  text-shadow:
+    0 0 calc(4px + (var(--lyric-poster-glow) * 12px)) rgba(235, 235, 235, calc(var(--lyric-poster-glow) * 0.45)),
+    0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+/* The corner guide is now driven only by the guide opacity slider. */
+.lyrics-boundary-guide-video {
+  opacity: var(--lyric-poster-guide-opacity, 0) !important;
+}
+
+.lyrics-boundary-guide-video::before,
+.lyrics-boundary-guide-video::after {
+  opacity: var(--lyric-poster-guide-opacity, 0) !important;
+}

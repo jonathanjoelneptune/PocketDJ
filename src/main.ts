@@ -124,14 +124,14 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterZoom: 1.00,
   lyricPosterTilt: 54,
   lyricPosterSkew: -4,
-  lyricPosterTopLeftX: 402,
+  lyricPosterTopLeftX: 221,
   lyricPosterTopLeftY: 12,
-  lyricPosterTopRightX: 1400,
+  lyricPosterTopRightX: 1637,
   lyricPosterTopRightY: 12,
-  lyricPosterBottomLeftX: 582,
-  lyricPosterBottomLeftY: 178,
-  lyricPosterBottomRightX: 1228,
-  lyricPosterBottomRightY: 178,
+  lyricPosterBottomLeftX: 597,
+  lyricPosterBottomLeftY: 418,
+  lyricPosterBottomRightX: 1201,
+  lyricPosterBottomRightY: 415,
   lyricPosterStroke: 2.4,
   lyricPosterStrokeOpacity: 0.52,
   lyricPosterFillOpacity: 0.02,
@@ -143,7 +143,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricBaseFontSize: 12
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v14";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v15";
 let roomUtility = loadRoomUtilitySettings();
 
 

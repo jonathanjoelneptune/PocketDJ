@@ -223,29 +223,29 @@ export function renderShell(state: AppState): void {
               <label>Corner guide opacity <span id="lyricPosterGuideOpacityValue">0.00</span>
                 <input id="lyricPosterGuideOpacity" type="range" min="0" max="1" step="0.01" value="0" />
               </label>
-              <label>Top left X px <span id="lyricPosterTopLeftXValue">402</span>
-                <input id="lyricPosterTopLeftX" type="range" min="0" max="1764" step="1" value="402" />
+              <label>Top left X px <span id="lyricPosterTopLeftXValue">221</span>
+                <input id="lyricPosterTopLeftX" type="range" min="0" max="1764" step="1" value="221" />
               </label>
               <label>Top left Y px <span id="lyricPosterTopLeftYValue">12</span>
                 <input id="lyricPosterTopLeftY" type="range" min="0" max="520" step="1" value="12" />
               </label>
-              <label>Top right X px <span id="lyricPosterTopRightXValue">1400</span>
-                <input id="lyricPosterTopRightX" type="range" min="0" max="1764" step="1" value="1400" />
+              <label>Top right X px <span id="lyricPosterTopRightXValue">1637</span>
+                <input id="lyricPosterTopRightX" type="range" min="0" max="1764" step="1" value="1637" />
               </label>
               <label>Top right Y px <span id="lyricPosterTopRightYValue">12</span>
                 <input id="lyricPosterTopRightY" type="range" min="0" max="520" step="1" value="12" />
               </label>
-              <label>Bottom left X px <span id="lyricPosterBottomLeftXValue">582</span>
-                <input id="lyricPosterBottomLeftX" type="range" min="0" max="1764" step="1" value="582" />
+              <label>Bottom left X px <span id="lyricPosterBottomLeftXValue">597</span>
+                <input id="lyricPosterBottomLeftX" type="range" min="0" max="1764" step="1" value="597" />
               </label>
-              <label>Bottom left Y px <span id="lyricPosterBottomLeftYValue">178</span>
-                <input id="lyricPosterBottomLeftY" type="range" min="0" max="520" step="1" value="178" />
+              <label>Bottom left Y px <span id="lyricPosterBottomLeftYValue">418</span>
+                <input id="lyricPosterBottomLeftY" type="range" min="0" max="520" step="1" value="418" />
               </label>
-              <label>Bottom right X px <span id="lyricPosterBottomRightXValue">1228</span>
-                <input id="lyricPosterBottomRightX" type="range" min="0" max="1764" step="1" value="1228" />
+              <label>Bottom right X px <span id="lyricPosterBottomRightXValue">1201</span>
+                <input id="lyricPosterBottomRightX" type="range" min="0" max="1764" step="1" value="1201" />
               </label>
-              <label>Bottom right Y px <span id="lyricPosterBottomRightYValue">178</span>
-                <input id="lyricPosterBottomRightY" type="range" min="0" max="520" step="1" value="178" />
+              <label>Bottom right Y px <span id="lyricPosterBottomRightYValue">415</span>
+                <input id="lyricPosterBottomRightY" type="range" min="0" max="520" step="1" value="415" />
               </label>
               <label>Stroke px <span id="lyricPosterStrokeValue">2.40</span>
                 <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="2.4" />
@@ -728,14 +728,12 @@ export function updateLyricsCeiling(
   const centerIndex = Math.max(0, Math.min(cleanLines.length - 1, activeIndex >= 0 ? activeIndex : 0));
   const activeLine = cleanLines[centerIndex];
   const rootStyles = getComputedStyle(document.documentElement);
-
-  const baseFontSize = Number.parseFloat(rootStyles.getPropertyValue("--lyrics-base-font-size")) || 12;
   const maxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || "auto") as "auto" | "1" | "2" | "3";
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
-
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
-  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${JSON.stringify(trapezoid)}|${baseFontSize}|${maxRowsValue}|${animationRevision}|${rootClassSignature}`;
+
+  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${JSON.stringify(trapezoid)}|${maxRowsValue}|${animationRevision}|${rootClassSignature}`;
 
   if (renderSignature === lastLyricsRenderSignature) {
     activeBlock.style.setProperty("--lyric-line-visibility", "1");
@@ -745,28 +743,34 @@ export function updateLyricsCeiling(
   lastLyricsRenderSignature = renderSignature;
   activeBlock.style.setProperty("--lyric-line-visibility", "1");
 
-  const layout = buildPosterLyricLayout(activeLine.text, trapezoid, baseFontSize, maxRowsValue);
+  const layout = buildPosterLyricLayout(activeLine.text, trapezoid, maxRowsValue);
 
   activeBlock.innerHTML = `
-    <div class="lyric-poster-text" data-time="${activeLine.timeMs ?? ""}">
-      ${layout.rows
-        .map(
-          (row) => `
-            <div
-              class="lyric-poster-row"
-              style="
-                left: ${row.left}px;
-                top: ${row.top}px;
-                width: ${row.width}px;
-                --poster-font-size: ${row.fontSize}px;
-              "
-            >
-              ${escapeHtml(row.text)}
-            </div>
-          `,
-        )
-        .join("")}
-    </div>
+    <svg class="lyric-poster-svg" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <clipPath id="lyricPosterClip">
+          <polygon points="${trapezoid.topLeftX},${trapezoid.topLeftY} ${trapezoid.topRightX},${trapezoid.topRightY} ${trapezoid.bottomRightX},${trapezoid.bottomRightY} ${trapezoid.bottomLeftX},${trapezoid.bottomLeftY}" />
+        </clipPath>
+      </defs>
+      <g class="lyric-poster-svg-rows" clip-path="url(#lyricPosterClip)">
+        ${layout.rows
+          .map(
+            (row) => `
+              <text
+                class="lyric-poster-svg-row"
+                x="${row.centerX}"
+                y="${row.centerY}"
+                font-size="${row.fontSize}"
+                textLength="${row.width}"
+                lengthAdjust="spacingAndGlyphs"
+                dominant-baseline="middle"
+                text-anchor="middle"
+              >${escapeHtml(row.text)}</text>
+            `,
+          )
+          .join("")}
+      </g>
+    </svg>
   `;
 }
 
@@ -781,33 +785,32 @@ type LyricPosterTrapezoid = {
   bottomRightY: number;
 };
 
-type LyricPosterRowLayout = {
+type LyricPosterSvgRowLayout = {
   text: string;
-  left: number;
-  top: number;
+  centerX: number;
+  centerY: number;
   width: number;
   fontSize: number;
 };
 
 function readLyricPosterTrapezoid(rootStyles: CSSStyleDeclaration): LyricPosterTrapezoid {
   return {
-    topLeftX: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-top-left-x")) || 402,
+    topLeftX: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-top-left-x")) || 221,
     topLeftY: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-top-left-y")) || 12,
-    topRightX: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-top-right-x")) || 1400,
+    topRightX: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-top-right-x")) || 1637,
     topRightY: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-top-right-y")) || 12,
-    bottomLeftX: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-left-x")) || 582,
-    bottomLeftY: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-left-y")) || 178,
-    bottomRightX: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-right-x")) || 1228,
-    bottomRightY: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-right-y")) || 178,
+    bottomLeftX: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-left-x")) || 597,
+    bottomLeftY: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-left-y")) || 418,
+    bottomRightX: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-right-x")) || 1201,
+    bottomRightY: Number.parseFloat(rootStyles.getPropertyValue("--lyric-poster-bottom-right-y")) || 415,
   };
 }
 
 function buildPosterLyricLayout(
   text: string,
   trapezoid: LyricPosterTrapezoid,
-  baseFontSize: number,
   maxRowsValue: "auto" | "1" | "2" | "3",
-): { rows: LyricPosterRowLayout[] } {
+): { rows: LyricPosterSvgRowLayout[] } {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return { rows: [] };
 
@@ -815,78 +818,93 @@ function buildPosterLyricLayout(
   const candidateRowCounts =
     forcedRows > 0
       ? [forcedRows]
-      : words.length <= 4
-        ? [1, 2]
-        : [1, 2, 3].filter((count) => count <= words.length);
+      : getPosterRowCandidates(words, trapezoid);
 
-  let best: { rows: LyricPosterRowLayout[]; score: number } = { rows: [], score: -Infinity };
+  let best: { rows: LyricPosterSvgRowLayout[]; score: number } = { rows: [], score: -Infinity };
 
   for (const rowCount of candidateRowCounts) {
-    const rows = balanceWordsIntoRows(words, rowCount);
-    const rowLayouts = layoutRowsInsideTrapezoid(rows, trapezoid, baseFontSize);
-    if (rowLayouts.length !== rowCount) continue;
+    const rowTexts = balanceWordsIntoRows(words, rowCount);
+    if (rowTexts.length !== rowCount) continue;
 
-    const coverage = rowLayouts.reduce((sum, row) => {
-      const estimate = weightedPosterLength(row.text) * row.fontSize * 0.64;
-      return sum + Math.min(1, estimate / Math.max(1, row.width));
-    }, 0) / Math.max(1, rowLayouts.length);
+    const rows = layoutSvgRowsInsideTrapezoid(rowTexts, trapezoid);
+    const minStretch = Math.min(...rows.map((row) => row.width / Math.max(1, weightedPosterLength(row.text))));
+    const balancePenalty = getRowBalancePenalty(rowTexts);
+    const compressionPenalty = rows.reduce((sum, row) => {
+      const naturalWidth = weightedPosterLength(row.text) * row.fontSize * 0.62;
+      return sum + Math.max(0, naturalWidth / Math.max(1, row.width) - 1.18) * 75;
+    }, 0);
+    const score = minStretch * 0.40 - rowCount * 65 - balancePenalty * 3 - compressionPenalty;
 
-    const minFont = Math.min(...rowLayouts.map((row) => row.fontSize));
-    const avgFont = rowLayouts.reduce((sum, row) => sum + row.fontSize, 0) / rowLayouts.length;
-    const balancePenalty = getRowBalancePenalty(rows);
-
-    // Favor fewer rows unless another layout clearly fills the ceiling better.
-    const score =
-      minFont * 0.95 +
-      avgFont * 0.20 +
-      coverage * 70 -
-      rowLayouts.length * 30 -
-      balancePenalty * 2.5;
-
-    if (score > best.score) best = { rows: rowLayouts, score };
+    if (score > best.score) best = { rows, score };
   }
 
   if (best.rows.length) return { rows: best.rows };
 
   const fallbackRows = balanceWordsIntoRows(words, Math.min(3, words.length));
-  return { rows: layoutRowsInsideTrapezoid(fallbackRows, trapezoid, baseFontSize) };
+  return { rows: layoutSvgRowsInsideTrapezoid(fallbackRows, trapezoid) };
 }
 
-function layoutRowsInsideTrapezoid(
+function getPosterRowCandidates(words: string[], trapezoid: LyricPosterTrapezoid): number[] {
+  const fullTextWeight = weightedPosterLength(words.join(" "));
+  const centerBounds = trapezoidHorizontalBoundsAtY(trapezoid, getTrapezoidCenterY(trapezoid));
+  const availableCenterWidth = Math.max(1, centerBounds.width * 0.92);
+  const roughSingleLineFont = getTrapezoidHeight(trapezoid) * 0.72;
+  const roughNaturalWidth = fullTextWeight * roughSingleLineFont * 0.62;
+  const compressionRatio = roughNaturalWidth / availableCenterWidth;
+
+  if (words.length <= 3) return [1, 2].filter((count) => count <= words.length);
+  if (compressionRatio < 1.35) return [1, 2, 3].filter((count) => count <= words.length);
+  if (compressionRatio < 2.35) return [2, 1, 3].filter((count) => count <= words.length);
+  return [3, 2, 1].filter((count) => count <= words.length);
+}
+
+function layoutSvgRowsInsideTrapezoid(
   rows: string[],
   trapezoid: LyricPosterTrapezoid,
-  baseFontSize: number,
-): LyricPosterRowLayout[] {
-  const topY = (trapezoid.topLeftY + trapezoid.topRightY) / 2;
-  const bottomY = (trapezoid.bottomLeftY + trapezoid.bottomRightY) / 2;
+): LyricPosterSvgRowLayout[] {
+  const n = Math.max(1, rows.length);
+  const topY = getTrapezoidTopY(trapezoid);
+  const bottomY = getTrapezoidBottomY(trapezoid);
   const height = Math.max(20, bottomY - topY);
-  const n = rows.length;
-  const rowGapRatio = 0.18;
+  const sliceHeight = height / n;
+  const verticalPad = Math.max(4, sliceHeight * 0.04);
 
-  const candidateYs = rows.map((_, index) => {
-    const t = (index + 0.5) / Math.max(1, n);
-    return topY + t * height;
-  });
-
-  const maxByHeight = height / Math.max(1, n + Math.max(0, n - 1) * rowGapRatio);
   return rows.map((row, index) => {
-    const y = candidateYs[index];
-    const bounds = trapezoidHorizontalBoundsAtY(trapezoid, y);
-    const sidePad = Math.max(10, bounds.width * 0.045);
-    const safeLeft = bounds.left + sidePad;
-    const safeWidth = Math.max(20, bounds.width - sidePad * 2);
-    const textWeight = Math.max(1, weightedPosterLength(row));
-    const maxByWidth = safeWidth / (textWeight * 0.64);
-    const fontSize = Math.max(baseFontSize * 1.25, Math.min(maxByWidth, maxByHeight * 0.95));
+    const sliceTop = topY + index * sliceHeight + verticalPad;
+    const sliceBottom = topY + (index + 1) * sliceHeight - verticalPad;
+    const y = (sliceTop + sliceBottom) / 2;
+    const topBounds = trapezoidHorizontalBoundsAtY(trapezoid, sliceTop);
+    const bottomBounds = trapezoidHorizontalBoundsAtY(trapezoid, sliceBottom);
+    const centerBounds = trapezoidHorizontalBoundsAtY(trapezoid, y);
+
+    const safeLeft = Math.max(topBounds.left, bottomBounds.left, centerBounds.left) + 10;
+    const safeRight = Math.min(topBounds.right, bottomBounds.right, centerBounds.right) - 10;
+    const safeWidth = Math.max(28, safeRight - safeLeft);
 
     return {
       text: row,
-      left: safeLeft,
-      top: y,
+      centerX: safeLeft + safeWidth / 2,
+      centerY: y,
       width: safeWidth,
-      fontSize,
+      fontSize: Math.max(18, (sliceBottom - sliceTop) * 0.84),
     };
   });
+}
+
+function getTrapezoidTopY(trapezoid: LyricPosterTrapezoid): number {
+  return (trapezoid.topLeftY + trapezoid.topRightY) / 2;
+}
+
+function getTrapezoidBottomY(trapezoid: LyricPosterTrapezoid): number {
+  return (trapezoid.bottomLeftY + trapezoid.bottomRightY) / 2;
+}
+
+function getTrapezoidCenterY(trapezoid: LyricPosterTrapezoid): number {
+  return (getTrapezoidTopY(trapezoid) + getTrapezoidBottomY(trapezoid)) / 2;
+}
+
+function getTrapezoidHeight(trapezoid: LyricPosterTrapezoid): number {
+  return Math.max(20, getTrapezoidBottomY(trapezoid) - getTrapezoidTopY(trapezoid));
 }
 
 function trapezoidHorizontalBoundsAtY(trapezoid: LyricPosterTrapezoid, y: number): { left: number; right: number; width: number } {
@@ -916,12 +934,7 @@ function balanceWordsIntoRows(words: string[], rowCount: number): string[] {
     const remainingRowsAfterBreak = safeRowCount - rows.length - 1;
     const canBreak = rows.length < safeRowCount - 1 && remainingWords > remainingRowsAfterBreak;
 
-    if (
-      canBreak &&
-      currentRow.length > 0 &&
-      currentWeight + wordWeight > targetWeight &&
-      currentRow.length + remainingWords > 1
-    ) {
+    if (canBreak && currentRow.length > 0 && currentWeight + wordWeight > targetWeight) {
       rows.push(currentRow);
       currentRow = [];
       currentWeight = 0;
@@ -933,7 +946,6 @@ function balanceWordsIntoRows(words: string[], rowCount: number): string[] {
 
   if (currentRow.length) rows.push(currentRow);
 
-  // If the greedy split produced too few rows, split the heaviest rows until the requested count is reached.
   while (rows.length < safeRowCount) {
     const splitIndex = rows
       .map((row, index) => ({ index, weight: weightedPosterLength(row.join(" ")), length: row.length }))
@@ -947,7 +959,6 @@ function balanceWordsIntoRows(words: string[], rowCount: number): string[] {
     rows.splice(splitIndex, 1, row.slice(0, midpoint), row.slice(midpoint));
   }
 
-  // If there are somehow too many rows, merge the lightest adjacent pair.
   while (rows.length > safeRowCount) {
     let mergeIndex = 0;
     let bestWeight = Infinity;
@@ -961,9 +972,7 @@ function balanceWordsIntoRows(words: string[], rowCount: number): string[] {
     rows.splice(mergeIndex, 2, [...rows[mergeIndex], ...rows[mergeIndex + 1]]);
   }
 
-  return rows
-    .filter((row) => row.length > 0)
-    .map((row) => row.join(" "));
+  return rows.filter((row) => row.length > 0).map((row) => row.join(" "));
 }
 
 function getRowBalancePenalty(rows: string[]): number {
