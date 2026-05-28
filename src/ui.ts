@@ -265,7 +265,7 @@ export function renderShell(state: AppState): void {
                 <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="7.6" />
               </label>
               <label>Stroke color
-                <input id="lyricPosterStrokeColor" type="color" value="#4d4c4c" />
+                <input id="lyricPosterStrokeColor" type="color" value="#000000" />
               </label>
               <label>Fill color
                 <input id="lyricPosterFillColor" type="color" value="#000000" />
@@ -273,7 +273,7 @@ export function renderShell(state: AppState): void {
               <label>Stroke opacity <span id="lyricPosterStrokeOpacityValue">0.30</span>
                 <input id="lyricPosterStrokeOpacity" type="range" min="0" max="1" step="0.01" value="0.30" />
               </label>
-              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0.35</span>
+              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0.25</span>
                 <input id="lyricPosterFillOpacity" type="range" min="0" max="0.35" step="0.01" value="0" />
               </label>
               <label>Glow strength <span id="lyricPosterGlowValue">0</span>
@@ -289,7 +289,7 @@ export function renderShell(state: AppState): void {
                 Emboss
               </label>
               <label class="utility-checkbox">
-                <input id="lyricPosterEffectInsetEmboss" type="checkbox" />
+                <input id="lyricPosterEffectInsetEmboss" type="checkbox" checked />
                 Inset emboss
               </label>
               <label class="utility-checkbox">
@@ -561,6 +561,10 @@ export function renderShell(state: AppState): void {
                 <select id="lyricPosterTransition">
                   <option value="push-slide" selected>Quick push slide</option>
                   <option value="fade-slide">Subtle fade slide</option>
+                  <option value="shadow-slide">Shadow slide</option>
+                  <option value="ceiling-stamp">Ceiling stamp</option>
+                  <option value="soft-dissolve">Soft dissolve</option>
+                  <option value="ghost-drift">Ghost drift</option>
                 </select>
               </label>
             </div>
@@ -1001,7 +1005,7 @@ export function updateLyricsCeiling(
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
   const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
   const maxRowsValue = rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue;
-  const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "push-slide") as "push-slide" | "fade-slide";
+  const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "push-slide") as "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, transitionValue);
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
@@ -1012,6 +1016,12 @@ export function updateLyricsCeiling(
     return;
   }
 
+  const lyricTextChanged = activeLine.text !== previousLyricPosterText;
+  if (lyricTextChanged) {
+    lyricPosterTransitionFlip = !lyricPosterTransitionFlip;
+    previousLyricPosterText = activeLine.text;
+  }
+
   lastLyricsRenderSignature = renderSignature;
   activeBlock.style.setProperty("--lyric-line-visibility", "1");
 
@@ -1019,6 +1029,12 @@ export function updateLyricsCeiling(
   const layout = buildCeilingPosterLayout(activeLine.text, trapezoid, controls, ceilingRect.width, ceilingRect.height);
   activeBlock.classList.toggle("lyric-poster-transition-push", controls.transition === "push-slide");
   activeBlock.classList.toggle("lyric-poster-transition-fade", controls.transition === "fade-slide");
+  activeBlock.classList.toggle("lyric-poster-transition-shadow-slide", controls.transition === "shadow-slide");
+  activeBlock.classList.toggle("lyric-poster-transition-ceiling-stamp", controls.transition === "ceiling-stamp");
+  activeBlock.classList.toggle("lyric-poster-transition-soft-dissolve", controls.transition === "soft-dissolve");
+  activeBlock.classList.toggle("lyric-poster-transition-ghost-drift", controls.transition === "ghost-drift");
+  activeBlock.classList.toggle("lyric-poster-transition-a", !lyricPosterTransitionFlip);
+  activeBlock.classList.toggle("lyric-poster-transition-b", lyricPosterTransitionFlip);
   activeBlock.dataset.lyricRows = String(layout.rows.length);
 
   const clipId = `lyricPosterClip-${Math.abs(hashString(renderSignature))}`;
@@ -1582,12 +1598,6 @@ function constrainPointToTrapezoid(point: Point2D, trapezoid: LyricPosterTrapezo
 
 function choosePosterRowCount(words: string[], breakpoint: number): 1 | 2 {
   const lyricText = words.join(" ");
-  const lyricPosterTransitionClass = lyricPosterTransitionFlip ? "lyric-poster-transition-b" : "lyric-poster-transition-a";
-  const lyricPosterChanged = lyricText !== previousLyricPosterText;
-  if (lyricPosterChanged) {
-    lyricPosterTransitionFlip = !lyricPosterTransitionFlip;
-    previousLyricPosterText = lyricText;
-  }
   const safeBreakpoint = Math.max(10, Math.min(80, Math.round(breakpoint || 28)));
   if (lyricText.length >= safeBreakpoint) return 2;
   return 1;

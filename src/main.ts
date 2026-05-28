@@ -202,15 +202,15 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTwoRowBandGuideOpacity: 0.00,
   lyricPosterThreeRowBandGuideOpacity: 0.00,
   lyricPosterStroke: 7.6,
-  lyricPosterStrokeColor: "#4d4c4c",
+  lyricPosterStrokeColor: "#000000",
   lyricPosterFillColor: "#000000",
   lyricPosterStrokeOpacity: 0.30,
-  lyricPosterFillOpacity: 0.35,
+  lyricPosterFillOpacity: 0.25,
   lyricPosterGlow: 0,
   lyricPosterEffectDropShadow: false,
   lyricPosterEffectEmboss: false,
-  lyricPosterEffectInsetEmboss: false,
-  lyricPosterEffectBevel: true,
+  lyricPosterEffectInsetEmboss: true,
+  lyricPosterEffectBevel: false,
   lyricPosterEffectSoftBlur: false,
   lyricPosterOneRowVerticalStretch: 0.86,
   lyricPosterOneRowTightness: 0.00,
@@ -291,7 +291,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "push-slide"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v40-1";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v41";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -1109,6 +1109,10 @@ function applyRoomUtilitySettings(): void {
 
   root.classList.toggle("lyric-poster-transition-push", roomUtility.lyricPosterTransition === "push-slide");
   root.classList.toggle("lyric-poster-transition-fade", roomUtility.lyricPosterTransition === "fade-slide");
+  root.classList.toggle("lyric-poster-transition-shadow-slide", roomUtility.lyricPosterTransition === "shadow-slide");
+  root.classList.toggle("lyric-poster-transition-ceiling-stamp", roomUtility.lyricPosterTransition === "ceiling-stamp");
+  root.classList.toggle("lyric-poster-transition-soft-dissolve", roomUtility.lyricPosterTransition === "soft-dissolve");
+  root.classList.toggle("lyric-poster-transition-ghost-drift", roomUtility.lyricPosterTransition === "ghost-drift");
   root.classList.toggle("lyric-poster-transition-shadow-slide", roomUtility.lyricPosterTransition === "shadow-slide");
   root.classList.toggle("lyric-poster-transition-ceiling-stamp", roomUtility.lyricPosterTransition === "ceiling-stamp");
   root.classList.toggle("lyric-poster-transition-soft-dissolve", roomUtility.lyricPosterTransition === "soft-dissolve");

@@ -3903,7 +3903,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-skew: -4deg;
   --lyric-poster-stroke: 7.6;
   --lyric-poster-stroke-opacity: 0.30;
-  --lyric-poster-fill-opacity: 0.35;
+  --lyric-poster-fill-opacity: 0.25;
   --lyric-poster-glow: 0;
   --lyric-poster-effect-drop-shadow-filter: ;
   --lyric-poster-effect-emboss-filter: ;
@@ -3981,7 +3981,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-center-y: 215px;
   --lyric-poster-stroke: 7.6;
   --lyric-poster-stroke-opacity: 0.30;
-  --lyric-poster-fill-opacity: 0.35;
+  --lyric-poster-fill-opacity: 0.25;
   --lyric-poster-glow: 0;
   --lyric-poster-guide-opacity: 0;
   --lyric-poster-center-guide-opacity: 0;
@@ -4187,7 +4187,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-perspective-depth: 1.25;
   --lyric-poster-stroke: 7.6;
   --lyric-poster-stroke-opacity: 0.30;
-  --lyric-poster-fill-opacity: 0.35;
+  --lyric-poster-fill-opacity: 0.25;
   --lyric-poster-glow: 0;
   --lyric-poster-row-gap: 30px;
   --lyrics-base-font-size: 12px;
@@ -4260,7 +4260,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   --lyric-poster-center-guide-opacity: 0;
   --lyric-poster-stroke: 7.6;
   --lyric-poster-stroke-opacity: 0.30;
-  --lyric-poster-fill-opacity: 0.35;
+  --lyric-poster-fill-opacity: 0.25;
   --lyric-poster-glow: 0;
   --lyric-poster-overall-y: 22px;
   --lyric-poster-overall-scale: 0.80;
@@ -4665,32 +4665,32 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   animation-name: lyricPosterPushSlideInAlt;
 }
 
-.lyric-poster-transition-fade .lyric-poster-transition-a .lyric-poster-row-svg,
-.lyric-poster-transition-fade .lyric-poster-transition-b .lyric-poster-row-svg {
+.lyric-poster-transition-fade.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-fade.lyric-poster-transition-b .lyric-poster-row-svg {
   animation-name: lyricPosterFadeSlideIn;
   animation-duration: 620ms;
 }
 
-.lyric-poster-transition-shadow-slide .lyric-poster-transition-a .lyric-poster-row-svg,
-.lyric-poster-transition-shadow-slide .lyric-poster-transition-b .lyric-poster-row-svg {
+.lyric-poster-transition-shadow-slide.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-shadow-slide.lyric-poster-transition-b .lyric-poster-row-svg {
   animation-name: lyricPosterShadowSlideIn;
   animation-duration: 680ms;
 }
 
-.lyric-poster-transition-ceiling-stamp .lyric-poster-transition-a .lyric-poster-row-svg,
-.lyric-poster-transition-ceiling-stamp .lyric-poster-transition-b .lyric-poster-row-svg {
+.lyric-poster-transition-ceiling-stamp.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-ceiling-stamp.lyric-poster-transition-b .lyric-poster-row-svg {
   animation-name: lyricPosterCeilingStampIn;
   animation-duration: 460ms;
 }
 
-.lyric-poster-transition-soft-dissolve .lyric-poster-transition-a .lyric-poster-row-svg,
-.lyric-poster-transition-soft-dissolve .lyric-poster-transition-b .lyric-poster-row-svg {
+.lyric-poster-transition-soft-dissolve.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-soft-dissolve.lyric-poster-transition-b .lyric-poster-row-svg {
   animation-name: lyricPosterSoftDissolveIn;
   animation-duration: 760ms;
 }
 
-.lyric-poster-transition-ghost-drift .lyric-poster-transition-a .lyric-poster-row-svg,
-.lyric-poster-transition-ghost-drift .lyric-poster-transition-b .lyric-poster-row-svg {
+.lyric-poster-transition-ghost-drift.lyric-poster-transition-a .lyric-poster-row-svg,
+.lyric-poster-transition-ghost-drift.lyric-poster-transition-b .lyric-poster-row-svg {
   animation-name: lyricPosterGhostDriftIn;
   animation-duration: 820ms;
 }
