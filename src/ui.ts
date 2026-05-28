@@ -2028,7 +2028,19 @@ export function updateLyricsToggleUi(status: LyricsPayload["status"], enabled: b
   toggle.classList.toggle("lyrics-toggle-searching", isSearching);
   toggle.classList.toggle("lyrics-toggle-unknown", isUnknown);
 
-  toggle.textContent = !enabled ? "OFF" : hasLyrics ? "LYRICS" : isSearching ? "LOAD" : isMissing ? "NO LYR" : "LYRICS";
+  toggle.dataset.state = !enabled
+    ? "off"
+    : hasLyrics
+      ? "found"
+      : isSearching
+        ? "searching"
+        : isMissing
+          ? "missing"
+          : isUnknown
+            ? "unknown"
+            : "on";
+
+  toggle.textContent = "LYRICS";
   toggle.setAttribute("aria-pressed", String(enabled));
   toggle.setAttribute("title", enabled ? "Hide ceiling lyrics" : "Show ceiling lyrics");
 }

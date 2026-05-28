@@ -5013,3 +5013,103 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     transform 260ms ease,
     filter 260ms ease !important;
 }
+
+
+/* v47 header pill states.
+   Match the Pocket DJ amber/orange active style instead of green for active playback and active lyrics. */
+.mode-pill,
+.lyrics-toggle {
+  position: relative;
+  overflow: hidden;
+}
+
+.mode-pill.mode-pill-playing,
+.mode-pill[data-state="playing"] {
+  color: #ffdf9a !important;
+  border-color: rgba(255, 184, 76, 0.42) !important;
+  background: rgba(72, 43, 21, 0.44) !important;
+  box-shadow:
+    0 0 16px rgba(255, 184, 76, 0.12),
+    inset 0 0 14px rgba(255, 184, 76, 0.08) !important;
+}
+
+.mode-pill.mode-pill-paused,
+.mode-pill[data-state="paused"],
+.mode-pill.mode-pill-idle,
+.mode-pill[data-state="idle"] {
+  color: rgba(255, 218, 155, 0.62) !important;
+  border-color: rgba(255, 184, 76, 0.18) !important;
+  background: rgba(36, 23, 38, 0.34) !important;
+  box-shadow:
+    inset 0 0 10px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Lyrics always says LYRICS. Fill shows enabled/off. Border shows search/found/error status. */
+.lyrics-toggle.lyrics-toggle-on,
+.lyrics-toggle[data-state="found"],
+.lyrics-toggle[data-state="searching"],
+.lyrics-toggle[data-state="missing"],
+.lyrics-toggle[data-state="unknown"] {
+  color: #ffdf9a !important;
+  background: rgba(72, 43, 21, 0.44) !important;
+  box-shadow:
+    0 0 14px rgba(255, 184, 76, 0.10),
+    inset 0 0 14px rgba(255, 184, 76, 0.07) !important;
+}
+
+.lyrics-toggle.lyrics-toggle-off,
+.lyrics-toggle[data-state="off"] {
+  color: rgba(255, 218, 155, 0.58) !important;
+  border-color: rgba(255, 184, 76, 0.16) !important;
+  background: rgba(36, 23, 38, 0.32) !important;
+  box-shadow:
+    inset 0 0 10px rgba(0, 0, 0, 0.12) !important;
+}
+
+.lyrics-toggle.lyrics-toggle-found,
+.lyrics-toggle[data-state="found"] {
+  border-color: rgba(52, 211, 153, 0.58) !important;
+}
+
+.lyrics-toggle.lyrics-toggle-missing,
+.lyrics-toggle[data-state="missing"] {
+  border-color: rgba(248, 113, 113, 0.58) !important;
+}
+
+.lyrics-toggle.lyrics-toggle-searching,
+.lyrics-toggle[data-state="searching"] {
+  border-color: rgba(255, 184, 76, 0.62) !important;
+}
+
+.lyrics-toggle.lyrics-toggle-searching::after,
+.lyrics-toggle[data-state="searching"]::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 210, 132, 0.00) 18%,
+      rgba(255, 210, 132, 0.72) 48%,
+      rgba(255, 210, 132, 0.00) 78%,
+      transparent 100%
+    );
+  background-size: 210% 100%;
+  mix-blend-mode: screen;
+  opacity: 0.76;
+  animation: lyricPillSearchSweep 1.15s linear infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 1px;
+}
+
+@keyframes lyricPillSearchSweep {
+  0% { background-position: 130% 0; }
+  100% { background-position: -130% 0; }
+}
