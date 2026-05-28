@@ -4970,3 +4970,46 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .floor-player.floor-player-playing {
   opacity: 1 !important;
 }
+
+
+/* v46 fix: panel stays above ceiling lyrics and active playing pill is filled/lit. */
+.control-card,
+.panel-card,
+.dev-panel,
+.utility-panel {
+  z-index: 120 !important;
+}
+
+.mode-pill.mode-pill-playing,
+.mode-pill[data-state="playing"] {
+  color: #bbf7d0 !important;
+  border-color: rgba(52,211,153,0.42) !important;
+  background: rgba(6, 78, 59, 0.42) !important;
+  box-shadow:
+    0 0 18px rgba(52,211,153,0.16),
+    inset 0 0 14px rgba(52,211,153,0.08) !important;
+}
+
+.mode-pill.mode-pill-paused,
+.mode-pill[data-state="paused"] {
+  color: #fde68a !important;
+  border-color: rgba(251,191,36,0.42) !important;
+  background: rgba(92, 59, 12, 0.38) !important;
+  box-shadow:
+    0 0 16px rgba(251,191,36,0.14),
+    inset 0 0 14px rgba(251,191,36,0.06) !important;
+}
+
+.mode-pill.mode-pill-idle,
+.mode-pill[data-state="idle"] {
+  color: rgba(255, 218, 155, 0.66) !important;
+  border-color: rgba(255, 184, 76, 0.18) !important;
+  background: rgba(36, 23, 38, 0.36) !important;
+}
+
+.floor-player {
+  transition:
+    opacity 240ms ease,
+    transform 260ms ease,
+    filter 260ms ease !important;
+}

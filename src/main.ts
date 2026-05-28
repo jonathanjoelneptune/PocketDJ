@@ -333,7 +333,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v44";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v46";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -530,7 +530,7 @@ function scheduleSidePanelAutoHide(): void {
 
   sidePanelHideTimer = window.setTimeout(() => {
     if (!sidePanelLocked) closeSidePanel();
-  }, 10_000);
+  }, 1_500);
 }
 
 function clearSidePanelHideTimer(): void {
@@ -714,7 +714,7 @@ function scheduleFloorControlsAutoHide(): void {
   floorControlsHideTimer = window.setTimeout(() => {
     const floor = qs<HTMLElement>("#floorPlayer");
     floor.classList.add("floor-player-idle");
-  }, 10_000);
+  }, 1_500);
 }
 
 function getEstimatedPlaybackProgress(track: AppState["playback"]): number {

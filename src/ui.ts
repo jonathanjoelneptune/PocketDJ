@@ -711,7 +711,6 @@ export function setControlPanelOpen(open: boolean): void {
 
 function updateFloorControls(track: NormalizedTrack): void {
   const floor = qs<HTMLElement>("#floorPlayer");
-  const toggle = qs<HTMLButtonElement>("#floorControlsToggle");
   const playButton = qs<HTMLButtonElement>("#floorPlayButton");
   const playIcon = qs<HTMLElement>("#floorPlayIcon");
   const prevButton = qs<HTMLButtonElement>("#floorPrevButton");
@@ -721,14 +720,24 @@ function updateFloorControls(track: NormalizedTrack): void {
   const panelPlayButton = qs<HTMLButtonElement>("#panelPlayButton");
   const panelPrevButton = qs<HTMLButtonElement>("#panelPrevButton");
   const panelNextButton = qs<HTMLButtonElement>("#panelNextButton");
+  const modePill = qs<HTMLElement>("#modePill");
 
   const canControl = track.source === "spotify" && track.isAuthenticated;
-  floor.classList.toggle("floor-player-playing", track.isPlaying);
-  toggle.classList.toggle("floor-controls-toggle-playing", track.isPlaying);
-  playIcon.textContent = track.isPlaying ? "||" : "▶";
-  panelPlayIcon.textContent = track.isPlaying ? "||" : "▶";
-  playButton.setAttribute("aria-label", track.isPlaying ? "Pause Spotify" : "Play Spotify");
-  panelPlayButton.setAttribute("aria-label", track.isPlaying ? "Pause Spotify" : "Play Spotify");
+  const isPlaying = Boolean(track.isPlaying);
+  const isPaused = canControl && !isPlaying && track.source !== "none";
+
+  floor.classList.toggle("floor-player-playing", isPlaying);
+
+  modePill.classList.toggle("mode-pill-playing", isPlaying);
+  modePill.classList.toggle("mode-pill-paused", isPaused);
+  modePill.classList.toggle("mode-pill-idle", !isPlaying && !isPaused);
+  modePill.dataset.state = isPlaying ? "playing" : isPaused ? "paused" : "idle";
+  modePill.textContent = isPlaying ? "PLAYING" : isPaused ? "PAUSED" : "IDLE";
+
+  playIcon.textContent = isPlaying ? "||" : "▶";
+  panelPlayIcon.textContent = isPlaying ? "||" : "▶";
+  playButton.setAttribute("aria-label", isPlaying ? "Pause Spotify" : "Play Spotify");
+  panelPlayButton.setAttribute("aria-label", isPlaying ? "Pause Spotify" : "Play Spotify");
 
   const progressPercent = track.durationMs > 0
     ? Math.min(100, (getEstimatedProgress(track) / track.durationMs) * 100)
@@ -2007,21 +2016,19 @@ type Point2D = {
 export function updateLyricsToggleUi(status: LyricsPayload["status"], enabled: boolean): void {
   const toggle = qs<HTMLButtonElement>("#lyricsToggle");
 
+  const hasLyrics = enabled && status === "found";
+  const isSearching = enabled && status === "loading";
+  const isMissing = enabled && (status === "not-found" || status === "instrumental" || status === "error");
+  const isUnknown = enabled && status === "idle";
+
   toggle.classList.toggle("lyrics-toggle-on", enabled);
   toggle.classList.toggle("lyrics-toggle-off", !enabled);
-  toggle.classList.toggle("lyrics-toggle-found", enabled && status === "found");
-  toggle.classList.toggle("lyrics-toggle-missing", enabled && (status === "not-found" || status === "instrumental" || status === "error"));
-  toggle.classList.toggle("lyrics-toggle-searching", enabled && status === "loading");
-  toggle.classList.toggle("lyrics-toggle-unknown", enabled && status === "idle");
+  toggle.classList.toggle("lyrics-toggle-found", hasLyrics);
+  toggle.classList.toggle("lyrics-toggle-missing", isMissing);
+  toggle.classList.toggle("lyrics-toggle-searching", isSearching);
+  toggle.classList.toggle("lyrics-toggle-unknown", isUnknown);
 
-  let label = "LYRICS";
-  if (!enabled) label = "OFF";
-  else if (status === "found") label = "LYRICS";
-  else if (status === "loading") label = "LOAD";
-  else if (status === "not-found" || status === "instrumental") label = "NO LYR";
-  else if (status === "error") label = "ERR";
-
-  toggle.textContent = label;
+  toggle.textContent = !enabled ? "OFF" : hasLyrics ? "LYRICS" : isSearching ? "LOAD" : isMissing ? "NO LYR" : "LYRICS";
   toggle.setAttribute("aria-pressed", String(enabled));
   toggle.setAttribute("title", enabled ? "Hide ceiling lyrics" : "Show ceiling lyrics");
 }
