@@ -4236,3 +4236,161 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   min-width: 0 !important;
   box-sizing: border-box !important;
 }
+
+
+/* V27 CLEAN CEILING POSTER LYRIC SYSTEM */
+:root {
+  --lyric-ceiling-room-height-ratio: 53.326%;
+  --lyric-poster-top-left-x: 221px;
+  --lyric-poster-top-left-y: 12px;
+  --lyric-poster-top-right-x: 1562px;
+  --lyric-poster-top-right-y: 3px;
+  --lyric-poster-bottom-left-x: 454px;
+  --lyric-poster-bottom-left-y: 189px;
+  --lyric-poster-bottom-right-x: 1343px;
+  --lyric-poster-bottom-right-y: 189px;
+  --lyric-poster-guide-opacity: 0;
+  --lyric-poster-center-guide-opacity: 0;
+  --lyric-poster-stroke: 2.4px;
+  --lyric-poster-stroke-opacity: 0.52;
+  --lyric-poster-fill-opacity: 0;
+  --lyric-poster-glow: 0;
+  --lyric-poster-overall-y: 0px;
+  --lyric-poster-overall-scale: 1;
+  --lyric-poster-row-tightness: 0.04;
+  --lyric-poster-perspective-strength: 1.15;
+  --lyric-poster-max-rows: auto;
+  --lyric-poster-transition: push-slide;
+  --lyrics-animation-revision: 0;
+}
+
+.lyrics-ceiling {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: var(--lyric-ceiling-room-height-ratio) !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 22 !important;
+  pointer-events: none !important;
+  opacity: 0;
+  overflow: visible !important;
+  transform: none !important;
+  transform-origin: 0 0 !important;
+  transition: opacity 220ms ease;
+}
+
+.lyrics-ceiling.lyrics-ceiling-visible { opacity: 1 !important; }
+.lyrics-ceiling.lyrics-ceiling-hidden { opacity: 0 !important; }
+
+.active-lyrics-block,
+.lyric-poster-line {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  right: auto !important;
+  bottom: auto !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+  transform: none !important;
+  transform-origin: 0 0 !important;
+}
+
+.lyric-poster-svg {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  right: auto !important;
+  bottom: auto !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+  transform-origin: 0 0 !important;
+}
+
+.lyric-poster-svg-row {
+  font-family: "Arial Black", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif !important;
+  font-weight: 900 !important;
+  font-style: italic !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.018em !important;
+  fill: rgba(255, 255, 255, var(--lyric-poster-fill-opacity)) !important;
+  stroke: rgba(218, 218, 218, var(--lyric-poster-stroke-opacity)) !important;
+  stroke-width: var(--lyric-poster-stroke) !important;
+  vector-effect: non-scaling-stroke !important;
+  paint-order: stroke fill !important;
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
+  dominant-baseline: middle !important;
+  text-anchor: start !important;
+  filter: drop-shadow(0 0 calc(1px + (var(--lyric-poster-glow) * 8px)) rgba(235, 235, 235, calc(var(--lyric-poster-glow) * 0.32))) !important;
+}
+
+.lyric-poster-svg-guide {
+  fill: rgba(255, 42, 42, calc(var(--lyric-poster-guide-opacity) * 0.10)) !important;
+  stroke: rgba(255, 42, 42, calc(var(--lyric-poster-guide-opacity) * 0.86)) !important;
+  stroke-width: 3 !important;
+  vector-effect: non-scaling-stroke !important;
+  pointer-events: none !important;
+}
+
+.lyric-poster-center-guide {
+  fill: rgba(102, 178, 74, var(--lyric-poster-center-guide-opacity)) !important;
+  stroke: rgba(8, 20, 10, var(--lyric-poster-center-guide-opacity)) !important;
+  stroke-width: 2 !important;
+  vector-effect: non-scaling-stroke !important;
+  pointer-events: none !important;
+}
+
+.lyric-poster-transition-push .lyric-poster-svg { animation: lyricPosterPushV27 440ms cubic-bezier(.18, .88, .2, 1) both !important; }
+.lyric-poster-transition-fade .lyric-poster-svg { animation: lyricPosterFadeV27 560ms ease both !important; }
+
+@keyframes lyricPosterPushV27 {
+  0% { opacity: 0; transform: translateY(12px) scale(1.01); filter: blur(0.8px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes lyricPosterFadeV27 {
+  0% { opacity: 0; transform: translateY(5px); filter: blur(0.7px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+.lyrics-boundary-utility .lyric-utility-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 9px !important;
+}
+
+.lyrics-boundary-utility .lyric-utility-stack label {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 4px 10px !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.lyrics-boundary-utility .lyric-utility-stack label input,
+.lyrics-boundary-utility .lyric-utility-stack label select {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.lyrics-boundary-utility .utility-minihead {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 196, 84, 0.18);
+  color: #ffc65a;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#lyricPosterMaxRows,
+#lyricPosterTransition { width: 100% !important; }
