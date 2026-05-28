@@ -81,6 +81,7 @@ type RoomUtilitySettings = {
   lyricPosterCenterX: number;
   lyricPosterCenterY: number;
   lyricPosterCenterGuideOpacity: number;
+  lyricPosterPerspectiveDepth: number;
   lyricPosterStroke: number;
   lyricPosterStrokeOpacity: number;
   lyricPosterFillOpacity: number;
@@ -110,27 +111,28 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   tableShadowScale: 1.16,
   lyricPosterTopLeftX: 221,
   lyricPosterTopLeftY: 12,
-  lyricPosterTopRightX: 1637,
-  lyricPosterTopRightY: 12,
-  lyricPosterBottomLeftX: 597,
-  lyricPosterBottomLeftY: 418,
-  lyricPosterBottomRightX: 1201,
-  lyricPosterBottomRightY: 415,
-  lyricPosterCenterX: 882,
-  lyricPosterCenterY: 215,
+  lyricPosterTopRightX: 1562,
+  lyricPosterTopRightY: 3,
+  lyricPosterBottomLeftX: 454,
+  lyricPosterBottomLeftY: 189,
+  lyricPosterBottomRightX: 1343,
+  lyricPosterBottomRightY: 189,
+  lyricPosterCenterX: 878,
+  lyricPosterCenterY: 178,
   lyricPosterCenterGuideOpacity: 0.00,
+  lyricPosterPerspectiveDepth: 1.35,
   lyricPosterStroke: 2.4,
   lyricPosterStrokeOpacity: 0.52,
-  lyricPosterFillOpacity: 0.02,
-  lyricPosterGlow: 0.18,
-  lyricPosterGuideOpacity: 0.00,
-  lyricPosterRowGap: 0.5,
+  lyricPosterFillOpacity: 0,
+  lyricPosterGlow: 0,
+  lyricPosterGuideOpacity: 1.00,
+  lyricPosterRowGap: 30,
   lyricPosterMaxRows: "auto",
   lyricPosterTransition: "push-slide",
   lyricBaseFontSize: 12
 };
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v20";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v23";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -624,6 +626,7 @@ function bindRoomUtilityControls(): void {
     ["lyricPosterCenterX", "lyricPosterCenterXValue"],
     ["lyricPosterCenterY", "lyricPosterCenterYValue"],
     ["lyricPosterCenterGuideOpacity", "lyricPosterCenterGuideOpacityValue"],
+    ["lyricPosterPerspectiveDepth", "lyricPosterPerspectiveDepthValue"],
     ["lyricPosterStroke", "lyricPosterStrokeValue"],
     ["lyricPosterStrokeOpacity", "lyricPosterStrokeOpacityValue"],
     ["lyricPosterFillOpacity", "lyricPosterFillOpacityValue"],
@@ -739,6 +742,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-center-x", `${roomUtility.lyricPosterCenterX}px`);
   root.style.setProperty("--lyric-poster-center-y", `${roomUtility.lyricPosterCenterY}px`);
   root.style.setProperty("--lyric-poster-center-guide-opacity", String(roomUtility.lyricPosterCenterGuideOpacity));
+  root.style.setProperty("--lyric-poster-perspective-depth", String(roomUtility.lyricPosterPerspectiveDepth));
   root.style.setProperty("--lyric-poster-stroke", `${roomUtility.lyricPosterStroke}px`);
   root.style.setProperty("--lyric-poster-stroke-opacity", String(roomUtility.lyricPosterStrokeOpacity));
   root.style.setProperty("--lyric-poster-fill-opacity", String(roomUtility.lyricPosterFillOpacity));
