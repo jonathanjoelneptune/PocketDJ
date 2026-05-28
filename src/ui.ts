@@ -1005,7 +1005,7 @@ export function updateLyricsCeiling(
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
   const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
   const maxRowsValue = rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue;
-  const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "push-slide") as "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
+  const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "push-slide") as LyricPosterTransitionMode;
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, transitionValue);
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
@@ -1115,7 +1115,7 @@ function readLyricPosterTrapezoid(rootStyles: CSSStyleDeclaration): LyricPosterT
 function readCeilingPosterControls(
   rootStyles: CSSStyleDeclaration,
   maxRowsValue: "auto" | "1" | "2" | "3",
-  transitionValue: "push-slide" | "fade-slide",
+  transitionValue: LyricPosterTransitionMode,
 ): CeilingPosterControls {
   const readNumber = (name: string, fallback: number) => {
     const value = Number.parseFloat(rootStyles.getPropertyValue(name));
@@ -1715,9 +1715,11 @@ type LyricPosterTrapezoid = {
   centerY: number;
 };
 
+type LyricPosterTransitionMode = "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
+
 type CeilingPosterControls = {
   maxRows: "auto" | "1" | "2" | "3";
-  transition: "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift";
+  transition: LyricPosterTransitionMode;
   rowBreakpoint: number;
   twoRowBandGuideOpacity: number;
   threeRowBandGuideOpacity: number;
