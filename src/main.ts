@@ -337,7 +337,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v50";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v51";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -412,6 +412,12 @@ function bindControls(): void {
     if (!roomUtility.panelHeightAdjustEnabled) openSidePanel(true);
   });
   bindDraggableSidePanelTab(sideTab);
+
+  qs<HTMLButtonElement>("#panelAdjustDone").addEventListener("click", (event) => {
+    event.stopPropagation();
+    setPanelHeightAdjustEnabled(false, true);
+  });
+
 
   document.addEventListener("pointerdown", (event) => {
     closeSidePanelOnOutsidePointer(event);
@@ -519,6 +525,21 @@ function updatePanelStartY(value: number, persist = false): void {
 
   applyRoomUtilitySettings();
   if (persist) saveRoomUtilitySettings();
+}
+
+
+function setPanelHeightAdjustEnabled(enabled: boolean, openPanelAfter = false): void {
+  roomUtility = { ...roomUtility, panelHeightAdjustEnabled: enabled };
+
+  const checkbox = document.querySelector<HTMLInputElement>("#panelHeightAdjustEnabled");
+  if (checkbox) checkbox.checked = enabled;
+
+  applyRoomUtilitySettings();
+  saveRoomUtilitySettings();
+
+  if (openPanelAfter) {
+    openSidePanel(true);
+  }
 }
 
 function bindDraggableSidePanelTab(tab: HTMLButtonElement): void {
@@ -865,9 +886,7 @@ function bindRoomUtilityControls(): void {
   panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
 
   panelHeightAdjustEnabled.addEventListener("change", () => {
-    roomUtility = { ...roomUtility, panelHeightAdjustEnabled: panelHeightAdjustEnabled.checked };
-    applyRoomUtilitySettings();
-    saveRoomUtilitySettings();
+    setPanelHeightAdjustEnabled(panelHeightAdjustEnabled.checked, false);
   });
 
   const controls = [

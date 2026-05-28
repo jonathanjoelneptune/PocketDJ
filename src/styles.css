@@ -5151,22 +5151,6 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     inset 0 0 20px rgba(255,191,71,0.11) !important;
 }
 
-.side-panel-tab::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  width: 12px;
-  height: 18px;
-  transform: translateX(-50%);
-  opacity: 0.58;
-  background:
-    linear-gradient(currentColor, currentColor) center 3px / 2px 12px no-repeat,
-    linear-gradient(135deg, transparent 50%, currentColor 51%) 2px 0 / 5px 5px no-repeat,
-    linear-gradient(225deg, transparent 50%, currentColor 51%) 5px 0 / 5px 5px no-repeat,
-    linear-gradient(45deg, transparent 50%, currentColor 51%) 2px 13px / 5px 5px no-repeat,
-    linear-gradient(-45deg, transparent 50%, currentColor 51%) 5px 13px / 5px 5px no-repeat;
-}
 
 
 /* v50 panel height adjust mode and 16:9 room-bounded panel height */
@@ -5204,4 +5188,51 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   background: rgba(20, 13, 25, 0.58);
   border: 1px solid rgba(255, 191, 71, 0.18);
   pointer-events: none;
+}
+
+
+/* v51 panel drag mode cleanup */
+.side-panel-tab::after {
+  display: none !important;
+  content: none !important;
+}
+
+.panel-adjust-done {
+  position: absolute;
+  right: calc((100vw - var(--room-w)) / 2 + 52px);
+  top: calc(((100vh - var(--room-h)) / 2) + (var(--room-h) * var(--panel-start-y-ratio)) + 34px);
+  z-index: 82;
+  display: none;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 191, 71, 0.30);
+  background:
+    linear-gradient(180deg, rgba(72, 43, 21, 0.72), rgba(20, 13, 25, 0.68));
+  color: #ffdf9a;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.44rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow:
+    0 10px 24px rgba(0,0,0,0.24),
+    0 0 14px rgba(255,191,71,0.10),
+    inset 0 0 12px rgba(255,191,71,0.06);
+}
+
+.panel-height-adjust-enabled .panel-adjust-done {
+  display: inline-grid;
+  place-items: center;
+}
+
+.panel-adjust-done:hover {
+  border-color: rgba(255, 218, 155, 0.58);
+  color: #fff2c5;
+  background:
+    linear-gradient(180deg, rgba(100, 62, 25, 0.82), rgba(28, 16, 28, 0.74));
+}
+
+.panel-height-adjust-enabled .side-panel-tab::before {
+  right: calc(100% + 8px);
+  top: calc(50% - 14px);
 }

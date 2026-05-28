@@ -666,6 +666,7 @@ export function renderShell(state: AppState): void {
         <span class="side-panel-tab-note">♫</span>
         <span class="side-panel-tab-arrow">‹</span>
       </button>
+      <button id="panelAdjustDone" class="panel-adjust-done" type="button" aria-label="Done adjusting panel height" title="Done adjusting panel height">DONE</button>
     </main>
   `;
 }
