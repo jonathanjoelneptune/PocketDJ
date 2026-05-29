@@ -6784,3 +6784,10 @@ body.lyrics-marquee-unavailable .marquee::after {
 :root.room-fill-stretch .marquee {
   top: calc(var(--fill-marquee-top) + var(--fill-marquee-clearance)) !important;
 }
+
+
+/* v64M: Hide WIDE/FILL top pill.
+   Aspect mode remains available through Dev Tools and PocketDJ 5-click shortcut. */
+#aspectModeToggle {
+  display: none !important;
+}
