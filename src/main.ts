@@ -16,7 +16,7 @@ import { renderShell, setControlPanelOpen, updateLyricsCeiling, updateLyricsTogg
 
 const STANDARD_SPOTIFY_CLIENT_ID = "37da51db24384ad3a07c222f71b1525e";
 const SPOTIFY_WEB_PLAYBACK_SDK_URL = "https://sdk.scdn.co/spotify-player.js";
-const POCKET_DJ_DEVICE_NAME = "Pocket DJ";
+const POCKET_DJ_DEVICE_NAME = "Pocket DJ Browser";
 const PREFERRED_SPOTIFY_SOURCE_KEY = "pocketdj-preferred-spotify-source-v1";
 
 type SpotifyWebPlaybackPlayer = {
@@ -62,9 +62,6 @@ let pollTimer: number | null = null;
 let dj: DjController;
 let lastPollError = "";
 let panelAutoHiddenAfterConnect = false;
-let compactPanelEnabled = false;
-let devToolsClickTimer: number | null = null;
-let devToolsClickCount = 0;
 let sidePanelLocked = false;
 let sidePanelHideTimer: number | null = null;
 let floorControlsOpen = false;
@@ -432,7 +429,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64a";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v63";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -470,43 +467,6 @@ async function boot(): Promise<void> {
 
   requestAnimationFrame(tick);
 }
-
-
-function setCompactPanelEnabled(enabled: boolean): void {
-  compactPanelEnabled = enabled;
-  const card = document.querySelector<HTMLElement>("#controlCard");
-  const button = document.querySelector<HTMLButtonElement>("#compactPanelToggle");
-  card?.classList.toggle("control-card-compact-mode", enabled);
-  button?.classList.toggle("compact-pill-active", enabled);
-  if (button) {
-    button.setAttribute("aria-pressed", String(enabled));
-    button.textContent = enabled ? "FULL" : "COMPACT";
-  }
-}
-
-function revealDevToolsByTripleClick(): void {
-  devToolsClickCount += 1;
-  if (devToolsClickTimer) window.clearTimeout(devToolsClickTimer);
-  devToolsClickTimer = window.setTimeout(() => {
-    devToolsClickCount = 0;
-    devToolsClickTimer = null;
-  }, 700);
-
-  if (devToolsClickCount >= 3) {
-    devToolsClickCount = 0;
-    if (devToolsClickTimer) {
-      window.clearTimeout(devToolsClickTimer);
-      devToolsClickTimer = null;
-    }
-
-    const devTools = document.querySelector<HTMLDetailsElement>("#devToolsPanel");
-    if (devTools) {
-      devTools.classList.toggle("dev-tools-visible");
-      devTools.open = devTools.classList.contains("dev-tools-visible");
-    }
-  }
-}
-
 
 function bindControls(): void {
   qs<HTMLButtonElement>("#panelToggle").addEventListener("click", () => {
@@ -587,7 +547,7 @@ function bindControls(): void {
     state.playback = emptyTrack();
     panelAutoHiddenAfterConnect = false;
     openSidePanel(true);
-    setPocketDjSourceStatus("Spotify disconnected. Connect again to use Pocket DJ.");
+    setPocketDjSourceStatus("Spotify disconnected. Connect again to use Pocket DJ Browser.");
     renderSpotifySourcePanel();
     updatePlaybackUi(state.playback, state.debugOpen);
     qs<HTMLElement>("#connectDropdown").classList.remove("connect-dropdown-open");
@@ -1020,7 +980,7 @@ function renderSpotifySourcePanel(): void {
 
   playHereButton.disabled = !loadTokens();
   activeLabel.textContent = pocketDjDeviceActive
-    ? "Audio output: Pocket DJ"
+    ? "Audio output: Pocket DJ Browser"
     : "Audio output: Spotify Connect";
 
   const devices = [...lastSpotifyDevices];
@@ -1032,13 +992,13 @@ function renderSpotifySourcePanel(): void {
       is_private_session: false,
       is_restricted: false,
       name: POCKET_DJ_DEVICE_NAME,
-      type: "App",
+      type: "Computer",
       volume_percent: phase2Volume
     });
   }
 
   if (!devices.length) {
-    deviceList.innerHTML = `<div class="spotify-browser-empty">No Spotify Connect devices found yet. Open Spotify or activate Pocket DJ.</div>`;
+    deviceList.innerHTML = `<div class="spotify-browser-empty">No Spotify Connect devices found yet. Open Spotify or activate Pocket DJ Browser.</div>`;
     return;
   }
 
@@ -1086,7 +1046,7 @@ function loadSpotifyWebPlaybackSdk(): Promise<void> {
 
 async function initializePocketDjBrowserDevice(): Promise<void> {
   if (!state.spotifyClientId || !loadTokens()) {
-    setPocketDjSourceStatus("Connect Spotify before activating Pocket DJ.");
+    setPocketDjSourceStatus("Connect Spotify before activating Pocket DJ Browser.");
     renderSpotifySourcePanel();
     return;
   }
@@ -1113,7 +1073,7 @@ async function initializePocketDjBrowserDevice(): Promise<void> {
     pocketDjPlayer.addListener("ready", ({ device_id }: { device_id: string }) => {
       pocketDjDeviceId = device_id;
       pocketDjDeviceReady = true;
-      setPocketDjSourceStatus("Pocket DJ is ready as a Spotify Connect device.");
+      setPocketDjSourceStatus("Pocket DJ Browser is ready as a Spotify Connect device.");
       void refreshSpotifyDevices();
     });
 
@@ -1122,7 +1082,7 @@ async function initializePocketDjBrowserDevice(): Promise<void> {
         pocketDjDeviceReady = false;
         pocketDjDeviceActive = false;
       }
-      setPocketDjSourceStatus("Pocket DJ device went offline. Refresh or reconnect Spotify.");
+      setPocketDjSourceStatus("Pocket DJ Browser device went offline. Refresh or reconnect Spotify.");
       renderSpotifySourcePanel();
     });
 
@@ -1139,9 +1099,9 @@ async function initializePocketDjBrowserDevice(): Promise<void> {
     });
   }
 
-  setPocketDjSourceStatus("Activating Pocket DJ device...");
+  setPocketDjSourceStatus("Activating Pocket DJ Browser device...");
   const connected = await pocketDjPlayer.connect();
-  if (!connected) throw new Error("Spotify could not activate Pocket DJ. Confirm this Spotify account has Premium.");
+  if (!connected) throw new Error("Spotify could not activate Pocket DJ Browser. Confirm this Spotify account has Premium.");
   renderSpotifySourcePanel();
 }
 
@@ -1165,7 +1125,7 @@ async function refreshSpotifyDevices(): Promise<void> {
 async function transferToPocketDjBrowser(play = true): Promise<void> {
   await initializePocketDjBrowserDevice();
   if (!pocketDjPlayer || !pocketDjDeviceId) {
-    throw new Error("Pocket DJ is not ready yet.");
+    throw new Error("Pocket DJ Browser is not ready yet.");
   }
 
   await pocketDjPlayer.activateElement?.();
@@ -1173,7 +1133,7 @@ async function transferToPocketDjBrowser(play = true): Promise<void> {
   preferredSpotifySource = "pocket-dj-browser";
   localStorage.setItem(PREFERRED_SPOTIFY_SOURCE_KEY, preferredSpotifySource);
   pocketDjDeviceActive = true;
-  setPocketDjSourceStatus("Playing through Pocket DJ.");
+  setPocketDjSourceStatus("Playing through Pocket DJ Browser.");
   await refreshSpotifyDevices();
   await pollSpotifyNow();
 }
@@ -1640,6 +1600,10 @@ function bindSpotifyBrowserControls(): void {
     void runSpotifyBrowserAction(async () => {
       await transferToPocketDjBrowser(true);
     });
+  });
+
+  qs<HTMLButtonElement>("#spotifyRefreshDevicesButton").addEventListener("click", () => {
+    void refreshSpotifyDevices();
   });
 
   qs<HTMLElement>("#spotifyDeviceList").addEventListener("click", (event) => {
@@ -2383,7 +2347,7 @@ async function pollSpotifyNow(): Promise<void> {
     updatePlaybackUi(state.playback, state.debugOpen);
     void refreshLyricsForCurrentTrack();
 
-    if (Date.now() - lastDeviceRefreshAt > 5_000) {
+    if (Date.now() - lastDeviceRefreshAt > 12_000) {
       lastDeviceRefreshAt = Date.now();
       void refreshSpotifyDevices();
     }
