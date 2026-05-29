@@ -6037,3 +6037,104 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   border-radius: 999px;
   border: 2px solid rgba(6, 6, 9, 0.80);
 }
+
+
+/* v64A2 Part 1 fixed: safe source/status cleanup from stable v63 */
+.spotify-source-panel {
+  order: -1;
+  margin: 0 0 0.75rem !important;
+}
+
+.spotify-source-summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.07em;
+  color: #ffdf9a;
+  text-transform: uppercase;
+}
+
+.spotify-source-summary::-webkit-details-marker {
+  display: none;
+}
+
+.spotify-source-summary::after {
+  content: "▾";
+  color: rgba(255, 184, 76, 0.78);
+  transition: transform 160ms ease;
+}
+
+.spotify-source-panel[open] .spotify-source-summary::after {
+  transform: rotate(180deg);
+}
+
+.spotify-source-header {
+  margin-top: 0.7rem;
+}
+
+.spotify-device-name,
+.spotify-result-title,
+.spotify-result-title-button {
+  font-size: 0.74rem !important;
+  line-height: 1.15 !important;
+}
+
+.spotify-device-meta {
+  font-size: 0.58rem !important;
+}
+
+.mode-pill-hidden {
+  display: none !important;
+}
+
+.compact-pill {
+  min-height: 28px !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  max-height: 34px !important;
+  min-width: calc(var(--room-w) * 0.055) !important;
+  padding: 0 calc(var(--room-w) * 0.0065) !important;
+  border-radius: 999px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  font-family: "Press Start 2P", monospace !important;
+  font-size: clamp(0.40rem, calc(var(--room-w) * 0.00325), 0.54rem) !important;
+  border: 1px solid rgba(255, 184, 76, 0.20) !important;
+  background: rgba(36, 23, 38, 0.42) !important;
+  color: rgba(255, 218, 155, 0.76) !important;
+}
+
+.compact-pill-active {
+  color: #f7d68c !important;
+  border-color: rgba(255, 184, 76, 0.38) !important;
+  background: rgba(72, 43, 21, 0.44) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255,184,76,0.050),
+    0 0 12px rgba(255,184,76,0.10) !important;
+}
+
+.control-card-compact-mode .spotify-browser,
+.control-card-compact-mode .dev-tools,
+.control-card-compact-mode #debugPanel {
+  display: none !important;
+}
+
+.lyrics-toggle-off,
+.lyrics-toggle-missing,
+.lyrics-toggle-unknown {
+  border-color: rgba(248, 113, 113, 0.76) !important;
+  box-shadow:
+    inset 0 0 12px rgba(248, 113, 113, 0.045),
+    0 0 12px rgba(248, 113, 113, 0.14) !important;
+}
+
+.dev-tools {
+  display: none;
+}
+
+.dev-tools.dev-tools-visible {
+  display: block;
+}

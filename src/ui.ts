@@ -114,13 +114,14 @@ export function renderShell(state: AppState): void {
           <div class="mini-brand"><span>Pocket</span><span>DJ</span></div>
           <div class="brand-actions">
             <button id="lyricsToggle" class="lyrics-toggle lyrics-toggle-on lyrics-toggle-unknown" type="button" aria-pressed="true" title="Toggle ceiling lyrics">LYRICS</button>
-            <div class="mode-pill" id="modePill">IDLE</div>
+            <div class="mode-pill mode-pill-hidden" id="modePill" aria-hidden="true">IDLE</div>
             <div class="connect-pill-wrap">
               <button id="connectSpotify" class="connect-pill disconnected" type="button" aria-haspopup="true" aria-expanded="false">Connect</button>
               <div id="connectDropdown" class="connect-dropdown">
                 <button id="disconnectSpotify" type="button">Disconnect</button>
               </div>
             </div>
+            <button id="compactPanelToggle" class="compact-pill" type="button" aria-pressed="false" title="Show compact panel">COMPACT</button>
             <button id="panelLockToggle" class="panel-lock-toggle" type="button" aria-label="Lock side panel open" title="Lock side panel open">🔒</button>
           </div>
         </div>
@@ -154,6 +155,21 @@ export function renderShell(state: AppState): void {
 
 
         <section class="spotify-browser" id="spotifyBrowserPanel" aria-label="Spotify browser">
+          <details class="spotify-source-panel" id="spotifySourcePanel">
+            <summary class="spotify-source-summary">Playback Source</summary>
+            <div class="spotify-source-header">
+              <div>
+                <div class="spotify-source-title">Playback Source</div>
+                <div id="spotifyActiveDeviceLabel" class="spotify-source-active">Audio output: Spotify Connect</div>
+              </div>
+              <div class="spotify-source-actions">
+                <button id="spotifyPlayHereButton" class="spotify-browser-action" type="button">Play Here</button>
+              </div>
+            </div>
+            <div id="spotifySourceStatus" class="spotify-browser-status spotify-source-status">Connect Spotify, then activate Pocket DJ.</div>
+            <div id="spotifyDeviceList" class="spotify-device-list"></div>
+          </details>
+
           <div class="spotify-browser-tabs" role="tablist" aria-label="Spotify browser tabs">
             <button id="spotifyTabHome" class="spotify-browser-tab spotify-browser-tab-active" type="button" data-browser-tab="home">Home</button>
             <button id="spotifyTabPlaylists" class="spotify-browser-tab" type="button" data-browser-tab="playlists">Playlists</button>
@@ -162,21 +178,6 @@ export function renderShell(state: AppState): void {
           </div>
 
           <div id="spotifyBrowserStatus" class="spotify-browser-status">Home, Playlists, Vibes, and Search are ready.</div>
-
-          <section class="spotify-source-panel" id="spotifySourcePanel" aria-label="Spotify playback source">
-            <div class="spotify-source-header">
-              <div>
-                <div class="spotify-source-title">Playback Source</div>
-                <div id="spotifyActiveDeviceLabel" class="spotify-source-active">Audio output: Spotify Connect</div>
-              </div>
-              <div class="spotify-source-actions">
-                <button id="spotifyPlayHereButton" class="spotify-browser-action" type="button">Play Here</button>
-                <button id="spotifyRefreshDevicesButton" class="spotify-browser-action secondary" type="button">Refresh</button>
-              </div>
-            </div>
-            <div id="spotifySourceStatus" class="spotify-browser-status spotify-source-status">Connect Spotify, then activate Pocket DJ Browser.</div>
-            <div id="spotifyDeviceList" class="spotify-device-list"></div>
-          </section>
 
           <div id="spotifyHomePane" class="spotify-browser-pane spotify-browser-pane-active">
             <div id="spotifyHomeResults" class="spotify-browser-results spotify-home-results spotify-browser-empty">Home will load suggestions after Spotify connects.</div>
@@ -216,7 +217,7 @@ export function renderShell(state: AppState): void {
           </div>
         </section>
 
-        <details class="dev-tools">
+        <details id="devToolsPanel" class="dev-tools">
           <summary>Dev tools</summary>
 
           <div class="button-grid dev-button-grid">
