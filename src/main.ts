@@ -2,7 +2,7 @@ import "./styles.css";
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, previousSpotifyTrack, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin } from "./spotify/spotifyClient";
+import { addSpotifyUriToQueue, disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getRecentlyPlayed, getSavedTracks, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import {
   emptyLyrics,
@@ -41,6 +41,16 @@ let lyricsState: LyricsPayload = emptyLyrics();
 let lyricsFetchKey = "";
 let lyricsEnabled = true;
 let lyricAnimationRevision = 0;
+
+
+type SpotifyBrowserTab = "search" | "playlists" | "library";
+
+let spotifyBrowserTab: SpotifyBrowserTab = "search";
+let spotifyBrowserBusy = false;
+let spotifyBrowserStatus = "";
+let spotifyBrowserTracks: SpotifyCatalogTrack[] = [];
+let spotifyBrowserPlaylists: SpotifyCatalogPlaylist[] = [];
+let selectedPlaylist: SpotifyCatalogPlaylist | null = null;
 
 
 type SceneFilter =
@@ -337,7 +347,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v53";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v54";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -425,6 +435,7 @@ function bindControls(): void {
 
   bindFloorPlaybackControls();
   bindSeekControls();
+  bindSpotifyBrowserControls();
 
   qs<HTMLButtonElement>("#connectSpotify").addEventListener("click", async () => {
     if (loadTokens()) {
@@ -858,6 +869,288 @@ function updatePhase2SpotifyControls(): void {
 
   volume.value = String(phase2Volume);
   qs<HTMLElement>("#spotifyVolumeValue").textContent = String(phase2Volume);
+}
+
+function escapeHtmlInline(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char] || char));
+}
+
+function formatDurationMs(value: number): string {
+  if (!value) return "";
+  const totalSeconds = Math.round(value / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function setSpotifyBrowserStatus(message: string, busy = false): void {
+  spotifyBrowserStatus = message;
+  spotifyBrowserBusy = busy;
+  const status = qs<HTMLElement>("#spotifyBrowserStatus");
+  status.textContent = message;
+  status.classList.toggle("spotify-browser-status-busy", busy);
+}
+
+function setSpotifyBrowserTab(tab: SpotifyBrowserTab): void {
+  spotifyBrowserTab = tab;
+  qs<HTMLElement>("#spotifySearchPane").classList.toggle("spotify-browser-pane-active", tab === "search");
+  qs<HTMLElement>("#spotifyPlaylistsPane").classList.toggle("spotify-browser-pane-active", tab === "playlists");
+  qs<HTMLElement>("#spotifyLibraryPane").classList.toggle("spotify-browser-pane-active", tab === "library");
+
+  qs<HTMLButtonElement>("#spotifyTabSearch").classList.toggle("spotify-browser-tab-active", tab === "search");
+  qs<HTMLButtonElement>("#spotifyTabPlaylists").classList.toggle("spotify-browser-tab-active", tab === "playlists");
+  qs<HTMLButtonElement>("#spotifyTabLibrary").classList.toggle("spotify-browser-tab-active", tab === "library");
+}
+
+function renderTrackRows(containerId: string, tracks: SpotifyCatalogTrack[], emptyMessage: string): void {
+  const container = qs<HTMLElement>(`#${containerId}`);
+  if (!tracks.length) {
+    container.classList.add("spotify-browser-empty");
+    container.innerHTML = escapeHtmlInline(emptyMessage);
+    return;
+  }
+
+  container.classList.remove("spotify-browser-empty");
+  container.innerHTML = tracks.map((track) => `
+    <article class="spotify-result-row spotify-track-row" data-uri="${escapeHtmlInline(track.uri)}">
+      <div class="spotify-result-art">${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "<span>♪</span>"}</div>
+      <div class="spotify-result-copy">
+        <div class="spotify-result-title">${escapeHtmlInline(track.name)}</div>
+        <div class="spotify-result-subtitle">${escapeHtmlInline(track.artists)}${track.album ? ` • ${escapeHtmlInline(track.album)}` : ""}</div>
+      </div>
+      <div class="spotify-result-duration">${formatDurationMs(track.durationMs)}</div>
+      <button class="spotify-row-button" type="button" data-action="play-uri" data-uri="${escapeHtmlInline(track.uri)}">Play</button>
+      <button class="spotify-row-button secondary" type="button" data-action="queue-uri" data-uri="${escapeHtmlInline(track.uri)}">Queue</button>
+    </article>
+  `).join("");
+}
+
+function renderPlaylistRows(containerId: string, playlists: SpotifyCatalogPlaylist[], emptyMessage: string): void {
+  const container = qs<HTMLElement>(`#${containerId}`);
+  if (!playlists.length) {
+    container.classList.add("spotify-browser-empty");
+    container.innerHTML = escapeHtmlInline(emptyMessage);
+    return;
+  }
+
+  container.classList.remove("spotify-browser-empty");
+  container.innerHTML = playlists.map((playlist) => `
+    <article class="spotify-result-row spotify-playlist-row" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
+      <div class="spotify-result-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "<span>▤</span>"}</div>
+      <div class="spotify-result-copy">
+        <div class="spotify-result-title">${escapeHtmlInline(playlist.name)}</div>
+        <div class="spotify-result-subtitle">${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</div>
+      </div>
+      <button class="spotify-row-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Open</button>
+      <button class="spotify-row-button secondary" type="button" data-action="play-context" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
+    </article>
+  `).join("");
+}
+
+function renderSearchResults(): void {
+  const parts: string[] = [];
+  if (spotifyBrowserTracks.length) {
+    parts.push(`<div class="spotify-result-group-title">Tracks</div>`);
+    parts.push(spotifyBrowserTracks.map((track) => `
+      <article class="spotify-result-row spotify-track-row" data-uri="${escapeHtmlInline(track.uri)}">
+        <div class="spotify-result-art">${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "<span>♪</span>"}</div>
+        <div class="spotify-result-copy">
+          <div class="spotify-result-title">${escapeHtmlInline(track.name)}</div>
+          <div class="spotify-result-subtitle">${escapeHtmlInline(track.artists)}${track.album ? ` • ${escapeHtmlInline(track.album)}` : ""}</div>
+        </div>
+        <div class="spotify-result-duration">${formatDurationMs(track.durationMs)}</div>
+        <button class="spotify-row-button" type="button" data-action="play-uri" data-uri="${escapeHtmlInline(track.uri)}">Play</button>
+        <button class="spotify-row-button secondary" type="button" data-action="queue-uri" data-uri="${escapeHtmlInline(track.uri)}">Queue</button>
+      </article>
+    `).join(""));
+  }
+
+  if (spotifyBrowserPlaylists.length) {
+    parts.push(`<div class="spotify-result-group-title">Playlists</div>`);
+    parts.push(spotifyBrowserPlaylists.map((playlist) => `
+      <article class="spotify-result-row spotify-playlist-row" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
+        <div class="spotify-result-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "<span>▤</span>"}</div>
+        <div class="spotify-result-copy">
+          <div class="spotify-result-title">${escapeHtmlInline(playlist.name)}</div>
+          <div class="spotify-result-subtitle">${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</div>
+        </div>
+        <button class="spotify-row-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Open</button>
+        <button class="spotify-row-button secondary" type="button" data-action="play-context" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
+      </article>
+    `).join(""));
+  }
+
+  const container = qs<HTMLElement>("#spotifySearchResults");
+  if (!parts.length) {
+    container.classList.add("spotify-browser-empty");
+    container.innerHTML = "No Spotify results found.";
+  } else {
+    container.classList.remove("spotify-browser-empty");
+    container.innerHTML = parts.join("");
+  }
+}
+
+async function runSpotifyBrowserAction(action: () => Promise<void>): Promise<void> {
+  if (useDemo) {
+    setSpotifyBrowserStatus("Spotify browser is disabled in Demo Mode.", false);
+    return;
+  }
+
+  if (!state.spotifyClientId || !loadTokens()) {
+    setSpotifyBrowserStatus("Connect Spotify first. If you just added new Spotify scopes, reconnect once.", false);
+    openSidePanel(true);
+    return;
+  }
+
+  try {
+    setSpotifyBrowserStatus("Talking to Spotify...", true);
+    await action();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    setSpotifyBrowserStatus(message, false);
+    console.warn(message);
+  }
+}
+
+async function performSpotifySearch(): Promise<void> {
+  const input = qs<HTMLInputElement>("#spotifySearchInput");
+  const searchType = qs<HTMLSelectElement>("#spotifySearchType").value as "track" | "playlist" | "all";
+  const query = input.value.trim();
+  if (!query) {
+    setSpotifyBrowserStatus("Type something to search Spotify.", false);
+    return;
+  }
+
+  await runSpotifyBrowserAction(async () => {
+    const results = await searchSpotifyCatalog(state.spotifyClientId, query, searchType, 10);
+    spotifyBrowserTracks = results.tracks;
+    spotifyBrowserPlaylists = results.playlists;
+    renderSearchResults();
+    setSpotifyBrowserStatus(`Search complete for "${query}".`, false);
+  });
+}
+
+async function loadPlaylists(): Promise<void> {
+  await runSpotifyBrowserAction(async () => {
+    selectedPlaylist = null;
+    spotifyBrowserPlaylists = await getUserPlaylists(state.spotifyClientId, 40);
+    renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "No playlists returned.");
+    qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
+    setSpotifyBrowserStatus(`Loaded ${spotifyBrowserPlaylists.length} playlists.`, false);
+  });
+}
+
+async function openPlaylist(playlistId: string): Promise<void> {
+  const playlist = spotifyBrowserPlaylists.find((item) => item.id === playlistId)
+    || spotifyBrowserPlaylists.concat(spotifyBrowserPlaylists).find((item) => item.id === playlistId)
+    || null;
+  selectedPlaylist = playlist;
+
+  await runSpotifyBrowserAction(async () => {
+    const tracks = await getPlaylistTracks(state.spotifyClientId, playlistId, 80);
+    renderTrackRows("spotifyPlaylistsResults", tracks, "No tracks returned for this playlist.");
+    qs<HTMLButtonElement>("#playlistBackButton").disabled = false;
+    setSpotifyBrowserStatus(`Opened ${playlist?.name || "playlist"} with ${tracks.length} tracks.`, false);
+  });
+}
+
+async function loadSavedSpotifyTracks(): Promise<void> {
+  await runSpotifyBrowserAction(async () => {
+    const tracks = await getSavedTracks(state.spotifyClientId, 40);
+    renderTrackRows("spotifyLibraryResults", tracks, "No liked songs returned.");
+    setSpotifyBrowserStatus(`Loaded ${tracks.length} liked songs.`, false);
+  });
+}
+
+async function loadRecentSpotifyTracks(): Promise<void> {
+  await runSpotifyBrowserAction(async () => {
+    const tracks = await getRecentlyPlayed(state.spotifyClientId, 40);
+    renderTrackRows("spotifyLibraryResults", tracks, "No recently played tracks returned.");
+    setSpotifyBrowserStatus(`Loaded ${tracks.length} recently played tracks.`, false);
+  });
+}
+
+function bindSpotifyBrowserControls(): void {
+  qs<HTMLButtonElement>("#spotifyTabSearch").addEventListener("click", () => setSpotifyBrowserTab("search"));
+  qs<HTMLButtonElement>("#spotifyTabPlaylists").addEventListener("click", () => setSpotifyBrowserTab("playlists"));
+  qs<HTMLButtonElement>("#spotifyTabLibrary").addEventListener("click", () => setSpotifyBrowserTab("library"));
+
+  qs<HTMLButtonElement>("#spotifySearchButton").addEventListener("click", () => {
+    void performSpotifySearch();
+  });
+
+  qs<HTMLInputElement>("#spotifySearchInput").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      void performSpotifySearch();
+    }
+  });
+
+  qs<HTMLButtonElement>("#loadPlaylistsButton").addEventListener("click", () => {
+    void loadPlaylists();
+  });
+
+  qs<HTMLButtonElement>("#playlistBackButton").addEventListener("click", () => {
+    selectedPlaylist = null;
+    renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "Load your Spotify playlists.");
+    qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
+    setSpotifyBrowserStatus("Back to playlists.", false);
+  });
+  qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
+
+  qs<HTMLButtonElement>("#loadSavedTracksButton").addEventListener("click", () => {
+    void loadSavedSpotifyTracks();
+  });
+
+  qs<HTMLButtonElement>("#loadRecentTracksButton").addEventListener("click", () => {
+    void loadRecentSpotifyTracks();
+  });
+
+  qs<HTMLElement>("#spotifyBrowserPanel").addEventListener("click", (event) => {
+    const target = event.target as HTMLElement;
+    const button = target.closest<HTMLButtonElement>("[data-action]");
+    if (!button) return;
+
+    const action = button.dataset.action || "";
+    const uri = button.dataset.uri || "";
+    const playlistId = button.dataset.playlistId || "";
+
+    if (action === "play-uri" && uri) {
+      void runSpotifyBrowserAction(async () => {
+        await playSpotifyUri(state.spotifyClientId, uri);
+        await pollSpotifyNow();
+        setSpotifyBrowserStatus("Playing selected track.", false);
+      });
+    }
+
+    if (action === "queue-uri" && uri) {
+      void runSpotifyBrowserAction(async () => {
+        await addSpotifyUriToQueue(state.spotifyClientId, uri);
+        setSpotifyBrowserStatus("Added track to Spotify queue.", false);
+      });
+    }
+
+    if (action === "play-context" && uri) {
+      void runSpotifyBrowserAction(async () => {
+        await playSpotifyContext(state.spotifyClientId, uri);
+        await pollSpotifyNow();
+        setSpotifyBrowserStatus("Playing playlist.", false);
+      });
+    }
+
+    if (action === "open-playlist" && playlistId) {
+      setSpotifyBrowserTab("playlists");
+      void openPlaylist(playlistId);
+    }
+  });
+
+  setSpotifyBrowserTab("search");
 }
 
 function bindRoomUtilityControls(): void {

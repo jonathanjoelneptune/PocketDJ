@@ -141,6 +141,46 @@ export function renderShell(state: AppState): void {
           </div>
         </div>
 
+
+        <section class="spotify-browser" id="spotifyBrowserPanel" aria-label="Spotify browser">
+          <div class="spotify-browser-tabs" role="tablist" aria-label="Spotify browser tabs">
+            <button id="spotifyTabSearch" class="spotify-browser-tab spotify-browser-tab-active" type="button" data-browser-tab="search">Search</button>
+            <button id="spotifyTabPlaylists" class="spotify-browser-tab" type="button" data-browser-tab="playlists">Playlists</button>
+            <button id="spotifyTabLibrary" class="spotify-browser-tab" type="button" data-browser-tab="library">Library</button>
+          </div>
+
+          <div id="spotifyBrowserStatus" class="spotify-browser-status">Search tracks or open playlists inside Pocket DJ.</div>
+
+          <div id="spotifySearchPane" class="spotify-browser-pane spotify-browser-pane-active">
+            <div class="spotify-search-row">
+              <input id="spotifySearchInput" class="spotify-search-input" type="search" placeholder="Search tracks or playlists" autocomplete="off" />
+              <select id="spotifySearchType" class="spotify-search-type" aria-label="Search type">
+                <option value="all">All</option>
+                <option value="track">Tracks</option>
+                <option value="playlist">Playlists</option>
+              </select>
+              <button id="spotifySearchButton" class="spotify-browser-action" type="button">Search</button>
+            </div>
+            <div id="spotifySearchResults" class="spotify-browser-results spotify-browser-empty">Search results will show here.</div>
+          </div>
+
+          <div id="spotifyPlaylistsPane" class="spotify-browser-pane">
+            <div class="spotify-browser-toolbar">
+              <button id="loadPlaylistsButton" class="spotify-browser-action" type="button">Load Playlists</button>
+              <button id="playlistBackButton" class="spotify-browser-action secondary" type="button">Back</button>
+            </div>
+            <div id="spotifyPlaylistsResults" class="spotify-browser-results spotify-browser-empty">Load your Spotify playlists.</div>
+          </div>
+
+          <div id="spotifyLibraryPane" class="spotify-browser-pane">
+            <div class="spotify-browser-toolbar">
+              <button id="loadSavedTracksButton" class="spotify-browser-action" type="button">Liked Songs</button>
+              <button id="loadRecentTracksButton" class="spotify-browser-action" type="button">Recently Played</button>
+            </div>
+            <div id="spotifyLibraryResults" class="spotify-browser-results spotify-browser-empty">Choose liked songs or recently played tracks.</div>
+          </div>
+        </section>
+
         <details class="dev-tools">
           <summary>Dev tools</summary>
 

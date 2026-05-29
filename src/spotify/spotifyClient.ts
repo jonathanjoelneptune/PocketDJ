@@ -6,7 +6,11 @@ export const spotifyScopes = [
   "user-read-currently-playing",
   "user-read-playback-state",
   "user-modify-playback-state",
-  "user-read-private"
+  "user-read-private",
+  "playlist-read-private",
+  "playlist-read-collaborative",
+  "user-library-read",
+  "user-read-recently-played"
 ];
 
 type SpotifyImage = { url: string; height?: number; width?: number };
@@ -273,4 +277,217 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
 
 export function disconnectSpotify(): void {
   clearTokens();
+}
+
+
+export type SpotifyCatalogTrack = {
+  kind: "track";
+  id: string;
+  uri: string;
+  name: string;
+  artists: string;
+  album: string;
+  albumArtUrl: string | null;
+  durationMs: number;
+};
+
+export type SpotifyCatalogPlaylist = {
+  kind: "playlist";
+  id: string;
+  uri: string;
+  name: string;
+  owner: string;
+  imageUrl: string | null;
+  trackCount: number;
+};
+
+type SpotifyPlaylistItem = {
+  id: string;
+  uri: string;
+  name: string;
+  owner?: { display_name?: string };
+  images?: SpotifyImage[];
+  tracks?: { total?: number };
+};
+
+type SpotifySearchResponse = {
+  tracks?: { items?: SpotifyTrackItem[] };
+  playlists?: { items?: Array<SpotifyPlaylistItem | null> };
+};
+
+type SpotifyPlaylistsResponse = {
+  items?: Array<SpotifyPlaylistItem | null>;
+};
+
+type SpotifyPlaylistTracksResponse = {
+  items?: Array<{ track?: SpotifyTrackItem | null }>;
+};
+
+type SpotifySavedTracksResponse = {
+  items?: Array<{ track?: SpotifyTrackItem | null }>;
+};
+
+type SpotifyRecentlyPlayedResponse = {
+  items?: Array<{ track?: SpotifyTrackItem | null }>;
+};
+
+function normalizeCatalogTrack(item: SpotifyTrackItem | null | undefined): SpotifyCatalogTrack | null {
+  if (!item?.id) return null;
+  return {
+    kind: "track",
+    id: item.id,
+    uri: `spotify:track:${item.id}`,
+    name: item.name || "Untitled track",
+    artists: item.artists?.map((artist) => artist.name).filter(Boolean).join(", ") || "Unknown artist",
+    album: item.album?.name || "",
+    albumArtUrl: item.album?.images?.[0]?.url || null,
+    durationMs: Number(item.duration_ms || 0)
+  };
+}
+
+function normalizeCatalogPlaylist(item: SpotifyPlaylistItem | null | undefined): SpotifyCatalogPlaylist | null {
+  if (!item?.id) return null;
+  return {
+    kind: "playlist",
+    id: item.id,
+    uri: item.uri || `spotify:playlist:${item.id}`,
+    name: item.name || "Untitled playlist",
+    owner: item.owner?.display_name || "Spotify playlist",
+    imageUrl: item.images?.[0]?.url || null,
+    trackCount: Number(item.tracks?.total || 0)
+  };
+}
+
+async function spotifyApiJson<T>(clientId: string, endpoint: string, options: RequestInit = {}): Promise<T> {
+  const token = await getUsableToken(clientId);
+  if (!token) {
+    clearTokens();
+    throw new Error("Spotify disconnected. Please connect again.");
+  }
+
+  const response = await fetch(`https://api.spotify.com/v1${endpoint}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(options.headers || {})
+    }
+  });
+
+  if (response.status === 401) {
+    clearTokens();
+    throw new Error("Spotify session expired. Please connect again.");
+  }
+
+  if (response.status === 403) {
+    throw new Error("Spotify denied this request. Reconnect Spotify if new browser permissions were added, and confirm the account has access.");
+  }
+
+  if (response.status === 404) {
+    throw new Error("Spotify could not find that item or no active Spotify device is available.");
+  }
+
+  if (response.status === 429) {
+    const retryAfter = response.headers.get("Retry-After") || "30";
+    throw new Error(`Spotify rate limited this browser action. Retry after ${retryAfter} seconds.`);
+  }
+
+  if (!response.ok) {
+    let detail = "";
+    try {
+      const errorJson = await response.json();
+      detail = errorJson?.error?.message ? `: ${errorJson.error.message}` : "";
+    } catch {
+      detail = "";
+    }
+    throw new Error(`Spotify request failed (${response.status})${detail}`);
+  }
+
+  if (response.status === 204) return {} as T;
+  return (await response.json()) as T;
+}
+
+export async function searchSpotifyCatalog(
+  clientId: string,
+  query: string,
+  type: "track" | "playlist" | "all" = "all",
+  limit = 10
+): Promise<{ tracks: SpotifyCatalogTrack[]; playlists: SpotifyCatalogPlaylist[] }> {
+  const cleanQuery = query.trim();
+  if (!cleanQuery) return { tracks: [], playlists: [] };
+
+  const searchTypes = type === "all" ? "track,playlist" : type;
+  const endpoint = `/search?${new URLSearchParams({
+    q: cleanQuery,
+    type: searchTypes,
+    limit: String(Math.max(1, Math.min(20, limit)))
+  }).toString()}`;
+  const json = await spotifyApiJson<SpotifySearchResponse>(clientId, endpoint);
+
+  return {
+    tracks: (json.tracks?.items || []).map(normalizeCatalogTrack).filter((item): item is SpotifyCatalogTrack => Boolean(item)),
+    playlists: (json.playlists?.items || []).map(normalizeCatalogPlaylist).filter((item): item is SpotifyCatalogPlaylist => Boolean(item))
+  };
+}
+
+export async function getUserPlaylists(clientId: string, limit = 30): Promise<SpotifyCatalogPlaylist[]> {
+  const endpoint = `/me/playlists?${new URLSearchParams({
+    limit: String(Math.max(1, Math.min(50, limit)))
+  }).toString()}`;
+  const json = await spotifyApiJson<SpotifyPlaylistsResponse>(clientId, endpoint);
+  return (json.items || []).map(normalizeCatalogPlaylist).filter((item): item is SpotifyCatalogPlaylist => Boolean(item));
+}
+
+export async function getPlaylistTracks(clientId: string, playlistId: string, limit = 50): Promise<SpotifyCatalogTrack[]> {
+  const endpoint = `/playlists/${encodeURIComponent(playlistId)}/tracks?${new URLSearchParams({
+    limit: String(Math.max(1, Math.min(100, limit))),
+    fields: "items(track(id,name,uri,duration_ms,artists(name),album(name,images)))"
+  }).toString()}`;
+  const json = await spotifyApiJson<SpotifyPlaylistTracksResponse>(clientId, endpoint);
+  return (json.items || [])
+    .map((item) => normalizeCatalogTrack(item.track))
+    .filter((item): item is SpotifyCatalogTrack => Boolean(item));
+}
+
+export async function getSavedTracks(clientId: string, limit = 30): Promise<SpotifyCatalogTrack[]> {
+  const endpoint = `/me/tracks?${new URLSearchParams({
+    limit: String(Math.max(1, Math.min(50, limit)))
+  }).toString()}`;
+  const json = await spotifyApiJson<SpotifySavedTracksResponse>(clientId, endpoint);
+  return (json.items || [])
+    .map((item) => normalizeCatalogTrack(item.track))
+    .filter((item): item is SpotifyCatalogTrack => Boolean(item));
+}
+
+export async function getRecentlyPlayed(clientId: string, limit = 30): Promise<SpotifyCatalogTrack[]> {
+  const endpoint = `/me/player/recently-played?${new URLSearchParams({
+    limit: String(Math.max(1, Math.min(50, limit)))
+  }).toString()}`;
+  const json = await spotifyApiJson<SpotifyRecentlyPlayedResponse>(clientId, endpoint);
+  return (json.items || [])
+    .map((item) => normalizeCatalogTrack(item.track))
+    .filter((item): item is SpotifyCatalogTrack => Boolean(item));
+}
+
+export async function playSpotifyUri(clientId: string, uri: string): Promise<void> {
+  await spotifyPlayerCommand(clientId, "/play", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uris: [uri] })
+  });
+}
+
+export async function playSpotifyContext(clientId: string, contextUri: string, trackUri?: string): Promise<void> {
+  await spotifyPlayerCommand(clientId, "/play", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      context_uri: contextUri,
+      ...(trackUri ? { offset: { uri: trackUri } } : {})
+    })
+  });
+}
+
+export async function addSpotifyUriToQueue(clientId: string, uri: string): Promise<void> {
+  await spotifyPlayerCommand(clientId, `/queue?${new URLSearchParams({ uri }).toString()}`, { method: "POST" });
 }
