@@ -167,14 +167,13 @@ export function renderShell(state: AppState): void {
 
           <div id="spotifyPlaylistsPane" class="spotify-browser-pane">
             <div class="spotify-browser-toolbar">
-              <button id="loadPlaylistsButton" class="spotify-browser-action" type="button">Load My Playlists</button>
               <select id="playlistSortSelect" class="spotify-search-type spotify-sort-select" aria-label="Playlist sort">
                 <option value="recent" selected>Recent / Pinned</option>
                 <option value="alpha">A-Z</option>
               </select>
               <button id="playlistBackButton" class="spotify-browser-action secondary" type="button">Back</button>
             </div>
-            <div id="spotifyPlaylistsResults" class="spotify-browser-results spotify-browser-empty">Load My Playlists.</div>
+            <div id="spotifyPlaylistsResults" class="spotify-browser-results spotify-browser-empty">My Playlists will load automatically.</div>
           </div>
 
           <div id="spotifyLibraryPane" class="spotify-browser-pane">

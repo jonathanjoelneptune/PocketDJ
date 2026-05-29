@@ -2,7 +2,7 @@ import "./styles.css";
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getRecentlyPlayed, getSavedTracks, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack } from "./spotify/spotifyClient";
+import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getRecentlyPlayed, getSavedTracks, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import {
   emptyLyrics,
@@ -357,7 +357,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v55";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v56";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -384,6 +384,7 @@ async function boot(): Promise<void> {
 
   if (loadTokens()) {
     await pollSpotifyNow();
+    void loadPlaylists();
     scheduleNextPoll(6000);
   } else {
     updatePlaybackUi(state.playback, state.debugOpen);
@@ -1032,12 +1033,11 @@ function renderPlaylistRows(containerId: string, playlists: SpotifyCatalogPlayli
       <article class="spotify-result-row spotify-playlist-row${pinned ? " spotify-playlist-pinned" : ""}" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
         <div class="spotify-result-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "<span>▤</span>"}</div>
         <div class="spotify-result-copy">
-          <div class="spotify-result-title">${pinned ? "★ " : ""}${escapeHtmlInline(playlist.name)}</div>
+          <button class="spotify-result-title spotify-result-title-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">${pinned ? "★ " : ""}${escapeHtmlInline(playlist.name)}</button>
           <div class="spotify-result-subtitle">${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks • ${recentLabel}</div>
         </div>
-        <button class="spotify-row-button secondary" type="button" data-action="pin-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">${pinned ? "Unpin" : "Pin"}</button>
-        <button class="spotify-row-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Open</button>
-        <button class="spotify-row-button secondary" type="button" data-action="play-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
+        <button class="spotify-row-button" type="button" data-action="play-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
+        <button class="spotify-row-button secondary" type="button" data-action="shuffle-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Shuffle</button>
       </article>
     `;
   }).join("");
@@ -1051,7 +1051,7 @@ function renderArtistRows(artists: SpotifyCatalogArtist[]): string {
       <article class="spotify-result-row spotify-artist-row" data-artist-id="${escapeHtmlInline(artist.id)}" data-uri="${escapeHtmlInline(artist.uri)}">
         <div class="spotify-result-art spotify-result-art-round">${artist.imageUrl ? `<img src="${escapeHtmlInline(artist.imageUrl)}" alt="" />` : "<span>◎</span>"}</div>
         <div class="spotify-result-copy">
-          <div class="spotify-result-title">${escapeHtmlInline(artist.name)}</div>
+          <button class="spotify-result-title spotify-result-title-button" type="button" data-action="artist-top-tracks" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}">${escapeHtmlInline(artist.name)}</button>
           <div class="spotify-result-subtitle">${artist.followers ? `${artist.followers.toLocaleString()} followers` : "Artist"}</div>
         </div>
         <button class="spotify-row-button" type="button" data-action="artist-top-tracks" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}">Top Tracks</button>
@@ -1068,7 +1068,7 @@ function renderSearchResults(): void {
       <article class="spotify-result-row spotify-track-row" data-uri="${escapeHtmlInline(track.uri)}">
         <div class="spotify-result-art">${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "<span>♪</span>"}</div>
         <div class="spotify-result-copy">
-          <div class="spotify-result-title">${escapeHtmlInline(track.name)}</div>
+          <button class="spotify-result-title spotify-result-title-button" type="button" data-action="play-uri" data-uri="${escapeHtmlInline(track.uri)}">${escapeHtmlInline(track.name)}</button>
           <div class="spotify-result-subtitle">${escapeHtmlInline(track.artists)}${track.album ? ` • ${escapeHtmlInline(track.album)}` : ""}</div>
         </div>
         <div class="spotify-result-duration">${formatDurationMs(track.durationMs)}</div>
@@ -1088,12 +1088,11 @@ function renderSearchResults(): void {
         <article class="spotify-result-row spotify-playlist-row${pinned ? " spotify-playlist-pinned" : ""}" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
           <div class="spotify-result-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "<span>▤</span>"}</div>
           <div class="spotify-result-copy">
-            <div class="spotify-result-title">${pinned ? "★ " : ""}${escapeHtmlInline(playlist.name)}</div>
+            <button class="spotify-result-title spotify-result-title-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">${pinned ? "★ " : ""}${escapeHtmlInline(playlist.name)}</button>
             <div class="spotify-result-subtitle">${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</div>
           </div>
-          <button class="spotify-row-button secondary" type="button" data-action="pin-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">${pinned ? "Unpin" : "Pin"}</button>
-          <button class="spotify-row-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Open</button>
-          <button class="spotify-row-button secondary" type="button" data-action="play-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
+          <button class="spotify-row-button" type="button" data-action="play-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
+          <button class="spotify-row-button secondary" type="button" data-action="shuffle-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Shuffle</button>
         </article>
       `;
     }).join(""));
@@ -1216,7 +1215,10 @@ async function openArtistTopTracks(artistId: string, artistName: string): Promis
 
 function bindSpotifyBrowserControls(): void {
   qs<HTMLButtonElement>("#spotifyTabSearch").addEventListener("click", () => setSpotifyBrowserTab("search"));
-  qs<HTMLButtonElement>("#spotifyTabPlaylists").addEventListener("click", () => setSpotifyBrowserTab("playlists"));
+  qs<HTMLButtonElement>("#spotifyTabPlaylists").addEventListener("click", () => {
+    setSpotifyBrowserTab("playlists");
+    if (!spotifyBrowserPlaylists.length && !spotifyBrowserBusy) void loadPlaylists();
+  });
   qs<HTMLButtonElement>("#spotifyTabLibrary").addEventListener("click", () => setSpotifyBrowserTab("library"));
 
   qs<HTMLButtonElement>("#spotifySearchButton").addEventListener("click", () => {
@@ -1230,7 +1232,7 @@ function bindSpotifyBrowserControls(): void {
     }
   });
 
-  qs<HTMLButtonElement>("#loadPlaylistsButton").addEventListener("click", () => {
+  document.querySelector<HTMLButtonElement>("#loadPlaylistsButton")?.addEventListener("click", () => {
     void loadPlaylists();
   });
 
@@ -1289,9 +1291,23 @@ function bindSpotifyBrowserControls(): void {
     if (action === "play-context" && uri) {
       void runSpotifyBrowserAction(async () => {
         if (playlistId) rememberPlaylistUse(playlistId);
+        phase2ShuffleEnabled = false;
+        await setSpotifyShuffle(state.spotifyClientId, false);
         await playSpotifyContext(state.spotifyClientId, uri);
+        updatePhase2SpotifyControls();
         await pollSpotifyNow();
         setSpotifyBrowserStatus("Playing playlist.", false);
+      });
+    }
+
+    if (action === "shuffle-context" && uri) {
+      void runSpotifyBrowserAction(async () => {
+        if (playlistId) rememberPlaylistUse(playlistId);
+        phase2ShuffleEnabled = true;
+        await playSpotifyContextShuffled(state.spotifyClientId, uri);
+        updatePhase2SpotifyControls();
+        await pollSpotifyNow();
+        setSpotifyBrowserStatus("Shuffling playlist.", false);
       });
     }
 

@@ -5580,3 +5580,84 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .spotify-artist-row {
   grid-template-columns: 42px minmax(0, 1fr) auto;
 }
+
+
+/* v56 Spotify menu usability and darker utility panel theme */
+.control-card {
+  background:
+    linear-gradient(180deg, rgba(3, 3, 5, 0.88), rgba(5, 5, 8, 0.80)) !important;
+  border-color: rgba(255, 184, 76, 0.12) !important;
+}
+
+.dev-tools,
+.room-utility-controls,
+.spotify-browser {
+  background:
+    linear-gradient(180deg, rgba(3, 3, 5, 0.72), rgba(6, 6, 9, 0.58)) !important;
+  border-color: rgba(255, 184, 76, 0.12) !important;
+}
+
+.spotify-result-title-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff0c2;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotify-result-title-button:hover {
+  color: #ffdf9a;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 184, 76, 0.45);
+  text-underline-offset: 3px;
+}
+
+.control-card,
+.spotify-browser-results,
+.room-utility-controls,
+.dev-tools {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 184, 76, 0.48) rgba(6, 6, 9, 0.50);
+}
+
+.control-card::-webkit-scrollbar,
+.spotify-browser-results::-webkit-scrollbar,
+.room-utility-controls::-webkit-scrollbar,
+.dev-tools::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.control-card::-webkit-scrollbar-track,
+.spotify-browser-results::-webkit-scrollbar-track,
+.room-utility-controls::-webkit-scrollbar-track,
+.dev-tools::-webkit-scrollbar-track {
+  background: rgba(6, 6, 9, 0.55);
+  border-radius: 999px;
+}
+
+.control-card::-webkit-scrollbar-thumb,
+.spotify-browser-results::-webkit-scrollbar-thumb,
+.room-utility-controls::-webkit-scrollbar-thumb,
+.dev-tools::-webkit-scrollbar-thumb {
+  background:
+    linear-gradient(180deg, rgba(255, 184, 76, 0.62), rgba(92, 59, 12, 0.68));
+  border-radius: 999px;
+  border: 2px solid rgba(6, 6, 9, 0.80);
+}
+
+.control-card::-webkit-scrollbar-thumb:hover,
+.spotify-browser-results::-webkit-scrollbar-thumb:hover,
+.room-utility-controls::-webkit-scrollbar-thumb:hover,
+.dev-tools::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(180deg, rgba(255, 218, 155, 0.78), rgba(135, 84, 20, 0.78));
+}

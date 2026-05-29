@@ -511,6 +511,11 @@ export async function playSpotifyContext(clientId: string, contextUri: string, t
   });
 }
 
+export async function playSpotifyContextShuffled(clientId: string, contextUri: string): Promise<void> {
+  await setSpotifyShuffle(clientId, true);
+  await playSpotifyContext(clientId, contextUri);
+}
+
 export async function addSpotifyUriToQueue(clientId: string, uri: string): Promise<void> {
   await spotifyPlayerCommand(clientId, `/queue?${new URLSearchParams({ uri }).toString()}`, { method: "POST" });
 }
