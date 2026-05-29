@@ -337,7 +337,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v51";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v52";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -381,7 +381,7 @@ function bindControls(): void {
     lyricsEnabled = !lyricsEnabled;
     const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
     const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
-    updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled);
+    updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, track.isPlaying || track.source === "demo");
   });
 
 
@@ -1037,6 +1037,7 @@ function bindRoomUtilityControls(): void {
   sceneFilter.addEventListener("change", () => {
     roomUtility = { ...roomUtility, sceneFilter: sceneFilter.value as SceneFilter };
     applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
   });
 
   lyricPosterMaxRows.addEventListener("change", () => {
@@ -1151,6 +1152,11 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--panel-start-y", `${roomUtility.panelStartY}%`);
   root.style.setProperty("--panel-start-y-ratio", String(roomUtility.panelStartY / 100));
   root.classList.toggle("panel-height-adjust-enabled", roomUtility.panelHeightAdjustEnabled);
+
+  const filterOverlay = document.querySelector<HTMLElement>("#roomFilterOverlay");
+  if (filterOverlay) {
+    filterOverlay.className = `room-filter-overlay ${roomUtility.sceneFilter}`;
+  }
 
   root.style.setProperty("--lyric-poster-guide-opacity", String(roomUtility.lyricPosterGuideOpacity));
   root.style.setProperty("--lyric-poster-center-guide-opacity", String(roomUtility.lyricPosterCenterGuideOpacity));
@@ -1333,7 +1339,7 @@ async function refreshLyricsForCurrentTrack(): Promise<void> {
   if (!key || track.source === "none") {
     lyricsState = emptyLyrics("idle");
     lyricsFetchKey = "";
-    updateLyricsCeiling(lyricsState, 0, -1, lyricsEnabled);
+    updateLyricsCeiling(lyricsState, 0, -1, lyricsEnabled, false);
     return;
   }
 
@@ -1341,12 +1347,12 @@ async function refreshLyricsForCurrentTrack(): Promise<void> {
 
   lyricsFetchKey = key;
   lyricsState = { ...emptyLyrics("loading"), trackKey: key };
-  updateLyricsCeiling(lyricsState, getEstimatedPlaybackProgress(track), -1, lyricsEnabled);
+  updateLyricsCeiling(lyricsState, getEstimatedPlaybackProgress(track), -1, lyricsEnabled, track.isPlaying || track.source === "demo");
 
   lyricsState = await fetchLyricsForTrack(track);
   const lyricProgressMs = getEstimatedPlaybackProgress(track);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
-  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled);
+  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, track.isPlaying || track.source === "demo");
 }
 
 async function pollSpotifyNow(): Promise<void> {
@@ -1390,7 +1396,7 @@ function tick(): void {
 
   const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
-  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled);
+  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, track.isPlaying || track.source === "demo");
 
   requestAnimationFrame(tick);
 }

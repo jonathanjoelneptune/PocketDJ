@@ -6,6 +6,7 @@ import { formatMs, qs } from "./utils/dom";
 let lastLyricsRenderSignature = "";
 let previousLyricPosterText = "";
 let lyricPosterTransitionFlip = false;
+let lyricClearFadeTimer: number | null = null;
 
 type MarqueeState = "empty" | "paused" | "playing";
 
@@ -1054,6 +1055,7 @@ export function updateLyricsCeiling(
   playbackMs: number,
   activeIndex: number,
   enabled = true,
+  playbackActive = true,
 ): void {
   const ceiling = qs<HTMLElement>("#lyricsCeiling");
   const activeBlock = qs<HTMLElement>("#activeLyricsBlock");
@@ -1067,11 +1069,27 @@ export function updateLyricsCeiling(
 
   const clearLyrics = () => {
     lastLyricsRenderSignature = "";
-    activeBlock.innerHTML = "";
     activeBlock.style.setProperty("--lyric-line-visibility", "0");
+
+    if (lyricClearFadeTimer) {
+      window.clearTimeout(lyricClearFadeTimer);
+      lyricClearFadeTimer = null;
+    }
+
+    if (activeBlock.innerHTML.trim()) {
+      lyricClearFadeTimer = window.setTimeout(() => {
+        activeBlock.innerHTML = "";
+        lyricClearFadeTimer = null;
+      }, 650);
+    }
   };
 
   if (!shouldShow) {
+    clearLyrics();
+    return;
+  }
+
+  if (!playbackActive) {
     clearLyrics();
     return;
   }
@@ -1111,6 +1129,10 @@ export function updateLyricsCeiling(
   }
 
   lastLyricsRenderSignature = renderSignature;
+  if (lyricClearFadeTimer) {
+    window.clearTimeout(lyricClearFadeTimer);
+    lyricClearFadeTimer = null;
+  }
   activeBlock.style.setProperty("--lyric-line-visibility", "1");
 
   const ceilingRect = ceiling.getBoundingClientRect();
