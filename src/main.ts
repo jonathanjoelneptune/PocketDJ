@@ -434,7 +434,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64b";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64c";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -453,6 +453,7 @@ async function boot(): Promise<void> {
   if (state.spotifyClientId) {
     try {
       await handleSpotifyCallback(state.spotifyClientId, state.redirectUri);
+      schedulePostConnectPlaybackRefresh();
     } catch (error) {
       lastPollError = error instanceof Error ? error.message : String(error);
       console.warn(lastPollError);
@@ -463,6 +464,7 @@ async function boot(): Promise<void> {
     await pollSpotifyNow();
     void initializePocketDjBrowserDevice();
     void refreshSpotifyDevices();
+    schedulePostConnectPlaybackRefresh();
     void loadHome();
     void loadPlaylists();
     scheduleNextPoll(6000);
@@ -471,6 +473,18 @@ async function boot(): Promise<void> {
   }
 
   requestAnimationFrame(tick);
+}
+
+
+
+function schedulePostConnectPlaybackRefresh(): void {
+  window.setTimeout(() => {
+    if (!useDemo && loadTokens()) void pollSpotifyNow();
+  }, 600);
+
+  window.setTimeout(() => {
+    if (!useDemo && loadTokens()) void pollSpotifyNow();
+  }, 1800);
 }
 
 
@@ -536,6 +550,8 @@ function revealDevToolsByLockClicks(): void {
 
 
 function bindControls(): void {
+  qs<HTMLButtonElement>("#compactPanelToggle").addEventListener("click", () => setCompactPanelEnabled(!compactPanelEnabled));
+
   qs<HTMLButtonElement>("#panelToggle").addEventListener("click", () => {
     openSidePanel(true);
   });
@@ -1012,7 +1028,28 @@ async function runSpotifyPlaybackCommand(command: () => Promise<void>): Promise<
     await pollSpotifyNow();
     setFloorControlsOpen(true);
   } catch (error) {
-    lastPollError = error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : String(error);
+    const lowerMessage = message.toLowerCase();
+    const canAutoStartPocketDj =
+      lowerMessage.includes("no active spotify device") ||
+      lowerMessage.includes("no active") ||
+      lowerMessage.includes("device");
+
+    if (canAutoStartPocketDj) {
+      try {
+        lastPollError = "";
+        await transferToPocketDjBrowser(true);
+        await command();
+        await pollSpotifyNow();
+        setFloorControlsOpen(true);
+        return;
+      } catch (fallbackError) {
+        lastPollError = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+      }
+    } else {
+      lastPollError = message;
+    }
+
     console.warn(lastPollError);
     updatePlaybackUi({ ...state.playback, artist: `${state.playback.artist} | ${lastPollError}` }, state.debugOpen);
   }
@@ -1478,10 +1515,17 @@ function renderSearchResults(): void {
 
 function renderHome(recentTracks: SpotifyCatalogTrack[], playlists: SpotifyCatalogPlaylist[]): void {
   const container = qs<HTMLElement>("#spotifyHomeResults");
-  const playlistTiles = sortPlaylists(playlists, "recent").slice(0, 6).map((playlist) => `
-    <button class="spotify-home-tile" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">
-      <span>${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "▤"}</span>
-      <strong>${escapeHtmlInline(playlist.name)}</strong>
+  const albumMap = new Map<string, SpotifyCatalogTrack>();
+  recentTracks.forEach((track) => {
+    const key = `${track.album}__${track.artists}`;
+    if (track.album && !albumMap.has(key)) albumMap.set(key, track);
+  });
+
+  const recentAlbums = [...albumMap.values()].slice(0, 8).map((track) => `
+    <button class="spotify-home-tile spotify-home-album-tile" type="button" data-action="play-uri" data-uri="${escapeHtmlInline(track.uri)}">
+      <span>${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "▣"}</span>
+      <strong>${escapeHtmlInline(track.album || track.name)}</strong>
+      <em>${escapeHtmlInline(track.artists)}</em>
     </button>
   `).join("");
 
@@ -1495,11 +1539,11 @@ function renderHome(recentTracks: SpotifyCatalogTrack[], playlists: SpotifyCatal
 
   container.innerHTML = `
     <div class="spotify-home-section">
-      <div class="spotify-result-group-title">Good to see you</div>
-      <div class="spotify-home-grid">${playlistTiles || "<div class='spotify-browser-empty'>Playlists will appear after loading.</div>"}</div>
+      <div class="spotify-result-group-title">Recently played albums</div>
+      <div class="spotify-home-grid">${recentAlbums || "<div class='spotify-browser-empty'>Recent albums will appear after Spotify returns them.</div>"}</div>
     </div>
     <div class="spotify-home-section">
-      <div class="spotify-result-group-title">Recently played</div>
+      <div class="spotify-result-group-title">Recently played songs</div>
       <div class="spotify-home-list">${recentRows || "<div class='spotify-browser-empty'>Recent tracks will appear after Spotify returns them.</div>"}</div>
     </div>
   `;
@@ -1665,6 +1709,7 @@ async function openArtistTopTracks(artistId: string, artistName: string): Promis
 
 function bindSpotifyBrowserControls(): void {
   qs<HTMLButtonElement>("#spotifyPlayHereButton").addEventListener("click", (event) => {
+    event.preventDefault();
     event.stopPropagation();
     void runSpotifyBrowserAction(async () => {
       await transferToPocketDjBrowser(true);

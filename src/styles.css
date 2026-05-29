@@ -6246,3 +6246,56 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     0 0 28px rgba(255,191,71,0.28),
     inset 0 0 28px rgba(255,191,71,0.12) !important;
 }
+
+
+/* v64C player/menu fixes */
+.control-card {
+  right: calc(((100vw - var(--room-w)) / 2) + clamp(10px, calc(var(--room-w) * 0.010), 18px)) !important;
+  max-width: min(370px, calc(var(--room-w) - 20px)) !important;
+}
+
+.control-card-hidden {
+  transform: translateX(calc(100% + clamp(36px, calc(var(--room-w) * 0.035), 58px))) !important;
+}
+
+.control-card-compact-mode {
+  width: min(370px, calc(var(--room-w) * 0.34)) !important;
+  max-height: none !important;
+}
+
+.control-card-compact-mode .now-card {
+  margin-bottom: 0 !important;
+}
+
+.spotify-result-title,
+.spotify-result-title-button,
+.spotify-device-name,
+.spotify-home-row strong,
+.spotify-home-tile strong {
+  font-size: clamp(0.50rem, calc(var(--room-w) * 0.0049), 0.74rem) !important;
+  line-height: 1.16 !important;
+}
+
+.spotify-result-subtitle,
+.spotify-device-meta,
+.spotify-home-row em,
+.spotify-home-tile em {
+  font-size: clamp(0.46rem, calc(var(--room-w) * 0.0042), 0.62rem) !important;
+}
+
+.spotify-home-album-tile {
+  grid-template-rows: auto auto;
+}
+
+.spotify-home-album-tile span {
+  grid-row: 1 / span 2;
+}
+
+.spotify-home-album-tile em {
+  color: rgba(255, 220, 170, 0.60);
+  font-style: normal;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
