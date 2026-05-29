@@ -65,6 +65,8 @@ let panelAutoHiddenAfterConnect = false;
 let compactPanelEnabled = false;
 let devToolsClickTimer: number | null = null;
 let devToolsClickCount = 0;
+let devToolsLockClickCount = 0;
+let devToolsLockClickTimer: number | null = null;
 let sidePanelLocked = false;
 let sidePanelHideTimer: number | null = null;
 let floorControlsOpen = false;
@@ -432,7 +434,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64a2";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64b";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -508,6 +510,31 @@ function revealDevToolsByTripleClick(): void {
 }
 
 
+
+function revealDevToolsByLockClicks(): void {
+  devToolsLockClickCount += 1;
+  if (devToolsLockClickTimer) window.clearTimeout(devToolsLockClickTimer);
+  devToolsLockClickTimer = window.setTimeout(() => {
+    devToolsLockClickCount = 0;
+    devToolsLockClickTimer = null;
+  }, 1100);
+
+  if (devToolsLockClickCount >= 5) {
+    devToolsLockClickCount = 0;
+    if (devToolsLockClickTimer) {
+      window.clearTimeout(devToolsLockClickTimer);
+      devToolsLockClickTimer = null;
+    }
+
+    const devTools = document.querySelector<HTMLDetailsElement>("#devToolsPanel");
+    if (devTools) {
+      devTools.classList.toggle("dev-tools-visible");
+      devTools.open = devTools.classList.contains("dev-tools-visible");
+    }
+  }
+}
+
+
 function bindControls(): void {
   qs<HTMLButtonElement>("#panelToggle").addEventListener("click", () => {
     openSidePanel(true);
@@ -523,6 +550,7 @@ function bindControls(): void {
 
   qs<HTMLButtonElement>("#panelLockToggle").addEventListener("click", () => {
     setSidePanelLocked(!sidePanelLocked);
+    revealDevToolsByLockClicks();
   });
 
   const controlCard = qs<HTMLElement>("#controlCard");
@@ -1636,7 +1664,8 @@ async function openArtistTopTracks(artistId: string, artistName: string): Promis
 }
 
 function bindSpotifyBrowserControls(): void {
-  qs<HTMLButtonElement>("#spotifyPlayHereButton").addEventListener("click", () => {
+  qs<HTMLButtonElement>("#spotifyPlayHereButton").addEventListener("click", (event) => {
+    event.stopPropagation();
     void runSpotifyBrowserAction(async () => {
       await transferToPocketDjBrowser(true);
     });

@@ -6138,3 +6138,111 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .dev-tools.dev-tools-visible {
   display: block;
 }
+
+
+/* v64B Part 2: locked header, safer inner scroll, source row cleanup */
+.control-card {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  top: calc(((100vh - var(--room-h)) / 2) + (var(--room-h) * var(--panel-start-y-ratio))) !important;
+}
+
+.brand-row,
+.now-card {
+  flex: 0 0 auto !important;
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+.panel-scroll-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  display: block !important;
+  padding-right: 2px;
+  pointer-events: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 184, 76, 0.48) rgba(6, 6, 9, 0.50);
+}
+
+.panel-scroll-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.panel-scroll-body::-webkit-scrollbar-track {
+  background: rgba(6, 6, 9, 0.55);
+  border-radius: 999px;
+}
+
+.panel-scroll-body::-webkit-scrollbar-thumb {
+  background:
+    linear-gradient(180deg, rgba(255, 184, 76, 0.62), rgba(92, 59, 12, 0.68));
+  border-radius: 999px;
+  border: 2px solid rgba(6, 6, 9, 0.80);
+}
+
+.spotify-source-summary {
+  width: auto !important;
+  gap: 0.55rem !important;
+  justify-content: flex-start !important;
+}
+
+.spotify-source-summary::after {
+  margin-left: 0.15rem !important;
+  order: 2;
+}
+
+.spotify-play-here-inline {
+  order: 3;
+  margin-left: 0.35rem;
+  padding: 0.42rem 0.62rem !important;
+}
+
+.spotify-source-header {
+  margin-top: 0.55rem !important;
+}
+
+.spotify-source-title {
+  display: none !important;
+}
+
+.control-card-compact-mode .panel-scroll-body {
+  display: none !important;
+}
+
+/* Extended hover target for opening the panel. Disabled while panel is open by existing class logic. */
+.side-panel-tab {
+  top: calc(((100vh - var(--room-h)) / 2) + (var(--room-h) * var(--panel-start-y-ratio))) !important;
+  bottom: calc((100vh - var(--room-h)) / 2) !important;
+  height: auto !important;
+  transform: none !important;
+  width: clamp(38px, calc(var(--room-w) * 0.030), 54px) !important;
+  background:
+    linear-gradient(180deg, rgba(30, 20, 12, 0.82), rgba(6, 8, 15, 0.76)),
+    radial-gradient(circle at 50% 18%, rgba(255,191,71,0.22), transparent 40%) !important;
+  box-shadow:
+    -12px 0 34px rgba(0,0,0,0.34),
+    0 0 20px rgba(255,191,71,0.18),
+    inset 0 0 24px rgba(255,191,71,0.08) !important;
+}
+
+.side-panel-tab-visible {
+  opacity: 0.84 !important;
+  pointer-events: auto !important;
+}
+
+.side-panel-tab:not(.side-panel-tab-visible) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.side-panel-tab:hover {
+  opacity: 1 !important;
+  transform: translateX(-3px) !important;
+  box-shadow:
+    -14px 0 40px rgba(0,0,0,0.36),
+    0 0 28px rgba(255,191,71,0.28),
+    inset 0 0 28px rgba(255,191,71,0.12) !important;
+}

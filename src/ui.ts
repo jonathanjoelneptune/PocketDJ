@@ -153,18 +153,15 @@ export function renderShell(state: AppState): void {
           </div>
         </div>
 
-
+        <div id="panelScrollBody" class="panel-scroll-body">
         <section class="spotify-browser" id="spotifyBrowserPanel" aria-label="Spotify browser">
           <details class="spotify-source-panel" id="spotifySourcePanel">
-            <summary class="spotify-source-summary">Playback Source</summary>
+            <summary class="spotify-source-summary">
+              <span>Playback Source</span>
+              <button id="spotifyPlayHereButton" class="spotify-browser-action spotify-play-here-inline" type="button">Play Here</button>
+            </summary>
             <div class="spotify-source-header">
-              <div>
-                <div class="spotify-source-title">Playback Source</div>
-                <div id="spotifyActiveDeviceLabel" class="spotify-source-active">Audio output: Spotify Connect</div>
-              </div>
-              <div class="spotify-source-actions">
-                <button id="spotifyPlayHereButton" class="spotify-browser-action" type="button">Play Here</button>
-              </div>
+              <div id="spotifyActiveDeviceLabel" class="spotify-source-active">Audio output: Spotify Connect</div>
             </div>
             <div id="spotifySourceStatus" class="spotify-browser-status spotify-source-status">Connect Spotify, then activate Pocket DJ.</div>
             <div id="spotifyDeviceList" class="spotify-device-list"></div>
@@ -751,6 +748,7 @@ export function renderShell(state: AppState): void {
 
           <pre id="debugPanel" class="debug-panel" hidden></pre>
         </details>
+        </div>
       </aside>
 
       <button id="sidePanelTab" class="side-panel-tab" type="button" aria-label="Open Pocket DJ panel" title="Open Pocket DJ panel">
