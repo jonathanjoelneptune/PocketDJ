@@ -6379,3 +6379,39 @@ body.lyrics-marquee-unavailable .marquee::after {
 .control-card-compact-mode .panel-scroll-body {
   display: none !important;
 }
+
+
+/* v64F comprehensive menu sizing fix
+   The panel is anchored to the 16:9 room edge and scales from room width.
+   Full and compact use the same width; compact only reduces height/content. */
+.control-card,
+.control-card.control-card-compact-mode {
+  right: calc(((100vw - var(--room-w)) / 2) + clamp(10px, calc(var(--room-w) * 0.010), 18px)) !important;
+  width: clamp(390px, calc(var(--room-w) * 0.31), 540px) !important;
+  max-width: min(540px, calc(var(--room-w) - 28px)) !important;
+  min-width: min(390px, calc(var(--room-w) - 28px)) !important;
+}
+
+.control-card-hidden {
+  transform: translateX(calc(100% + clamp(36px, calc(var(--room-w) * 0.035), 58px))) !important;
+}
+
+.control-card-compact-mode {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(var(--room-h) - (var(--room-h) * var(--panel-start-y-ratio)) - 18px) !important;
+}
+
+.control-card-compact-mode .panel-scroll-body {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .control-card,
+  .control-card.control-card-compact-mode {
+    width: calc(var(--room-w) - 24px) !important;
+    max-width: calc(var(--room-w) - 24px) !important;
+    min-width: 0 !important;
+    right: calc(((100vw - var(--room-w)) / 2) + 12px) !important;
+  }
+}

@@ -21,7 +21,7 @@ type SpotifyTrackItem = {
   name: string;
   duration_ms: number;
   artists?: SpotifyArtist[];
-  album?: { name?: string; images?: SpotifyImage[] };
+  album?: { name?: string; uri?: string; images?: SpotifyImage[] };
 };
 
 type CurrentlyPlayingResponse = {
@@ -294,7 +294,9 @@ export type SpotifyCatalogTrack = {
   uri: string;
   name: string;
   artists: string;
+  artistId: string | null;
   album: string;
+  albumUri: string | null;
   albumArtUrl: string | null;
   durationMs: number;
 };
@@ -379,7 +381,9 @@ function normalizeCatalogTrack(item: SpotifyTrackItem | null | undefined): Spoti
     uri: `spotify:track:${item.id}`,
     name: item.name || "Untitled track",
     artists: item.artists?.map((artist) => artist.name).filter(Boolean).join(", ") || "Unknown artist",
+    artistId: item.artists?.[0]?.id || null,
     album: item.album?.name || "",
+    albumUri: item.album?.uri || null,
     albumArtUrl: item.album?.images?.[0]?.url || null,
     durationMs: Number(item.duration_ms || 0)
   };

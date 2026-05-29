@@ -120,6 +120,7 @@ let spotifySearchType: "track" | "artist" | "playlist" | "album" | "all" = "all"
 let spotifySearchOffset = 0;
 let spotifyBrowserPlaylists: SpotifyCatalogPlaylist[] = [];
 let currentPlaylistTracks: SpotifyCatalogTrack[] = [];
+let currentHomeTracks: SpotifyCatalogTrack[] = [];
 let currentLibraryTracks: SpotifyCatalogTrack[] = [];
 let recentTrackIds: string[] = [];
 let pinnedPlaylistIds = loadSpotifyPinnedPlaylists();
@@ -434,7 +435,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64e";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64f";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -1368,6 +1369,61 @@ function setSpotifyBrowserTab(tab: SpotifyBrowserTab): void {
   qs<HTMLButtonElement>("#spotifyTabSearch").classList.toggle("spotify-browser-tab-active", tab === "search");
 }
 
+
+function allKnownSpotifyTracks(): SpotifyCatalogTrack[] {
+  return [
+    ...currentHomeTracks,
+    ...spotifyBrowserTracks,
+    ...currentPlaylistTracks,
+    ...currentLibraryTracks,
+  ];
+}
+
+function findKnownTrackByUri(uri: string): SpotifyCatalogTrack | null {
+  return allKnownSpotifyTracks().find((track) => track.uri === uri) || null;
+}
+
+async function queueRelevantTracksAfter(track: SpotifyCatalogTrack | null): Promise<void> {
+  if (!track?.artistId) return;
+  try {
+    const related = await getArtistTopTracks(state.spotifyClientId, track.artistId);
+    const queueCandidates = related
+      .filter((candidate) => candidate.uri !== track.uri)
+      .slice(0, 8);
+
+    for (const candidate of queueCandidates) {
+      await addSpotifyUriToQueue(state.spotifyClientId, candidate.uri);
+    }
+  } catch (error) {
+    console.warn("Could not queue related tracks.", error);
+  }
+}
+
+async function playTrackWithContinuation(uri: string): Promise<void> {
+  const knownTrack = findKnownTrackByUri(uri);
+
+  if (selectedPlaylist && currentPlaylistTracks.some((track) => track.uri === uri)) {
+    rememberPlaylistUse(selectedPlaylist.id);
+    phase2ShuffleEnabled = false;
+    await setSpotifyShuffle(state.spotifyClientId, false);
+    await playSpotifyContext(state.spotifyClientId, selectedPlaylist.uri, uri);
+    updatePhase2SpotifyControls();
+    return;
+  }
+
+  if (knownTrack?.albumUri) {
+    await setSpotifyShuffle(state.spotifyClientId, false);
+    await playSpotifyContext(state.spotifyClientId, knownTrack.albumUri, uri);
+    await queueRelevantTracksAfter(knownTrack);
+    updatePhase2SpotifyControls();
+    return;
+  }
+
+  await playSpotifyUri(state.spotifyClientId, uri);
+  await queueRelevantTracksAfter(knownTrack);
+}
+
+
 function renderTrackRows(containerId: string, tracks: SpotifyCatalogTrack[], emptyMessage: string, sort: SpotifyBrowserSort = "recent"): void {
   const container = qs<HTMLElement>(`#${containerId}`);
   const visibleTracks = sortTracks(tracks, sort);
@@ -1673,6 +1729,7 @@ async function loadHome(): Promise<void> {
       spotifyBrowserPlaylists.length ? Promise.resolve(spotifyBrowserPlaylists) : getUserPlaylists(state.spotifyClientId, 120)
     ]);
     recentTrackIds = recent.map((track) => track.id);
+    currentHomeTracks = recent;
     spotifyBrowserPlaylists = playlists;
     renderHome(recent, playlists);
     setSpotifyBrowserStatus("Home loaded.", false);
@@ -1798,9 +1855,9 @@ function bindSpotifyBrowserControls(): void {
 
     if (action === "play-uri" && uri) {
       void runSpotifyBrowserAction(async () => {
-        await playSpotifyUri(state.spotifyClientId, uri);
+        await playTrackWithContinuation(uri);
         await pollSpotifyNow();
-        setSpotifyBrowserStatus("Playing selected track.", false);
+        setSpotifyBrowserStatus("Playing selected track with continuation.", false);
       });
     }
 
