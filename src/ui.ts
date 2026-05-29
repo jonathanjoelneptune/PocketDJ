@@ -163,6 +163,21 @@ export function renderShell(state: AppState): void {
 
           <div id="spotifyBrowserStatus" class="spotify-browser-status">Home, Playlists, Vibes, and Search are ready.</div>
 
+          <section class="spotify-source-panel" id="spotifySourcePanel" aria-label="Spotify playback source">
+            <div class="spotify-source-header">
+              <div>
+                <div class="spotify-source-title">Playback Source</div>
+                <div id="spotifyActiveDeviceLabel" class="spotify-source-active">Audio output: Spotify Connect</div>
+              </div>
+              <div class="spotify-source-actions">
+                <button id="spotifyPlayHereButton" class="spotify-browser-action" type="button">Play Here</button>
+                <button id="spotifyRefreshDevicesButton" class="spotify-browser-action secondary" type="button">Refresh</button>
+              </div>
+            </div>
+            <div id="spotifySourceStatus" class="spotify-browser-status spotify-source-status">Connect Spotify, then activate Pocket DJ Browser.</div>
+            <div id="spotifyDeviceList" class="spotify-device-list"></div>
+          </section>
+
           <div id="spotifyHomePane" class="spotify-browser-pane spotify-browser-pane-active">
             <div id="spotifyHomeResults" class="spotify-browser-results spotify-home-results spotify-browser-empty">Home will load suggestions after Spotify connects.</div>
           </div>

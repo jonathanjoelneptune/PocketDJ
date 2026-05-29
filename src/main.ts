@@ -2,7 +2,7 @@ import "./styles.css";
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getRecentlyPlayed, getSavedTracks, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack } from "./spotify/spotifyClient";
+import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import {
   emptyLyrics,
@@ -15,6 +15,39 @@ import { qs } from "./utils/dom";
 import { renderShell, setControlPanelOpen, updateLyricsCeiling, updateLyricsToggleUi, updatePlaybackUi } from "./ui";
 
 const STANDARD_SPOTIFY_CLIENT_ID = "37da51db24384ad3a07c222f71b1525e";
+const SPOTIFY_WEB_PLAYBACK_SDK_URL = "https://sdk.scdn.co/spotify-player.js";
+const POCKET_DJ_DEVICE_NAME = "Pocket DJ Browser";
+const PREFERRED_SPOTIFY_SOURCE_KEY = "pocketdj-preferred-spotify-source-v1";
+
+type SpotifyWebPlaybackPlayer = {
+  addListener: (event: string, callback: (payload: any) => void) => boolean;
+  connect: () => Promise<boolean>;
+  disconnect: () => void;
+  activateElement?: () => Promise<void>;
+};
+
+declare global {
+  interface Window {
+    Spotify?: {
+      Player: new (options: {
+        name: string;
+        getOAuthToken: (callback: (token: string) => void) => void;
+        volume?: number;
+      }) => SpotifyWebPlaybackPlayer;
+    };
+    onSpotifyWebPlaybackSDKReady?: () => void;
+  }
+}
+
+let webPlaybackSdkPromise: Promise<void> | null = null;
+let pocketDjPlayer: SpotifyWebPlaybackPlayer | null = null;
+let pocketDjDeviceId: string | null = null;
+let pocketDjDeviceReady = false;
+let pocketDjDeviceActive = false;
+let lastSpotifyDevices: SpotifyDevice[] = [];
+let preferredSpotifySource = localStorage.getItem(PREFERRED_SPOTIFY_SOURCE_KEY) || "";
+let lastDeviceRefreshAt = 0;
+
 
 const state: AppState = {
   spotifyClientId: loadClientId() || STANDARD_SPOTIFY_CLIENT_ID,
@@ -396,7 +429,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v62";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v63";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -423,6 +456,8 @@ async function boot(): Promise<void> {
 
   if (loadTokens()) {
     await pollSpotifyNow();
+    void initializePocketDjBrowserDevice();
+    void refreshSpotifyDevices();
     void loadHome();
     void loadPlaylists();
     scheduleNextPoll(6000);
@@ -501,11 +536,19 @@ function bindControls(): void {
 
   qs<HTMLButtonElement>("#disconnectSpotify").addEventListener("click", () => {
     disconnectSpotify();
+    pocketDjPlayer?.disconnect();
+    pocketDjPlayer = null;
+    pocketDjDeviceId = null;
+    pocketDjDeviceReady = false;
+    pocketDjDeviceActive = false;
+    lastSpotifyDevices = [];
     stopDemo();
     useDemo = false;
     state.playback = emptyTrack();
     panelAutoHiddenAfterConnect = false;
     openSidePanel(true);
+    setPocketDjSourceStatus("Spotify disconnected. Connect again to use Pocket DJ Browser.");
+    renderSpotifySourcePanel();
     updatePlaybackUi(state.playback, state.debugOpen);
     qs<HTMLElement>("#connectDropdown").classList.remove("connect-dropdown-open");
   });
@@ -920,6 +963,189 @@ function updatePhase2SpotifyControls(): void {
 
   volume.value = String(phase2Volume);
   qs<HTMLElement>("#spotifyVolumeValue").textContent = String(phase2Volume);
+}
+
+
+
+function setPocketDjSourceStatus(message: string): void {
+  const status = document.querySelector<HTMLElement>("#spotifySourceStatus");
+  if (status) status.textContent = message;
+}
+
+function renderSpotifySourcePanel(): void {
+  const deviceList = document.querySelector<HTMLElement>("#spotifyDeviceList");
+  const playHereButton = document.querySelector<HTMLButtonElement>("#spotifyPlayHereButton");
+  const activeLabel = document.querySelector<HTMLElement>("#spotifyActiveDeviceLabel");
+  if (!deviceList || !playHereButton || !activeLabel) return;
+
+  playHereButton.disabled = !loadTokens();
+  activeLabel.textContent = pocketDjDeviceActive
+    ? "Audio output: Pocket DJ Browser"
+    : "Audio output: Spotify Connect";
+
+  const devices = [...lastSpotifyDevices];
+  const hasPocketDevice = pocketDjDeviceId && devices.some((device) => device.id === pocketDjDeviceId);
+  if (pocketDjDeviceId && !hasPocketDevice) {
+    devices.unshift({
+      id: pocketDjDeviceId,
+      is_active: pocketDjDeviceActive,
+      is_private_session: false,
+      is_restricted: false,
+      name: POCKET_DJ_DEVICE_NAME,
+      type: "Computer",
+      volume_percent: phase2Volume
+    });
+  }
+
+  if (!devices.length) {
+    deviceList.innerHTML = `<div class="spotify-browser-empty">No Spotify Connect devices found yet. Open Spotify or activate Pocket DJ Browser.</div>`;
+    return;
+  }
+
+  deviceList.innerHTML = devices.map((device) => {
+    const isPocketDevice = Boolean(pocketDjDeviceId && device.id === pocketDjDeviceId);
+    const isActive = Boolean(device.is_active || (isPocketDevice && pocketDjDeviceActive));
+    const label = isPocketDevice ? `${device.name} ✦` : device.name;
+    const type = device.type || "Device";
+    return `
+      <button class="spotify-device-row${isActive ? " spotify-device-row-active" : ""}${isPocketDevice ? " spotify-device-row-pocket" : ""}" type="button" data-device-id="${escapeHtmlInline(device.id || "")}" ${device.id ? "" : "disabled"}>
+        <span class="spotify-device-name">${escapeHtmlInline(label)}</span>
+        <span class="spotify-device-meta">${escapeHtmlInline(type)}${isActive ? " • active" : ""}</span>
+      </button>
+    `;
+  }).join("");
+}
+
+function loadSpotifyWebPlaybackSdk(): Promise<void> {
+  if (window.Spotify?.Player) return Promise.resolve();
+  if (webPlaybackSdkPromise) return webPlaybackSdkPromise;
+
+  webPlaybackSdkPromise = new Promise((resolve, reject) => {
+    const existingScript = document.querySelector<HTMLScriptElement>('script[src="https://sdk.scdn.co/spotify-player.js"]');
+    const previousReady = window.onSpotifyWebPlaybackSDKReady;
+
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      previousReady?.();
+      resolve();
+    };
+
+    if (existingScript) {
+      existingScript.addEventListener("error", () => reject(new Error("Could not load Spotify Web Playback SDK.")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = SPOTIFY_WEB_PLAYBACK_SDK_URL;
+    script.async = true;
+    script.addEventListener("error", () => reject(new Error("Could not load Spotify Web Playback SDK.")), { once: true });
+    document.head.appendChild(script);
+  });
+
+  return webPlaybackSdkPromise;
+}
+
+async function initializePocketDjBrowserDevice(): Promise<void> {
+  if (!state.spotifyClientId || !loadTokens()) {
+    setPocketDjSourceStatus("Connect Spotify before activating Pocket DJ Browser.");
+    renderSpotifySourcePanel();
+    return;
+  }
+
+  if (pocketDjPlayer && pocketDjDeviceReady) {
+    renderSpotifySourcePanel();
+    return;
+  }
+
+  await loadSpotifyWebPlaybackSdk();
+  if (!window.Spotify?.Player) throw new Error("Spotify Web Playback SDK did not initialize.");
+
+  if (!pocketDjPlayer) {
+    pocketDjPlayer = new window.Spotify.Player({
+      name: POCKET_DJ_DEVICE_NAME,
+      volume: phase2Volume / 100,
+      getOAuthToken: (callback) => {
+        void getSpotifyAccessToken(state.spotifyClientId)
+          .then((token) => callback(token || ""))
+          .catch(() => callback(""));
+      }
+    });
+
+    pocketDjPlayer.addListener("ready", ({ device_id }: { device_id: string }) => {
+      pocketDjDeviceId = device_id;
+      pocketDjDeviceReady = true;
+      setPocketDjSourceStatus("Pocket DJ Browser is ready as a Spotify Connect device.");
+      void refreshSpotifyDevices();
+    });
+
+    pocketDjPlayer.addListener("not_ready", ({ device_id }: { device_id: string }) => {
+      if (pocketDjDeviceId === device_id) {
+        pocketDjDeviceReady = false;
+        pocketDjDeviceActive = false;
+      }
+      setPocketDjSourceStatus("Pocket DJ Browser device went offline. Refresh or reconnect Spotify.");
+      renderSpotifySourcePanel();
+    });
+
+    pocketDjPlayer.addListener("player_state_changed", (payload: any) => {
+      pocketDjDeviceActive = Boolean(payload);
+      renderSpotifySourcePanel();
+    });
+
+    ["initialization_error", "authentication_error", "account_error", "playback_error"].forEach((eventName) => {
+      pocketDjPlayer?.addListener(eventName, (payload: { message?: string }) => {
+        setPocketDjSourceStatus(payload?.message || `Spotify Web Playback ${eventName.replace("_", " ")}.`);
+        renderSpotifySourcePanel();
+      });
+    });
+  }
+
+  setPocketDjSourceStatus("Activating Pocket DJ Browser device...");
+  const connected = await pocketDjPlayer.connect();
+  if (!connected) throw new Error("Spotify could not activate Pocket DJ Browser. Confirm this Spotify account has Premium.");
+  renderSpotifySourcePanel();
+}
+
+async function refreshSpotifyDevices(): Promise<void> {
+  if (!state.spotifyClientId || !loadTokens()) {
+    lastSpotifyDevices = [];
+    renderSpotifySourcePanel();
+    return;
+  }
+
+  try {
+    lastSpotifyDevices = await getSpotifyDevices(state.spotifyClientId);
+    pocketDjDeviceActive = Boolean(pocketDjDeviceId && lastSpotifyDevices.some((device) => device.id === pocketDjDeviceId && device.is_active));
+    renderSpotifySourcePanel();
+  } catch (error) {
+    setPocketDjSourceStatus(error instanceof Error ? error.message : String(error));
+    renderSpotifySourcePanel();
+  }
+}
+
+async function transferToPocketDjBrowser(play = true): Promise<void> {
+  await initializePocketDjBrowserDevice();
+  if (!pocketDjPlayer || !pocketDjDeviceId) {
+    throw new Error("Pocket DJ Browser is not ready yet.");
+  }
+
+  await pocketDjPlayer.activateElement?.();
+  await transferSpotifyPlayback(state.spotifyClientId, pocketDjDeviceId, play);
+  preferredSpotifySource = "pocket-dj-browser";
+  localStorage.setItem(PREFERRED_SPOTIFY_SOURCE_KEY, preferredSpotifySource);
+  pocketDjDeviceActive = true;
+  setPocketDjSourceStatus("Playing through Pocket DJ Browser.");
+  await refreshSpotifyDevices();
+  await pollSpotifyNow();
+}
+
+async function transferToSpotifyDevice(deviceId: string): Promise<void> {
+  if (!deviceId) return;
+  await transferSpotifyPlayback(state.spotifyClientId, deviceId, true);
+  preferredSpotifySource = deviceId === pocketDjDeviceId ? "pocket-dj-browser" : deviceId;
+  localStorage.setItem(PREFERRED_SPOTIFY_SOURCE_KEY, preferredSpotifySource);
+  setPocketDjSourceStatus("Spotify playback source changed.");
+  await refreshSpotifyDevices();
+  await pollSpotifyNow();
 }
 
 
@@ -1370,6 +1596,25 @@ async function openArtistTopTracks(artistId: string, artistName: string): Promis
 }
 
 function bindSpotifyBrowserControls(): void {
+  qs<HTMLButtonElement>("#spotifyPlayHereButton").addEventListener("click", () => {
+    void runSpotifyBrowserAction(async () => {
+      await transferToPocketDjBrowser(true);
+    });
+  });
+
+  qs<HTMLButtonElement>("#spotifyRefreshDevicesButton").addEventListener("click", () => {
+    void refreshSpotifyDevices();
+  });
+
+  qs<HTMLElement>("#spotifyDeviceList").addEventListener("click", (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-device-id]");
+    if (!button) return;
+    const deviceId = button.dataset.deviceId || "";
+    void runSpotifyBrowserAction(async () => {
+      await transferToSpotifyDevice(deviceId);
+    });
+  });
+
   qs<HTMLButtonElement>("#spotifyTabHome").addEventListener("click", () => {
     setSpotifyBrowserTab("home");
     void loadHome();
@@ -2101,6 +2346,11 @@ async function pollSpotifyNow(): Promise<void> {
     state.playback = await getCurrentlyPlaying(state.spotifyClientId);
     updatePlaybackUi(state.playback, state.debugOpen);
     void refreshLyricsForCurrentTrack();
+
+    if (Date.now() - lastDeviceRefreshAt > 12_000) {
+      lastDeviceRefreshAt = Date.now();
+      void refreshSpotifyDevices();
+    }
 
     if (state.playback.isAuthenticated && !panelAutoHiddenAfterConnect) {
       panelAutoHiddenAfterConnect = true;

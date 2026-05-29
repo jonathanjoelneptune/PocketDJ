@@ -10,7 +10,8 @@ export const spotifyScopes = [
   "playlist-read-private",
   "playlist-read-collaborative",
   "user-library-read",
-  "user-read-recently-played"
+  "user-read-recently-played",
+  "streaming"
 ];
 
 type SpotifyImage = { url: string; height?: number; width?: number };
@@ -116,6 +117,10 @@ async function getUsableToken(clientId: string): Promise<string | null> {
     tokens = await refreshAccessToken(clientId, tokens);
   }
   return tokens?.accessToken || null;
+}
+
+export async function getSpotifyAccessToken(clientId: string): Promise<string | null> {
+  return getUsableToken(clientId);
 }
 
 
@@ -579,4 +584,94 @@ export async function getArtistTopTracks(clientId: string, artistId: string): Pr
   return (json.tracks || [])
     .map(normalizeCatalogTrack)
     .filter((item): item is SpotifyCatalogTrack => Boolean(item));
+}
+
+
+export type SpotifyDevice = {
+  id: string | null;
+  is_active: boolean;
+  is_private_session: boolean;
+  is_restricted: boolean;
+  name: string;
+  type: string;
+  volume_percent: number | null;
+};
+
+type SpotifyDevicesResponse = {
+  devices?: SpotifyDevice[];
+};
+
+export async function getSpotifyDevices(clientId: string): Promise<SpotifyDevice[]> {
+  const token = await getUsableToken(clientId);
+  if (!token) {
+    clearTokens();
+    throw new Error("Spotify disconnected. Please connect again.");
+  }
+
+  const response = await fetch("https://api.spotify.com/v1/me/player/devices", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (response.status === 401) {
+    clearTokens();
+    throw new Error("Spotify session expired. Please connect again.");
+  }
+
+  if (response.status === 403) {
+    throw new Error("Spotify denied device access. Reconnect Spotify and confirm Premium is active.");
+  }
+
+  if (response.status === 429) {
+    const retryAfter = response.headers.get("Retry-After") || "30";
+    throw new Error(`Spotify rate limited device requests. Retry after ${retryAfter} seconds.`);
+  }
+
+  if (!response.ok) {
+    throw new Error(`Spotify devices request failed (${response.status}).`);
+  }
+
+  const json = (await response.json()) as SpotifyDevicesResponse;
+  return json.devices || [];
+}
+
+export async function transferSpotifyPlayback(clientId: string, deviceId: string, play = true): Promise<void> {
+  const token = await getUsableToken(clientId);
+  if (!token) {
+    clearTokens();
+    throw new Error("Spotify disconnected. Please connect again.");
+  }
+
+  const response = await fetch("https://api.spotify.com/v1/me/player", {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      device_ids: [deviceId],
+      play
+    })
+  });
+
+  if (response.status === 401) {
+    clearTokens();
+    throw new Error("Spotify session expired. Please connect again.");
+  }
+
+  if (response.status === 403) {
+    throw new Error("Spotify playback transfer requires Premium. Confirm this account has Premium and reconnect if needed.");
+  }
+
+  if (response.status === 404) {
+    throw new Error("Spotify could not find that playback device. Refresh devices and try again.");
+  }
+
+  if (response.status === 429) {
+    const retryAfter = response.headers.get("Retry-After") || "30";
+    throw new Error(`Spotify rate limited device transfer. Retry after ${retryAfter} seconds.`);
+  }
+
+  if (!response.ok && response.status !== 204) {
+    throw new Error(`Spotify playback transfer failed (${response.status}).`);
+  }
 }

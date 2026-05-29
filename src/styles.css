@@ -5920,3 +5920,120 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .song-change-album-layer:not(.song-change-album-has-art) {
   opacity: 0 !important;
 }
+
+
+/* v63 Spotify Web Playback / source selector */
+.spotify-source-panel {
+  margin: 0.65rem 0 0.75rem;
+  padding: 0.72rem;
+  border: 1px solid rgba(255, 184, 76, 0.14);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(5, 5, 8, 0.78), rgba(10, 8, 11, 0.58));
+  box-shadow:
+    inset 0 0 16px rgba(255, 184, 76, 0.035),
+    0 12px 26px rgba(0, 0, 0, 0.18);
+}
+
+.spotify-source-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.spotify-source-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.07em;
+  color: #ffdf9a;
+  text-transform: uppercase;
+}
+
+.spotify-source-active,
+.spotify-source-status {
+  margin-top: 0.25rem;
+  color: rgba(255, 220, 170, 0.62);
+  font-size: 0.64rem;
+  line-height: 1.35;
+}
+
+.spotify-source-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.spotify-device-list {
+  display: grid;
+  gap: 0.38rem;
+  margin-top: 0.55rem;
+  max-height: 160px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 184, 76, 0.48) rgba(6, 6, 9, 0.50);
+}
+
+.spotify-device-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: center;
+  width: 100%;
+  border: 1px solid rgba(255, 184, 76, 0.12);
+  border-radius: 12px;
+  background: rgba(8, 8, 11, 0.64);
+  color: #fff0c2;
+  text-align: left;
+  padding: 0.48rem 0.58rem;
+  cursor: pointer;
+}
+
+.spotify-device-row:hover {
+  border-color: rgba(255, 218, 155, 0.38);
+  background: rgba(28, 21, 17, 0.72);
+}
+
+.spotify-device-row-active {
+  border-color: rgba(255, 184, 76, 0.50);
+  background:
+    linear-gradient(180deg, rgba(92, 59, 12, 0.54), rgba(14, 10, 12, 0.68));
+  box-shadow:
+    0 0 14px rgba(255, 184, 76, 0.10),
+    inset 0 0 14px rgba(255, 184, 76, 0.07);
+}
+
+.spotify-device-row-pocket .spotify-device-name {
+  color: #ffdf9a;
+}
+
+.spotify-device-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 800;
+}
+
+.spotify-device-meta {
+  color: rgba(255, 220, 170, 0.54);
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
+.spotify-device-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.spotify-device-list::-webkit-scrollbar-track {
+  background: rgba(6, 6, 9, 0.55);
+  border-radius: 999px;
+}
+
+.spotify-device-list::-webkit-scrollbar-thumb {
+  background:
+    linear-gradient(180deg, rgba(255, 184, 76, 0.62), rgba(92, 59, 12, 0.68));
+  border-radius: 999px;
+  border: 2px solid rgba(6, 6, 9, 0.80);
+}
