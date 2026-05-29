@@ -469,7 +469,8 @@ export async function searchSpotifyCatalog(
   clientId: string,
   query: string,
   type: "track" | "artist" | "playlist" | "album" | "all" = "all",
-  limit = 10
+  limit = 10,
+  offset = 0
 ): Promise<{ tracks: SpotifyCatalogTrack[]; artists: SpotifyCatalogArtist[]; playlists: SpotifyCatalogPlaylist[]; albums: SpotifyCatalogAlbum[] }> {
   const cleanQuery = query.trim();
   if (!cleanQuery) return { tracks: [], artists: [], playlists: [], albums: [] };
@@ -478,7 +479,8 @@ export async function searchSpotifyCatalog(
   const endpoint = `/search?${new URLSearchParams({
     q: cleanQuery,
     type: searchTypes,
-    limit: String(Math.max(1, Math.min(20, limit)))
+    limit: String(Math.max(1, Math.min(20, limit))),
+    offset: String(Math.max(0, offset))
   }).toString()}`;
   const json = await spotifyApiJson<SpotifySearchResponse>(clientId, endpoint);
 
@@ -490,12 +492,25 @@ export async function searchSpotifyCatalog(
   };
 }
 
-export async function getUserPlaylists(clientId: string, limit = 30): Promise<SpotifyCatalogPlaylist[]> {
-  const endpoint = `/me/playlists?${new URLSearchParams({
-    limit: String(Math.max(1, Math.min(50, limit)))
-  }).toString()}`;
-  const json = await spotifyApiJson<SpotifyPlaylistsResponse>(clientId, endpoint);
-  return (json.items || []).map(normalizeCatalogPlaylist).filter((item): item is SpotifyCatalogPlaylist => Boolean(item));
+export async function getUserPlaylists(clientId: string, limit = 200): Promise<SpotifyCatalogPlaylist[]> {
+  const all: SpotifyCatalogPlaylist[] = [];
+  const pageSize = 50;
+  let offset = 0;
+  const maxToLoad = Math.max(1, Math.min(500, limit));
+
+  while (all.length < maxToLoad) {
+    const endpoint = `/me/playlists?${new URLSearchParams({
+      limit: String(Math.min(pageSize, maxToLoad - all.length)),
+      offset: String(offset)
+    }).toString()}`;
+    const json = await spotifyApiJson<SpotifyPlaylistsResponse>(clientId, endpoint);
+    const page = (json.items || []).map(normalizeCatalogPlaylist).filter((item): item is SpotifyCatalogPlaylist => Boolean(item));
+    all.push(...page);
+    if (page.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  return all;
 }
 
 export async function getPlaylistTracks(clientId: string, playlistId: string, limit = 50): Promise<SpotifyCatalogTrack[]> {

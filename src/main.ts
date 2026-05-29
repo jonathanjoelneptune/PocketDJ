@@ -43,20 +43,43 @@ let lyricsEnabled = true;
 let lyricAnimationRevision = 0;
 
 
-type SpotifyBrowserTab = "search" | "playlists" | "library";
+type SpotifyBrowserTab = "home" | "playlists" | "vibes" | "search";
 type SpotifyBrowserSort = "recent" | "alpha" | "artist" | "album";
 type SpotifySearchResultTab = "tracks" | "artists" | "playlists" | "albums";
 
+type VibePreset = {
+  label: string;
+  query: string;
+};
+
 const SPOTIFY_PINNED_PLAYLISTS_KEY = "pocketdj-pinned-playlists-v1";
 const SPOTIFY_PLAYLIST_RECENCY_KEY = "pocketdj-playlist-recency-v1";
+const SEARCH_PAGE_SIZE = 10;
 
-let spotifyBrowserTab: SpotifyBrowserTab = "search";
+const VIBE_PRESETS: VibePreset[] = [
+  { label: "Late Night", query: 'genre:"r-n-b" OR genre:"chill"' },
+  { label: "House Party", query: 'genre:"dance" OR genre:"house"' },
+  { label: "Hip-Hop", query: 'genre:"hip-hop"' },
+  { label: "Pop", query: 'genre:"pop"' },
+  { label: "Throwbacks", query: 'year:1990-2012' },
+  { label: "Indie", query: 'genre:"indie"' },
+  { label: "Rock", query: 'genre:"rock"' },
+  { label: "Focus", query: 'genre:"ambient" OR genre:"study"' },
+  { label: "Workout", query: 'genre:"work-out" OR genre:"edm"' },
+  { label: "Smooth", query: 'genre:"soul" OR genre:"jazz"' }
+];
+
+let spotifyBrowserTab: SpotifyBrowserTab = "home";
 let spotifyBrowserBusy = false;
 let spotifyBrowserStatus = "";
 let spotifyBrowserTracks: SpotifyCatalogTrack[] = [];
 let spotifyBrowserArtists: SpotifyCatalogArtist[] = [];
 let spotifyBrowserAlbums: SpotifyCatalogAlbum[] = [];
+let spotifySearchPlaylists: SpotifyCatalogPlaylist[] = [];
 let spotifySearchResultTab: SpotifySearchResultTab = "tracks";
+let spotifySearchQuery = "";
+let spotifySearchType: "track" | "artist" | "playlist" | "album" | "all" = "all";
+let spotifySearchOffset = 0;
 let spotifyBrowserPlaylists: SpotifyCatalogPlaylist[] = [];
 let currentPlaylistTracks: SpotifyCatalogTrack[] = [];
 let currentLibraryTracks: SpotifyCatalogTrack[] = [];
@@ -64,7 +87,6 @@ let recentTrackIds: string[] = [];
 let pinnedPlaylistIds = loadSpotifyPinnedPlaylists();
 let playlistRecency = loadSpotifyPlaylistRecency();
 let selectedPlaylist: SpotifyCatalogPlaylist | null = null;
-
 
 type SceneFilter =
   | "none"
@@ -360,7 +382,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v57";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v58";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -387,6 +409,7 @@ async function boot(): Promise<void> {
 
   if (loadTokens()) {
     await pollSpotifyNow();
+    void loadHome();
     void loadPlaylists();
     scheduleNextPoll(6000);
   } else {
@@ -972,10 +995,6 @@ function getPlaylistSortMode(): SpotifyBrowserSort {
   return qs<HTMLSelectElement>("#playlistSortSelect").value as SpotifyBrowserSort;
 }
 
-function getLibrarySortMode(): SpotifyBrowserSort {
-  return qs<HTMLSelectElement>("#librarySortSelect").value as SpotifyBrowserSort;
-}
-
 function setSpotifyBrowserStatus(message: string, busy = false): void {
   spotifyBrowserStatus = message;
   spotifyBrowserBusy = busy;
@@ -986,13 +1005,15 @@ function setSpotifyBrowserStatus(message: string, busy = false): void {
 
 function setSpotifyBrowserTab(tab: SpotifyBrowserTab): void {
   spotifyBrowserTab = tab;
-  qs<HTMLElement>("#spotifySearchPane").classList.toggle("spotify-browser-pane-active", tab === "search");
+  qs<HTMLElement>("#spotifyHomePane").classList.toggle("spotify-browser-pane-active", tab === "home");
   qs<HTMLElement>("#spotifyPlaylistsPane").classList.toggle("spotify-browser-pane-active", tab === "playlists");
-  qs<HTMLElement>("#spotifyLibraryPane").classList.toggle("spotify-browser-pane-active", tab === "library");
+  qs<HTMLElement>("#spotifyVibesPane").classList.toggle("spotify-browser-pane-active", tab === "vibes");
+  qs<HTMLElement>("#spotifySearchPane").classList.toggle("spotify-browser-pane-active", tab === "search");
 
-  qs<HTMLButtonElement>("#spotifyTabSearch").classList.toggle("spotify-browser-tab-active", tab === "search");
+  qs<HTMLButtonElement>("#spotifyTabHome").classList.toggle("spotify-browser-tab-active", tab === "home");
   qs<HTMLButtonElement>("#spotifyTabPlaylists").classList.toggle("spotify-browser-tab-active", tab === "playlists");
-  qs<HTMLButtonElement>("#spotifyTabLibrary").classList.toggle("spotify-browser-tab-active", tab === "library");
+  qs<HTMLButtonElement>("#spotifyTabVibes").classList.toggle("spotify-browser-tab-active", tab === "vibes");
+  qs<HTMLButtonElement>("#spotifyTabSearch").classList.toggle("spotify-browser-tab-active", tab === "search");
 }
 
 function renderTrackRows(containerId: string, tracks: SpotifyCatalogTrack[], emptyMessage: string, sort: SpotifyBrowserSort = "recent"): void {
@@ -1086,10 +1107,6 @@ function renderAlbumRows(albums: SpotifyCatalogAlbum[]): string {
 
 function setSearchResultTab(tab: SpotifySearchResultTab): void {
   spotifySearchResultTab = tab;
-  ["tracks", "artists", "playlists", "albums"].forEach((candidate) => {
-    const button = document.querySelector<HTMLButtonElement>(`[data-search-result-tab="${candidate}"]`);
-    button?.classList.toggle("spotify-result-tab-active", candidate === tab);
-  });
   renderSearchResults();
 }
 
@@ -1099,12 +1116,20 @@ function searchTabLabel(tab: SpotifySearchResultTab, label: string, count: numbe
 
 function renderSearchResults(): void {
   const container = qs<HTMLElement>("#spotifySearchResults");
+  const total = spotifyBrowserTracks.length + spotifyBrowserArtists.length + spotifySearchPlaylists.length + spotifyBrowserAlbums.length;
   const tabs = `
     <div class="spotify-result-tabs">
       ${searchTabLabel("tracks", "Tracks", spotifyBrowserTracks.length)}
       ${searchTabLabel("artists", "Artists", spotifyBrowserArtists.length)}
-      ${searchTabLabel("playlists", "Playlists", spotifyBrowserPlaylists.length)}
+      ${searchTabLabel("playlists", "Playlists", spotifySearchPlaylists.length)}
       ${searchTabLabel("albums", "Albums", spotifyBrowserAlbums.length)}
+    </div>
+  `;
+  const pager = `
+    <div class="spotify-search-pager">
+      <button id="spotifySearchPrev" class="spotify-browser-action secondary" type="button" data-action="search-prev" ${spotifySearchOffset <= 0 ? "disabled" : ""}>‹ Prev 10</button>
+      <span>${spotifySearchQuery ? `Showing ${spotifySearchOffset + 1}-${spotifySearchOffset + SEARCH_PAGE_SIZE}` : "Search Spotify"}</span>
+      <button id="spotifySearchNext" class="spotify-browser-action secondary" type="button" data-action="search-next">Next 10 ›</button>
     </div>
   `;
 
@@ -1123,31 +1148,62 @@ function renderSearchResults(): void {
       </article>
     `).join("");
   }
-
   if (spotifySearchResultTab === "artists") body = renderArtistRows(spotifyBrowserArtists);
-
   if (spotifySearchResultTab === "playlists") {
-    body = sortPlaylists(spotifyBrowserPlaylists, "recent").map((playlist) => {
-      const pinned = pinnedPlaylistIds.has(playlist.id);
-      return `
-        <article class="spotify-result-row spotify-playlist-row${pinned ? " spotify-playlist-pinned" : ""}" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
-          <div class="spotify-result-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "<span>▤</span>"}</div>
-          <div class="spotify-result-copy">
-            <button class="spotify-result-title spotify-result-title-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">${pinned ? "★ " : ""}${escapeHtmlInline(playlist.name)}</button>
-            <div class="spotify-result-subtitle">${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</div>
-          </div>
-          <button class="spotify-row-button" type="button" data-action="play-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
-          <button class="spotify-row-button secondary" type="button" data-action="shuffle-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Shuffle</button>
-        </article>
-      `;
-    }).join("");
+    body = sortPlaylists(spotifySearchPlaylists, "recent").map((playlist) => `
+      <article class="spotify-result-row spotify-playlist-row" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
+        <div class="spotify-result-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "<span>▤</span>"}</div>
+        <div class="spotify-result-copy">
+          <button class="spotify-result-title spotify-result-title-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">${escapeHtmlInline(playlist.name)}</button>
+          <div class="spotify-result-subtitle">${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</div>
+        </div>
+        <button class="spotify-row-button" type="button" data-action="play-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
+        <button class="spotify-row-button secondary" type="button" data-action="shuffle-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Shuffle</button>
+      </article>
+    `).join("");
   }
-
   if (spotifySearchResultTab === "albums") body = renderAlbumRows(spotifyBrowserAlbums);
 
-  const total = spotifyBrowserTracks.length + spotifyBrowserArtists.length + spotifyBrowserPlaylists.length + spotifyBrowserAlbums.length;
   container.classList.toggle("spotify-browser-empty", total === 0);
-  container.innerHTML = total === 0 ? "No Spotify results found." : tabs + (body || `<div class="spotify-browser-empty spotify-result-tab-empty">No ${spotifySearchResultTab} found.</div>`);
+  container.innerHTML = total === 0 ? "Search results will show here." : pager + tabs + (body || `<div class="spotify-browser-empty spotify-result-tab-empty">No ${spotifySearchResultTab} found.</div>`);
+}
+
+function renderHome(recentTracks: SpotifyCatalogTrack[], playlists: SpotifyCatalogPlaylist[]): void {
+  const container = qs<HTMLElement>("#spotifyHomeResults");
+  const playlistTiles = sortPlaylists(playlists, "recent").slice(0, 6).map((playlist) => `
+    <button class="spotify-home-tile" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">
+      <span>${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "▤"}</span>
+      <strong>${escapeHtmlInline(playlist.name)}</strong>
+    </button>
+  `).join("");
+
+  const recentRows = sortTracks(recentTracks, "recent").slice(0, 6).map((track) => `
+    <button class="spotify-home-row" type="button" data-action="play-uri" data-uri="${escapeHtmlInline(track.uri)}">
+      <span>${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "♪"}</span>
+      <strong>${escapeHtmlInline(track.name)}</strong>
+      <em>${escapeHtmlInline(track.artists)}</em>
+    </button>
+  `).join("");
+
+  container.innerHTML = `
+    <div class="spotify-home-section">
+      <div class="spotify-result-group-title">Good to see you</div>
+      <div class="spotify-home-grid">${playlistTiles || "<div class='spotify-browser-empty'>Playlists will appear after loading.</div>"}</div>
+    </div>
+    <div class="spotify-home-section">
+      <div class="spotify-result-group-title">Recently played</div>
+      <div class="spotify-home-list">${recentRows || "<div class='spotify-browser-empty'>Recent tracks will appear after Spotify returns them.</div>"}</div>
+    </div>
+  `;
+}
+
+function renderVibes(): void {
+  qs<HTMLElement>("#spotifyVibesResults").innerHTML = VIBE_PRESETS.map((vibe) => `
+    <button class="spotify-vibe-card" type="button" data-action="play-vibe" data-vibe-query="${escapeHtmlInline(vibe.query)}">
+      <strong>${escapeHtmlInline(vibe.label)}</strong>
+      <span>Start a random ${escapeHtmlInline(vibe.label.toLowerCase())} track</span>
+    </button>
+  `).join("");
 }
 
 async function ensureRecentTrackIds(): Promise<void> {
@@ -1178,41 +1234,73 @@ async function runSpotifyBrowserAction(action: () => Promise<void>): Promise<voi
   }
 }
 
-async function performSpotifySearch(): Promise<void> {
+async function performSpotifySearch(resetPage = true): Promise<void> {
   const input = qs<HTMLInputElement>("#spotifySearchInput");
   const searchType = qs<HTMLSelectElement>("#spotifySearchType").value as "track" | "artist" | "playlist" | "album" | "all";
   const query = input.value.trim();
   if (!query) {
+    clearSpotifySearch();
     setSpotifyBrowserStatus("Type something to search Spotify.", false);
     return;
   }
 
+  if (resetPage || query !== spotifySearchQuery || searchType !== spotifySearchType) {
+    spotifySearchOffset = 0;
+  }
+
+  spotifySearchQuery = query;
+  spotifySearchType = searchType;
+
   await runSpotifyBrowserAction(async () => {
     await ensureRecentTrackIds();
-    const results = await searchSpotifyCatalog(state.spotifyClientId, query, searchType, 10);
+    const results = await searchSpotifyCatalog(state.spotifyClientId, query, searchType, SEARCH_PAGE_SIZE, spotifySearchOffset);
     spotifyBrowserTracks = results.tracks;
     spotifyBrowserArtists = results.artists;
-    spotifyBrowserPlaylists = results.playlists;
+    spotifySearchPlaylists = results.playlists;
     spotifyBrowserAlbums = results.albums;
-    spotifySearchResultTab = spotifyBrowserTracks.length ? "tracks" : spotifyBrowserArtists.length ? "artists" : spotifyBrowserPlaylists.length ? "playlists" : "albums";
+    spotifySearchResultTab = spotifyBrowserTracks.length ? "tracks" : spotifyBrowserArtists.length ? "artists" : spotifySearchPlaylists.length ? "playlists" : "albums";
     renderSearchResults();
     setSpotifyBrowserStatus(`Search complete for "${query}".`, false);
   });
+}
+
+function clearSpotifySearch(): void {
+  qs<HTMLInputElement>("#spotifySearchInput").value = "";
+  spotifySearchQuery = "";
+  spotifySearchOffset = 0;
+  spotifyBrowserTracks = [];
+  spotifyBrowserArtists = [];
+  spotifySearchPlaylists = [];
+  spotifyBrowserAlbums = [];
+  spotifySearchResultTab = "tracks";
+  renderSearchResults();
 }
 
 async function loadPlaylists(): Promise<void> {
   await runSpotifyBrowserAction(async () => {
     selectedPlaylist = null;
     currentPlaylistTracks = [];
-    spotifyBrowserPlaylists = await getUserPlaylists(state.spotifyClientId, 50);
+    spotifyBrowserPlaylists = await getUserPlaylists(state.spotifyClientId, 300);
     renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "No playlists returned.");
     qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
-    setSpotifyBrowserStatus(`Loaded ${spotifyBrowserPlaylists.length} playlists. Pinned and recently opened are first.`, false);
+    setSpotifyBrowserStatus(`Loaded ${spotifyBrowserPlaylists.length} playlists.`, false);
   });
 }
 
+function clearPlaylistSearch(): void {
+  qs<HTMLInputElement>("#playlistSearchInput").value = "";
+  if (selectedPlaylist) {
+    selectedPlaylist = null;
+    currentPlaylistTracks = [];
+    qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
+  }
+  renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "My Playlists will load automatically.");
+}
+
 async function openPlaylist(playlistId: string): Promise<void> {
-  const playlist = spotifyBrowserPlaylists.find((item) => item.id === playlistId) || null;
+  const playlist = spotifyBrowserPlaylists.find((item) => item.id === playlistId)
+    || spotifySearchPlaylists.find((item) => item.id === playlistId)
+    || null;
   selectedPlaylist = playlist;
   rememberPlaylistUse(playlistId);
 
@@ -1225,22 +1313,31 @@ async function openPlaylist(playlistId: string): Promise<void> {
   });
 }
 
-async function loadSavedSpotifyTracks(): Promise<void> {
+async function loadHome(): Promise<void> {
   await runSpotifyBrowserAction(async () => {
-    await ensureRecentTrackIds();
-    currentLibraryTracks = await getSavedTracks(state.spotifyClientId, 50);
-    renderTrackRows("spotifyLibraryResults", currentLibraryTracks, "No liked songs returned.", getLibrarySortMode());
-    setSpotifyBrowserStatus(`Loaded ${currentLibraryTracks.length} liked songs.`, false);
+    const [recent, playlists] = await Promise.all([
+      getRecentlyPlayed(state.spotifyClientId, 20),
+      spotifyBrowserPlaylists.length ? Promise.resolve(spotifyBrowserPlaylists) : getUserPlaylists(state.spotifyClientId, 120)
+    ]);
+    recentTrackIds = recent.map((track) => track.id);
+    spotifyBrowserPlaylists = playlists;
+    renderHome(recent, playlists);
+    setSpotifyBrowserStatus("Home loaded.", false);
   });
 }
 
-async function loadRecentSpotifyTracks(): Promise<void> {
+async function playVibe(query: string): Promise<void> {
   await runSpotifyBrowserAction(async () => {
-    const tracks = await getRecentlyPlayed(state.spotifyClientId, 50);
-    recentTrackIds = tracks.map((track) => track.id);
-    currentLibraryTracks = tracks;
-    renderTrackRows("spotifyLibraryResults", currentLibraryTracks, "No recently played tracks returned.", getLibrarySortMode());
-    setSpotifyBrowserStatus(`Loaded ${currentLibraryTracks.length} recently played tracks.`, false);
+    const offset = Math.floor(Math.random() * 40);
+    const results = await searchSpotifyCatalog(state.spotifyClientId, query, "track", 10, offset);
+    const pick = results.tracks[Math.floor(Math.random() * Math.max(1, results.tracks.length))];
+    if (!pick) {
+      setSpotifyBrowserStatus("No tracks found for that vibe.", false);
+      return;
+    }
+    await playSpotifyUri(state.spotifyClientId, pick.uri);
+    await pollSpotifyNow();
+    setSpotifyBrowserStatus(`Vibe started: ${pick.name}.`, false);
   });
 }
 
@@ -1249,7 +1346,9 @@ async function openArtistTopTracks(artistId: string, artistName: string): Promis
     const tracks = await getArtistTopTracks(state.spotifyClientId, artistId);
     spotifyBrowserTracks = tracks;
     spotifyBrowserArtists = [];
-    spotifyBrowserPlaylists = [];
+    spotifySearchPlaylists = [];
+    spotifyBrowserAlbums = [];
+    spotifySearchResultTab = "tracks";
     renderSearchResults();
     setSpotifyBrowserTab("search");
     setSpotifyBrowserStatus(`Loaded top tracks for ${artistName}.`, false);
@@ -1257,34 +1356,42 @@ async function openArtistTopTracks(artistId: string, artistName: string): Promis
 }
 
 function bindSpotifyBrowserControls(): void {
-  qs<HTMLButtonElement>("#spotifyTabSearch").addEventListener("click", () => setSpotifyBrowserTab("search"));
+  qs<HTMLButtonElement>("#spotifyTabHome").addEventListener("click", () => {
+    setSpotifyBrowserTab("home");
+    void loadHome();
+  });
+
   qs<HTMLButtonElement>("#spotifyTabPlaylists").addEventListener("click", () => {
     setSpotifyBrowserTab("playlists");
     if (selectedPlaylist) {
-      selectedPlaylist = null;
-      currentPlaylistTracks = [];
-      renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "My Playlists will load automatically.");
-      qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
-      setSpotifyBrowserStatus("Back to My Playlists.", false);
+      clearPlaylistSearch();
+      setSpotifyBrowserStatus("Back to Playlists.", false);
       return;
     }
     if (!spotifyBrowserPlaylists.length && !spotifyBrowserBusy) void loadPlaylists();
   });
-  qs<HTMLButtonElement>("#spotifyTabLibrary").addEventListener("click", () => setSpotifyBrowserTab("library"));
+
+  qs<HTMLButtonElement>("#spotifyTabVibes").addEventListener("click", () => {
+    setSpotifyBrowserTab("vibes");
+    renderVibes();
+  });
+
+  qs<HTMLButtonElement>("#spotifyTabSearch").addEventListener("click", () => setSpotifyBrowserTab("search"));
 
   qs<HTMLButtonElement>("#spotifySearchButton").addEventListener("click", () => {
-    void performSpotifySearch();
+    void performSpotifySearch(true);
+  });
+
+  qs<HTMLButtonElement>("#spotifyClearSearchButton").addEventListener("click", () => {
+    clearSpotifySearch();
+    setSpotifyBrowserStatus("Search cleared.", false);
   });
 
   qs<HTMLInputElement>("#spotifySearchInput").addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      void performSpotifySearch();
+      void performSpotifySearch(true);
     }
-  });
-
-  document.querySelector<HTMLButtonElement>("#loadPlaylistsButton")?.addEventListener("click", () => {
-    void loadPlaylists();
   });
 
   qs<HTMLSelectElement>("#playlistSortSelect").addEventListener("change", () => {
@@ -1296,26 +1403,16 @@ function bindSpotifyBrowserControls(): void {
     if (!selectedPlaylist) renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "No matching playlists.");
   });
 
-  qs<HTMLSelectElement>("#librarySortSelect").addEventListener("change", () => {
-    renderTrackRows("spotifyLibraryResults", currentLibraryTracks, "Choose liked songs or recently played tracks.", getLibrarySortMode());
+  qs<HTMLButtonElement>("#playlistClearSearchButton").addEventListener("click", () => {
+    clearPlaylistSearch();
+    setSpotifyBrowserStatus("Playlist search cleared.", false);
   });
 
   qs<HTMLButtonElement>("#playlistBackButton").addEventListener("click", () => {
-    selectedPlaylist = null;
-    currentPlaylistTracks = [];
-    renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "Load your Spotify playlists.");
-    qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
-    setSpotifyBrowserStatus("Back to My Playlists.", false);
+    clearPlaylistSearch();
+    setSpotifyBrowserStatus("Back to Playlists.", false);
   });
   qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
-
-  qs<HTMLButtonElement>("#loadSavedTracksButton").addEventListener("click", () => {
-    void loadSavedSpotifyTracks();
-  });
-
-  qs<HTMLButtonElement>("#loadRecentTracksButton").addEventListener("click", () => {
-    void loadRecentSpotifyTracks();
-  });
 
   qs<HTMLElement>("#spotifyBrowserPanel").addEventListener("click", (event) => {
     const target = event.target as HTMLElement;
@@ -1327,6 +1424,7 @@ function bindSpotifyBrowserControls(): void {
     const playlistId = button.dataset.playlistId || "";
     const artistId = button.dataset.artistId || "";
     const artistName = button.dataset.artistName || "artist";
+    const vibeQuery = button.dataset.vibeQuery || "";
 
     if (action === "play-uri" && uri) {
       void runSpotifyBrowserAction(async () => {
@@ -1351,7 +1449,7 @@ function bindSpotifyBrowserControls(): void {
         await playSpotifyContext(state.spotifyClientId, uri);
         updatePhase2SpotifyControls();
         await pollSpotifyNow();
-        setSpotifyBrowserStatus("Playing playlist.", false);
+        setSpotifyBrowserStatus("Playing selection.", false);
       });
     }
 
@@ -1362,22 +1460,13 @@ function bindSpotifyBrowserControls(): void {
         await playSpotifyContextShuffled(state.spotifyClientId, uri);
         updatePhase2SpotifyControls();
         await pollSpotifyNow();
-        setSpotifyBrowserStatus("Shuffling playlist.", false);
+        setSpotifyBrowserStatus("Shuffling selection.", false);
       });
     }
 
     if (action === "open-playlist" && playlistId) {
       setSpotifyBrowserTab("playlists");
       void openPlaylist(playlistId);
-    }
-
-    if (action === "pin-playlist" && playlistId) {
-      if (pinnedPlaylistIds.has(playlistId)) pinnedPlaylistIds.delete(playlistId);
-      else pinnedPlaylistIds.add(playlistId);
-      saveSpotifyPinnedPlaylists();
-      if (spotifyBrowserTab === "search") renderSearchResults();
-      else if (selectedPlaylist) renderTrackRows("spotifyPlaylistsResults", currentPlaylistTracks, "No tracks returned for this playlist.", getPlaylistSortMode());
-      else renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "Load your Spotify playlists.");
     }
 
     if (action === "artist-top-tracks" && artistId) {
@@ -1388,9 +1477,24 @@ function bindSpotifyBrowserControls(): void {
       const tab = button.dataset.searchResultTab as SpotifySearchResultTab | undefined;
       if (tab) setSearchResultTab(tab);
     }
+
+    if (action === "search-prev") {
+      spotifySearchOffset = Math.max(0, spotifySearchOffset - SEARCH_PAGE_SIZE);
+      void performSpotifySearch(false);
+    }
+
+    if (action === "search-next") {
+      spotifySearchOffset += SEARCH_PAGE_SIZE;
+      void performSpotifySearch(false);
+    }
+
+    if (action === "play-vibe" && vibeQuery) {
+      void playVibe(vibeQuery);
+    }
   });
 
-  setSpotifyBrowserTab("search");
+  setSpotifyBrowserTab("home");
+  renderVibes();
 }
 
 function bindRoomUtilityControls(): void {

@@ -144,16 +144,38 @@ export function renderShell(state: AppState): void {
 
         <section class="spotify-browser" id="spotifyBrowserPanel" aria-label="Spotify browser">
           <div class="spotify-browser-tabs" role="tablist" aria-label="Spotify browser tabs">
-            <button id="spotifyTabSearch" class="spotify-browser-tab spotify-browser-tab-active" type="button" data-browser-tab="search">Search</button>
-            <button id="spotifyTabPlaylists" class="spotify-browser-tab" type="button" data-browser-tab="playlists">My Playlists</button>
-            <button id="spotifyTabLibrary" class="spotify-browser-tab" type="button" data-browser-tab="library">My Library</button>
+            <button id="spotifyTabHome" class="spotify-browser-tab spotify-browser-tab-active" type="button" data-browser-tab="home">Home</button>
+            <button id="spotifyTabPlaylists" class="spotify-browser-tab" type="button" data-browser-tab="playlists">Playlists</button>
+            <button id="spotifyTabVibes" class="spotify-browser-tab" type="button" data-browser-tab="vibes">Vibes</button>
+            <button id="spotifyTabSearch" class="spotify-browser-tab" type="button" data-browser-tab="search">Search</button>
           </div>
 
-          <div id="spotifyBrowserStatus" class="spotify-browser-status">Search Spotify, browse My Playlists, or open My Library.</div>
+          <div id="spotifyBrowserStatus" class="spotify-browser-status">Home, Playlists, Vibes, and Search are ready.</div>
 
-          <div id="spotifySearchPane" class="spotify-browser-pane spotify-browser-pane-active">
+          <div id="spotifyHomePane" class="spotify-browser-pane spotify-browser-pane-active">
+            <div id="spotifyHomeResults" class="spotify-browser-results spotify-home-results spotify-browser-empty">Home will load suggestions after Spotify connects.</div>
+          </div>
+
+          <div id="spotifyPlaylistsPane" class="spotify-browser-pane">
+            <div class="spotify-browser-toolbar">
+              <input id="playlistSearchInput" class="spotify-search-input spotify-playlist-search-input" type="search" placeholder="Search Playlists" autocomplete="off" />
+              <button id="playlistClearSearchButton" class="spotify-browser-action secondary" type="button">Clear</button>
+              <select id="playlistSortSelect" class="spotify-search-type spotify-sort-select" aria-label="Playlist sort">
+                <option value="recent" selected>Recent / Pinned</option>
+                <option value="alpha">A-Z</option>
+              </select>
+              <button id="playlistBackButton" class="spotify-browser-action secondary" type="button">Back</button>
+            </div>
+            <div id="spotifyPlaylistsResults" class="spotify-browser-results spotify-browser-empty">Playlists will load automatically.</div>
+          </div>
+
+          <div id="spotifyVibesPane" class="spotify-browser-pane">
+            <div id="spotifyVibesResults" class="spotify-vibes-grid"></div>
+          </div>
+
+          <div id="spotifySearchPane" class="spotify-browser-pane">
             <div class="spotify-search-row">
-              <input id="spotifySearchInput" class="spotify-search-input" type="search" placeholder="Search tracks, artists, or playlists" autocomplete="off" />
+              <input id="spotifySearchInput" class="spotify-search-input" type="search" placeholder="Search tracks, artists, playlists, or albums" autocomplete="off" />
               <select id="spotifySearchType" class="spotify-search-type" aria-label="Search type">
                 <option value="all">All</option>
                 <option value="track">Tracks</option>
@@ -162,34 +184,9 @@ export function renderShell(state: AppState): void {
                 <option value="album">Albums</option>
               </select>
               <button id="spotifySearchButton" class="spotify-browser-action" type="button">Search</button>
+              <button id="spotifyClearSearchButton" class="spotify-browser-action secondary" type="button">Clear</button>
             </div>
             <div id="spotifySearchResults" class="spotify-browser-results spotify-browser-empty">Search results will show here.</div>
-          </div>
-
-          <div id="spotifyPlaylistsPane" class="spotify-browser-pane">
-            <div class="spotify-browser-toolbar">
-              <input id="playlistSearchInput" class="spotify-search-input spotify-playlist-search-input" type="search" placeholder="Search My Playlists" autocomplete="off" />
-              <select id="playlistSortSelect" class="spotify-search-type spotify-sort-select" aria-label="Playlist sort">
-                <option value="recent" selected>Recent / Pinned</option>
-                <option value="alpha">A-Z</option>
-              </select>
-              <button id="playlistBackButton" class="spotify-browser-action secondary" type="button">Back</button>
-            </div>
-            <div id="spotifyPlaylistsResults" class="spotify-browser-results spotify-browser-empty">My Playlists will load automatically.</div>
-          </div>
-
-          <div id="spotifyLibraryPane" class="spotify-browser-pane">
-            <div class="spotify-browser-toolbar">
-              <button id="loadSavedTracksButton" class="spotify-browser-action" type="button">Liked Songs</button>
-              <button id="loadRecentTracksButton" class="spotify-browser-action" type="button">Recently Played</button>
-              <select id="librarySortSelect" class="spotify-search-type spotify-sort-select" aria-label="Library sort">
-                <option value="recent" selected>Recently Played</option>
-                <option value="alpha">A-Z</option>
-                <option value="artist">Artist</option>
-                <option value="album">Album</option>
-              </select>
-            </div>
-            <div id="spotifyLibraryResults" class="spotify-browser-results spotify-browser-empty">Choose liked songs or recently played tracks. Default sorting uses recently played.</div>
           </div>
         </section>
 

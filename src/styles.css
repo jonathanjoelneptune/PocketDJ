@@ -5709,3 +5709,133 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 .spotify-playlist-search-input {
   flex: 2 1 12rem;
 }
+
+
+/* v58 Spotify Home / Playlists / Vibes / Search refinement */
+.spotify-home-results {
+  gap: 0.75rem;
+}
+
+.spotify-home-section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.spotify-home-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.spotify-home-tile,
+.spotify-home-row,
+.spotify-vibe-card {
+  border: 1px solid rgba(255, 184, 76, 0.14);
+  border-radius: 14px;
+  background: rgba(8, 8, 11, 0.62);
+  color: #fff0c2;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: inset 0 0 14px rgba(255, 184, 76, 0.035);
+}
+
+.spotify-home-tile {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.42rem;
+}
+
+.spotify-home-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  padding: 0.42rem;
+}
+
+.spotify-home-row span,
+.spotify-home-tile span {
+  grid-row: 1 / span 2;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 184, 76, 0.10);
+}
+
+.spotify-home-row img,
+.spotify-home-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spotify-home-row strong,
+.spotify-home-tile strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotify-home-row em {
+  color: rgba(255, 220, 170, 0.60);
+  font-style: normal;
+  font-size: 0.64rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotify-vibes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.spotify-vibe-card {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 82px;
+  padding: 0.75rem;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(255, 184, 76, 0.18), transparent 52%),
+    linear-gradient(135deg, rgba(8,8,11,0.82), rgba(40,24,42,0.44));
+}
+
+.spotify-vibe-card strong {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.05em;
+}
+
+.spotify-vibe-card span {
+  color: rgba(255, 220, 170, 0.62);
+  font-size: 0.66rem;
+}
+
+.spotify-search-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+  color: rgba(255, 220, 170, 0.62);
+  font-size: 0.62rem;
+}
+
+.spotify-result-title,
+.spotify-result-title-button {
+  font-size: 0.74rem !important;
+  line-height: 1.15;
+}
+
+.spotify-browser-toolbar .spotify-playlist-search-input {
+  flex: 2 1 100%;
+}
