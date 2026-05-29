@@ -6039,51 +6039,7 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 }
 
 
-/* v64 panel/menu refinements */
-.control-card {
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 10px !important;
-  top: calc(((100vh - var(--room-h)) / 2) + (var(--room-h) * var(--panel-start-y-ratio))) !important;
-}
-
-.brand-row,
-.now-card {
-  flex: 0 0 auto;
-  position: relative;
-  z-index: 3;
-}
-
-.panel-scroll-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 2px;
-  display: grid;
-  gap: 14px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 184, 76, 0.48) rgba(6, 6, 9, 0.50);
-}
-
-.panel-scroll-body::-webkit-scrollbar,
-.spotify-device-list::-webkit-scrollbar {
-  width: 10px;
-}
-
-.panel-scroll-body::-webkit-scrollbar-track,
-.spotify-device-list::-webkit-scrollbar-track {
-  background: rgba(6, 6, 9, 0.55);
-  border-radius: 999px;
-}
-
-.panel-scroll-body::-webkit-scrollbar-thumb,
-.spotify-device-list::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(255, 184, 76, 0.62), rgba(92, 59, 12, 0.68));
-  border-radius: 999px;
-  border: 2px solid rgba(6, 6, 9, 0.80);
-}
-
+/* v65 safe menu refinements, rebuilt from stable v63 */
 .spotify-source-panel {
   order: -1;
   margin: 0 0 0.75rem !important;
@@ -6157,7 +6113,9 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     0 0 12px rgba(255,184,76,0.10) !important;
 }
 
-.control-card-compact-mode .panel-scroll-body {
+.control-card-compact-mode .spotify-browser,
+.control-card-compact-mode .dev-tools,
+.control-card-compact-mode #debugPanel {
   display: none !important;
 }
 
@@ -6178,13 +6136,13 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   display: block;
 }
 
+/* Safer right-side hover tab: larger target, but only visible/clickable when panel is closed. */
 .side-panel-tab {
   top: calc(((100vh - var(--room-h)) / 2) + (var(--room-h) * var(--panel-start-y-ratio))) !important;
   bottom: calc((100vh - var(--room-h)) / 2) !important;
   height: auto !important;
   transform: none !important;
   width: clamp(38px, calc(var(--room-w) * 0.030), 54px) !important;
-  opacity: 0;
   background:
     linear-gradient(180deg, rgba(30, 20, 12, 0.82), rgba(6, 8, 15, 0.76)),
     radial-gradient(circle at 50% 18%, rgba(255,191,71,0.22), transparent 40%) !important;
@@ -6196,6 +6154,12 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 .side-panel-tab-visible {
   opacity: 0.84 !important;
+  pointer-events: auto !important;
+}
+
+.side-panel-tab:not(.side-panel-tab-visible) {
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .side-panel-tab:hover {

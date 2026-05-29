@@ -152,7 +152,7 @@ export function renderShell(state: AppState): void {
           </div>
         </div>
 
-        <div id="panelScrollBody" class="panel-scroll-body">
+
         <section class="spotify-browser" id="spotifyBrowserPanel" aria-label="Spotify browser">
           <details class="spotify-source-panel" id="spotifySourcePanel">
             <summary class="spotify-source-summary">Playback Source</summary>

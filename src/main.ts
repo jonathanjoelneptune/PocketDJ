@@ -432,7 +432,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v65";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -1051,7 +1051,7 @@ function renderSpotifySourcePanel(): void {
       is_private_session: false,
       is_restricted: false,
       name: POCKET_DJ_DEVICE_NAME,
-      type: "App",  // Pocket DJ is an app playback source
+      type: "App",
       volume_percent: phase2Volume
     });
   }

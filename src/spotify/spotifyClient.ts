@@ -268,7 +268,6 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
     };
   }
 
-  const image = item.album?.images?.[0]?.url || null;
   return {
     source: "spotify",
     isAuthenticated: true,
@@ -277,7 +276,7 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
     title: item.name,
     artist: item.artists?.map((artist) => artist.name).join(", ") || "Unknown artist",
     album: item.album?.name || "",
-    albumArtUrl: image,
+    albumArtUrl: item.album?.images?.[0]?.url || null,
     progressMs: Number(json.progress_ms || 0),
     durationMs: Number(item.duration_ms || 0),
     updatedAt: Date.now()
