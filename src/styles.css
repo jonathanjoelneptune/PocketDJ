@@ -6772,3 +6772,15 @@ body.lyrics-marquee-unavailable .marquee::after {
     padding-right: 6px !important;
   }
 }
+
+
+/* v64L Fill marquee clearance
+   Keep the marquee below the ceiling lyric trapezoid / back-wall transition in Fill mode. */
+:root {
+  --fill-marquee-top: 28.5%;
+  --fill-marquee-clearance: 10px;
+}
+
+:root.room-fill-stretch .marquee {
+  top: calc(var(--fill-marquee-top) + var(--fill-marquee-clearance)) !important;
+}

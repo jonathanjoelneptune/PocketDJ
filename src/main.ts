@@ -67,6 +67,8 @@ let devToolsClickTimer: number | null = null;
 let devToolsClickCount = 0;
 let devToolsLockClickCount = 0;
 let devToolsLockClickTimer: number | null = null;
+let aspectPocketClickCount = 0;
+let aspectPocketClickTimer: number | null = null;
 let sidePanelLocked = false;
 let sidePanelHideTimer: number | null = null;
 let floorControlsOpen = false;
@@ -292,8 +294,8 @@ type RoomUtilitySettings = {
 };
 
 const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
-  speakerLeftX: 37,
-  speakerRightX: 65,
+  speakerLeftX: 33,
+  speakerRightX: 68,
   speakerY: 71,
   speakerScale: 1.47,
   speakerOpacity: 1.00,
@@ -437,7 +439,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64k";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64l";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -501,6 +503,26 @@ function setRoomFillStretchMode(enabled: boolean): void {
   applyRoomUtilitySettings();
   syncAspectModeControls();
   saveRoomUtilitySettings();
+}
+
+
+
+function toggleAspectModeFromPocketClicks(): void {
+  aspectPocketClickCount += 1;
+  if (aspectPocketClickTimer) window.clearTimeout(aspectPocketClickTimer);
+  aspectPocketClickTimer = window.setTimeout(() => {
+    aspectPocketClickCount = 0;
+    aspectPocketClickTimer = null;
+  }, 1100);
+
+  if (aspectPocketClickCount >= 5) {
+    aspectPocketClickCount = 0;
+    if (aspectPocketClickTimer) {
+      window.clearTimeout(aspectPocketClickTimer);
+      aspectPocketClickTimer = null;
+    }
+    setRoomFillStretchMode(!roomUtility.roomFillStretchMode);
+  }
 }
 
 
@@ -606,6 +628,8 @@ function revealDevToolsByLockClicks(): void {
 
 
 function bindControls(): void {
+  qs<HTMLButtonElement>("#aspectModeToggle").addEventListener("click", () => setRoomFillStretchMode(!roomUtility.roomFillStretchMode));
+  qs<HTMLElement>(".pocket-title-pill").addEventListener("click", toggleAspectModeFromPocketClicks);
   qs<HTMLButtonElement>("#compactPanelToggle").addEventListener("click", () => setCompactPanelEnabled(!compactPanelEnabled));
 
   qs<HTMLButtonElement>("#panelToggle").addEventListener("click", () => {
