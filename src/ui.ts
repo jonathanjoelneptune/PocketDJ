@@ -432,7 +432,7 @@ export function renderShell(state: AppState): void {
                 <input id="lyricPosterStrokeOpacity" type="range" min="0" max="1" step="0.01" value="0.30" />
               </label>
               <label>Fill opacity <span id="lyricPosterFillOpacityValue">0.35</span>
-                <input id="lyricPosterFillOpacity" type="range" min="0" max="1" step="0.01" value="0.35" />
+                <input id="lyricPosterFillOpacity" type="range" min="0" max="1" step="0.01" value="0.70" />
               </label>
               <label>Glow strength <span id="lyricPosterGlowValue">0</span>
                 <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0" />

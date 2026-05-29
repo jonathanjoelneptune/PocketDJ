@@ -349,7 +349,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterStrokeColor: "#000000",
   lyricPosterFillColor: "#000000",
   lyricPosterStrokeOpacity: 0.30,
-  lyricPosterFillOpacity: 0.35,
+  lyricPosterFillOpacity: 0.70,
   lyricPosterGlow: 0,
   lyricPosterEffectDropShadow: false,
   lyricPosterEffectEmboss: false,
@@ -435,7 +435,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64h";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64i";
 let roomUtility = loadRoomUtilitySettings();
 
 
