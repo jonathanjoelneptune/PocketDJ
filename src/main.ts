@@ -263,9 +263,9 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   tableShadowScale: 1.16,
   floorControlsIdleOpacity: 0.15,
   songChangeMode: false,
-  songChangeAlbumX: 50,
+  songChangeAlbumX: 49,
   songChangeAlbumY: 45,
-  songChangeAlbumSize: 22,
+  songChangeAlbumSize: 12,
   panelStartY: 39,
   panelHeightAdjustEnabled: false,
   lyricPosterTopLeftX: 221,
@@ -390,7 +390,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v59";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v60";
 let roomUtility = loadRoomUtilitySettings();
 
 

@@ -4865,9 +4865,9 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 /* v45 utility panel, top pills, and always-visible floor controls cleanup */
 :root {
   --floor-controls-idle-opacity: 0.15;
-  --song-change-album-x: 50%;
+  --song-change-album-x: 49%;
   --song-change-album-y: 45%;
-  --song-change-album-size: 22%;
+  --song-change-album-size: 12%;
   --panel-start-y: 39%;
   --panel-start-y-ratio: 0.39;
 }
@@ -5897,4 +5897,20 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 .song-change-preview .dj-frame-img {
   content: url("./assets/poses/final/a41.png");
+}
+
+
+/* v60 album reveal edge polish */
+.song-change-album-layer {
+  border: 1px solid rgba(0, 0, 0, 0.92) !important;
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.48),
+    0 3px 8px rgba(0, 0, 0, 0.36),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+.song-change-album-cover {
+  filter:
+    drop-shadow(0 5px 8px rgba(0, 0, 0, 0.32))
+    saturate(1.03);
 }

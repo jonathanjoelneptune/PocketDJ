@@ -280,14 +280,14 @@ export function renderShell(state: AppState): void {
               <input id="songChangeMode" type="checkbox" />
               Song Change Mode
             </label>
-            <label>Album X % <span id="songChangeAlbumXValue">50</span>
-              <input id="songChangeAlbumX" type="range" min="0" max="100" step="0.1" value="50" />
+            <label>Album X % <span id="songChangeAlbumXValue">49</span>
+              <input id="songChangeAlbumX" type="range" min="0" max="100" step="0.1" value="49" />
             </label>
             <label>Album Y % <span id="songChangeAlbumYValue">45</span>
               <input id="songChangeAlbumY" type="range" min="0" max="100" step="0.1" value="45" />
             </label>
-            <label>Album size % <span id="songChangeAlbumSizeValue">22</span>
-              <input id="songChangeAlbumSize" type="range" min="5" max="55" step="0.1" value="22" />
+            <label>Album size % <span id="songChangeAlbumSizeValue">12</span>
+              <input id="songChangeAlbumSize" type="range" min="5" max="55" step="0.1" value="12" />
             </label>
             <label>Panel starting Y % <span id="panelStartYValue">39</span>
               <input id="panelStartY" type="range" min="4" max="86" step="0.1" value="39" />
