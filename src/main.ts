@@ -167,6 +167,7 @@ type RoomUtilitySettings = {
   songChangeAlbumSize: number;
   panelStartY: number;
   panelHeightAdjustEnabled: boolean;
+  roomFillStretchMode: boolean;
   lyricPosterTopLeftX: number;
   lyricPosterTopLeftY: number;
   lyricPosterTopRightX: number;
@@ -313,6 +314,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   songChangeAlbumSize: 12,
   panelStartY: 39,
   panelHeightAdjustEnabled: false,
+  roomFillStretchMode: false,
   lyricPosterTopLeftX: 221,
   lyricPosterTopLeftY: 18,
   lyricPosterTopRightX: 1562,
@@ -435,7 +437,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64i";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64j";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -1958,6 +1960,7 @@ function bindRoomUtilityControls(): void {
   const lyricPosterEffectBevel = qs<HTMLInputElement>("#lyricPosterEffectBevel");
   const lyricPosterEffectSoftBlur = qs<HTMLInputElement>("#lyricPosterEffectSoftBlur");
   const panelHeightAdjustEnabled = qs<HTMLInputElement>("#panelHeightAdjustEnabled");
+  const roomFillStretchMode = qs<HTMLInputElement>("#roomFillStretchMode");
   const songChangeMode = qs<HTMLInputElement>("#songChangeMode");
 
   sceneFilter.value = roomUtility.sceneFilter;
@@ -1971,10 +1974,17 @@ function bindRoomUtilityControls(): void {
   lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
   lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
   panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
+  roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
   songChangeMode.checked = roomUtility.songChangeMode;
 
   panelHeightAdjustEnabled.addEventListener("change", () => {
     setPanelHeightAdjustEnabled(panelHeightAdjustEnabled.checked, false);
+  });
+
+  roomFillStretchMode.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, roomFillStretchMode: roomFillStretchMode.checked };
+    applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
   });
 
   songChangeMode.addEventListener("change", () => {
@@ -2253,6 +2263,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--panel-start-y", `${roomUtility.panelStartY}%`);
   root.style.setProperty("--panel-start-y-ratio", String(roomUtility.panelStartY / 100));
   root.classList.toggle("panel-height-adjust-enabled", roomUtility.panelHeightAdjustEnabled);
+  root.classList.toggle("room-fill-stretch", roomUtility.roomFillStretchMode);
 
   const filterOverlay = document.querySelector<HTMLElement>("#roomFilterOverlay");
   if (filterOverlay) {

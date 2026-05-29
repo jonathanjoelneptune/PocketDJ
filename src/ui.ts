@@ -310,6 +310,10 @@ export function renderShell(state: AppState): void {
             <input id="panelHeightAdjustEnabled" type="checkbox" />
             Adjust panel height by dragging side tab
           </label>
+          <label class="utility-checkbox">
+            <input id="roomFillStretchMode" type="checkbox" />
+            Fill/stretch scene to browser
+          </label>
           </div>
 
           <div class="lyrics-boundary-utility">

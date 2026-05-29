@@ -6648,3 +6648,38 @@ body.lyrics-marquee-unavailable .marquee::after {
     gap: 4px !important;
   }
 }
+
+
+/* v64J Fill/stretch scene mode.
+   Developer toggle: keeps the room coordinate system consistent while stretching the 16:9 room to the full browser area. */
+:root.room-fill-stretch {
+  --room-w: 100vw;
+  --room-h: 100vh;
+}
+
+:root.room-fill-stretch .stage {
+  place-items: stretch;
+  background: #07101f;
+}
+
+:root.room-fill-stretch .room {
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  box-shadow: none;
+}
+
+:root.room-fill-stretch .room-bg {
+  background-size: 100% 100%;
+  background-position: center center;
+}
+
+:root.room-fill-stretch .control-card,
+:root.room-fill-stretch .control-card.control-card-compact-mode {
+  right: var(--panel-edge-pad) !important;
+}
+
+:root.room-fill-stretch .side-panel-tab {
+  right: 0 !important;
+}
