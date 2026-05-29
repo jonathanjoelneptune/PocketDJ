@@ -5914,3 +5914,9 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     drop-shadow(0 5px 8px rgba(0, 0, 0, 0.32))
     saturate(1.03);
 }
+
+
+/* v62 album-ready cinematic gate: hide album art layer until the current album image has loaded. */
+.song-change-album-layer:not(.song-change-album-has-art) {
+  opacity: 0 !important;
+}

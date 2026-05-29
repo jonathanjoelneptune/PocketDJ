@@ -87,6 +87,12 @@ let recentTrackIds: string[] = [];
 let pinnedPlaylistIds = loadSpotifyPinnedPlaylists();
 let playlistRecency = loadSpotifyPlaylistRecency();
 let selectedPlaylist: SpotifyCatalogPlaylist | null = null;
+let albumRevealPreloadTrackId: string | null = null;
+let albumRevealPreloadUrl = "";
+let albumRevealLoadedUrl = "";
+let albumRevealPreloadStartedAt = 0;
+let albumRevealPreloadImage: HTMLImageElement | null = null;
+const ALBUM_REVEAL_MAX_WAIT_MS = 500;
 
 type SceneFilter =
   | "none"
@@ -390,7 +396,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v61";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v62";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -1952,17 +1958,74 @@ function applyRoomUtilitySettings(): void {
 }
 
 
+function primeSongChangeAlbumReveal(track: AppState["playback"], now = Date.now()): boolean {
+  const trackId = track.trackId || "";
+  const albumArtUrl = track.albumArtUrl || "";
+
+  if (!trackId || !albumArtUrl) {
+    albumRevealPreloadTrackId = trackId || null;
+    albumRevealPreloadUrl = "";
+    albumRevealLoadedUrl = "";
+    albumRevealPreloadImage = null;
+    return true;
+  }
+
+  if (albumRevealPreloadTrackId !== trackId || albumRevealPreloadUrl !== albumArtUrl) {
+    albumRevealPreloadTrackId = trackId;
+    albumRevealPreloadUrl = albumArtUrl;
+    albumRevealPreloadStartedAt = now;
+    albumRevealLoadedUrl = "";
+    albumRevealPreloadImage = new Image();
+
+    const image = albumRevealPreloadImage;
+    image.onload = () => {
+      if (albumRevealPreloadTrackId === trackId && albumRevealPreloadUrl === albumArtUrl) {
+        albumRevealLoadedUrl = albumArtUrl;
+        updateSongChangeAlbumOverlay(track);
+      }
+    };
+    image.onerror = () => {
+      if (albumRevealPreloadTrackId === trackId && albumRevealPreloadUrl === albumArtUrl) {
+        albumRevealLoadedUrl = "";
+      }
+    };
+    image.src = albumArtUrl;
+
+    if (typeof image.decode === "function") {
+      void image.decode()
+        .then(() => {
+          if (albumRevealPreloadTrackId === trackId && albumRevealPreloadUrl === albumArtUrl) {
+            albumRevealLoadedUrl = albumArtUrl;
+            updateSongChangeAlbumOverlay(track);
+          }
+        })
+        .catch(() => {
+          // onerror/onload will handle the final state where supported.
+        });
+    }
+  }
+
+  return albumRevealLoadedUrl === albumArtUrl || now - albumRevealPreloadStartedAt >= ALBUM_REVEAL_MAX_WAIT_MS;
+}
+
 function updateSongChangeAlbumOverlay(track: AppState["playback"]): void {
   const albumCover = document.querySelector<HTMLImageElement>("#songChangeAlbumCover");
   const albumLayer = document.querySelector<HTMLElement>("#songChangeAlbumLayer");
   if (!albumCover || !albumLayer) return;
 
   const albumArtUrl = track.albumArtUrl || "";
-  albumLayer.classList.toggle("song-change-album-has-art", Boolean(albumArtUrl));
-  if (albumCover.src !== albumArtUrl) {
-    albumCover.src = albumArtUrl;
+  const readyUrl = albumArtUrl && albumRevealLoadedUrl === albumArtUrl ? albumArtUrl : "";
+  albumLayer.classList.toggle("song-change-album-has-art", Boolean(readyUrl));
+
+  if (readyUrl && albumCover.src !== readyUrl) {
+    albumCover.src = readyUrl;
   }
-  albumCover.alt = track.albumArtUrl ? `${track.title} album cover` : "";
+
+  if (!readyUrl) {
+    albumCover.removeAttribute("src");
+  }
+
+  albumCover.alt = readyUrl ? `${track.title} album cover` : "";
 }
 
 function updateSpeakerPulse(isPlaying: boolean): void {
@@ -2065,11 +2128,13 @@ function tick(): void {
     state.playback = getDemoTrack();
   }
 
+  const albumRevealReady = primeSongChangeAlbumReveal(state.playback);
+
   if (roomUtility.songChangeMode) {
     dj.setPose("a41.png");
     state.djMode = "playing";
   } else {
-    state.djMode = dj.update(state.playback);
+    state.djMode = dj.update(state.playback, Date.now(), albumRevealReady);
   }
 
   updateSongChangeAlbumOverlay(state.playback);

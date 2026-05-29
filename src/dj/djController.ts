@@ -78,6 +78,7 @@ export class DjController {
   private nextCinematicForNewTrack = 0;
   private lastStatus = "";
   private previousFrame = "";
+  private pendingSongChangeCinematic = false;
 
   constructor(private readonly poseElement: HTMLElement, private readonly modeElement: HTMLElement) {
     this.preload();
@@ -87,9 +88,9 @@ export class DjController {
     this.paint();
   }
 
-  update(playback: NormalizedTrack, now = Date.now()): DjMode {
+  update(playback: NormalizedTrack, now = Date.now(), songChangeCinematicReady = true): DjMode {
     const nextMode = this.resolveMode(playback);
-    this.handleTrackTiming(playback, nextMode, now);
+    this.handleTrackTiming(playback, nextMode, now, songChangeCinematicReady);
 
     if (this.controlMode !== "normal") {
       this.mode = nextMode;
@@ -147,29 +148,41 @@ export class DjController {
     return "playing";
   }
 
-  private handleTrackTiming(playback: NormalizedTrack, nextMode: DjMode, now: number): void {
+  private handleTrackTiming(playback: NormalizedTrack, nextMode: DjMode, now: number, songChangeCinematicReady: boolean): void {
     const isActive = nextMode === "playing" || nextMode === "demo";
     const trackId = playback.trackId;
 
-    if (!trackId || trackId === this.lastTrackId) return;
+    if (trackId && trackId !== this.lastTrackId) {
+      const hadPreviousTrack = Boolean(this.lastTrackId);
+      const shouldQueueSongChangeCinematic =
+        hadPreviousTrack &&
+        isActive &&
+        this.controlMode === "normal" &&
+        !this.cinematicOnce;
 
-    const hadPreviousTrack = Boolean(this.lastTrackId);
-    const shouldPlaySongChangeCinematic =
-      hadPreviousTrack &&
+      this.lastTrackId = trackId;
+      this.cinematicFiredForTrack = false;
+      this.cinematicForCurrentTrack = this.nextCinematicForNewTrack;
+      this.nextCinematicForNewTrack = 1 - this.nextCinematicForNewTrack;
+      this.pendingSongChangeCinematic = shouldQueueSongChangeCinematic;
+    }
+
+    // Gate the record-change cinematic until the new album artwork has either loaded
+    // or the short fallback timeout has expired. This prevents the old album from
+    // flashing on the A41 reveal frame.
+    if (
+      this.pendingSongChangeCinematic &&
+      songChangeCinematicReady &&
       isActive &&
       this.controlMode === "normal" &&
-      !this.cinematicOnce;
-
-    this.lastTrackId = trackId;
-    this.cinematicFiredForTrack = false;
-    this.cinematicForCurrentTrack = this.nextCinematicForNewTrack;
-    this.nextCinematicForNewTrack = 1 - this.nextCinematicForNewTrack;
-
-    // Only play the record-change cinematic after Spotify has actually changed tracks.
-    // The previous near-song-end 30 second trigger was removed so the album reveal is
-    // tied to the record that just started.
-    if (shouldPlaySongChangeCinematic) {
+      !this.cinematicOnce
+    ) {
+      this.pendingSongChangeCinematic = false;
       this.triggerCinematicOnce(now);
+    }
+
+    if (!trackId || !isActive) {
+      this.pendingSongChangeCinematic = false;
     }
   }
 
