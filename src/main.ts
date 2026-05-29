@@ -434,7 +434,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64c";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64d";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -488,6 +488,13 @@ function schedulePostConnectPlaybackRefresh(): void {
 }
 
 
+
+function updateMarqueeLyricsAvailability(status: LyricsPayload["status"], enabled: boolean): void {
+  const hasLyrics = enabled && status === "found";
+  document.body.classList.toggle("lyrics-marquee-unavailable", !hasLyrics);
+}
+
+
 function setCompactPanelEnabled(enabled: boolean): void {
   compactPanelEnabled = enabled;
   const card = document.querySelector<HTMLElement>("#controlCard");
@@ -496,7 +503,7 @@ function setCompactPanelEnabled(enabled: boolean): void {
   button?.classList.toggle("compact-pill-active", enabled);
   if (button) {
     button.setAttribute("aria-pressed", String(enabled));
-    button.textContent = enabled ? "FULL" : "COMPACT";
+    button.textContent = "COMPACT";
   }
 }
 
@@ -1515,17 +1522,11 @@ function renderSearchResults(): void {
 
 function renderHome(recentTracks: SpotifyCatalogTrack[], playlists: SpotifyCatalogPlaylist[]): void {
   const container = qs<HTMLElement>("#spotifyHomeResults");
-  const albumMap = new Map<string, SpotifyCatalogTrack>();
-  recentTracks.forEach((track) => {
-    const key = `${track.album}__${track.artists}`;
-    if (track.album && !albumMap.has(key)) albumMap.set(key, track);
-  });
 
-  const recentAlbums = [...albumMap.values()].slice(0, 8).map((track) => `
-    <button class="spotify-home-tile spotify-home-album-tile" type="button" data-action="play-uri" data-uri="${escapeHtmlInline(track.uri)}">
-      <span>${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "▣"}</span>
-      <strong>${escapeHtmlInline(track.album || track.name)}</strong>
-      <em>${escapeHtmlInline(track.artists)}</em>
+  const recentlyPlayedPlaylists = sortPlaylists(playlists, "recent").slice(0, 8).map((playlist) => `
+    <button class="spotify-home-tile" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
+      <span>${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "▦"}</span>
+      <strong>${escapeHtmlInline(playlist.name)}</strong>
     </button>
   `).join("");
 
@@ -1539,8 +1540,8 @@ function renderHome(recentTracks: SpotifyCatalogTrack[], playlists: SpotifyCatal
 
   container.innerHTML = `
     <div class="spotify-home-section">
-      <div class="spotify-result-group-title">Recently played albums</div>
-      <div class="spotify-home-grid">${recentAlbums || "<div class='spotify-browser-empty'>Recent albums will appear after Spotify returns them.</div>"}</div>
+      <div class="spotify-result-group-title">Recently played playlists</div>
+      <div class="spotify-home-grid">${recentlyPlayedPlaylists || "<div class='spotify-browser-empty'>Recently played playlists will appear after Spotify returns them.</div>"}</div>
     </div>
     <div class="spotify-home-section">
       <div class="spotify-result-group-title">Recently played songs</div>
@@ -2432,6 +2433,7 @@ async function refreshLyricsForCurrentTrack(): Promise<void> {
     lyricsState = emptyLyrics("idle");
     lyricsFetchKey = "";
     updateLyricsCeiling(lyricsState, 0, -1, lyricsEnabled, false);
+    updateMarqueeLyricsAvailability(lyricsState.status, lyricsEnabled);
     return;
   }
 
@@ -2440,11 +2442,13 @@ async function refreshLyricsForCurrentTrack(): Promise<void> {
   lyricsFetchKey = key;
   lyricsState = { ...emptyLyrics("loading"), trackKey: key };
   updateLyricsCeiling(lyricsState, getEstimatedPlaybackProgress(track), -1, lyricsEnabled, state.playback.isPlaying || state.playback.source === "demo");
+  updateMarqueeLyricsAvailability(lyricsState.status, lyricsEnabled);
 
   lyricsState = await fetchLyricsForTrack(track);
   const lyricProgressMs = getEstimatedPlaybackProgress(track);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
   updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, state.playback.isPlaying || state.playback.source === "demo");
+  updateMarqueeLyricsAvailability(lyricsState.status, lyricsEnabled);
 }
 
 async function pollSpotifyNow(): Promise<void> {

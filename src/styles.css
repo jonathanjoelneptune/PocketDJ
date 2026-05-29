@@ -6299,3 +6299,63 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+
+/* v64D menu width, compact pill, home, and lyric-availability marquee polish */
+.control-card {
+  width: clamp(340px, calc(var(--room-w) * 0.30), 430px) !important;
+  max-width: min(430px, calc(var(--room-w) - 24px)) !important;
+}
+
+.control-card-compact-mode {
+  width: clamp(300px, calc(var(--room-w) * 0.24), 370px) !important;
+}
+
+.control-card-compact-mode .now-card {
+  margin-bottom: 0 !important;
+}
+
+.compact-pill {
+  color: rgba(255, 218, 155, 0.62) !important;
+  border-color: rgba(255, 184, 76, 0.18) !important;
+  background: rgba(18, 12, 20, 0.36) !important;
+  box-shadow: none !important;
+}
+
+.compact-pill.compact-pill-active {
+  color: #f7d68c !important;
+  border-color: rgba(255, 184, 76, 0.50) !important;
+  background:
+    linear-gradient(180deg, rgba(92, 59, 12, 0.58), rgba(37, 20, 11, 0.54)) !important;
+  box-shadow:
+    inset 0 0 14px rgba(255,184,76,0.08),
+    0 0 14px rgba(255,184,76,0.14) !important;
+}
+
+.spotify-home-tile strong,
+.spotify-home-row strong {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Burnt red-orange marquee side blocks when lyrics are unavailable or cannot show. */
+.marquee::before,
+.marquee::after {
+  transition:
+    background 420ms ease,
+    filter 420ms ease,
+    opacity 420ms ease;
+}
+
+body.lyrics-marquee-unavailable .marquee::before,
+body.lyrics-marquee-unavailable .marquee::after {
+  background: repeating-linear-gradient(
+    to bottom,
+    #b34722 0 8px,
+    transparent 8px 18px
+  ) !important;
+  filter:
+    drop-shadow(0 0 5px rgba(179,71,34,0.78))
+    drop-shadow(0 0 12px rgba(107,35,22,0.38)) !important;
+}
