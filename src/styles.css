@@ -6037,3 +6037,172 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   border-radius: 999px;
   border: 2px solid rgba(6, 6, 9, 0.80);
 }
+
+
+/* v64 panel/menu refinements */
+.control-card {
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  top: calc(((100vh - var(--room-h)) / 2) + (var(--room-h) * var(--panel-start-y-ratio))) !important;
+}
+
+.brand-row,
+.now-card {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 3;
+}
+
+.panel-scroll-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+  display: grid;
+  gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 184, 76, 0.48) rgba(6, 6, 9, 0.50);
+}
+
+.panel-scroll-body::-webkit-scrollbar,
+.spotify-device-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.panel-scroll-body::-webkit-scrollbar-track,
+.spotify-device-list::-webkit-scrollbar-track {
+  background: rgba(6, 6, 9, 0.55);
+  border-radius: 999px;
+}
+
+.panel-scroll-body::-webkit-scrollbar-thumb,
+.spotify-device-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 184, 76, 0.62), rgba(92, 59, 12, 0.68));
+  border-radius: 999px;
+  border: 2px solid rgba(6, 6, 9, 0.80);
+}
+
+.spotify-source-panel {
+  order: -1;
+  margin: 0 0 0.75rem !important;
+}
+
+.spotify-source-summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.07em;
+  color: #ffdf9a;
+  text-transform: uppercase;
+}
+
+.spotify-source-summary::-webkit-details-marker {
+  display: none;
+}
+
+.spotify-source-summary::after {
+  content: "▾";
+  color: rgba(255, 184, 76, 0.78);
+  transition: transform 160ms ease;
+}
+
+.spotify-source-panel[open] .spotify-source-summary::after {
+  transform: rotate(180deg);
+}
+
+.spotify-source-header {
+  margin-top: 0.7rem;
+}
+
+.spotify-device-name,
+.spotify-result-title,
+.spotify-result-title-button {
+  font-size: 0.74rem !important;
+  line-height: 1.15 !important;
+}
+
+.spotify-device-meta {
+  font-size: 0.58rem !important;
+}
+
+.compact-pill {
+  min-height: 28px !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  max-height: 34px !important;
+  min-width: calc(var(--room-w) * 0.055) !important;
+  padding: 0 calc(var(--room-w) * 0.0065) !important;
+  border-radius: 999px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  font-family: "Press Start 2P", monospace !important;
+  font-size: clamp(0.40rem, calc(var(--room-w) * 0.00325), 0.54rem) !important;
+  border: 1px solid rgba(255, 184, 76, 0.20) !important;
+  background: rgba(36, 23, 38, 0.42) !important;
+  color: rgba(255, 218, 155, 0.76) !important;
+}
+
+.compact-pill-active,
+.compact-pill-playing {
+  color: #f7d68c !important;
+  border-color: rgba(255, 184, 76, 0.38) !important;
+  background: rgba(72, 43, 21, 0.44) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255,184,76,0.050),
+    0 0 12px rgba(255,184,76,0.10) !important;
+}
+
+.control-card-compact-mode .panel-scroll-body {
+  display: none !important;
+}
+
+.lyrics-toggle-off,
+.lyrics-toggle-missing,
+.lyrics-toggle-unknown {
+  border-color: rgba(248, 113, 113, 0.76) !important;
+  box-shadow:
+    inset 0 0 12px rgba(248, 113, 113, 0.045),
+    0 0 12px rgba(248, 113, 113, 0.14) !important;
+}
+
+.dev-tools {
+  display: none;
+}
+
+.dev-tools.dev-tools-visible {
+  display: block;
+}
+
+.side-panel-tab {
+  top: calc(((100vh - var(--room-h)) / 2) + (var(--room-h) * var(--panel-start-y-ratio))) !important;
+  bottom: calc((100vh - var(--room-h)) / 2) !important;
+  height: auto !important;
+  transform: none !important;
+  width: clamp(38px, calc(var(--room-w) * 0.030), 54px) !important;
+  opacity: 0;
+  background:
+    linear-gradient(180deg, rgba(30, 20, 12, 0.82), rgba(6, 8, 15, 0.76)),
+    radial-gradient(circle at 50% 18%, rgba(255,191,71,0.22), transparent 40%) !important;
+  box-shadow:
+    -12px 0 34px rgba(0,0,0,0.34),
+    0 0 20px rgba(255,191,71,0.18),
+    inset 0 0 24px rgba(255,191,71,0.08) !important;
+}
+
+.side-panel-tab-visible {
+  opacity: 0.84 !important;
+}
+
+.side-panel-tab:hover {
+  opacity: 1 !important;
+  transform: translateX(-3px) !important;
+  box-shadow:
+    -14px 0 40px rgba(0,0,0,0.36),
+    0 0 28px rgba(255,191,71,0.28),
+    inset 0 0 28px rgba(255,191,71,0.12) !important;
+}

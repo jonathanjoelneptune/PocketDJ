@@ -215,7 +215,7 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
     };
   }
 
-  const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+  const response = await fetch("https://api.spotify.com/v1/me/player", {
     headers: { Authorization: `Bearer ${token}` }
   });
 
@@ -225,8 +225,8 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
       isAuthenticated: true,
       isPlaying: false,
       trackId: null,
-      title: "Nothing is currently playing",
-      artist: "Start Spotify and Pocket DJ will wake up",
+      title: "Nothing is currently loaded",
+      artist: "Choose music on Spotify or press Play Here",
       album: "",
       albumArtUrl: null,
       progressMs: 0,
@@ -245,7 +245,11 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
     throw new Error(`Spotify rate limited requests. Retry after ${retryAfter} seconds.`);
   }
 
-  const json = (await response.json()) as CurrentlyPlayingResponse;
+  if (!response.ok) {
+    throw new Error(`Spotify playback state request failed (${response.status}).`);
+  }
+
+  const json = (await response.json()) as CurrentlyPlayingResponse & { item?: SpotifyTrackItem | null };
   const item = json.item;
 
   if (!item) {
@@ -254,8 +258,8 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
       isAuthenticated: true,
       isPlaying: false,
       trackId: null,
-      title: "No track available",
-      artist: "Spotify returned an empty player state",
+      title: "No track loaded",
+      artist: "Choose music on Spotify or press Play Here",
       album: "",
       albumArtUrl: null,
       progressMs: 0,
