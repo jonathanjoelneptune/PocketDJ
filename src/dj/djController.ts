@@ -17,6 +17,7 @@ type AnimationLoop = {
 };
 
 const POSE_BASE = "./assets/poses/final/";
+const ALBUM_REVEAL_FRAME_HOLD_MULTIPLIER = 2;
 
 /*
  * Important split:
@@ -262,7 +263,12 @@ export class DjController {
     const endPause = advancedIndex % loop.frames.length === 0
       ? randomInt(loop.endPauseMinMs, loop.endPauseMaxMs)
       : 0;
-    return base + endPause;
+    const frameIndex = Math.max(0, (advancedIndex - 1) % Math.max(1, loop.frames.length));
+    const frame = loop.frames[frameIndex];
+    const holdMultiplier = loop.kind === "cinematic" && frame === "a41.png"
+      ? ALBUM_REVEAL_FRAME_HOLD_MULTIPLIER
+      : 1;
+    return Math.round(base * holdMultiplier) + endPause;
   }
 
   private startNormalLoop(mode: DjMode, now: number): void {
