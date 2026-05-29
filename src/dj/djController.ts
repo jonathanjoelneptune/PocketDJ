@@ -17,12 +17,11 @@ type AnimationLoop = {
 };
 
 const POSE_BASE = "./assets/poses/final/";
-const CINEMATIC_TRIGGER_MS = 30_000;
 
 /*
  * Important split:
  * - active/playing/demo lives mainly in calm scratch loops that can dwell for short or long organic stretches
- * - the A11/A11m cinematic record moves are used for near-song-change triggers and manual next/previous track changes
+ * - the A11/A11m cinematic record moves are used only when the active track changes
  * - idle/no-track uses only the approved calm idle poses: i6, i7, i9, i1, i10, i11, i12
  * - paused uses the same calm pose family by default so the DJ clearly stops performing
  */
@@ -151,42 +150,24 @@ export class DjController {
     const isActive = nextMode === "playing" || nextMode === "demo";
     const trackId = playback.trackId;
 
-    if (trackId && trackId !== this.lastTrackId) {
-      const hadPreviousTrack = Boolean(this.lastTrackId);
-      const shouldPlayManualChangeCinematic =
-        hadPreviousTrack &&
-        isActive &&
-        this.controlMode === "normal" &&
-        !this.cinematicOnce;
+    if (!trackId || trackId === this.lastTrackId) return;
 
-      this.lastTrackId = trackId;
-      this.cinematicFiredForTrack = false;
-      this.cinematicForCurrentTrack = this.nextCinematicForNewTrack;
-      this.nextCinematicForNewTrack = 1 - this.nextCinematicForNewTrack;
-
-      // When the user skips forward/back or Spotify changes to a new track while active,
-      // play the same record-change cinematic used near the end of a song. This makes the
-      // DJ visually pull/change vinyl in sync with the marquee transition. The first track
-      // loaded after connect is ignored so the DJ does not do a record-change move on boot.
-      if (shouldPlayManualChangeCinematic) {
-        this.triggerCinematicOnce(now);
-        return;
-      }
-    }
-
-    if (!trackId || !playback.durationMs || !isActive) return;
-
-    const estimatedProgress = playback.isPlaying
-      ? Math.min(playback.durationMs, playback.progressMs + (now - playback.updatedAt))
-      : playback.progressMs;
-    const remainingMs = Math.max(0, playback.durationMs - estimatedProgress);
-
-    if (
-      remainingMs <= CINEMATIC_TRIGGER_MS &&
-      !this.cinematicFiredForTrack &&
+    const hadPreviousTrack = Boolean(this.lastTrackId);
+    const shouldPlaySongChangeCinematic =
+      hadPreviousTrack &&
+      isActive &&
       this.controlMode === "normal" &&
-      !this.cinematicOnce
-    ) {
+      !this.cinematicOnce;
+
+    this.lastTrackId = trackId;
+    this.cinematicFiredForTrack = false;
+    this.cinematicForCurrentTrack = this.nextCinematicForNewTrack;
+    this.nextCinematicForNewTrack = 1 - this.nextCinematicForNewTrack;
+
+    // Only play the record-change cinematic after Spotify has actually changed tracks.
+    // The previous near-song-end 30 second trigger was removed so the album reveal is
+    // tied to the record that just started.
+    if (shouldPlaySongChangeCinematic) {
       this.triggerCinematicOnce(now);
     }
   }

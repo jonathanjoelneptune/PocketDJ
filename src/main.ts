@@ -116,6 +116,10 @@ type RoomUtilitySettings = {
   shadowOpacity: number;
   tableShadowScale: number;
   floorControlsIdleOpacity: number;
+  songChangeMode: boolean;
+  songChangeAlbumX: number;
+  songChangeAlbumY: number;
+  songChangeAlbumSize: number;
   panelStartY: number;
   panelHeightAdjustEnabled: boolean;
   lyricPosterTopLeftX: number;
@@ -258,6 +262,10 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   shadowOpacity: 1.00,
   tableShadowScale: 1.16,
   floorControlsIdleOpacity: 0.15,
+  songChangeMode: false,
+  songChangeAlbumX: 50,
+  songChangeAlbumY: 45,
+  songChangeAlbumSize: 22,
   panelStartY: 39,
   panelHeightAdjustEnabled: false,
   lyricPosterTopLeftX: 221,
@@ -382,7 +390,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v58";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v59";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -1509,6 +1517,7 @@ function bindRoomUtilityControls(): void {
   const lyricPosterEffectBevel = qs<HTMLInputElement>("#lyricPosterEffectBevel");
   const lyricPosterEffectSoftBlur = qs<HTMLInputElement>("#lyricPosterEffectSoftBlur");
   const panelHeightAdjustEnabled = qs<HTMLInputElement>("#panelHeightAdjustEnabled");
+  const songChangeMode = qs<HTMLInputElement>("#songChangeMode");
 
   sceneFilter.value = roomUtility.sceneFilter;
   lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
@@ -1521,9 +1530,16 @@ function bindRoomUtilityControls(): void {
   lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
   lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
   panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
+  songChangeMode.checked = roomUtility.songChangeMode;
 
   panelHeightAdjustEnabled.addEventListener("change", () => {
     setPanelHeightAdjustEnabled(panelHeightAdjustEnabled.checked, false);
+  });
+
+  songChangeMode.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, songChangeMode: songChangeMode.checked };
+    applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
   });
 
   const controls = [
@@ -1542,6 +1558,9 @@ function bindRoomUtilityControls(): void {
     ["shadowOpacity", "shadowOpacityValue"],
     ["tableShadowScale", "tableShadowScaleValue"],
     ["floorControlsIdleOpacity", "floorControlsIdleOpacityValue"],
+    ["songChangeAlbumX", "songChangeAlbumXValue"],
+    ["songChangeAlbumY", "songChangeAlbumYValue"],
+    ["songChangeAlbumSize", "songChangeAlbumSizeValue"],
     ["panelStartY", "panelStartYValue"],
     ["lyricPosterGuideOpacity", "lyricPosterGuideOpacityValue"],
     ["lyricPosterCenterGuideOpacity", "lyricPosterCenterGuideOpacityValue"],
@@ -1786,6 +1805,10 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
   root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
   root.style.setProperty("--floor-controls-idle-opacity", String(roomUtility.floorControlsIdleOpacity));
+  root.style.setProperty("--song-change-album-x", `${roomUtility.songChangeAlbumX}%`);
+  root.style.setProperty("--song-change-album-y", `${roomUtility.songChangeAlbumY}%`);
+  root.style.setProperty("--song-change-album-size", `${roomUtility.songChangeAlbumSize}%`);
+  root.classList.toggle("song-change-preview", roomUtility.songChangeMode);
   root.style.setProperty("--panel-start-y", `${roomUtility.panelStartY}%`);
   root.style.setProperty("--panel-start-y-ratio", String(roomUtility.panelStartY / 100));
   root.classList.toggle("panel-height-adjust-enabled", roomUtility.panelHeightAdjustEnabled);
@@ -1928,6 +1951,20 @@ function applyRoomUtilitySettings(): void {
   root.classList.toggle("lyric-poster-effect-soft-blur", roomUtility.lyricPosterEffectSoftBlur);
 }
 
+
+function updateSongChangeAlbumOverlay(track: AppState["playback"]): void {
+  const albumCover = document.querySelector<HTMLImageElement>("#songChangeAlbumCover");
+  const albumLayer = document.querySelector<HTMLElement>("#songChangeAlbumLayer");
+  if (!albumCover || !albumLayer) return;
+
+  const albumArtUrl = track.albumArtUrl || "";
+  albumLayer.classList.toggle("song-change-album-has-art", Boolean(albumArtUrl));
+  if (albumCover.src !== albumArtUrl) {
+    albumCover.src = albumArtUrl;
+  }
+  albumCover.alt = track.albumArtUrl ? `${track.title} album cover` : "";
+}
+
 function updateSpeakerPulse(isPlaying: boolean): void {
   const left = qs<HTMLElement>("#leftSpeaker");
   const right = qs<HTMLElement>("#rightSpeaker");
@@ -2027,7 +2064,15 @@ function tick(): void {
   if (useDemo) {
     state.playback = getDemoTrack();
   }
-  state.djMode = dj.update(state.playback);
+
+  if (roomUtility.songChangeMode) {
+    dj.setPose("a41.png");
+    state.djMode = "playing";
+  } else {
+    state.djMode = dj.update(state.playback);
+  }
+
+  updateSongChangeAlbumOverlay(state.playback);
   updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
   updatePlaybackUi(state.playback, state.debugOpen);
 

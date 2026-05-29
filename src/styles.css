@@ -4865,6 +4865,9 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 /* v45 utility panel, top pills, and always-visible floor controls cleanup */
 :root {
   --floor-controls-idle-opacity: 0.15;
+  --song-change-album-x: 50%;
+  --song-change-album-y: 45%;
+  --song-change-album-size: 22%;
   --panel-start-y: 39%;
   --panel-start-y-ratio: 0.39;
 }
@@ -5838,4 +5841,60 @@ html[data-dj-mode="cinematic"] .dj-wrap {
 
 .spotify-browser-toolbar .spotify-playlist-search-input {
   flex: 2 1 100%;
+}
+
+
+/* v59 song-change album reveal overlay.
+   Visible only while the DJ pose is a41.png or when Song Change Mode preview is enabled. */
+.song-change-album-layer,
+.song-change-hands {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.song-change-album-layer {
+  left: var(--song-change-album-x);
+  top: var(--song-change-album-y);
+  width: var(--song-change-album-size);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  border-radius: 3%;
+  overflow: hidden;
+  box-shadow:
+    0 8px 18px rgba(0,0,0,0.32),
+    inset 0 0 0 1px rgba(255,255,255,0.12);
+  background:
+    linear-gradient(135deg, rgba(12,12,12,0.95), rgba(40,40,40,0.65));
+}
+
+.song-change-album-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  image-rendering: auto;
+}
+
+.song-change-hands {
+  left: 50%;
+  bottom: 0;
+  height: 100%;
+  width: auto;
+  transform: translateX(-50%);
+  z-index: 3;
+  user-select: none;
+  image-rendering: auto;
+}
+
+.dj-frame-img[data-pose="a41.png"] ~ .song-change-album-layer.song-change-album-has-art,
+.dj-frame-img[data-pose="a41.png"] ~ .song-change-hands,
+.song-change-preview .song-change-album-layer.song-change-album-has-art,
+.song-change-preview .song-change-hands {
+  opacity: 1;
+}
+
+.song-change-preview .dj-frame-img {
+  content: url("./assets/poses/final/a41.png");
 }

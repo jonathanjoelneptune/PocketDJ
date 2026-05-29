@@ -71,6 +71,17 @@ export function renderShell(state: AppState): void {
             alt="Pocket DJ"
             draggable="false"
           />
+          <div id="songChangeAlbumLayer" class="song-change-album-layer" aria-hidden="true">
+            <img id="songChangeAlbumCover" class="song-change-album-cover" src="" alt="" draggable="false" />
+          </div>
+          <img
+            id="songChangeHands"
+            class="song-change-hands"
+            src="./assets/poses/final/a41-Hands.png"
+            alt=""
+            draggable="false"
+            aria-hidden="true"
+          />
         </div>
 
         <div class="floor-player floor-player-visible" id="floorPlayer" aria-label="Spotify floor playback controls">
@@ -263,6 +274,20 @@ export function renderShell(state: AppState): void {
             </label>
             <label>Floor controls idle opacity <span id="floorControlsIdleOpacityValue">0.15</span>
               <input id="floorControlsIdleOpacity" type="range" min="0" max="1" step="0.01" value="0.15" />
+            </label>
+
+            <label class="utility-checkbox">
+              <input id="songChangeMode" type="checkbox" />
+              Song Change Mode
+            </label>
+            <label>Album X % <span id="songChangeAlbumXValue">50</span>
+              <input id="songChangeAlbumX" type="range" min="0" max="100" step="0.1" value="50" />
+            </label>
+            <label>Album Y % <span id="songChangeAlbumYValue">45</span>
+              <input id="songChangeAlbumY" type="range" min="0" max="100" step="0.1" value="45" />
+            </label>
+            <label>Album size % <span id="songChangeAlbumSizeValue">22</span>
+              <input id="songChangeAlbumSize" type="range" min="5" max="55" step="0.1" value="22" />
             </label>
             <label>Panel starting Y % <span id="panelStartYValue">39</span>
               <input id="panelStartY" type="range" min="4" max="86" step="0.1" value="39" />
