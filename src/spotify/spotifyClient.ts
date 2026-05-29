@@ -310,6 +310,17 @@ export type SpotifyCatalogArtist = {
   followers: number;
 };
 
+export type SpotifyCatalogAlbum = {
+  kind: "album";
+  id: string;
+  uri: string;
+  name: string;
+  artists: string;
+  imageUrl: string | null;
+  releaseYear: string;
+  trackCount: number;
+};
+
 type SpotifyPlaylistItem = {
   id: string;
   uri: string;
@@ -319,10 +330,21 @@ type SpotifyPlaylistItem = {
   tracks?: { total?: number };
 };
 
+type SpotifyAlbumItem = {
+  id: string;
+  uri?: string;
+  name: string;
+  artists?: SpotifyArtist[];
+  images?: SpotifyImage[];
+  release_date?: string;
+  total_tracks?: number;
+};
+
 type SpotifySearchResponse = {
   tracks?: { items?: SpotifyTrackItem[] };
   playlists?: { items?: Array<SpotifyPlaylistItem | null> };
   artists?: { items?: SpotifyArtist[] };
+  albums?: { items?: SpotifyAlbumItem[] };
 };
 
 type SpotifyPlaylistsResponse = {
@@ -380,6 +402,20 @@ function normalizeCatalogArtist(item: SpotifyArtist | null | undefined): Spotify
   };
 }
 
+function normalizeCatalogAlbum(item: SpotifyAlbumItem | null | undefined): SpotifyCatalogAlbum | null {
+  if (!item?.id) return null;
+  return {
+    kind: "album",
+    id: item.id,
+    uri: item.uri || `spotify:album:${item.id}`,
+    name: item.name || "Untitled album",
+    artists: item.artists?.map((artist) => artist.name).filter(Boolean).join(", ") || "Unknown artist",
+    imageUrl: item.images?.[0]?.url || null,
+    releaseYear: item.release_date?.slice(0, 4) || "",
+    trackCount: Number(item.total_tracks || 0)
+  };
+}
+
 async function spotifyApiJson<T>(clientId: string, endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = await getUsableToken(clientId);
   if (!token) {
@@ -432,13 +468,13 @@ async function spotifyApiJson<T>(clientId: string, endpoint: string, options: Re
 export async function searchSpotifyCatalog(
   clientId: string,
   query: string,
-  type: "track" | "artist" | "playlist" | "all" = "all",
+  type: "track" | "artist" | "playlist" | "album" | "all" = "all",
   limit = 10
-): Promise<{ tracks: SpotifyCatalogTrack[]; artists: SpotifyCatalogArtist[]; playlists: SpotifyCatalogPlaylist[] }> {
+): Promise<{ tracks: SpotifyCatalogTrack[]; artists: SpotifyCatalogArtist[]; playlists: SpotifyCatalogPlaylist[]; albums: SpotifyCatalogAlbum[] }> {
   const cleanQuery = query.trim();
-  if (!cleanQuery) return { tracks: [], artists: [], playlists: [] };
+  if (!cleanQuery) return { tracks: [], artists: [], playlists: [], albums: [] };
 
-  const searchTypes = type === "all" ? "track,artist,playlist" : type;
+  const searchTypes = type === "all" ? "track,artist,playlist,album" : type;
   const endpoint = `/search?${new URLSearchParams({
     q: cleanQuery,
     type: searchTypes,
@@ -449,7 +485,8 @@ export async function searchSpotifyCatalog(
   return {
     tracks: (json.tracks?.items || []).map(normalizeCatalogTrack).filter((item): item is SpotifyCatalogTrack => Boolean(item)),
     artists: (json.artists?.items || []).map(normalizeCatalogArtist).filter((item): item is SpotifyCatalogArtist => Boolean(item)),
-    playlists: (json.playlists?.items || []).map(normalizeCatalogPlaylist).filter((item): item is SpotifyCatalogPlaylist => Boolean(item))
+    playlists: (json.playlists?.items || []).map(normalizeCatalogPlaylist).filter((item): item is SpotifyCatalogPlaylist => Boolean(item)),
+    albums: (json.albums?.items || []).map(normalizeCatalogAlbum).filter((item): item is SpotifyCatalogAlbum => Boolean(item))
   };
 }
 

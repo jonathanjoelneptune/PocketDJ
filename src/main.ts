@@ -2,7 +2,7 @@ import "./styles.css";
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getRecentlyPlayed, getSavedTracks, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack } from "./spotify/spotifyClient";
+import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getRecentlyPlayed, getSavedTracks, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import {
   emptyLyrics,
@@ -45,6 +45,7 @@ let lyricAnimationRevision = 0;
 
 type SpotifyBrowserTab = "search" | "playlists" | "library";
 type SpotifyBrowserSort = "recent" | "alpha" | "artist" | "album";
+type SpotifySearchResultTab = "tracks" | "artists" | "playlists" | "albums";
 
 const SPOTIFY_PINNED_PLAYLISTS_KEY = "pocketdj-pinned-playlists-v1";
 const SPOTIFY_PLAYLIST_RECENCY_KEY = "pocketdj-playlist-recency-v1";
@@ -54,6 +55,8 @@ let spotifyBrowserBusy = false;
 let spotifyBrowserStatus = "";
 let spotifyBrowserTracks: SpotifyCatalogTrack[] = [];
 let spotifyBrowserArtists: SpotifyCatalogArtist[] = [];
+let spotifyBrowserAlbums: SpotifyCatalogAlbum[] = [];
+let spotifySearchResultTab: SpotifySearchResultTab = "tracks";
 let spotifyBrowserPlaylists: SpotifyCatalogPlaylist[] = [];
 let currentPlaylistTracks: SpotifyCatalogTrack[] = [];
 let currentLibraryTracks: SpotifyCatalogTrack[] = [];
@@ -357,7 +360,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v56";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v57";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -1006,7 +1009,7 @@ function renderTrackRows(containerId: string, tracks: SpotifyCatalogTrack[], emp
     <article class="spotify-result-row spotify-track-row" data-uri="${escapeHtmlInline(track.uri)}">
       <div class="spotify-result-art">${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "<span>♪</span>"}</div>
       <div class="spotify-result-copy">
-        <div class="spotify-result-title">${escapeHtmlInline(track.name)}</div>
+        <button class="spotify-result-title spotify-result-title-button" type="button" data-action="play-uri" data-uri="${escapeHtmlInline(track.uri)}">${escapeHtmlInline(track.name)}</button>
         <div class="spotify-result-subtitle">${escapeHtmlInline(track.artists)}${track.album ? ` • ${escapeHtmlInline(track.album)}` : ""}</div>
       </div>
       <div class="spotify-result-duration">${formatDurationMs(track.durationMs)}</div>
@@ -1016,9 +1019,18 @@ function renderTrackRows(containerId: string, tracks: SpotifyCatalogTrack[], emp
   `).join("");
 }
 
+function filterPlaylistsForSearch(playlists: SpotifyCatalogPlaylist[]): SpotifyCatalogPlaylist[] {
+  const query = qs<HTMLInputElement>("#playlistSearchInput")?.value.trim().toLowerCase() || "";
+  if (!query) return playlists;
+  return playlists.filter((playlist) =>
+    playlist.name.toLowerCase().includes(query)
+    || playlist.owner.toLowerCase().includes(query)
+  );
+}
+
 function renderPlaylistRows(containerId: string, playlists: SpotifyCatalogPlaylist[], emptyMessage: string): void {
   const container = qs<HTMLElement>(`#${containerId}`);
-  const visiblePlaylists = sortPlaylists(playlists, getPlaylistSortMode());
+  const visiblePlaylists = sortPlaylists(filterPlaylistsForSearch(playlists), getPlaylistSortMode());
   if (!visiblePlaylists.length) {
     container.classList.add("spotify-browser-empty");
     container.innerHTML = escapeHtmlInline(emptyMessage);
@@ -1045,26 +1057,60 @@ function renderPlaylistRows(containerId: string, playlists: SpotifyCatalogPlayli
 
 function renderArtistRows(artists: SpotifyCatalogArtist[]): string {
   if (!artists.length) return "";
-  return `
-    <div class="spotify-result-group-title">Artists</div>
-    ${artists.map((artist) => `
-      <article class="spotify-result-row spotify-artist-row" data-artist-id="${escapeHtmlInline(artist.id)}" data-uri="${escapeHtmlInline(artist.uri)}">
-        <div class="spotify-result-art spotify-result-art-round">${artist.imageUrl ? `<img src="${escapeHtmlInline(artist.imageUrl)}" alt="" />` : "<span>◎</span>"}</div>
-        <div class="spotify-result-copy">
-          <button class="spotify-result-title spotify-result-title-button" type="button" data-action="artist-top-tracks" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}">${escapeHtmlInline(artist.name)}</button>
-          <div class="spotify-result-subtitle">${artist.followers ? `${artist.followers.toLocaleString()} followers` : "Artist"}</div>
-        </div>
-        <button class="spotify-row-button" type="button" data-action="artist-top-tracks" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}">Top Tracks</button>
-      </article>
-    `).join("")}
-  `;
+  return artists.map((artist) => `
+    <article class="spotify-result-row spotify-artist-row" data-artist-id="${escapeHtmlInline(artist.id)}" data-uri="${escapeHtmlInline(artist.uri)}">
+      <div class="spotify-result-art spotify-result-art-round">${artist.imageUrl ? `<img src="${escapeHtmlInline(artist.imageUrl)}" alt="" />` : "<span>◎</span>"}</div>
+      <div class="spotify-result-copy">
+        <button class="spotify-result-title spotify-result-title-button" type="button" data-action="artist-top-tracks" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}">${escapeHtmlInline(artist.name)}</button>
+        <div class="spotify-result-subtitle">${artist.followers ? `${artist.followers.toLocaleString()} followers` : "Artist"}</div>
+      </div>
+      <button class="spotify-row-button" type="button" data-action="artist-top-tracks" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}">Top Tracks</button>
+    </article>
+  `).join("");
+}
+
+function renderAlbumRows(albums: SpotifyCatalogAlbum[]): string {
+  if (!albums.length) return "";
+  return albums.map((album) => `
+    <article class="spotify-result-row spotify-playlist-row" data-uri="${escapeHtmlInline(album.uri)}">
+      <div class="spotify-result-art">${album.imageUrl ? `<img src="${escapeHtmlInline(album.imageUrl)}" alt="" />` : "<span>▣</span>"}</div>
+      <div class="spotify-result-copy">
+        <button class="spotify-result-title spotify-result-title-button" type="button" data-action="play-context" data-uri="${escapeHtmlInline(album.uri)}">${escapeHtmlInline(album.name)}</button>
+        <div class="spotify-result-subtitle">${escapeHtmlInline(album.artists)}${album.releaseYear ? ` • ${escapeHtmlInline(album.releaseYear)}` : ""} • ${album.trackCount} tracks</div>
+      </div>
+      <button class="spotify-row-button" type="button" data-action="play-context" data-uri="${escapeHtmlInline(album.uri)}">Play</button>
+      <button class="spotify-row-button secondary" type="button" data-action="shuffle-context" data-uri="${escapeHtmlInline(album.uri)}">Shuffle</button>
+    </article>
+  `).join("");
+}
+
+function setSearchResultTab(tab: SpotifySearchResultTab): void {
+  spotifySearchResultTab = tab;
+  ["tracks", "artists", "playlists", "albums"].forEach((candidate) => {
+    const button = document.querySelector<HTMLButtonElement>(`[data-search-result-tab="${candidate}"]`);
+    button?.classList.toggle("spotify-result-tab-active", candidate === tab);
+  });
+  renderSearchResults();
+}
+
+function searchTabLabel(tab: SpotifySearchResultTab, label: string, count: number): string {
+  return `<button class="spotify-result-tab${spotifySearchResultTab === tab ? " spotify-result-tab-active" : ""}" type="button" data-action="search-result-tab" data-search-result-tab="${tab}">${label} <span>${count}</span></button>`;
 }
 
 function renderSearchResults(): void {
-  const parts: string[] = [];
-  if (spotifyBrowserTracks.length) {
-    parts.push(`<div class="spotify-result-group-title">Tracks</div>`);
-    parts.push(sortTracks(spotifyBrowserTracks, "recent").map((track) => `
+  const container = qs<HTMLElement>("#spotifySearchResults");
+  const tabs = `
+    <div class="spotify-result-tabs">
+      ${searchTabLabel("tracks", "Tracks", spotifyBrowserTracks.length)}
+      ${searchTabLabel("artists", "Artists", spotifyBrowserArtists.length)}
+      ${searchTabLabel("playlists", "Playlists", spotifyBrowserPlaylists.length)}
+      ${searchTabLabel("albums", "Albums", spotifyBrowserAlbums.length)}
+    </div>
+  `;
+
+  let body = "";
+  if (spotifySearchResultTab === "tracks") {
+    body = sortTracks(spotifyBrowserTracks, "recent").map((track) => `
       <article class="spotify-result-row spotify-track-row" data-uri="${escapeHtmlInline(track.uri)}">
         <div class="spotify-result-art">${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "<span>♪</span>"}</div>
         <div class="spotify-result-copy">
@@ -1075,14 +1121,13 @@ function renderSearchResults(): void {
         <button class="spotify-row-button" type="button" data-action="play-uri" data-uri="${escapeHtmlInline(track.uri)}">Play</button>
         <button class="spotify-row-button secondary" type="button" data-action="queue-uri" data-uri="${escapeHtmlInline(track.uri)}">Queue</button>
       </article>
-    `).join(""));
+    `).join("");
   }
 
-  parts.push(renderArtistRows(spotifyBrowserArtists));
+  if (spotifySearchResultTab === "artists") body = renderArtistRows(spotifyBrowserArtists);
 
-  if (spotifyBrowserPlaylists.length) {
-    parts.push(`<div class="spotify-result-group-title">Playlists</div>`);
-    parts.push(sortPlaylists(spotifyBrowserPlaylists, "recent").map((playlist) => {
+  if (spotifySearchResultTab === "playlists") {
+    body = sortPlaylists(spotifyBrowserPlaylists, "recent").map((playlist) => {
       const pinned = pinnedPlaylistIds.has(playlist.id);
       return `
         <article class="spotify-result-row spotify-playlist-row${pinned ? " spotify-playlist-pinned" : ""}" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
@@ -1095,18 +1140,14 @@ function renderSearchResults(): void {
           <button class="spotify-row-button secondary" type="button" data-action="shuffle-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Shuffle</button>
         </article>
       `;
-    }).join(""));
+    }).join("");
   }
 
-  const container = qs<HTMLElement>("#spotifySearchResults");
-  const html = parts.filter(Boolean).join("");
-  if (!html.trim()) {
-    container.classList.add("spotify-browser-empty");
-    container.innerHTML = "No Spotify results found.";
-  } else {
-    container.classList.remove("spotify-browser-empty");
-    container.innerHTML = html;
-  }
+  if (spotifySearchResultTab === "albums") body = renderAlbumRows(spotifyBrowserAlbums);
+
+  const total = spotifyBrowserTracks.length + spotifyBrowserArtists.length + spotifyBrowserPlaylists.length + spotifyBrowserAlbums.length;
+  container.classList.toggle("spotify-browser-empty", total === 0);
+  container.innerHTML = total === 0 ? "No Spotify results found." : tabs + (body || `<div class="spotify-browser-empty spotify-result-tab-empty">No ${spotifySearchResultTab} found.</div>`);
 }
 
 async function ensureRecentTrackIds(): Promise<void> {
@@ -1139,7 +1180,7 @@ async function runSpotifyBrowserAction(action: () => Promise<void>): Promise<voi
 
 async function performSpotifySearch(): Promise<void> {
   const input = qs<HTMLInputElement>("#spotifySearchInput");
-  const searchType = qs<HTMLSelectElement>("#spotifySearchType").value as "track" | "artist" | "playlist" | "all";
+  const searchType = qs<HTMLSelectElement>("#spotifySearchType").value as "track" | "artist" | "playlist" | "album" | "all";
   const query = input.value.trim();
   if (!query) {
     setSpotifyBrowserStatus("Type something to search Spotify.", false);
@@ -1152,6 +1193,8 @@ async function performSpotifySearch(): Promise<void> {
     spotifyBrowserTracks = results.tracks;
     spotifyBrowserArtists = results.artists;
     spotifyBrowserPlaylists = results.playlists;
+    spotifyBrowserAlbums = results.albums;
+    spotifySearchResultTab = spotifyBrowserTracks.length ? "tracks" : spotifyBrowserArtists.length ? "artists" : spotifyBrowserPlaylists.length ? "playlists" : "albums";
     renderSearchResults();
     setSpotifyBrowserStatus(`Search complete for "${query}".`, false);
   });
@@ -1217,6 +1260,14 @@ function bindSpotifyBrowserControls(): void {
   qs<HTMLButtonElement>("#spotifyTabSearch").addEventListener("click", () => setSpotifyBrowserTab("search"));
   qs<HTMLButtonElement>("#spotifyTabPlaylists").addEventListener("click", () => {
     setSpotifyBrowserTab("playlists");
+    if (selectedPlaylist) {
+      selectedPlaylist = null;
+      currentPlaylistTracks = [];
+      renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "My Playlists will load automatically.");
+      qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
+      setSpotifyBrowserStatus("Back to My Playlists.", false);
+      return;
+    }
     if (!spotifyBrowserPlaylists.length && !spotifyBrowserBusy) void loadPlaylists();
   });
   qs<HTMLButtonElement>("#spotifyTabLibrary").addEventListener("click", () => setSpotifyBrowserTab("library"));
@@ -1238,7 +1289,11 @@ function bindSpotifyBrowserControls(): void {
 
   qs<HTMLSelectElement>("#playlistSortSelect").addEventListener("change", () => {
     if (selectedPlaylist) renderTrackRows("spotifyPlaylistsResults", currentPlaylistTracks, "No tracks returned for this playlist.", getPlaylistSortMode());
-    else renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "Load your Spotify playlists.");
+    else renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "My Playlists will load automatically.");
+  });
+
+  qs<HTMLInputElement>("#playlistSearchInput").addEventListener("input", () => {
+    if (!selectedPlaylist) renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "No matching playlists.");
   });
 
   qs<HTMLSelectElement>("#librarySortSelect").addEventListener("change", () => {
@@ -1327,6 +1382,11 @@ function bindSpotifyBrowserControls(): void {
 
     if (action === "artist-top-tracks" && artistId) {
       void openArtistTopTracks(artistId, artistName);
+    }
+
+    if (action === "search-result-tab") {
+      const tab = button.dataset.searchResultTab as SpotifySearchResultTab | undefined;
+      if (tab) setSearchResultTab(tab);
     }
   });
 

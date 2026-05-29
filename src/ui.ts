@@ -159,6 +159,7 @@ export function renderShell(state: AppState): void {
                 <option value="track">Tracks</option>
                 <option value="artist">Artists</option>
                 <option value="playlist">Playlists</option>
+                <option value="album">Albums</option>
               </select>
               <button id="spotifySearchButton" class="spotify-browser-action" type="button">Search</button>
             </div>
@@ -167,6 +168,7 @@ export function renderShell(state: AppState): void {
 
           <div id="spotifyPlaylistsPane" class="spotify-browser-pane">
             <div class="spotify-browser-toolbar">
+              <input id="playlistSearchInput" class="spotify-search-input spotify-playlist-search-input" type="search" placeholder="Search My Playlists" autocomplete="off" />
               <select id="playlistSortSelect" class="spotify-search-type spotify-sort-select" aria-label="Playlist sort">
                 <option value="recent" selected>Recent / Pinned</option>
                 <option value="alpha">A-Z</option>
