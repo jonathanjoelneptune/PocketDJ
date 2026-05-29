@@ -14,7 +14,7 @@ export const spotifyScopes = [
 ];
 
 type SpotifyImage = { url: string; height?: number; width?: number };
-type SpotifyArtist = { name: string };
+type SpotifyArtist = { id?: string; uri?: string; name: string; images?: SpotifyImage[]; followers?: { total?: number }; };
 type SpotifyTrackItem = {
   id: string;
   name: string;
@@ -301,6 +301,15 @@ export type SpotifyCatalogPlaylist = {
   trackCount: number;
 };
 
+export type SpotifyCatalogArtist = {
+  kind: "artist";
+  id: string;
+  uri: string;
+  name: string;
+  imageUrl: string | null;
+  followers: number;
+};
+
 type SpotifyPlaylistItem = {
   id: string;
   uri: string;
@@ -313,6 +322,7 @@ type SpotifyPlaylistItem = {
 type SpotifySearchResponse = {
   tracks?: { items?: SpotifyTrackItem[] };
   playlists?: { items?: Array<SpotifyPlaylistItem | null> };
+  artists?: { items?: SpotifyArtist[] };
 };
 
 type SpotifyPlaylistsResponse = {
@@ -355,6 +365,18 @@ function normalizeCatalogPlaylist(item: SpotifyPlaylistItem | null | undefined):
     owner: item.owner?.display_name || "Spotify playlist",
     imageUrl: item.images?.[0]?.url || null,
     trackCount: Number(item.tracks?.total || 0)
+  };
+}
+
+function normalizeCatalogArtist(item: SpotifyArtist | null | undefined): SpotifyCatalogArtist | null {
+  if (!item?.id) return null;
+  return {
+    kind: "artist",
+    id: item.id,
+    uri: item.uri || `spotify:artist:${item.id}`,
+    name: item.name || "Unknown artist",
+    imageUrl: item.images?.[0]?.url || null,
+    followers: Number(item.followers?.total || 0)
   };
 }
 
@@ -410,13 +432,13 @@ async function spotifyApiJson<T>(clientId: string, endpoint: string, options: Re
 export async function searchSpotifyCatalog(
   clientId: string,
   query: string,
-  type: "track" | "playlist" | "all" = "all",
+  type: "track" | "artist" | "playlist" | "all" = "all",
   limit = 10
-): Promise<{ tracks: SpotifyCatalogTrack[]; playlists: SpotifyCatalogPlaylist[] }> {
+): Promise<{ tracks: SpotifyCatalogTrack[]; artists: SpotifyCatalogArtist[]; playlists: SpotifyCatalogPlaylist[] }> {
   const cleanQuery = query.trim();
-  if (!cleanQuery) return { tracks: [], playlists: [] };
+  if (!cleanQuery) return { tracks: [], artists: [], playlists: [] };
 
-  const searchTypes = type === "all" ? "track,playlist" : type;
+  const searchTypes = type === "all" ? "track,artist,playlist" : type;
   const endpoint = `/search?${new URLSearchParams({
     q: cleanQuery,
     type: searchTypes,
@@ -426,6 +448,7 @@ export async function searchSpotifyCatalog(
 
   return {
     tracks: (json.tracks?.items || []).map(normalizeCatalogTrack).filter((item): item is SpotifyCatalogTrack => Boolean(item)),
+    artists: (json.artists?.items || []).map(normalizeCatalogArtist).filter((item): item is SpotifyCatalogArtist => Boolean(item)),
     playlists: (json.playlists?.items || []).map(normalizeCatalogPlaylist).filter((item): item is SpotifyCatalogPlaylist => Boolean(item))
   };
 }
@@ -490,4 +513,13 @@ export async function playSpotifyContext(clientId: string, contextUri: string, t
 
 export async function addSpotifyUriToQueue(clientId: string, uri: string): Promise<void> {
   await spotifyPlayerCommand(clientId, `/queue?${new URLSearchParams({ uri }).toString()}`, { method: "POST" });
+}
+
+
+export async function getArtistTopTracks(clientId: string, artistId: string): Promise<SpotifyCatalogTrack[]> {
+  const endpoint = `/artists/${encodeURIComponent(artistId)}/top-tracks?market=US`;
+  const json = await spotifyApiJson<{ tracks?: SpotifyTrackItem[] }>(clientId, endpoint);
+  return (json.tracks || [])
+    .map(normalizeCatalogTrack)
+    .filter((item): item is SpotifyCatalogTrack => Boolean(item));
 }

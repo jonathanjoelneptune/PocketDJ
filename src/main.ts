@@ -2,7 +2,7 @@ import "./styles.css";
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { addSpotifyUriToQueue, disconnectSpotify, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getRecentlyPlayed, getSavedTracks, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack } from "./spotify/spotifyClient";
+import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getRecentlyPlayed, getSavedTracks, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import {
   emptyLyrics,
@@ -44,12 +44,22 @@ let lyricAnimationRevision = 0;
 
 
 type SpotifyBrowserTab = "search" | "playlists" | "library";
+type SpotifyBrowserSort = "recent" | "alpha" | "artist" | "album";
+
+const SPOTIFY_PINNED_PLAYLISTS_KEY = "pocketdj-pinned-playlists-v1";
+const SPOTIFY_PLAYLIST_RECENCY_KEY = "pocketdj-playlist-recency-v1";
 
 let spotifyBrowserTab: SpotifyBrowserTab = "search";
 let spotifyBrowserBusy = false;
 let spotifyBrowserStatus = "";
 let spotifyBrowserTracks: SpotifyCatalogTrack[] = [];
+let spotifyBrowserArtists: SpotifyCatalogArtist[] = [];
 let spotifyBrowserPlaylists: SpotifyCatalogPlaylist[] = [];
+let currentPlaylistTracks: SpotifyCatalogTrack[] = [];
+let currentLibraryTracks: SpotifyCatalogTrack[] = [];
+let recentTrackIds: string[] = [];
+let pinnedPlaylistIds = loadSpotifyPinnedPlaylists();
+let playlistRecency = loadSpotifyPlaylistRecency();
 let selectedPlaylist: SpotifyCatalogPlaylist | null = null;
 
 
@@ -347,7 +357,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v54";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v55";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -871,6 +881,7 @@ function updatePhase2SpotifyControls(): void {
   qs<HTMLElement>("#spotifyVolumeValue").textContent = String(phase2Volume);
 }
 
+
 function escapeHtmlInline(value: string): string {
   return value.replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
@@ -887,6 +898,78 @@ function formatDurationMs(value: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function loadSpotifyPinnedPlaylists(): Set<string> {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(SPOTIFY_PINNED_PLAYLISTS_KEY) || "[]");
+    return new Set(Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveSpotifyPinnedPlaylists(): void {
+  localStorage.setItem(SPOTIFY_PINNED_PLAYLISTS_KEY, JSON.stringify([...pinnedPlaylistIds]));
+}
+
+function loadSpotifyPlaylistRecency(): Record<string, number> {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(SPOTIFY_PLAYLIST_RECENCY_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed as Record<string, number> : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSpotifyPlaylistRecency(): void {
+  localStorage.setItem(SPOTIFY_PLAYLIST_RECENCY_KEY, JSON.stringify(playlistRecency));
+}
+
+function rememberPlaylistUse(playlistId: string): void {
+  playlistRecency = { ...playlistRecency, [playlistId]: Date.now() };
+  saveSpotifyPlaylistRecency();
+}
+
+function compareText(a: string, b: string): number {
+  return a.localeCompare(b, undefined, { sensitivity: "base" });
+}
+
+function recentTrackRank(track: SpotifyCatalogTrack): number {
+  const index = recentTrackIds.indexOf(track.id);
+  return index === -1 ? 999_999 : index;
+}
+
+function sortTracks(tracks: SpotifyCatalogTrack[], sort: SpotifyBrowserSort): SpotifyCatalogTrack[] {
+  const sorted = [...tracks];
+  if (sort === "alpha") return sorted.sort((a, b) => compareText(a.name, b.name));
+  if (sort === "artist") return sorted.sort((a, b) => compareText(a.artists, b.artists) || compareText(a.name, b.name));
+  if (sort === "album") return sorted.sort((a, b) => compareText(a.album, b.album) || compareText(a.name, b.name));
+  return sorted.sort((a, b) => recentTrackRank(a) - recentTrackRank(b) || compareText(a.name, b.name));
+}
+
+function sortPlaylists(playlists: SpotifyCatalogPlaylist[], sort: SpotifyBrowserSort): SpotifyCatalogPlaylist[] {
+  const sorted = [...playlists];
+  if (sort === "alpha") {
+    return sorted.sort((a, b) =>
+      Number(pinnedPlaylistIds.has(b.id)) - Number(pinnedPlaylistIds.has(a.id))
+      || compareText(a.name, b.name)
+    );
+  }
+
+  return sorted.sort((a, b) =>
+    Number(pinnedPlaylistIds.has(b.id)) - Number(pinnedPlaylistIds.has(a.id))
+    || (playlistRecency[b.id] || 0) - (playlistRecency[a.id] || 0)
+    || compareText(a.name, b.name)
+  );
+}
+
+function getPlaylistSortMode(): SpotifyBrowserSort {
+  return qs<HTMLSelectElement>("#playlistSortSelect").value as SpotifyBrowserSort;
+}
+
+function getLibrarySortMode(): SpotifyBrowserSort {
+  return qs<HTMLSelectElement>("#librarySortSelect").value as SpotifyBrowserSort;
 }
 
 function setSpotifyBrowserStatus(message: string, busy = false): void {
@@ -908,16 +991,17 @@ function setSpotifyBrowserTab(tab: SpotifyBrowserTab): void {
   qs<HTMLButtonElement>("#spotifyTabLibrary").classList.toggle("spotify-browser-tab-active", tab === "library");
 }
 
-function renderTrackRows(containerId: string, tracks: SpotifyCatalogTrack[], emptyMessage: string): void {
+function renderTrackRows(containerId: string, tracks: SpotifyCatalogTrack[], emptyMessage: string, sort: SpotifyBrowserSort = "recent"): void {
   const container = qs<HTMLElement>(`#${containerId}`);
-  if (!tracks.length) {
+  const visibleTracks = sortTracks(tracks, sort);
+  if (!visibleTracks.length) {
     container.classList.add("spotify-browser-empty");
     container.innerHTML = escapeHtmlInline(emptyMessage);
     return;
   }
 
   container.classList.remove("spotify-browser-empty");
-  container.innerHTML = tracks.map((track) => `
+  container.innerHTML = visibleTracks.map((track) => `
     <article class="spotify-result-row spotify-track-row" data-uri="${escapeHtmlInline(track.uri)}">
       <div class="spotify-result-art">${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "<span>♪</span>"}</div>
       <div class="spotify-result-copy">
@@ -933,31 +1017,54 @@ function renderTrackRows(containerId: string, tracks: SpotifyCatalogTrack[], emp
 
 function renderPlaylistRows(containerId: string, playlists: SpotifyCatalogPlaylist[], emptyMessage: string): void {
   const container = qs<HTMLElement>(`#${containerId}`);
-  if (!playlists.length) {
+  const visiblePlaylists = sortPlaylists(playlists, getPlaylistSortMode());
+  if (!visiblePlaylists.length) {
     container.classList.add("spotify-browser-empty");
     container.innerHTML = escapeHtmlInline(emptyMessage);
     return;
   }
 
   container.classList.remove("spotify-browser-empty");
-  container.innerHTML = playlists.map((playlist) => `
-    <article class="spotify-result-row spotify-playlist-row" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
-      <div class="spotify-result-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "<span>▤</span>"}</div>
-      <div class="spotify-result-copy">
-        <div class="spotify-result-title">${escapeHtmlInline(playlist.name)}</div>
-        <div class="spotify-result-subtitle">${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</div>
-      </div>
-      <button class="spotify-row-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Open</button>
-      <button class="spotify-row-button secondary" type="button" data-action="play-context" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
-    </article>
-  `).join("");
+  container.innerHTML = visiblePlaylists.map((playlist) => {
+    const pinned = pinnedPlaylistIds.has(playlist.id);
+    const recentLabel = playlistRecency[playlist.id] ? "Recently opened" : "Not opened here yet";
+    return `
+      <article class="spotify-result-row spotify-playlist-row${pinned ? " spotify-playlist-pinned" : ""}" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
+        <div class="spotify-result-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "<span>▤</span>"}</div>
+        <div class="spotify-result-copy">
+          <div class="spotify-result-title">${pinned ? "★ " : ""}${escapeHtmlInline(playlist.name)}</div>
+          <div class="spotify-result-subtitle">${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks • ${recentLabel}</div>
+        </div>
+        <button class="spotify-row-button secondary" type="button" data-action="pin-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">${pinned ? "Unpin" : "Pin"}</button>
+        <button class="spotify-row-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Open</button>
+        <button class="spotify-row-button secondary" type="button" data-action="play-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderArtistRows(artists: SpotifyCatalogArtist[]): string {
+  if (!artists.length) return "";
+  return `
+    <div class="spotify-result-group-title">Artists</div>
+    ${artists.map((artist) => `
+      <article class="spotify-result-row spotify-artist-row" data-artist-id="${escapeHtmlInline(artist.id)}" data-uri="${escapeHtmlInline(artist.uri)}">
+        <div class="spotify-result-art spotify-result-art-round">${artist.imageUrl ? `<img src="${escapeHtmlInline(artist.imageUrl)}" alt="" />` : "<span>◎</span>"}</div>
+        <div class="spotify-result-copy">
+          <div class="spotify-result-title">${escapeHtmlInline(artist.name)}</div>
+          <div class="spotify-result-subtitle">${artist.followers ? `${artist.followers.toLocaleString()} followers` : "Artist"}</div>
+        </div>
+        <button class="spotify-row-button" type="button" data-action="artist-top-tracks" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}">Top Tracks</button>
+      </article>
+    `).join("")}
+  `;
 }
 
 function renderSearchResults(): void {
   const parts: string[] = [];
   if (spotifyBrowserTracks.length) {
     parts.push(`<div class="spotify-result-group-title">Tracks</div>`);
-    parts.push(spotifyBrowserTracks.map((track) => `
+    parts.push(sortTracks(spotifyBrowserTracks, "recent").map((track) => `
       <article class="spotify-result-row spotify-track-row" data-uri="${escapeHtmlInline(track.uri)}">
         <div class="spotify-result-art">${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "<span>♪</span>"}</div>
         <div class="spotify-result-copy">
@@ -971,29 +1078,42 @@ function renderSearchResults(): void {
     `).join(""));
   }
 
+  parts.push(renderArtistRows(spotifyBrowserArtists));
+
   if (spotifyBrowserPlaylists.length) {
     parts.push(`<div class="spotify-result-group-title">Playlists</div>`);
-    parts.push(spotifyBrowserPlaylists.map((playlist) => `
-      <article class="spotify-result-row spotify-playlist-row" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
-        <div class="spotify-result-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "<span>▤</span>"}</div>
-        <div class="spotify-result-copy">
-          <div class="spotify-result-title">${escapeHtmlInline(playlist.name)}</div>
-          <div class="spotify-result-subtitle">${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</div>
-        </div>
-        <button class="spotify-row-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Open</button>
-        <button class="spotify-row-button secondary" type="button" data-action="play-context" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
-      </article>
-    `).join(""));
+    parts.push(sortPlaylists(spotifyBrowserPlaylists, "recent").map((playlist) => {
+      const pinned = pinnedPlaylistIds.has(playlist.id);
+      return `
+        <article class="spotify-result-row spotify-playlist-row${pinned ? " spotify-playlist-pinned" : ""}" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">
+          <div class="spotify-result-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "<span>▤</span>"}</div>
+          <div class="spotify-result-copy">
+            <div class="spotify-result-title">${pinned ? "★ " : ""}${escapeHtmlInline(playlist.name)}</div>
+            <div class="spotify-result-subtitle">${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</div>
+          </div>
+          <button class="spotify-row-button secondary" type="button" data-action="pin-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">${pinned ? "Unpin" : "Pin"}</button>
+          <button class="spotify-row-button" type="button" data-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Open</button>
+          <button class="spotify-row-button secondary" type="button" data-action="play-context" data-playlist-id="${escapeHtmlInline(playlist.id)}" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
+        </article>
+      `;
+    }).join(""));
   }
 
   const container = qs<HTMLElement>("#spotifySearchResults");
-  if (!parts.length) {
+  const html = parts.filter(Boolean).join("");
+  if (!html.trim()) {
     container.classList.add("spotify-browser-empty");
     container.innerHTML = "No Spotify results found.";
   } else {
     container.classList.remove("spotify-browser-empty");
-    container.innerHTML = parts.join("");
+    container.innerHTML = html;
   }
+}
+
+async function ensureRecentTrackIds(): Promise<void> {
+  if (recentTrackIds.length) return;
+  const recent = await getRecentlyPlayed(state.spotifyClientId, 50);
+  recentTrackIds = recent.map((track) => track.id);
 }
 
 async function runSpotifyBrowserAction(action: () => Promise<void>): Promise<void> {
@@ -1020,7 +1140,7 @@ async function runSpotifyBrowserAction(action: () => Promise<void>): Promise<voi
 
 async function performSpotifySearch(): Promise<void> {
   const input = qs<HTMLInputElement>("#spotifySearchInput");
-  const searchType = qs<HTMLSelectElement>("#spotifySearchType").value as "track" | "playlist" | "all";
+  const searchType = qs<HTMLSelectElement>("#spotifySearchType").value as "track" | "artist" | "playlist" | "all";
   const query = input.value.trim();
   if (!query) {
     setSpotifyBrowserStatus("Type something to search Spotify.", false);
@@ -1028,8 +1148,10 @@ async function performSpotifySearch(): Promise<void> {
   }
 
   await runSpotifyBrowserAction(async () => {
+    await ensureRecentTrackIds();
     const results = await searchSpotifyCatalog(state.spotifyClientId, query, searchType, 10);
     spotifyBrowserTracks = results.tracks;
+    spotifyBrowserArtists = results.artists;
     spotifyBrowserPlaylists = results.playlists;
     renderSearchResults();
     setSpotifyBrowserStatus(`Search complete for "${query}".`, false);
@@ -1039,40 +1161,56 @@ async function performSpotifySearch(): Promise<void> {
 async function loadPlaylists(): Promise<void> {
   await runSpotifyBrowserAction(async () => {
     selectedPlaylist = null;
-    spotifyBrowserPlaylists = await getUserPlaylists(state.spotifyClientId, 40);
+    currentPlaylistTracks = [];
+    spotifyBrowserPlaylists = await getUserPlaylists(state.spotifyClientId, 50);
     renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "No playlists returned.");
     qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
-    setSpotifyBrowserStatus(`Loaded ${spotifyBrowserPlaylists.length} playlists.`, false);
+    setSpotifyBrowserStatus(`Loaded ${spotifyBrowserPlaylists.length} playlists. Pinned and recently opened are first.`, false);
   });
 }
 
 async function openPlaylist(playlistId: string): Promise<void> {
-  const playlist = spotifyBrowserPlaylists.find((item) => item.id === playlistId)
-    || spotifyBrowserPlaylists.concat(spotifyBrowserPlaylists).find((item) => item.id === playlistId)
-    || null;
+  const playlist = spotifyBrowserPlaylists.find((item) => item.id === playlistId) || null;
   selectedPlaylist = playlist;
+  rememberPlaylistUse(playlistId);
 
   await runSpotifyBrowserAction(async () => {
-    const tracks = await getPlaylistTracks(state.spotifyClientId, playlistId, 80);
-    renderTrackRows("spotifyPlaylistsResults", tracks, "No tracks returned for this playlist.");
+    await ensureRecentTrackIds();
+    currentPlaylistTracks = await getPlaylistTracks(state.spotifyClientId, playlistId, 100);
+    renderTrackRows("spotifyPlaylistsResults", currentPlaylistTracks, "No tracks returned for this playlist.", getPlaylistSortMode());
     qs<HTMLButtonElement>("#playlistBackButton").disabled = false;
-    setSpotifyBrowserStatus(`Opened ${playlist?.name || "playlist"} with ${tracks.length} tracks.`, false);
+    setSpotifyBrowserStatus(`Opened ${playlist?.name || "playlist"} with ${currentPlaylistTracks.length} tracks.`, false);
   });
 }
 
 async function loadSavedSpotifyTracks(): Promise<void> {
   await runSpotifyBrowserAction(async () => {
-    const tracks = await getSavedTracks(state.spotifyClientId, 40);
-    renderTrackRows("spotifyLibraryResults", tracks, "No liked songs returned.");
-    setSpotifyBrowserStatus(`Loaded ${tracks.length} liked songs.`, false);
+    await ensureRecentTrackIds();
+    currentLibraryTracks = await getSavedTracks(state.spotifyClientId, 50);
+    renderTrackRows("spotifyLibraryResults", currentLibraryTracks, "No liked songs returned.", getLibrarySortMode());
+    setSpotifyBrowserStatus(`Loaded ${currentLibraryTracks.length} liked songs.`, false);
   });
 }
 
 async function loadRecentSpotifyTracks(): Promise<void> {
   await runSpotifyBrowserAction(async () => {
-    const tracks = await getRecentlyPlayed(state.spotifyClientId, 40);
-    renderTrackRows("spotifyLibraryResults", tracks, "No recently played tracks returned.");
-    setSpotifyBrowserStatus(`Loaded ${tracks.length} recently played tracks.`, false);
+    const tracks = await getRecentlyPlayed(state.spotifyClientId, 50);
+    recentTrackIds = tracks.map((track) => track.id);
+    currentLibraryTracks = tracks;
+    renderTrackRows("spotifyLibraryResults", currentLibraryTracks, "No recently played tracks returned.", getLibrarySortMode());
+    setSpotifyBrowserStatus(`Loaded ${currentLibraryTracks.length} recently played tracks.`, false);
+  });
+}
+
+async function openArtistTopTracks(artistId: string, artistName: string): Promise<void> {
+  await runSpotifyBrowserAction(async () => {
+    const tracks = await getArtistTopTracks(state.spotifyClientId, artistId);
+    spotifyBrowserTracks = tracks;
+    spotifyBrowserArtists = [];
+    spotifyBrowserPlaylists = [];
+    renderSearchResults();
+    setSpotifyBrowserTab("search");
+    setSpotifyBrowserStatus(`Loaded top tracks for ${artistName}.`, false);
   });
 }
 
@@ -1096,11 +1234,21 @@ function bindSpotifyBrowserControls(): void {
     void loadPlaylists();
   });
 
+  qs<HTMLSelectElement>("#playlistSortSelect").addEventListener("change", () => {
+    if (selectedPlaylist) renderTrackRows("spotifyPlaylistsResults", currentPlaylistTracks, "No tracks returned for this playlist.", getPlaylistSortMode());
+    else renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "Load your Spotify playlists.");
+  });
+
+  qs<HTMLSelectElement>("#librarySortSelect").addEventListener("change", () => {
+    renderTrackRows("spotifyLibraryResults", currentLibraryTracks, "Choose liked songs or recently played tracks.", getLibrarySortMode());
+  });
+
   qs<HTMLButtonElement>("#playlistBackButton").addEventListener("click", () => {
     selectedPlaylist = null;
+    currentPlaylistTracks = [];
     renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "Load your Spotify playlists.");
     qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
-    setSpotifyBrowserStatus("Back to playlists.", false);
+    setSpotifyBrowserStatus("Back to My Playlists.", false);
   });
   qs<HTMLButtonElement>("#playlistBackButton").disabled = true;
 
@@ -1120,6 +1268,8 @@ function bindSpotifyBrowserControls(): void {
     const action = button.dataset.action || "";
     const uri = button.dataset.uri || "";
     const playlistId = button.dataset.playlistId || "";
+    const artistId = button.dataset.artistId || "";
+    const artistName = button.dataset.artistName || "artist";
 
     if (action === "play-uri" && uri) {
       void runSpotifyBrowserAction(async () => {
@@ -1138,6 +1288,7 @@ function bindSpotifyBrowserControls(): void {
 
     if (action === "play-context" && uri) {
       void runSpotifyBrowserAction(async () => {
+        if (playlistId) rememberPlaylistUse(playlistId);
         await playSpotifyContext(state.spotifyClientId, uri);
         await pollSpotifyNow();
         setSpotifyBrowserStatus("Playing playlist.", false);
@@ -1147,6 +1298,19 @@ function bindSpotifyBrowserControls(): void {
     if (action === "open-playlist" && playlistId) {
       setSpotifyBrowserTab("playlists");
       void openPlaylist(playlistId);
+    }
+
+    if (action === "pin-playlist" && playlistId) {
+      if (pinnedPlaylistIds.has(playlistId)) pinnedPlaylistIds.delete(playlistId);
+      else pinnedPlaylistIds.add(playlistId);
+      saveSpotifyPinnedPlaylists();
+      if (spotifyBrowserTab === "search") renderSearchResults();
+      else if (selectedPlaylist) renderTrackRows("spotifyPlaylistsResults", currentPlaylistTracks, "No tracks returned for this playlist.", getPlaylistSortMode());
+      else renderPlaylistRows("spotifyPlaylistsResults", spotifyBrowserPlaylists, "Load your Spotify playlists.");
+    }
+
+    if (action === "artist-top-tracks" && artistId) {
+      void openArtistTopTracks(artistId, artistName);
     }
   });
 
