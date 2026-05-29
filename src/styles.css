@@ -6519,3 +6519,132 @@ body.lyrics-marquee-unavailable .marquee::after {
     drop-shadow(0 0 5px rgba(179,71,34,0.78))
     drop-shadow(0 0 12px rgba(107,35,22,0.38)) !important;
 }
+
+
+/* v64H panel/header width fix
+   Keep the control card wide enough for PocketDJ + Lyrics + Connected + Compact + Lock.
+   Use viewport-based width on large browsers, but enforce a practical minimum so the header never horizontally scrolls. */
+:root {
+  --panel-min-readable: 520px;
+  --panel-w: clamp(var(--panel-min-readable), 32vw, 660px);
+  --panel-edge-pad: clamp(10px, 1vw, 18px);
+  --panel-tab-w: clamp(38px, 3vw, 54px);
+}
+
+@media (max-width: 1100px) {
+  :root {
+    --panel-w: min(70vw, calc(var(--room-w) - 24px));
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --panel-w: min(78vw, calc(var(--room-w) - 18px));
+    --panel-edge-pad: 9px;
+  }
+}
+
+.control-card,
+.control-card.control-card-compact-mode {
+  right: calc(((100vw - var(--room-w)) / 2) + var(--panel-edge-pad)) !important;
+  width: var(--panel-w) !important;
+  min-width: min(var(--panel-min-readable), calc(var(--room-w) - 24px)) !important;
+  max-width: min(660px, calc(var(--room-w) - 24px)) !important;
+  transform: translateX(0) !important;
+  overflow-x: hidden !important;
+}
+
+.control-card-hidden,
+.control-card:not(.control-card-open) {
+  transform: translateX(calc(var(--panel-w) + var(--panel-tab-w) + 18px)) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.brand-row,
+.compact-brand-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: clamp(6px, calc(var(--room-w) * 0.005), 10px) !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.brand-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: clamp(5px, calc(var(--room-w) * 0.004), 8px) !important;
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+}
+
+.pocket-title-pill,
+.mini-brand {
+  flex: 0 0 auto !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  height: calc(var(--room-h) * 0.038) !important;
+  min-height: 24px !important;
+  max-height: 34px !important;
+  padding: 0 clamp(8px, calc(var(--room-w) * 0.007), 12px) !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 184, 76, 0.56) !important;
+  background:
+    linear-gradient(180deg, rgba(122, 72, 17, 0.72), rgba(45, 24, 9, 0.68)) !important;
+  color: #ffd98a !important;
+  box-shadow:
+    inset 0 0 14px rgba(255, 184, 76, 0.10),
+    0 0 14px rgba(255, 184, 76, 0.16) !important;
+  font-family: "Press Start 2P", monospace !important;
+  font-size: clamp(0.44rem, calc(var(--room-w) * 0.0037), 0.58rem) !important;
+  line-height: 1 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.lyrics-toggle,
+.connect-pill,
+.compact-pill,
+.panel-lock-toggle {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+
+.lyrics-toggle,
+.connect-pill,
+.compact-pill {
+  min-width: auto !important;
+  padding-left: clamp(8px, calc(var(--room-w) * 0.0065), 12px) !important;
+  padding-right: clamp(8px, calc(var(--room-w) * 0.0065), 12px) !important;
+}
+
+.panel-lock-toggle {
+  min-width: 28px !important;
+}
+
+/* If the viewport becomes genuinely narrow, the panel can use most of the room width,
+   but the pills still shrink text instead of forcing horizontal card scroll. */
+@media (max-width: 720px) {
+  .pocket-title-pill,
+  .mini-brand,
+  .lyrics-toggle,
+  .connect-pill,
+  .compact-pill {
+    font-size: clamp(0.36rem, calc(var(--room-w) * 0.0034), 0.48rem) !important;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+
+  .brand-actions {
+    gap: 4px !important;
+  }
+}

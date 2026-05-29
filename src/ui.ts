@@ -111,7 +111,7 @@ export function renderShell(state: AppState): void {
 
       <aside id="controlCard" class="control-card control-card-open">
         <div class="brand-row compact-brand-row">
-          <div class="mini-brand"><span>Pocket</span><span>DJ</span></div>
+          <div class="mini-brand pocket-title-pill">PocketDJ</div>
           <div class="brand-actions">
             <button id="lyricsToggle" class="lyrics-toggle lyrics-toggle-on lyrics-toggle-unknown" type="button" aria-pressed="true" title="Toggle ceiling lyrics">LYRICS</button>
             <div class="mode-pill mode-pill-hidden" id="modePill" aria-hidden="true">IDLE</div>
