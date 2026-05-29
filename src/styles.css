@@ -6415,3 +6415,107 @@ body.lyrics-marquee-unavailable .marquee::after {
     right: calc(((100vw - var(--room-w)) / 2) + 12px) !important;
   }
 }
+
+
+/* v64G single-source panel sizing and lyric marquee state cleanup
+   This is the only width system that should win after older v64C/v64D/v64E/v64F overrides. */
+:root {
+  --panel-w: clamp(390px, 25vw, 560px);
+  --panel-edge-pad: clamp(10px, 1vw, 18px);
+  --panel-tab-w: clamp(38px, 3vw, 54px);
+  --marquee-lyrics-found: #ffbf47;
+  --marquee-lyrics-searching: #f7d68c;
+  --marquee-lyrics-unavailable: #b34722;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --panel-w: min(70vw, calc(var(--room-w) - 24px));
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --panel-w: min(78vw, calc(var(--room-w) - 18px));
+    --panel-edge-pad: 9px;
+  }
+}
+
+.control-card,
+.control-card.control-card-compact-mode {
+  right: calc(((100vw - var(--room-w)) / 2) + var(--panel-edge-pad)) !important;
+  width: var(--panel-w) !important;
+  min-width: 0 !important;
+  max-width: var(--panel-w) !important;
+  transform: translateX(0) !important;
+}
+
+.control-card-hidden,
+.control-card:not(.control-card-open) {
+  transform: translateX(calc(var(--panel-w) + var(--panel-tab-w) + 18px)) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.control-card-compact-mode {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(var(--room-h) - (var(--room-h) * var(--panel-start-y-ratio)) - 18px) !important;
+}
+
+.control-card-compact-mode .panel-scroll-body {
+  display: none !important;
+}
+
+/* Keep the opener tab independent from panel width. */
+.side-panel-tab {
+  right: calc((100vw - var(--room-w)) / 2) !important;
+  width: var(--panel-tab-w) !important;
+}
+
+/* Marquee lyric state colors:
+   found = vibrant orange, searching = light artist-line orange, unavailable = burnt red-orange. */
+.marquee::before,
+.marquee::after {
+  transition:
+    background 420ms ease,
+    filter 420ms ease,
+    opacity 420ms ease;
+}
+
+body.lyrics-marquee-found .marquee::before,
+body.lyrics-marquee-found .marquee::after {
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--marquee-lyrics-found) 0 8px,
+    transparent 8px 18px
+  ) !important;
+  filter:
+    drop-shadow(0 0 5px rgba(255,191,71,0.78))
+    drop-shadow(0 0 12px rgba(255,191,71,0.32)) !important;
+}
+
+body.lyrics-marquee-searching .marquee::before,
+body.lyrics-marquee-searching .marquee::after {
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--marquee-lyrics-searching) 0 8px,
+    transparent 8px 18px
+  ) !important;
+  filter:
+    drop-shadow(0 0 5px rgba(247,214,140,0.62))
+    drop-shadow(0 0 12px rgba(247,214,140,0.24)) !important;
+}
+
+body.lyrics-marquee-unavailable .marquee::before,
+body.lyrics-marquee-unavailable .marquee::after {
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--marquee-lyrics-unavailable) 0 8px,
+    transparent 8px 18px
+  ) !important;
+  filter:
+    drop-shadow(0 0 5px rgba(179,71,34,0.78))
+    drop-shadow(0 0 12px rgba(107,35,22,0.38)) !important;
+}

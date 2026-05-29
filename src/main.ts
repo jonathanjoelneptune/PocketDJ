@@ -435,7 +435,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64f";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64g";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -491,8 +491,30 @@ function schedulePostConnectPlaybackRefresh(): void {
 
 
 function updateMarqueeLyricsAvailability(status: LyricsPayload["status"], enabled: boolean): void {
-  const hasLyrics = enabled && status === "found";
-  document.body.classList.toggle("lyrics-marquee-unavailable", !hasLyrics);
+  const classes = [
+    "lyrics-marquee-found",
+    "lyrics-marquee-searching",
+    "lyrics-marquee-unavailable",
+  ];
+
+  document.body.classList.remove(...classes);
+
+  if (!enabled) {
+    document.body.classList.add("lyrics-marquee-unavailable");
+    return;
+  }
+
+  if (status === "loading") {
+    document.body.classList.add("lyrics-marquee-searching");
+    return;
+  }
+
+  if (status === "found") {
+    document.body.classList.add("lyrics-marquee-found");
+    return;
+  }
+
+  document.body.classList.add("lyrics-marquee-unavailable");
 }
 
 
