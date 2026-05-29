@@ -437,7 +437,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64j";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64k";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -478,6 +478,30 @@ async function boot(): Promise<void> {
   requestAnimationFrame(tick);
 }
 
+
+
+
+function syncAspectModeControls(): void {
+  const enabled = roomUtility.roomFillStretchMode;
+  const aspectButton = document.querySelector<HTMLButtonElement>("#aspectModeToggle");
+  const devCheckbox = document.querySelector<HTMLInputElement>("#roomFillStretchMode");
+
+  if (aspectButton) {
+    aspectButton.textContent = enabled ? "FILL" : "WIDE";
+    aspectButton.classList.toggle("aspect-pill-active", enabled);
+    aspectButton.setAttribute("aria-pressed", String(enabled));
+    aspectButton.title = enabled ? "Fill mode: clamped 1.25 to 2.25" : "Wide mode: locked 16:9";
+  }
+
+  if (devCheckbox) devCheckbox.checked = enabled;
+}
+
+function setRoomFillStretchMode(enabled: boolean): void {
+  roomUtility = { ...roomUtility, roomFillStretchMode: enabled };
+  applyRoomUtilitySettings();
+  syncAspectModeControls();
+  saveRoomUtilitySettings();
+}
 
 
 function schedulePostConnectPlaybackRefresh(): void {
@@ -1982,9 +2006,7 @@ function bindRoomUtilityControls(): void {
   });
 
   roomFillStretchMode.addEventListener("change", () => {
-    roomUtility = { ...roomUtility, roomFillStretchMode: roomFillStretchMode.checked };
-    applyRoomUtilitySettings();
-    saveRoomUtilitySettings();
+    setRoomFillStretchMode(roomFillStretchMode.checked);
   });
 
   songChangeMode.addEventListener("change", () => {
@@ -2264,6 +2286,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--panel-start-y-ratio", String(roomUtility.panelStartY / 100));
   root.classList.toggle("panel-height-adjust-enabled", roomUtility.panelHeightAdjustEnabled);
   root.classList.toggle("room-fill-stretch", roomUtility.roomFillStretchMode);
+  syncAspectModeControls();
 
   const filterOverlay = document.querySelector<HTMLElement>("#roomFilterOverlay");
   if (filterOverlay) {

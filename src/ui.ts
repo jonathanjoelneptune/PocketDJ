@@ -121,6 +121,7 @@ export function renderShell(state: AppState): void {
                 <button id="disconnectSpotify" type="button">Disconnect</button>
               </div>
             </div>
+            <button id="aspectModeToggle" class="aspect-pill" type="button" aria-pressed="false" title="Toggle Wide / Fill scene">WIDE</button>
             <button id="compactPanelToggle" class="compact-pill" type="button" aria-pressed="false" title="Show compact panel">COMPACT</button>
             <button id="panelLockToggle" class="panel-lock-toggle" type="button" aria-label="Lock side panel open" title="Lock side panel open">🔒</button>
           </div>
