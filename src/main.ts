@@ -337,7 +337,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v52";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v53";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -381,7 +381,7 @@ function bindControls(): void {
     lyricsEnabled = !lyricsEnabled;
     const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
     const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
-    updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, track.isPlaying || track.source === "demo");
+    updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, state.playback.isPlaying || state.playback.source === "demo");
   });
 
 
@@ -1347,12 +1347,12 @@ async function refreshLyricsForCurrentTrack(): Promise<void> {
 
   lyricsFetchKey = key;
   lyricsState = { ...emptyLyrics("loading"), trackKey: key };
-  updateLyricsCeiling(lyricsState, getEstimatedPlaybackProgress(track), -1, lyricsEnabled, track.isPlaying || track.source === "demo");
+  updateLyricsCeiling(lyricsState, getEstimatedPlaybackProgress(track), -1, lyricsEnabled, state.playback.isPlaying || state.playback.source === "demo");
 
   lyricsState = await fetchLyricsForTrack(track);
   const lyricProgressMs = getEstimatedPlaybackProgress(track);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
-  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, track.isPlaying || track.source === "demo");
+  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, state.playback.isPlaying || state.playback.source === "demo");
 }
 
 async function pollSpotifyNow(): Promise<void> {
@@ -1396,7 +1396,7 @@ function tick(): void {
 
   const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
-  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, track.isPlaying || track.source === "demo");
+  updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, state.playback.isPlaying || state.playback.source === "demo");
 
   requestAnimationFrame(tick);
 }
