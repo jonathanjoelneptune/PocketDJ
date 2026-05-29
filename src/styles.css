@@ -6359,3 +6359,23 @@ body.lyrics-marquee-unavailable .marquee::after {
     drop-shadow(0 0 5px rgba(179,71,34,0.78))
     drop-shadow(0 0 12px rgba(107,35,22,0.38)) !important;
 }
+
+
+/* v64E compact/menu width fix
+   Restore stable v64B-style width and keep Compact the same width as full mode.
+   Compact should reduce height by hiding the lower scroll body, not narrow the panel. */
+.control-card,
+.control-card.control-card-compact-mode {
+  width: min(370px, calc(var(--room-w) - 28px)) !important;
+  max-width: min(370px, calc(var(--room-w) - 28px)) !important;
+}
+
+.control-card-compact-mode {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(var(--room-h) - (var(--room-h) * var(--panel-start-y-ratio)) - 18px) !important;
+}
+
+.control-card-compact-mode .panel-scroll-body {
+  display: none !important;
+}

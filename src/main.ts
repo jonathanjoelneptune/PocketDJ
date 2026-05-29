@@ -434,7 +434,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64d";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64e";
 let roomUtility = loadRoomUtilitySettings();
 
 
