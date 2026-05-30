@@ -441,7 +441,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64r";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64s";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -479,7 +479,7 @@ const ROOM_COORD_HEIGHT = 992;
 const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
   placeAlbumsInFrames: false,
-  nextId: 30,
+  nextId: 53,
   slots: [
     { id: 1, label: "A-1", tlX: 77, tlY: 12, trX: 177, trY: 70, blX: 78, blY: 141, brX: 173, brY: 182 },
     { id: 2, label: "A-2", tlX: 187, tlY: 77, trX: 258, trY: 118, blX: 182, blY: 186, brX: 260, brY: 218 },
@@ -504,6 +504,29 @@ const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
     { id: 27, label: "A-27", tlX: 81, tlY: 627, trX: 175, trY: 614, blX: 81, blY: 727, brX: 174, brY: 699 },
     { id: 28, label: "A-28", tlX: 184, tlY: 610, trX: 258, trY: 603, blX: 187, blY: 696, brX: 260, brY: 676 },
     { id: 29, label: "A-29", tlX: 269, tlY: 601, trX: 331, trY: 592, blX: 271, blY: 674, brX: 330, brY: 658 },
+    { id: 30, label: "A-30", tlX: 1610, tlY: 68, trX: 1703, trY: 12, blX: 1608, blY: 184, brX: 1703, brY: 141 },
+    { id: 31, label: "A-31", tlX: 1523, tlY: 123, trX: 1598, trY: 75, blX: 1521, blY: 221, brX: 1598, brY: 188 },
+    { id: 32, label: "A-32", tlX: 1448, tlY: 167, trX: 1514, trY: 126, blX: 1445, blY: 256, brX: 1513, brY: 224 },
+    { id: 33, label: "A-33", tlX: 1394, tlY: 202, trX: 1441, trY: 169, blX: 1391, blY: 280, brX: 1439, brY: 257 },
+    { id: 34, label: "A-34", tlX: 1344, tlY: 231, trX: 1386, trY: 203, blX: 1345, blY: 299, brX: 1385, brY: 280 },
+    { id: 35, label: "A-35", tlX: 1610, tlY: 212, trX: 1702, trY: 175, blX: 1608, blY: 323, brX: 1702, brY: 300 },
+    { id: 36, label: "A-36", tlX: 1524, tlY: 247, trX: 1602, trY: 215, blX: 1523, blY: 344, brX: 1602, brY: 325 },
+    { id: 37, label: "A-37", tlX: 1447, tlY: 278, trX: 1517, trY: 250, blX: 1447, blY: 362, brX: 1517, brY: 345 },
+    { id: 38, label: "A-38", tlX: 1392, tlY: 303, trX: 1441, trY: 280, blX: 1392, blY: 375, brX: 1441, brY: 362 },
+    { id: 39, label: "A-39", tlX: 1345, tlY: 322, trX: 1385, trY: 303, blX: 1340, blY: 387, brX: 1385, brY: 377 },
+    { id: 40, label: "A-40", tlX: 1609, tlY: 349, trX: 1701, trY: 329, blX: 1607, blY: 459, brX: 1699, brY: 454 },
+    { id: 41, label: "A-41", tlX: 1521, tlY: 369, trX: 1600, trY: 351, blX: 1521, blY: 465, brX: 1600, brY: 460 },
+    { id: 42, label: "A-42", tlX: 1448, tlY: 384, trX: 1513, trY: 370, blX: 1447, blY: 469, brX: 1514, brY: 464 },
+    { id: 43, label: "A-43", tlX: 1395, tlY: 395, trX: 1442, trY: 383, blX: 1392, blY: 473, brX: 1441, brY: 468 },
+    { id: 44, label: "A-44", tlX: 1347, tlY: 407, trX: 1388, trY: 397, blX: 1342, blY: 476, brX: 1384, brY: 474 },
+    { id: 45, label: "A-45", tlX: 1610, tlY: 486, trX: 1700, trY: 481, blX: 1609, blY: 590, brX: 1703, brY: 600 },
+    { id: 46, label: "A-46", tlX: 1522, tlY: 488, trX: 1597, trY: 485, blX: 1523, blY: 582, brX: 1600, brY: 588 },
+    { id: 47, label: "A-47", tlX: 1448, tlY: 491, trX: 1515, trY: 488, blX: 1450, blY: 575, brX: 1516, brY: 581 },
+    { id: 48, label: "A-48", tlX: 1393, tlY: 494, trX: 1441, trY: 490, blX: 1391, blY: 567, brX: 1444, brY: 574 },
+    { id: 49, label: "A-49", tlX: 1342, tlY: 494, trX: 1386, trY: 492, blX: 1343, blY: 560, brX: 1385, brY: 568 },
+    { id: 50, label: "A-50", tlX: 1610, tlY: 616, trX: 1701, trY: 630, blX: 1611, blY: 711, brX: 1703, brY: 737 },
+    { id: 51, label: "A-51", tlX: 1521, tlY: 606, trX: 1600, trY: 613, blX: 1522, blY: 686, brX: 1603, brY: 709 },
+    { id: 52, label: "A-52", tlX: 1448, tlY: 596, trX: 1514, trY: 603, blX: 1446, blY: 664, brX: 1514, brY: 682 },
   ],
 };
 
@@ -846,12 +869,13 @@ function renderSessionAlbumSlotGuides(): void {
         defs.appendChild(clip);
 
         const bounds = sessionAlbumSlotBounds(slot);
+        const imageBleed = 2;
         const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
         image.setAttribute("href", placeholder.imageUrl);
-        image.setAttribute("x", String(bounds.x));
-        image.setAttribute("y", String(bounds.y));
-        image.setAttribute("width", String(bounds.width));
-        image.setAttribute("height", String(bounds.height));
+        image.setAttribute("x", String(bounds.x - imageBleed));
+        image.setAttribute("y", String(bounds.y - imageBleed));
+        image.setAttribute("width", String(bounds.width + imageBleed * 2));
+        image.setAttribute("height", String(bounds.height + imageBleed * 2));
         image.setAttribute("preserveAspectRatio", "none");
         image.setAttribute("clip-path", `url(#${clipId})`);
         image.setAttribute("class", "session-album-placeholder-image");
