@@ -442,7 +442,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64x";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64y";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -580,6 +580,9 @@ const SESSION_ALBUM_FALLBACK_ART_URL = `data:image/svg+xml,${encodeURIComponent(
 `)}`;
 const sessionAlbumImageCache = new Map<string, HTMLImageElement>();
 const sessionAlbumImagePending = new Map<string, Promise<HTMLImageElement | null>>();
+const sessionAlbumWarpLoadRequested = new Set<string>();
+let sessionAlbumWarpRenderQueued = false;
+let sessionAlbumWarpRenderInProgress = false;
 
 
 
@@ -841,7 +844,7 @@ function assignWallAlbumsForRefresh(): void {
       imageUrl: item.artworkUrl || cache[wallAlbumKey(item)] || SESSION_ALBUM_FALLBACK_ART_URL,
     };
     sessionWallAlbumAssignmentsBySlot.set(slot.id, placeholder);
-    void loadSessionAlbumImage(placeholder.imageUrl).then(() => renderSessionAlbumSlotGuides());
+    requestSessionAlbumImageLoad(placeholder.imageUrl);
 
     const cachedOrStaticUrl = item.artworkUrl || cache[wallAlbumKey(item)];
     if (cachedOrStaticUrl) {
@@ -853,7 +856,7 @@ function assignWallAlbumsForRefresh(): void {
         };
         sessionWallAlbumAssignments[index] = resolved;
         sessionWallAlbumAssignmentsBySlot.set(slot.id, resolved);
-        renderSessionAlbumSlotGuides();
+        scheduleSessionAlbumRender();
       });
       return;
     }
@@ -868,7 +871,7 @@ function assignWallAlbumsForRefresh(): void {
         };
         sessionWallAlbumAssignments[index] = resolved;
         sessionWallAlbumAssignmentsBySlot.set(slot.id, resolved);
-        renderSessionAlbumSlotGuides();
+        scheduleSessionAlbumRender();
       });
     });
   });
@@ -886,18 +889,20 @@ function sessionAlbumPixelCacheKey(imageUrl: string, amount: number): string {
 
 function getSessionAlbumDisplayImageUrl(placeholder: SessionAlbumPlaceholder): string {
   const amount = clamp01(sessionAlbumSettings.albumPixelAmount);
-  if (amount <= 0.01) return placeholder.imageUrl;
+  const imageUrl = placeholder.imageUrl || SESSION_ALBUM_FALLBACK_ART_URL;
+  if (sessionAlbumSettings.albumWarpMode) return imageUrl;
+  if (amount <= 0.01) return imageUrl;
 
-  const key = sessionAlbumPixelCacheKey(placeholder.imageUrl, amount);
+  const key = sessionAlbumPixelCacheKey(imageUrl, amount);
   const cached = sessionAlbumPixelCache.get(key);
   if (cached) return cached;
 
   if (!sessionAlbumPixelPending.has(key)) {
     sessionAlbumPixelPending.add(key);
-    void createPixelatedSessionAlbumImage(placeholder.imageUrl, amount, key);
+    void createPixelatedSessionAlbumImage(imageUrl, amount, key);
   }
 
-  return placeholder.imageUrl;
+  return imageUrl;
 }
 
 async function createPixelatedSessionAlbumImage(imageUrl: string, amount: number, key: string): Promise<void> {
@@ -935,7 +940,7 @@ async function createPixelatedSessionAlbumImage(imageUrl: string, amount: number
     bigCtx.drawImage(smallCanvas, 0, 0, outputSize, outputSize);
 
     sessionAlbumPixelCache.set(key, bigCanvas.toDataURL("image/png"));
-    renderSessionAlbumSlotGuides();
+    scheduleSessionAlbumRender();
   } catch (error) {
     console.warn("Could not generate pixelated album preview.", error);
   } finally {
@@ -1063,6 +1068,23 @@ function renderSessionAlbumFramePreviews(): void {
 
 
 
+function scheduleSessionAlbumRender(): void {
+  if (sessionAlbumWarpRenderQueued) return;
+  sessionAlbumWarpRenderQueued = true;
+  window.requestAnimationFrame(() => {
+    sessionAlbumWarpRenderQueued = false;
+    renderSessionAlbumSlotGuides();
+  });
+}
+
+function requestSessionAlbumImageLoad(imageUrl: string): void {
+  const resolvedUrl = imageUrl || SESSION_ALBUM_FALLBACK_ART_URL;
+  if (sessionAlbumWarpLoadRequested.has(resolvedUrl)) return;
+  if (sessionAlbumImageCache.has(resolvedUrl)) return;
+  sessionAlbumWarpLoadRequested.add(resolvedUrl);
+  void loadSessionAlbumImage(resolvedUrl).then(() => scheduleSessionAlbumRender());
+}
+
 function loadSessionAlbumImage(imageUrl: string): Promise<HTMLImageElement | null> {
   const resolvedUrl = imageUrl || SESSION_ALBUM_FALLBACK_ART_URL;
   const cached = sessionAlbumImageCache.get(resolvedUrl);
@@ -1142,7 +1164,7 @@ function drawAffineImageTriangle(
 function drawWarpedAlbumImage(ctx: CanvasRenderingContext2D, image: HTMLImageElement, slot: SessionAlbumSlot): void {
   const sourceWidth = image.naturalWidth || image.width || 600;
   const sourceHeight = image.naturalHeight || image.height || 600;
-  const grid = 5;
+  const grid = 3;
 
   for (let y = 0; y < grid; y += 1) {
     for (let x = 0; x < grid; x += 1) {
@@ -1233,58 +1255,56 @@ function clearSessionAlbumWarpCanvas(): void {
 }
 
 function renderSessionAlbumWarpCanvas(): void {
-  const canvas = document.querySelector<HTMLCanvasElement>("#sessionAlbumWarpCanvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (sessionAlbumWarpRenderInProgress) return;
+  sessionAlbumWarpRenderInProgress = true;
 
-  canvas.width = ROOM_COORD_WIDTH;
-  canvas.height = ROOM_COORD_HEIGHT;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  try {
+    const canvas = document.querySelector<HTMLCanvasElement>("#sessionAlbumWarpCanvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-  const activeSlots = sessionAlbumSettings.slots
-    .slice()
-    .sort((a, b) => a.id - b.id)
-    .filter((slot) => Boolean(placeholderAlbumForSlot(slot)));
+    if (canvas.width !== ROOM_COORD_WIDTH) canvas.width = ROOM_COORD_WIDTH;
+    if (canvas.height !== ROOM_COORD_HEIGHT) canvas.height = ROOM_COORD_HEIGHT;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  canvas.classList.toggle("session-album-warp-visible", sessionAlbumSettings.placeAlbumsInFrames && sessionAlbumSettings.albumWarpMode);
+    canvas.classList.toggle("session-album-warp-visible", sessionAlbumSettings.placeAlbumsInFrames && sessionAlbumSettings.albumWarpMode);
+    if (!sessionAlbumSettings.placeAlbumsInFrames || !sessionAlbumSettings.albumWarpMode) return;
 
-  if (!sessionAlbumSettings.placeAlbumsInFrames || !sessionAlbumSettings.albumWarpMode) return;
+    const activeSlots = sessionAlbumSettings.slots
+      .slice()
+      .sort((a, b) => a.id - b.id)
+      .filter((slot) => Boolean(placeholderAlbumForSlot(slot)));
 
-  activeSlots.forEach((slot) => {
-    const placeholder = placeholderAlbumForSlot(slot);
-    if (!placeholder) return;
+    const fallback = sessionAlbumImageCache.get(SESSION_ALBUM_FALLBACK_ART_URL);
+    if (!fallback?.complete || fallback.naturalWidth <= 0) {
+      requestSessionAlbumImageLoad(SESSION_ALBUM_FALLBACK_ART_URL);
+    }
 
-    const displayUrl = getSessionAlbumDisplayImageUrl({
-      ...placeholder,
-      imageUrl: placeholder.imageUrl || SESSION_ALBUM_FALLBACK_ART_URL,
-    }) || SESSION_ALBUM_FALLBACK_ART_URL;
+    activeSlots.forEach((slot) => {
+      const placeholder = placeholderAlbumForSlot(slot);
+      if (!placeholder) return;
 
-    const image = sessionAlbumImageCache.get(displayUrl);
-    if (!image?.complete || image.naturalWidth <= 0) {
-      void loadSessionAlbumImage(displayUrl).then(() => renderSessionAlbumSlotGuides());
-      const fallback = sessionAlbumImageCache.get(SESSION_ALBUM_FALLBACK_ART_URL);
-      if (!fallback?.complete || fallback.naturalWidth <= 0) {
-        void loadSessionAlbumImage(SESSION_ALBUM_FALLBACK_ART_URL).then(() => renderSessionAlbumSlotGuides());
-        return;
+      const displayUrl = placeholder.imageUrl || SESSION_ALBUM_FALLBACK_ART_URL;
+      let image = sessionAlbumImageCache.get(displayUrl);
+
+      if (!image?.complete || image.naturalWidth <= 0) {
+        requestSessionAlbumImageLoad(displayUrl);
+        image = fallback;
       }
+
+      if (!image?.complete || image.naturalWidth <= 0) return;
 
       drawSessionAlbumCanvasDepth(ctx, slot);
       ctx.save();
       applySessionAlbumCanvasWarmFilter(ctx);
-      drawWarpedAlbumImage(ctx, fallback, slot);
+      drawWarpedAlbumImage(ctx, image, slot);
       ctx.restore();
       drawSessionAlbumCanvasFinish(ctx, slot);
-      return;
-    }
-
-    drawSessionAlbumCanvasDepth(ctx, slot);
-    ctx.save();
-    applySessionAlbumCanvasWarmFilter(ctx);
-    drawWarpedAlbumImage(ctx, image, slot);
-    ctx.restore();
-    drawSessionAlbumCanvasFinish(ctx, slot);
-  });
+    });
+  } finally {
+    sessionAlbumWarpRenderInProgress = false;
+  }
 }
 
 
@@ -1708,7 +1728,8 @@ function bindSessionWallAlbumControls(): void {
   albumWarpMode?.addEventListener("change", () => {
     sessionAlbumSettings = { ...sessionAlbumSettings, albumWarpMode: Boolean(albumWarpMode.checked) };
     saveSessionAlbumSettings();
-    renderSessionAlbumSlotGuides();
+    requestSessionAlbumImageLoad(SESSION_ALBUM_FALLBACK_ART_URL);
+    scheduleSessionAlbumRender();
   });
 
   albumPixelAmount?.addEventListener("input", () => {

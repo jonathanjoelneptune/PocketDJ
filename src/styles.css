@@ -7246,3 +7246,7 @@ body.lyrics-marquee-unavailable .marquee::after {
   fill: #4a2412;
   mix-blend-mode: multiply;
 }
+
+
+/* v64Y: Warp-mode performance guard.
+   Warp mode uses a 3x3 mesh, throttled redraws, image preload tracking, and no pixel-cache redraw storm. */
