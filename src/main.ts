@@ -441,7 +441,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64p";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64q";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -479,13 +479,18 @@ const ROOM_COORD_HEIGHT = 992;
 const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
   placeAlbumsInFrames: false,
-  nextId: 6,
+  nextId: 16,
   slots: [
     { id: 1, label: "A-1", tlX: 77, tlY: 12, trX: 177, trY: 70, blX: 78, blY: 141, brX: 173, brY: 182 },
     { id: 2, label: "A-2", tlX: 187, tlY: 77, trX: 258, trY: 118, blX: 182, blY: 186, brX: 260, brY: 218 },
     { id: 3, label: "A-3", tlX: 266, tlY: 125, trX: 329, trY: 161, blX: 271, blY: 224, brX: 329, brY: 251 },
     { id: 4, label: "A-4", tlX: 336, tlY: 164, trX: 384, trY: 195, blX: 337, blY: 255, brX: 386, brY: 273 },
     { id: 5, label: "A-5", tlX: 391, tlY: 200, trX: 439, trY: 227, blX: 392, blY: 277, brX: 435, brY: 297 },
+    { id: 11, label: "B-1", tlX: 81, tlY: 177, trX: 174, trY: 213, blX: 81, blY: 300, brX: 173, brY: 324 },
+    { id: 12, label: "B-2", tlX: 183, tlY: 215, trX: 260, trY: 249, blX: 186, blY: 326, brX: 262, brY: 343 },
+    { id: 13, label: "B-3", tlX: 269, tlY: 250, trX: 271, trY: 346, blX: 327, blY: 275, brX: 327, brY: 359 },
+    { id: 14, label: "B-4", tlX: 337, tlY: 277, trX: 386, trY: 297, blX: 336, blY: 362, brX: 386, brY: 373 },
+    { id: 15, label: "B-5", tlX: 392, tlY: 300, trX: 435, trY: 320, blX: 392, blY: 375, brX: 437, brY: 385 },
   ],
 };
 
@@ -695,64 +700,130 @@ function sessionAlbumSlotBounds(slot: SessionAlbumSlot): { x: number; y: number;
 }
 
 
+
+function cssMatrixForQuad(slot: SessionAlbumSlot): string {
+  const room = document.querySelector<HTMLElement>(".room");
+  const rect = room?.getBoundingClientRect();
+  const scaleX = rect ? rect.width / ROOM_COORD_WIDTH : 1;
+  const scaleY = rect ? rect.height / ROOM_COORD_HEIGHT : 1;
+
+  const x0 = slot.tlX * scaleX;
+  const y0 = slot.tlY * scaleY;
+  const x1 = slot.trX * scaleX;
+  const y1 = slot.trY * scaleY;
+  const x2 = slot.brX * scaleX;
+  const y2 = slot.brY * scaleY;
+  const x3 = slot.blX * scaleX;
+  const y3 = slot.blY * scaleY;
+
+  const dx1 = x1 - x2;
+  const dy1 = y1 - y2;
+  const dx2 = x3 - x2;
+  const dy2 = y3 - y2;
+  const dx3 = x0 - x1 + x2 - x3;
+  const dy3 = y0 - y1 + y2 - y3;
+
+  let a: number;
+  let b: number;
+  let c: number;
+  let d: number;
+  let e: number;
+  let f: number;
+  let g: number;
+  let h: number;
+
+  if (Math.abs(dx3) < 0.0001 && Math.abs(dy3) < 0.0001) {
+    a = x1 - x0;
+    b = x3 - x0;
+    c = x0;
+    d = y1 - y0;
+    e = y3 - y0;
+    f = y0;
+    g = 0;
+    h = 0;
+  } else {
+    const det = dx1 * dy2 - dx2 * dy1;
+    if (Math.abs(det) < 0.0001) {
+      a = x1 - x0;
+      b = x3 - x0;
+      c = x0;
+      d = y1 - y0;
+      e = y3 - y0;
+      f = y0;
+      g = 0;
+      h = 0;
+    } else {
+      g = (dx3 * dy2 - dx2 * dy3) / det;
+      h = (dx1 * dy3 - dx3 * dy1) / det;
+      a = x1 - x0 + g * x1;
+      b = x3 - x0 + h * x3;
+      c = x0;
+      d = y1 - y0 + g * y1;
+      e = y3 - y0 + h * y3;
+      f = y0;
+    }
+  }
+
+  return `matrix3d(${a},${d},0,${g},${b},${e},0,${h},0,0,1,0,${c},${f},0,1)`;
+}
+
+function renderSessionAlbumFramePreviews(): void {
+  const overlay = document.querySelector<HTMLElement>("#sessionAlbumFrameOverlay");
+  if (!overlay) return;
+
+  overlay.classList.toggle("session-album-frames-visible", sessionAlbumSettings.placeAlbumsInFrames);
+  overlay.innerHTML = "";
+
+  if (!sessionAlbumSettings.placeAlbumsInFrames) return;
+
+  const sorted = sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id);
+  for (const slot of sorted) {
+    const placeholder = placeholderAlbumForSlot(slot);
+    if (!placeholder) continue;
+
+    const frame = document.createElement("div");
+    frame.className = "session-album-frame-preview";
+    frame.style.transform = cssMatrixForQuad(slot);
+    frame.title = `${slot.label}: ${placeholder.artist} - ${placeholder.title}`;
+
+    const img = document.createElement("img");
+    img.src = placeholder.imageUrl;
+    img.alt = "";
+    img.decoding = "async";
+    img.loading = "lazy";
+    frame.appendChild(img);
+
+    overlay.appendChild(frame);
+  }
+}
+
+
 function renderSessionAlbumSlotGuides(): void {
   const overlay = document.querySelector<SVGSVGElement>("#sessionAlbumGuideOverlay");
   if (!overlay) return;
 
-  const visible = sessionAlbumSettings.showGuides || sessionAlbumSettings.placeAlbumsInFrames;
+  const visible = sessionAlbumSettings.showGuides;
   overlay.classList.toggle("session-album-guides-visible", visible);
   overlay.innerHTML = "";
 
+  renderSessionAlbumFramePreviews();
   updateSessionAlbumExportText();
 
   if (!visible) return;
 
-  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-  overlay.appendChild(defs);
-
   for (const slot of sessionAlbumSettings.slots) {
-    if (sessionAlbumSettings.placeAlbumsInFrames) {
-      const clipId = `session-album-clip-${slot.id}`;
-      const clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
-      clip.setAttribute("id", clipId);
-      const clipPolygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      clipPolygon.setAttribute("points", sessionAlbumPoints(slot));
-      clip.appendChild(clipPolygon);
-      defs.appendChild(clip);
+    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    polygon.setAttribute("points", sessionAlbumPoints(slot));
+    polygon.setAttribute("class", "session-album-guide-polygon");
+    overlay.appendChild(polygon);
 
-      const placeholder = placeholderAlbumForSlot(slot);
-      if (placeholder) {
-        const bounds = sessionAlbumSlotBounds(slot);
-        const previewSize = Math.max(1, Math.min(bounds.width, bounds.height));
-        const previewX = bounds.x + (bounds.width - previewSize) / 2;
-        const previewY = bounds.y + (bounds.height - previewSize) / 2;
-        const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        image.setAttribute("href", placeholder.imageUrl);
-        image.setAttribute("x", String(previewX));
-        image.setAttribute("y", String(previewY));
-        image.setAttribute("width", String(previewSize));
-        image.setAttribute("height", String(previewSize));
-        image.setAttribute("preserveAspectRatio", "xMidYMid meet");
-        image.setAttribute("clip-path", `url(#${clipId})`);
-        image.setAttribute("class", "session-album-placeholder-image");
-        overlay.appendChild(image);
-      }
-    }
-
-    if (sessionAlbumSettings.showGuides) {
-      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      polygon.setAttribute("points", sessionAlbumPoints(slot));
-      polygon.setAttribute("class", "session-album-guide-polygon");
-      overlay.appendChild(polygon);
-
-      const center = getSessionAlbumSlotCenter(slot);
-      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      label.setAttribute("x", String(center.x));
-      label.setAttribute("y", String(center.y));
-      label.setAttribute("class", "session-album-guide-label");
-      label.textContent = slot.label;
-      overlay.appendChild(label);
-    }
+    const center = getSessionAlbumSlotCenter(slot);
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", String(center.x));
+    label.setAttribute("y", String(center.y));
+    label.setAttribute("class", "session-album-guide-label");
+    label.textContent = slot.label;
+    overlay.appendChild(label);
   }
 }
 
@@ -775,22 +846,34 @@ function updateSessionAlbumSlotCorner(slotId: number, corner: SessionAlbumCorner
 
   const cleanX = clampRoomX(x);
   const cleanY = clampRoomY(y);
+  let xKey: keyof SessionAlbumSlot;
+  let yKey: keyof SessionAlbumSlot;
+
   if (corner === "tl") {
     slot.tlX = cleanX;
     slot.tlY = cleanY;
+    xKey = "tlX";
+    yKey = "tlY";
   } else if (corner === "tr") {
     slot.trX = cleanX;
     slot.trY = cleanY;
+    xKey = "trX";
+    yKey = "trY";
   } else if (corner === "bl") {
     slot.blX = cleanX;
     slot.blY = cleanY;
+    xKey = "blX";
+    yKey = "blY";
   } else {
     slot.brX = cleanX;
     slot.brY = cleanY;
+    xKey = "brX";
+    yKey = "brY";
   }
 
   saveSessionAlbumSettings();
-  renderSessionAlbumSlotPanels();
+  syncSessionAlbumCoordinateInputs(slotId, xKey, cleanX);
+  syncSessionAlbumCoordinateInputs(slotId, yKey, cleanY);
   renderSessionAlbumSlotGuides();
 }
 
@@ -841,10 +924,13 @@ function renderSessionAlbumSlotPanel(slot: SessionAlbumSlot): string {
     ["br", "Bottom right", "brX", "brY"],
   ];
 
-  const controls = rows.map(([corner, label, xKey, yKey]) => `
+  const targetButtons = rows.map(([corner, label]) => `
+    <button class="session-album-target-button" type="button" data-session-target="${slot.id}:${corner}">Select ${label}</button>
+  `).join("");
+
+  const controls = rows.map(([, label, xKey, yKey]) => `
     <div class="session-album-corner-row">
       <div class="session-album-corner-title">${label}</div>
-      <button class="session-album-target-button" type="button" data-session-target="${slot.id}:${corner}">Set target</button>
       ${renderSessionAlbumNumberControl(slot, xKey, `${label} X`, ROOM_COORD_WIDTH)}
       ${renderSessionAlbumNumberControl(slot, yKey, `${label} Y`, ROOM_COORD_HEIGHT)}
     </div>
@@ -854,6 +940,7 @@ function renderSessionAlbumSlotPanel(slot: SessionAlbumSlot): string {
     <details class="session-album-slot-panel">
       <summary>${slot.label}</summary>
       <div class="session-album-slot-controls">
+        <div class="session-album-target-grid">${targetButtons}</div>
         ${controls}
         <button class="session-album-delete-button" type="button" data-session-delete-slot="${slot.id}">Delete ${slot.label}</button>
       </div>
@@ -952,6 +1039,7 @@ function duplicateSessionAlbumPrefix(sourcePrefix: string, targetPrefix: string,
   };
 
   saveSessionAlbumSettings();
+  window.addEventListener("resize", renderSessionAlbumFramePreviews);
   renderSessionAlbumSlotPanels();
   renderSessionAlbumSlotGuides();
 }

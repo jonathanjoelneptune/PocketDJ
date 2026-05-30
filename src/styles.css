@@ -7035,3 +7035,60 @@ body.lyrics-marquee-unavailable .marquee::after {
   left: calc((100vw - var(--room-w)) / 2) !important;
   right: auto !important;
 }
+
+
+/* v64Q: Perspective-corner album previews and cleaner target controls */
+.session-album-frame-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 21;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.session-album-frame-overlay.session-album-frames-visible {
+  opacity: 1;
+}
+
+.session-album-frame-preview {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  transform-origin: 0 0;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.16);
+  box-shadow:
+    0 8px 12px rgba(0, 0, 0, 0.52),
+    0 0 0 1px rgba(255, 255, 255, 0.10);
+  will-change: transform;
+}
+
+.session-album-frame-preview img {
+  display: block;
+  width: 1px;
+  height: 1px;
+  object-fit: fill;
+}
+
+.session-album-target-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.session-album-target-grid .session-album-target-button {
+  padding: 7px 5px;
+  font-size: 0.54rem;
+  line-height: 1.18;
+}
+
+@media (max-width: 760px) {
+  .session-album-target-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

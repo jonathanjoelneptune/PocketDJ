@@ -30,6 +30,7 @@ export function renderShell(state: AppState): void {
         <div class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\')" aria-hidden="true"></div>
         <div class="album-wash" id="albumWash"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
+        <div id="sessionAlbumFrameOverlay" class="session-album-frame-overlay" aria-hidden="true"></div>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
 
         <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
