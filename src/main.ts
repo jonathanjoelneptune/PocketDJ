@@ -439,9 +439,341 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64m";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64n";
 let roomUtility = loadRoomUtilitySettings();
 
+
+type SessionAlbumCornerKey = "tl" | "tr" | "bl" | "br";
+
+type SessionAlbumSlot = {
+  id: number;
+  label: string;
+  tlX: number;
+  tlY: number;
+  trX: number;
+  trY: number;
+  blX: number;
+  blY: number;
+  brX: number;
+  brY: number;
+};
+
+type SessionAlbumSettings = {
+  showGuides: boolean;
+  nextId: number;
+  slots: SessionAlbumSlot[];
+};
+
+type SessionAlbumCornerTarget = {
+  slotId: number;
+  corner: SessionAlbumCornerKey;
+} | null;
+
+const SESSION_ALBUM_KEY = "pocketdj-session-wall-albums-v1";
+const ROOM_COORD_WIDTH = 1764;
+const ROOM_COORD_HEIGHT = 992;
+
+const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
+  showGuides: false,
+  nextId: 1,
+  slots: [],
+};
+
+let sessionAlbumSettings = loadSessionAlbumSettings();
+let sessionAlbumCornerTarget: SessionAlbumCornerTarget = null;
+
+
+
+
+
+function loadSessionAlbumSettings(): SessionAlbumSettings {
+  try {
+    const raw = localStorage.getItem(SESSION_ALBUM_KEY);
+    if (!raw) return { ...DEFAULT_SESSION_ALBUM_SETTINGS, slots: [] };
+    const parsed = JSON.parse(raw) as Partial<SessionAlbumSettings>;
+    const slots = Array.isArray(parsed.slots)
+      ? parsed.slots
+          .map((slot) => normalizeSessionAlbumSlot(slot as Partial<SessionAlbumSlot>))
+          .filter((slot): slot is SessionAlbumSlot => Boolean(slot))
+      : [];
+
+    const maxId = slots.reduce((max, slot) => Math.max(max, slot.id), 0);
+    return {
+      showGuides: Boolean(parsed.showGuides),
+      nextId: Math.max(Number(parsed.nextId || 1), maxId + 1, 1),
+      slots,
+    };
+  } catch (error) {
+    console.warn("Could not load session wall album settings.", error);
+    return { ...DEFAULT_SESSION_ALBUM_SETTINGS, slots: [] };
+  }
+}
+
+function normalizeSessionAlbumSlot(slot: Partial<SessionAlbumSlot>): SessionAlbumSlot | null {
+  const id = Number(slot.id);
+  if (!Number.isFinite(id) || id < 1) return null;
+  return {
+    id,
+    label: slot.label || `A-${id}`,
+    tlX: clampRoomX(Number(slot.tlX ?? 720)),
+    tlY: clampRoomY(Number(slot.tlY ?? 260)),
+    trX: clampRoomX(Number(slot.trX ?? 860)),
+    trY: clampRoomY(Number(slot.trY ?? 260)),
+    blX: clampRoomX(Number(slot.blX ?? 720)),
+    blY: clampRoomY(Number(slot.blY ?? 400)),
+    brX: clampRoomX(Number(slot.brX ?? 860)),
+    brY: clampRoomY(Number(slot.brY ?? 400)),
+  };
+}
+
+function saveSessionAlbumSettings(): void {
+  localStorage.setItem(SESSION_ALBUM_KEY, JSON.stringify(sessionAlbumSettings));
+}
+
+function clampRoomX(value: number): number {
+  return Math.max(0, Math.min(ROOM_COORD_WIDTH, Math.round(value)));
+}
+
+function clampRoomY(value: number): number {
+  return Math.max(0, Math.min(ROOM_COORD_HEIGHT, Math.round(value)));
+}
+
+function createSessionAlbumSlot(): SessionAlbumSlot {
+  const id = sessionAlbumSettings.nextId;
+  const offset = ((id - 1) % 8) * 28;
+  const baseX = 640 + offset;
+  const baseY = 210 + offset;
+  return {
+    id,
+    label: `A-${id}`,
+    tlX: clampRoomX(baseX),
+    tlY: clampRoomY(baseY),
+    trX: clampRoomX(baseX + 150),
+    trY: clampRoomY(baseY + 8),
+    blX: clampRoomX(baseX + 8),
+    blY: clampRoomY(baseY + 150),
+    brX: clampRoomX(baseX + 158),
+    brY: clampRoomY(baseY + 158),
+  };
+}
+
+function getSessionAlbumSlotCenter(slot: SessionAlbumSlot): { x: number; y: number } {
+  return {
+    x: (slot.tlX + slot.trX + slot.blX + slot.brX) / 4,
+    y: (slot.tlY + slot.trY + slot.blY + slot.brY) / 4,
+  };
+}
+
+function sessionAlbumPoints(slot: SessionAlbumSlot): string {
+  return `${slot.tlX},${slot.tlY} ${slot.trX},${slot.trY} ${slot.brX},${slot.brY} ${slot.blX},${slot.blY}`;
+}
+
+function renderSessionAlbumSlotGuides(): void {
+  const overlay = document.querySelector<SVGSVGElement>("#sessionAlbumGuideOverlay");
+  if (!overlay) return;
+
+  overlay.classList.toggle("session-album-guides-visible", sessionAlbumSettings.showGuides);
+  overlay.innerHTML = "";
+
+  if (!sessionAlbumSettings.showGuides) return;
+
+  for (const slot of sessionAlbumSettings.slots) {
+    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    polygon.setAttribute("points", sessionAlbumPoints(slot));
+    polygon.setAttribute("class", "session-album-guide-polygon");
+    overlay.appendChild(polygon);
+
+    const center = getSessionAlbumSlotCenter(slot);
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", String(center.x));
+    label.setAttribute("y", String(center.y));
+    label.setAttribute("class", "session-album-guide-label");
+    label.textContent = slot.label;
+    overlay.appendChild(label);
+  }
+}
+
+function setSessionAlbumTarget(slotId: number, corner: SessionAlbumCornerKey): void {
+  sessionAlbumCornerTarget = { slotId, corner };
+  const status = document.querySelector<HTMLElement>("#sessionAlbumTargetStatus");
+  const slot = sessionAlbumSettings.slots.find((item) => item.id === slotId);
+  if (status) status.textContent = slot ? `Click the room to set ${slot.label} ${corner.toUpperCase()} corner.` : "No corner target selected.";
+}
+
+function clearSessionAlbumTarget(): void {
+  sessionAlbumCornerTarget = null;
+  const status = document.querySelector<HTMLElement>("#sessionAlbumTargetStatus");
+  if (status) status.textContent = "No corner target selected.";
+}
+
+function updateSessionAlbumSlotCorner(slotId: number, corner: SessionAlbumCornerKey, x: number, y: number): void {
+  const slot = sessionAlbumSettings.slots.find((item) => item.id === slotId);
+  if (!slot) return;
+
+  const cleanX = clampRoomX(x);
+  const cleanY = clampRoomY(y);
+  if (corner === "tl") {
+    slot.tlX = cleanX;
+    slot.tlY = cleanY;
+  } else if (corner === "tr") {
+    slot.trX = cleanX;
+    slot.trY = cleanY;
+  } else if (corner === "bl") {
+    slot.blX = cleanX;
+    slot.blY = cleanY;
+  } else {
+    slot.brX = cleanX;
+    slot.brY = cleanY;
+  }
+
+  saveSessionAlbumSettings();
+  renderSessionAlbumSlotPanels();
+  renderSessionAlbumSlotGuides();
+}
+
+function setSessionAlbumCoordinate(slotId: number, key: keyof SessionAlbumSlot, value: number): void {
+  const slot = sessionAlbumSettings.slots.find((item) => item.id === slotId);
+  if (!slot) return;
+  const nextValue = String(key).endsWith("X") ? clampRoomX(value) : clampRoomY(value);
+  (slot as unknown as Record<string, number>)[key as string] = nextValue;
+  saveSessionAlbumSettings();
+  renderSessionAlbumSlotGuides();
+  syncSessionAlbumCoordinateInputs(slotId, key, nextValue);
+}
+
+function syncSessionAlbumCoordinateInputs(slotId: number, key: keyof SessionAlbumSlot, value: number): void {
+  document.querySelectorAll<HTMLInputElement>(`[data-session-slot-id="${slotId}"][data-session-key="${String(key)}"]`).forEach((input) => {
+    input.value = String(value);
+  });
+}
+
+function renderSessionAlbumSlotPanels(): void {
+  const container = document.querySelector<HTMLElement>("#sessionAlbumSlotPanels");
+  const showGuides = document.querySelector<HTMLInputElement>("#sessionAlbumShowGuides");
+  if (!container) return;
+
+  if (showGuides) showGuides.checked = sessionAlbumSettings.showGuides;
+
+  if (!sessionAlbumSettings.slots.length) {
+    container.innerHTML = `<div class="session-album-empty">No album slots defined yet.</div>`;
+    return;
+  }
+
+  container.innerHTML = sessionAlbumSettings.slots
+    .sort((a, b) => a.id - b.id)
+    .map((slot) => renderSessionAlbumSlotPanel(slot))
+    .join("");
+
+  bindSessionAlbumSlotPanelEvents(container);
+}
+
+function renderSessionAlbumSlotPanel(slot: SessionAlbumSlot): string {
+  const rows: Array<[SessionAlbumCornerKey, string, keyof SessionAlbumSlot, keyof SessionAlbumSlot]> = [
+    ["tl", "Upper left", "tlX", "tlY"],
+    ["tr", "Upper right", "trX", "trY"],
+    ["bl", "Bottom left", "blX", "blY"],
+    ["br", "Bottom right", "brX", "brY"],
+  ];
+
+  const controls = rows.map(([corner, label, xKey, yKey]) => `
+    <div class="session-album-corner-row">
+      <div class="session-album-corner-title">${label}</div>
+      <button class="session-album-target-button" type="button" data-session-target="${slot.id}:${corner}">Set target</button>
+      ${renderSessionAlbumNumberControl(slot, xKey, `${label} X`, ROOM_COORD_WIDTH)}
+      ${renderSessionAlbumNumberControl(slot, yKey, `${label} Y`, ROOM_COORD_HEIGHT)}
+    </div>
+  `).join("");
+
+  return `
+    <details class="session-album-slot-panel">
+      <summary>${slot.label}</summary>
+      <div class="session-album-slot-controls">
+        ${controls}
+        <button class="session-album-delete-button" type="button" data-session-delete-slot="${slot.id}">Delete ${slot.label}</button>
+      </div>
+    </details>
+  `;
+}
+
+function renderSessionAlbumNumberControl(slot: SessionAlbumSlot, key: keyof SessionAlbumSlot, label: string, max: number): string {
+  const value = slot[key] as number;
+  return `
+    <label class="session-album-point-control">${label}
+      <input class="session-album-range" type="range" min="0" max="${max}" step="1" value="${value}" data-session-slot-id="${slot.id}" data-session-key="${String(key)}" />
+      <input class="session-album-number" type="number" min="0" max="${max}" step="1" value="${value}" data-session-slot-id="${slot.id}" data-session-key="${String(key)}" />
+    </label>
+  `;
+}
+
+function bindSessionAlbumSlotPanelEvents(container: HTMLElement): void {
+  container.querySelectorAll<HTMLInputElement>("[data-session-slot-id][data-session-key]").forEach((input) => {
+    input.addEventListener("input", () => {
+      const slotId = Number(input.dataset.sessionSlotId);
+      const key = input.dataset.sessionKey as keyof SessionAlbumSlot;
+      setSessionAlbumCoordinate(slotId, key, Number(input.value));
+    });
+  });
+
+  container.querySelectorAll<HTMLButtonElement>("[data-session-target]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const [slotIdRaw, cornerRaw] = String(button.dataset.sessionTarget || "").split(":");
+      setSessionAlbumTarget(Number(slotIdRaw), cornerRaw as SessionAlbumCornerKey);
+    });
+  });
+
+  container.querySelectorAll<HTMLButtonElement>("[data-session-delete-slot]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const slotId = Number(button.dataset.sessionDeleteSlot);
+      sessionAlbumSettings = {
+        ...sessionAlbumSettings,
+        slots: sessionAlbumSettings.slots.filter((slot) => slot.id !== slotId),
+      };
+      if (sessionAlbumCornerTarget?.slotId === slotId) clearSessionAlbumTarget();
+      saveSessionAlbumSettings();
+      renderSessionAlbumSlotPanels();
+      renderSessionAlbumSlotGuides();
+    });
+  });
+}
+
+function bindSessionWallAlbumControls(): void {
+  const showGuides = document.querySelector<HTMLInputElement>("#sessionAlbumShowGuides");
+  const addSlot = document.querySelector<HTMLButtonElement>("#sessionAlbumAddSlot");
+  const room = document.querySelector<HTMLElement>(".room");
+
+  showGuides?.addEventListener("change", () => {
+    sessionAlbumSettings = { ...sessionAlbumSettings, showGuides: Boolean(showGuides.checked) };
+    saveSessionAlbumSettings();
+    renderSessionAlbumSlotGuides();
+  });
+
+  addSlot?.addEventListener("click", () => {
+    const slot = createSessionAlbumSlot();
+    sessionAlbumSettings = {
+      ...sessionAlbumSettings,
+      nextId: slot.id + 1,
+      showGuides: true,
+      slots: [...sessionAlbumSettings.slots, slot],
+    };
+    saveSessionAlbumSettings();
+    renderSessionAlbumSlotPanels();
+    renderSessionAlbumSlotGuides();
+  });
+
+  room?.addEventListener("click", (event) => {
+    if (!sessionAlbumCornerTarget) return;
+    const rect = room.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * ROOM_COORD_WIDTH;
+    const y = ((event.clientY - rect.top) / rect.height) * ROOM_COORD_HEIGHT;
+    updateSessionAlbumSlotCorner(sessionAlbumCornerTarget.slotId, sessionAlbumCornerTarget.corner, x, y);
+    clearSessionAlbumTarget();
+  });
+
+  renderSessionAlbumSlotPanels();
+  renderSessionAlbumSlotGuides();
+}
 
 
 async function boot(): Promise<void> {
@@ -453,6 +785,7 @@ async function boot(): Promise<void> {
   updateLyricsToggleUi(lyricsState.status, lyricsEnabled);
   scheduleSidePanelAutoHide();
   bindRoomUtilityControls();
+  bindSessionWallAlbumControls();
   applyRoomUtilitySettings();
 
   if (state.spotifyClientId) {

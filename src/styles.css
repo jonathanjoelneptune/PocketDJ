@@ -6791,3 +6791,158 @@ body.lyrics-marquee-unavailable .marquee::after {
 #aspectModeToggle {
   display: none !important;
 }
+
+
+/* v64N Session Wall Albums slot editor */
+.session-wall-albums-controls {
+  margin-top: 14px;
+  border-radius: 18px;
+  background: rgba(2, 6, 23, 0.32);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 0 12px 12px;
+}
+
+.session-wall-albums-controls > summary {
+  cursor: pointer;
+  padding: 13px 2px;
+  color: #a7f3d0;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.74rem;
+}
+
+.session-album-target-status,
+.session-album-empty {
+  margin-top: 10px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(3, 12, 10, 0.52);
+  border: 1px solid rgba(52, 211, 153, 0.16);
+  color: rgba(187, 247, 208, 0.78);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.session-album-slot-panels {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.session-album-slot-panel {
+  border-radius: 14px;
+  border: 1px solid rgba(52, 211, 153, 0.16);
+  background: rgba(4, 15, 13, 0.42);
+  padding: 0 10px 10px;
+}
+
+.session-album-slot-panel > summary {
+  cursor: pointer;
+  padding: 11px 2px;
+  color: #86efac;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.session-album-slot-controls {
+  display: grid;
+  gap: 10px;
+}
+
+.session-album-corner-row {
+  display: grid;
+  gap: 7px;
+  padding: 9px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.session-album-corner-title {
+  color: #dcfce7;
+  font-size: 0.67rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.session-album-target-button,
+.session-album-delete-button {
+  border: 1px solid rgba(52, 211, 153, 0.26);
+  background: rgba(4, 120, 87, 0.22);
+  color: #bbf7d0;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.session-album-delete-button {
+  border-color: rgba(248, 113, 113, 0.34);
+  background: rgba(127, 29, 29, 0.28);
+  color: #fecaca;
+}
+
+.session-album-point-control {
+  display: grid;
+  grid-template-columns: 1fr 64px;
+  gap: 6px 8px;
+  align-items: center;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 0.64rem;
+}
+
+.session-album-range {
+  grid-column: 1 / 2;
+  width: 100%;
+}
+
+.session-album-number {
+  grid-column: 2 / 3;
+  width: 64px;
+  min-width: 0;
+  padding: 5px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(52, 211, 153, 0.18);
+  background: rgba(0, 0, 0, 0.22);
+  color: #d1fae5;
+  font-size: 0.66rem;
+}
+
+.session-album-guide-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 22;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.session-album-guide-overlay.session-album-guides-visible {
+  opacity: 1;
+}
+
+.session-album-guide-polygon {
+  fill: rgba(57, 255, 20, 0.025);
+  stroke: rgba(57, 255, 20, 0.96);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+  filter:
+    drop-shadow(0 0 5px rgba(57, 255, 20, 0.85))
+    drop-shadow(0 0 14px rgba(57, 255, 20, 0.35));
+}
+
+.session-album-guide-label {
+  fill: rgba(220, 252, 231, 0.96);
+  stroke: rgba(0, 0, 0, 0.72);
+  stroke-width: 5;
+  paint-order: stroke;
+  font-family: "Press Start 2P", monospace;
+  font-size: 30px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}

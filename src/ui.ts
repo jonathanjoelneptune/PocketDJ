@@ -30,6 +30,7 @@ export function renderShell(state: AppState): void {
         <div class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\')" aria-hidden="true"></div>
         <div class="album-wash" id="albumWash"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
+        <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
 
         <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
           <div class="lyrics-boundary-guides" aria-hidden="true">
@@ -224,6 +225,20 @@ export function renderShell(state: AppState): void {
           </div>
 
           <input id="clientIdInput" type="hidden" value="${escapeHtml(state.spotifyClientId || "37da51db24384ad3a07c222f71b1525e")}" />
+
+          <details class="session-wall-albums-controls">
+            <summary>Session Wall Albums</summary>
+            <p class="utility-help">Define 16:9 room-space album slots. These are future wall positions where played album covers will land.</p>
+            <div class="button-grid dev-button-grid">
+              <button id="sessionAlbumAddSlot" class="secondary" type="button">Add Session Album Slot</button>
+            </div>
+            <label class="utility-checkbox">
+              <input id="sessionAlbumShowGuides" type="checkbox" />
+              Show session album guides
+            </label>
+            <div id="sessionAlbumTargetStatus" class="session-album-target-status">No corner target selected.</div>
+            <div id="sessionAlbumSlotPanels" class="session-album-slot-panels"></div>
+          </details>
 
           <details class="room-utility-controls">
           <summary>Room utility controls</summary>
