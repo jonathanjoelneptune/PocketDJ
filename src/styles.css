@@ -7178,3 +7178,35 @@ body.lyrics-marquee-unavailable .marquee::after {
   vector-effect: non-scaling-stroke;
   pointer-events: none;
 }
+
+
+/* v64V: Curated wall album pool and warm room-matching album treatment */
+.session-album-warm-overlay {
+  fill: #4a2412;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.session-album-placeholder-image {
+  opacity: 0.90;
+  filter:
+    saturate(0.82)
+    contrast(0.96)
+    brightness(0.82)
+    sepia(0.18)
+    drop-shadow(0 3px 5px rgba(0, 0, 0, 0.30));
+  image-rendering: auto;
+  pointer-events: none;
+}
+
+.session-album-depth-stroke {
+  stroke: rgba(3, 3, 5, 0.82);
+}
+
+.session-album-emboss-highlight {
+  stroke: rgba(255, 224, 170, 0.12);
+}
+
+.session-album-emboss-shadow {
+  stroke: rgba(0, 0, 0, 0.46);
+}

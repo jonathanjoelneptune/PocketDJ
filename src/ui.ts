@@ -257,6 +257,9 @@ export function renderShell(state: AppState): void {
             <label class="session-album-pixel-control">Album pixel effect <span id="sessionAlbumPixelAmountValue">0.25</span>
               <input id="sessionAlbumPixelAmount" type="range" min="0" max="1" step="0.01" value="0.25" />
             </label>
+            <label class="session-album-pixel-control">Album warm blend <span id="sessionAlbumWarmBlendValue">0.62</span>
+              <input id="sessionAlbumWarmBlend" type="range" min="0" max="1" step="0.01" value="0.62" />
+            </label>
             <div class="button-grid dev-button-grid">
               <button id="sessionAlbumCopyExport" class="secondary" type="button">Copy Slot JSON</button>
             </div>

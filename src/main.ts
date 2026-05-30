@@ -1,4 +1,5 @@
 import "./styles.css";
+import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
@@ -441,7 +442,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64u";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64v";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -464,6 +465,7 @@ type SessionAlbumSettings = {
   showGuides: boolean;
   placeAlbumsInFrames: boolean;
   albumPixelAmount: number;
+  albumWarmBlend: number;
   nextId: number;
   slots: SessionAlbumSlot[];
 };
@@ -481,6 +483,7 @@ const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
   placeAlbumsInFrames: false,
   albumPixelAmount: 0.25,
+  albumWarmBlend: 0.62,
   nextId: 53,
   slots: [
     { id: 1, label: "A-1", tlX: 77, tlY: 15, trX: 177, trY: 73, blX: 78, blY: 144, brX: 173, brY: 185 },
@@ -545,6 +548,8 @@ let sessionAlbumPlaceholderPool: SessionAlbumPlaceholder[] = [];
 let sessionAlbumPlaceholderFetchStarted = false;
 const sessionAlbumPixelCache = new Map<string, string>();
 const sessionAlbumPixelPending = new Set<string>();
+let sessionWallAlbumAssignments: SessionAlbumPlaceholder[] = [];
+const sessionWallAlbumUrlCacheKey = "pocketdj-wall-album-url-cache-v1";
 
 
 
@@ -566,6 +571,7 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
       showGuides: Boolean(parsed.showGuides),
       placeAlbumsInFrames: Boolean(parsed.placeAlbumsInFrames),
       albumPixelAmount: clamp01(Number(parsed.albumPixelAmount ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumPixelAmount)),
+      albumWarmBlend: clamp01(Number(parsed.albumWarmBlend ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumWarmBlend)),
       nextId: Math.max(Number(parsed.nextId || 1), maxId + 1, 1),
       slots,
     };
@@ -676,6 +682,130 @@ async function copySessionAlbumExport(): Promise<void> {
     document.execCommand("copy");
   }
 }
+
+
+function shuffleSessionAlbumArray<T>(items: T[]): T[] {
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function readWallAlbumUrlCache(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(sessionWallAlbumUrlCacheKey);
+    return raw ? JSON.parse(raw) as Record<string, string> : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeWallAlbumUrlCache(cache: Record<string, string>): void {
+  try {
+    localStorage.setItem(sessionWallAlbumUrlCacheKey, JSON.stringify(cache));
+  } catch {
+    // Ignore storage limits.
+  }
+}
+
+function wallAlbumKey(item: WallAlbumMasterItem): string {
+  return `${item.artist}__${item.album}`;
+}
+
+function normalizeAlbumText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[’‘]/g, "'")
+    .replace(/[“”]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function scoreWallAlbumResult(item: WallAlbumMasterItem, result: { collectionName?: string; artistName?: string; artworkUrl100?: string }): number {
+  const targetAlbum = normalizeAlbumText(item.album);
+  const targetArtist = normalizeAlbumText(item.artist);
+  const foundAlbum = normalizeAlbumText(result.collectionName || "");
+  const foundArtist = normalizeAlbumText(result.artistName || "");
+  let score = 0;
+
+  if (targetAlbum === foundAlbum) score += 120;
+  else if (foundAlbum.includes(targetAlbum) || targetAlbum.includes(foundAlbum)) score += 70;
+
+  targetArtist.split(" ").filter(Boolean).forEach((part) => {
+    if (foundArtist.includes(part)) score += 8;
+  });
+
+  if (result.artworkUrl100) score += 10;
+  return score;
+}
+
+async function resolveWallAlbumArtworkUrl(item: WallAlbumMasterItem, cache: Record<string, string>): Promise<string | null> {
+  if (item.artworkUrl) return item.artworkUrl;
+  const key = wallAlbumKey(item);
+  if (cache[key]) return cache[key];
+
+  try {
+    const response = await fetch(item.searchUrl);
+    if (!response.ok) return null;
+    const json = await response.json() as {
+      results?: Array<{
+        collectionName?: string;
+        artistName?: string;
+        artworkUrl100?: string;
+      }>;
+    };
+
+    const best = (json.results || [])
+      .filter((result) => Boolean(result.artworkUrl100))
+      .sort((a, b) => scoreWallAlbumResult(item, b) - scoreWallAlbumResult(item, a))[0];
+
+    if (!best?.artworkUrl100) return null;
+
+    const artworkUrl = best.artworkUrl100.replace(/\/\d+x\d+bb\.(jpg|png|webp)$/i, "/1000x1000bb.$1");
+    cache[key] = artworkUrl;
+    writeWallAlbumUrlCache(cache);
+    return artworkUrl;
+  } catch (error) {
+    console.warn("Could not resolve wall album art.", item.artist, item.album, error);
+    return null;
+  }
+}
+
+function assignWallAlbumsForRefresh(): void {
+  const slotCount = Math.min(46, sessionAlbumSettings.slots.length);
+  const shuffled = shuffleSessionAlbumArray(WALL_ALBUM_MASTER_LIST).slice(0, slotCount);
+  sessionWallAlbumAssignments = shuffled.map((item) => ({
+    title: item.album,
+    artist: item.artist,
+    imageUrl: item.artworkUrl || "",
+  }));
+
+  const cache = readWallAlbumUrlCache();
+  shuffled.forEach((item, index) => {
+    const cached = item.artworkUrl || cache[wallAlbumKey(item)];
+    if (cached) {
+      sessionWallAlbumAssignments[index] = {
+        title: item.album,
+        artist: item.artist,
+        imageUrl: cached,
+      };
+      return;
+    }
+
+    void resolveWallAlbumArtworkUrl(item, cache).then((artworkUrl) => {
+      if (!artworkUrl) return;
+      sessionWallAlbumAssignments[index] = {
+        title: item.album,
+        artist: item.artist,
+        imageUrl: artworkUrl,
+      };
+      renderSessionAlbumSlotGuides();
+    });
+  });
+}
+
 
 async function loadSessionAlbumPlaceholderAlbums(): Promise<void> {
   if (sessionAlbumPlaceholderFetchStarted || sessionAlbumPlaceholderPool.length) return;
@@ -791,8 +921,10 @@ async function createPixelatedSessionAlbumImage(imageUrl: string, amount: number
 
 function placeholderAlbumForSlot(slot: SessionAlbumSlot): SessionAlbumPlaceholder | null {
   if (!sessionAlbumPlaceholderPool.length) return null;
-  const index = Math.abs(slot.id - 1) % sessionAlbumPlaceholderPool.length;
-  return sessionAlbumPlaceholderPool[index];
+  const sortedSlots = sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id);
+  const slotIndex = sortedSlots.findIndex((item) => item.id === slot.id);
+  if (slotIndex < 0) return null;
+  return sessionAlbumPlaceholderPool[slotIndex % sessionAlbumPlaceholderPool.length] || null;
 }
 
 function sessionAlbumSlotBounds(slot: SessionAlbumSlot): { x: number; y: number; width: number; height: number } {
@@ -928,6 +1060,36 @@ function renderSessionAlbumSlotGuides(): void {
   if (!visible) return;
 
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+
+  const warmFilter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+  warmFilter.setAttribute("id", "sessionAlbumWarmFilter");
+  warmFilter.setAttribute("color-interpolation-filters", "sRGB");
+
+  const colorMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
+  colorMatrix.setAttribute("type", "matrix");
+  colorMatrix.setAttribute("values", "0.82 0.08 0.03 0 0.025  0.05 0.74 0.04 0 0.012  0.02 0.06 0.66 0 0.000  0 0 0 1 0");
+  warmFilter.appendChild(colorMatrix);
+
+  const component = document.createElementNS("http://www.w3.org/2000/svg", "feComponentTransfer");
+  const rFunc = document.createElementNS("http://www.w3.org/2000/svg", "feFuncR");
+  rFunc.setAttribute("type", "gamma");
+  rFunc.setAttribute("amplitude", "0.86");
+  rFunc.setAttribute("exponent", "1.08");
+  rFunc.setAttribute("offset", "0.02");
+  const gFunc = document.createElementNS("http://www.w3.org/2000/svg", "feFuncG");
+  gFunc.setAttribute("type", "gamma");
+  gFunc.setAttribute("amplitude", "0.80");
+  gFunc.setAttribute("exponent", "1.10");
+  gFunc.setAttribute("offset", "0.01");
+  const bFunc = document.createElementNS("http://www.w3.org/2000/svg", "feFuncB");
+  bFunc.setAttribute("type", "gamma");
+  bFunc.setAttribute("amplitude", "0.66");
+  bFunc.setAttribute("exponent", "1.18");
+  bFunc.setAttribute("offset", "0.00");
+  component.append(rFunc, gFunc, bFunc);
+  warmFilter.appendChild(component);
+  defs.appendChild(warmFilter);
+
   overlay.appendChild(defs);
 
   for (const slot of sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id)) {
@@ -962,7 +1124,14 @@ function renderSessionAlbumSlotGuides(): void {
         image.setAttribute("preserveAspectRatio", "none");
         image.setAttribute("clip-path", `url(#${clipId})`);
         image.setAttribute("class", "session-album-placeholder-image");
+        image.setAttribute("filter", "url(#sessionAlbumWarmFilter)");
         overlay.appendChild(image);
+
+        const warmOverlay = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        warmOverlay.setAttribute("points", sessionAlbumPoints(slot));
+        warmOverlay.setAttribute("class", "session-album-warm-overlay");
+        warmOverlay.setAttribute("opacity", String(sessionAlbumSettings.albumWarmBlend));
+        overlay.appendChild(warmOverlay);
 
         const stroke = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         stroke.setAttribute("points", sessionAlbumPoints(slot));
@@ -1070,12 +1239,16 @@ function renderSessionAlbumSlotPanels(): void {
   const placeFrames = document.querySelector<HTMLInputElement>("#sessionAlbumPlaceFrames");
   const albumPixelAmount = document.querySelector<HTMLInputElement>("#sessionAlbumPixelAmount");
   const albumPixelAmountValue = document.querySelector<HTMLElement>("#sessionAlbumPixelAmountValue");
+  const albumWarmBlend = document.querySelector<HTMLInputElement>("#sessionAlbumWarmBlend");
+  const albumWarmBlendValue = document.querySelector<HTMLElement>("#sessionAlbumWarmBlendValue");
   if (!container) return;
 
   if (showGuides) showGuides.checked = sessionAlbumSettings.showGuides;
   if (placeFrames) placeFrames.checked = sessionAlbumSettings.placeAlbumsInFrames;
   if (albumPixelAmount) albumPixelAmount.value = sessionAlbumSettings.albumPixelAmount.toFixed(2);
   if (albumPixelAmountValue) albumPixelAmountValue.textContent = sessionAlbumSettings.albumPixelAmount.toFixed(2);
+  if (albumWarmBlend) albumWarmBlend.value = sessionAlbumSettings.albumWarmBlend.toFixed(2);
+  if (albumWarmBlendValue) albumWarmBlendValue.textContent = sessionAlbumSettings.albumWarmBlend.toFixed(2);
   updateSessionAlbumExportText();
 
   if (!sessionAlbumSettings.slots.length) {
@@ -1245,6 +1418,8 @@ function bindSessionWallAlbumControls(): void {
   const placeFrames = document.querySelector<HTMLInputElement>("#sessionAlbumPlaceFrames");
   const albumPixelAmount = document.querySelector<HTMLInputElement>("#sessionAlbumPixelAmount");
   const albumPixelAmountValue = document.querySelector<HTMLElement>("#sessionAlbumPixelAmountValue");
+  const albumWarmBlend = document.querySelector<HTMLInputElement>("#sessionAlbumWarmBlend");
+  const albumWarmBlendValue = document.querySelector<HTMLElement>("#sessionAlbumWarmBlendValue");
   const copyExport = document.querySelector<HTMLButtonElement>("#sessionAlbumCopyExport");
   const addSlot = document.querySelector<HTMLButtonElement>("#sessionAlbumAddSlot");
   const duplicateAToB = document.querySelector<HTMLButtonElement>("#sessionAlbumDuplicateAToB");
@@ -1275,6 +1450,14 @@ function bindSessionWallAlbumControls(): void {
     renderSessionAlbumSlotGuides();
   });
 
+  albumWarmBlend?.addEventListener("input", () => {
+    const amount = clamp01(Number(albumWarmBlend.value));
+    sessionAlbumSettings = { ...sessionAlbumSettings, albumWarmBlend: amount };
+    if (albumWarmBlendValue) albumWarmBlendValue.textContent = amount.toFixed(2);
+    saveSessionAlbumSettings();
+    renderSessionAlbumSlotGuides();
+  });
+
   copyExport?.addEventListener("click", () => {
     void copySessionAlbumExport();
   });
@@ -1301,6 +1484,7 @@ function bindSessionWallAlbumControls(): void {
     if (sessionAlbumSettings.placeAlbumsInFrames) void loadSessionAlbumPlaceholderAlbums();
   });
 
+  assignWallAlbumsForRefresh();
   if (sessionAlbumSettings.placeAlbumsInFrames) void loadSessionAlbumPlaceholderAlbums();
 
   room?.addEventListener("click", (event) => {
