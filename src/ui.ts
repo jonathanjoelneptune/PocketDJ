@@ -31,6 +31,7 @@ export function renderShell(state: AppState): void {
         <div class="album-wash" id="albumWash"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
         <div id="sessionAlbumFrameOverlay" class="session-album-frame-overlay" aria-hidden="true"></div>
+        <canvas id="sessionAlbumWarpCanvas" class="session-album-warp-canvas" width="1764" height="992" aria-hidden="true"></canvas>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
 
         <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
@@ -254,11 +255,15 @@ export function renderShell(state: AppState): void {
               <input id="sessionAlbumPlaceFrames" type="checkbox" checked />
               Place albums in frames
             </label>
+            <label class="utility-checkbox">
+              <input id="sessionAlbumWarpMode" type="checkbox" />
+              Warp albums to frame corners
+            </label>
             <label class="session-album-pixel-control">Album pixel effect <span id="sessionAlbumPixelAmountValue">0.25</span>
               <input id="sessionAlbumPixelAmount" type="range" min="0" max="1" step="0.01" value="0.25" />
             </label>
-            <label class="session-album-pixel-control">Album warm blend <span id="sessionAlbumWarmBlendValue">0.62</span>
-              <input id="sessionAlbumWarmBlend" type="range" min="0" max="1" step="0.01" value="0.62" />
+            <label class="session-album-pixel-control">Album warm blend <span id="sessionAlbumWarmBlendValue">0.54</span>
+              <input id="sessionAlbumWarmBlend" type="range" min="0" max="1" step="0.01" value="0.54" />
             </label>
             <div class="button-grid dev-button-grid">
               <button id="sessionAlbumCopyExport" class="secondary" type="button">Copy Slot JSON</button>

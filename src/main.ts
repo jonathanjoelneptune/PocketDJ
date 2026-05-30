@@ -442,7 +442,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64w";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64x";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -466,6 +466,7 @@ type SessionAlbumSettings = {
   placeAlbumsInFrames: boolean;
   albumPixelAmount: number;
   albumWarmBlend: number;
+  albumWarpMode: boolean;
   v64wQuintessentialDefault?: boolean;
   nextId: number;
   slots: SessionAlbumSlot[];
@@ -484,7 +485,8 @@ const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
   placeAlbumsInFrames: true,
   albumPixelAmount: 0.25,
-  albumWarmBlend: 0.62,
+  albumWarmBlend: 0.54,
+  albumWarpMode: false,
   v64wQuintessentialDefault: true,
   nextId: 53,
   slots: [
@@ -553,6 +555,31 @@ const sessionAlbumPixelPending = new Set<string>();
 let sessionWallAlbumAssignments: SessionAlbumPlaceholder[] = [];
 let sessionWallAlbumAssignmentsBySlot = new Map<number, SessionAlbumPlaceholder>();
 const sessionWallAlbumUrlCacheKey = "pocketdj-wall-album-url-cache-v1";
+const SESSION_ALBUM_FALLBACK_ART_URL = `data:image/svg+xml,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2b1a12"/>
+      <stop offset="0.52" stop-color="#111018"/>
+      <stop offset="1" stop-color="#4a2412"/>
+    </linearGradient>
+    <radialGradient id="r" cx="50%" cy="50%" r="42%">
+      <stop offset="0" stop-color="#d08b31" stop-opacity=".34"/>
+      <stop offset=".55" stop-color="#271810" stop-opacity=".42"/>
+      <stop offset=".58" stop-color="#08070a"/>
+      <stop offset="1" stop-color="#060508"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#g)"/>
+  <rect x="28" y="28" width="544" height="544" rx="18" fill="none" stroke="#2f1a10" stroke-width="24"/>
+  <circle cx="300" cy="300" r="176" fill="url(#r)" stroke="#050505" stroke-width="14"/>
+  <circle cx="300" cy="300" r="34" fill="#d29438"/>
+  <text x="300" y="98" text-anchor="middle" font-family="monospace" font-size="34" font-weight="700" fill="#f1b95d" opacity=".84">POCKET DJ</text>
+  <text x="300" y="520" text-anchor="middle" font-family="monospace" font-size="26" font-weight="700" fill="#f1b95d" opacity=".58">VINYL DREAMS</text>
+</svg>
+`)}`;
+const sessionAlbumImageCache = new Map<string, HTMLImageElement>();
+const sessionAlbumImagePending = new Map<string, Promise<HTMLImageElement | null>>();
 
 
 
@@ -576,6 +603,7 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
       placeAlbumsInFrames: hasV64WDefault ? Boolean(parsed.placeAlbumsInFrames) : true,
       albumPixelAmount: clamp01(Number(parsed.albumPixelAmount ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumPixelAmount)),
       albumWarmBlend: clamp01(Number(parsed.albumWarmBlend ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumWarmBlend)),
+      albumWarpMode: Boolean(parsed.albumWarpMode ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumWarpMode),
       v64wQuintessentialDefault: true,
       nextId: Math.max(Number(parsed.nextId || 1), maxId + 1, 1),
       slots,
@@ -778,6 +806,19 @@ async function resolveWallAlbumArtworkUrl(item: WallAlbumMasterItem, cache: Reco
   }
 }
 
+
+async function resolveWallAlbumArtworkUrlWithRetry(item: WallAlbumMasterItem, cache: Record<string, string>, attempts = 2): Promise<string | null> {
+  for (let attempt = 0; attempt <= attempts; attempt += 1) {
+    const artworkUrl = await resolveWallAlbumArtworkUrl(item, cache);
+    if (artworkUrl) return artworkUrl;
+    if (attempt < attempts) {
+      await new Promise((resolve) => window.setTimeout(resolve, 600 + attempt * 900));
+    }
+  }
+  return null;
+}
+
+
 function assignWallAlbumsForRefresh(): void {
   const eligibleSlots = sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id);
   const slotCount = Math.min(46, eligibleSlots.length, WALL_ALBUM_MASTER_LIST.length);
@@ -789,7 +830,7 @@ function assignWallAlbumsForRefresh(): void {
   sessionWallAlbumAssignments = selectedAlbums.map((item) => ({
     title: item.album,
     artist: item.artist,
-    imageUrl: item.artworkUrl || cache[wallAlbumKey(item)] || "",
+    imageUrl: item.artworkUrl || cache[wallAlbumKey(item)] || SESSION_ALBUM_FALLBACK_ART_URL,
   }));
 
   selectedAlbums.forEach((item, index) => {
@@ -797,22 +838,38 @@ function assignWallAlbumsForRefresh(): void {
     const placeholder: SessionAlbumPlaceholder = {
       title: item.album,
       artist: item.artist,
-      imageUrl: item.artworkUrl || cache[wallAlbumKey(item)] || "",
+      imageUrl: item.artworkUrl || cache[wallAlbumKey(item)] || SESSION_ALBUM_FALLBACK_ART_URL,
     };
     sessionWallAlbumAssignmentsBySlot.set(slot.id, placeholder);
+    void loadSessionAlbumImage(placeholder.imageUrl).then(() => renderSessionAlbumSlotGuides());
 
-    if (placeholder.imageUrl) return;
+    const cachedOrStaticUrl = item.artworkUrl || cache[wallAlbumKey(item)];
+    if (cachedOrStaticUrl) {
+      void loadSessionAlbumImage(cachedOrStaticUrl).then(() => {
+        const resolved: SessionAlbumPlaceholder = {
+          title: item.album,
+          artist: item.artist,
+          imageUrl: cachedOrStaticUrl,
+        };
+        sessionWallAlbumAssignments[index] = resolved;
+        sessionWallAlbumAssignmentsBySlot.set(slot.id, resolved);
+        renderSessionAlbumSlotGuides();
+      });
+      return;
+    }
 
-    void resolveWallAlbumArtworkUrl(item, cache).then((artworkUrl) => {
+    void resolveWallAlbumArtworkUrlWithRetry(item, cache, 2).then((artworkUrl) => {
       if (!artworkUrl) return;
-      const resolved: SessionAlbumPlaceholder = {
-        title: item.album,
-        artist: item.artist,
-        imageUrl: artworkUrl,
-      };
-      sessionWallAlbumAssignments[index] = resolved;
-      sessionWallAlbumAssignmentsBySlot.set(slot.id, resolved);
-      renderSessionAlbumSlotGuides();
+      void loadSessionAlbumImage(artworkUrl).then(() => {
+        const resolved: SessionAlbumPlaceholder = {
+          title: item.album,
+          artist: item.artist,
+          imageUrl: artworkUrl,
+        };
+        sessionWallAlbumAssignments[index] = resolved;
+        sessionWallAlbumAssignmentsBySlot.set(slot.id, resolved);
+        renderSessionAlbumSlotGuides();
+      });
     });
   });
 }
@@ -1005,6 +1062,232 @@ function renderSessionAlbumFramePreviews(): void {
 }
 
 
+
+function loadSessionAlbumImage(imageUrl: string): Promise<HTMLImageElement | null> {
+  const resolvedUrl = imageUrl || SESSION_ALBUM_FALLBACK_ART_URL;
+  const cached = sessionAlbumImageCache.get(resolvedUrl);
+  if (cached?.complete && cached.naturalWidth > 0) return Promise.resolve(cached);
+
+  const pending = sessionAlbumImagePending.get(resolvedUrl);
+  if (pending) return pending;
+
+  const promise = new Promise<HTMLImageElement | null>((resolve) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.referrerPolicy = "no-referrer";
+    image.decoding = "async";
+    image.onload = () => {
+      sessionAlbumImageCache.set(resolvedUrl, image);
+      sessionAlbumImagePending.delete(resolvedUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      sessionAlbumImagePending.delete(resolvedUrl);
+      if (resolvedUrl !== SESSION_ALBUM_FALLBACK_ART_URL) {
+        void loadSessionAlbumImage(SESSION_ALBUM_FALLBACK_ART_URL).then(resolve);
+      } else {
+        resolve(null);
+      }
+    };
+    image.src = resolvedUrl;
+  });
+
+  sessionAlbumImagePending.set(resolvedUrl, promise);
+  return promise;
+}
+
+function sessionAlbumQuadPoint(slot: SessionAlbumSlot, u: number, v: number): { x: number; y: number } {
+  const topX = slot.tlX + (slot.trX - slot.tlX) * u;
+  const topY = slot.tlY + (slot.trY - slot.tlY) * u;
+  const bottomX = slot.blX + (slot.brX - slot.blX) * u;
+  const bottomY = slot.blY + (slot.brY - slot.blY) * u;
+  return {
+    x: topX + (bottomX - topX) * v,
+    y: topY + (bottomY - topY) * v,
+  };
+}
+
+function drawAffineImageTriangle(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  s0: { x: number; y: number },
+  s1: { x: number; y: number },
+  s2: { x: number; y: number },
+  d0: { x: number; y: number },
+  d1: { x: number; y: number },
+  d2: { x: number; y: number },
+): void {
+  const denom = s0.x * (s1.y - s2.y) + s1.x * (s2.y - s0.y) + s2.x * (s0.y - s1.y);
+  if (Math.abs(denom) < 0.00001) return;
+
+  const a = (d0.x * (s1.y - s2.y) + d1.x * (s2.y - s0.y) + d2.x * (s0.y - s1.y)) / denom;
+  const b = (d0.y * (s1.y - s2.y) + d1.y * (s2.y - s0.y) + d2.y * (s0.y - s1.y)) / denom;
+  const c = (d0.x * (s2.x - s1.x) + d1.x * (s0.x - s2.x) + d2.x * (s1.x - s0.x)) / denom;
+  const d = (d0.y * (s2.x - s1.x) + d1.y * (s0.x - s2.x) + d2.y * (s1.x - s0.x)) / denom;
+  const e = (d0.x * (s1.x * s2.y - s2.x * s1.y) + d1.x * (s2.x * s0.y - s0.x * s2.y) + d2.x * (s0.x * s1.y - s1.x * s0.y)) / denom;
+  const f = (d0.y * (s1.x * s2.y - s2.x * s1.y) + d1.y * (s2.x * s0.y - s0.x * s2.y) + d2.y * (s0.x * s1.y - s1.x * s0.y)) / denom;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(d0.x, d0.y);
+  ctx.lineTo(d1.x, d1.y);
+  ctx.lineTo(d2.x, d2.y);
+  ctx.closePath();
+  ctx.clip();
+  ctx.transform(a, b, c, d, e, f);
+  ctx.drawImage(image, 0, 0, image.naturalWidth || image.width, image.naturalHeight || image.height);
+  ctx.restore();
+}
+
+function drawWarpedAlbumImage(ctx: CanvasRenderingContext2D, image: HTMLImageElement, slot: SessionAlbumSlot): void {
+  const sourceWidth = image.naturalWidth || image.width || 600;
+  const sourceHeight = image.naturalHeight || image.height || 600;
+  const grid = 5;
+
+  for (let y = 0; y < grid; y += 1) {
+    for (let x = 0; x < grid; x += 1) {
+      const u0 = x / grid;
+      const v0 = y / grid;
+      const u1 = (x + 1) / grid;
+      const v1 = (y + 1) / grid;
+
+      const d00 = sessionAlbumQuadPoint(slot, u0, v0);
+      const d10 = sessionAlbumQuadPoint(slot, u1, v0);
+      const d01 = sessionAlbumQuadPoint(slot, u0, v1);
+      const d11 = sessionAlbumQuadPoint(slot, u1, v1);
+
+      const s00 = { x: u0 * sourceWidth, y: v0 * sourceHeight };
+      const s10 = { x: u1 * sourceWidth, y: v0 * sourceHeight };
+      const s01 = { x: u0 * sourceWidth, y: v1 * sourceHeight };
+      const s11 = { x: u1 * sourceWidth, y: v1 * sourceHeight };
+
+      drawAffineImageTriangle(ctx, image, s00, s10, s11, d00, d10, d11);
+      drawAffineImageTriangle(ctx, image, s00, s11, s01, d00, d11, d01);
+    }
+  }
+}
+
+function drawSessionAlbumPolygon(ctx: CanvasRenderingContext2D, slot: SessionAlbumSlot): void {
+  ctx.beginPath();
+  ctx.moveTo(slot.tlX, slot.tlY);
+  ctx.lineTo(slot.trX, slot.trY);
+  ctx.lineTo(slot.brX, slot.brY);
+  ctx.lineTo(slot.blX, slot.blY);
+  ctx.closePath();
+}
+
+function drawSessionAlbumCanvasDepth(ctx: CanvasRenderingContext2D, slot: SessionAlbumSlot): void {
+  const center = getSessionAlbumSlotCenter(slot);
+  const shadowDx = center.x > ROOM_COORD_WIDTH / 2 ? -4 : 4;
+
+  ctx.save();
+  ctx.translate(shadowDx, 5);
+  drawSessionAlbumPolygon(ctx, slot);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.32)";
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawSessionAlbumCanvasFinish(ctx: CanvasRenderingContext2D, slot: SessionAlbumSlot): void {
+  ctx.save();
+  drawSessionAlbumPolygon(ctx, slot);
+  ctx.globalCompositeOperation = "multiply";
+  ctx.fillStyle = `rgba(74, 36, 18, ${sessionAlbumSettings.albumWarmBlend})`;
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  drawSessionAlbumPolygon(ctx, slot);
+  ctx.strokeStyle = "rgba(3, 3, 5, 0.82)";
+  ctx.lineWidth = 2.2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(slot.blX, slot.blY);
+  ctx.lineTo(slot.tlX, slot.tlY);
+  ctx.lineTo(slot.trX, slot.trY);
+  ctx.strokeStyle = "rgba(255, 224, 170, 0.12)";
+  ctx.lineWidth = 1.1;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(slot.trX, slot.trY);
+  ctx.lineTo(slot.brX, slot.brY);
+  ctx.lineTo(slot.blX, slot.blY);
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.46)";
+  ctx.lineWidth = 1.3;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function applySessionAlbumCanvasWarmFilter(ctx: CanvasRenderingContext2D): void {
+  ctx.filter = "saturate(0.86) contrast(0.98) brightness(0.90) sepia(0.14)";
+}
+
+function clearSessionAlbumWarpCanvas(): void {
+  const canvas = document.querySelector<HTMLCanvasElement>("#sessionAlbumWarpCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  ctx?.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.classList.remove("session-album-warp-visible");
+}
+
+function renderSessionAlbumWarpCanvas(): void {
+  const canvas = document.querySelector<HTMLCanvasElement>("#sessionAlbumWarpCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  canvas.width = ROOM_COORD_WIDTH;
+  canvas.height = ROOM_COORD_HEIGHT;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const activeSlots = sessionAlbumSettings.slots
+    .slice()
+    .sort((a, b) => a.id - b.id)
+    .filter((slot) => Boolean(placeholderAlbumForSlot(slot)));
+
+  canvas.classList.toggle("session-album-warp-visible", sessionAlbumSettings.placeAlbumsInFrames && sessionAlbumSettings.albumWarpMode);
+
+  if (!sessionAlbumSettings.placeAlbumsInFrames || !sessionAlbumSettings.albumWarpMode) return;
+
+  activeSlots.forEach((slot) => {
+    const placeholder = placeholderAlbumForSlot(slot);
+    if (!placeholder) return;
+
+    const displayUrl = getSessionAlbumDisplayImageUrl({
+      ...placeholder,
+      imageUrl: placeholder.imageUrl || SESSION_ALBUM_FALLBACK_ART_URL,
+    }) || SESSION_ALBUM_FALLBACK_ART_URL;
+
+    const image = sessionAlbumImageCache.get(displayUrl);
+    if (!image?.complete || image.naturalWidth <= 0) {
+      void loadSessionAlbumImage(displayUrl).then(() => renderSessionAlbumSlotGuides());
+      const fallback = sessionAlbumImageCache.get(SESSION_ALBUM_FALLBACK_ART_URL);
+      if (!fallback?.complete || fallback.naturalWidth <= 0) {
+        void loadSessionAlbumImage(SESSION_ALBUM_FALLBACK_ART_URL).then(() => renderSessionAlbumSlotGuides());
+        return;
+      }
+
+      drawSessionAlbumCanvasDepth(ctx, slot);
+      ctx.save();
+      applySessionAlbumCanvasWarmFilter(ctx);
+      drawWarpedAlbumImage(ctx, fallback, slot);
+      ctx.restore();
+      drawSessionAlbumCanvasFinish(ctx, slot);
+      return;
+    }
+
+    drawSessionAlbumCanvasDepth(ctx, slot);
+    ctx.save();
+    applySessionAlbumCanvasWarmFilter(ctx);
+    drawWarpedAlbumImage(ctx, image, slot);
+    ctx.restore();
+    drawSessionAlbumCanvasFinish(ctx, slot);
+  });
+}
+
+
 function renderSessionAlbumSlotGuides(): void {
   const overlay = document.querySelector<SVGSVGElement>("#sessionAlbumGuideOverlay");
   if (!overlay) return;
@@ -1014,6 +1297,12 @@ function renderSessionAlbumSlotGuides(): void {
   overlay.innerHTML = "";
 
   updateSessionAlbumExportText();
+
+  if (sessionAlbumSettings.albumWarpMode) {
+    renderSessionAlbumWarpCanvas();
+  } else {
+    clearSessionAlbumWarpCanvas();
+  }
 
   const frameOverlay = document.querySelector<HTMLElement>("#sessionAlbumFrameOverlay");
   if (frameOverlay) {
@@ -1057,9 +1346,9 @@ function renderSessionAlbumSlotGuides(): void {
   overlay.appendChild(defs);
 
   for (const slot of sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id)) {
-    if (sessionAlbumSettings.placeAlbumsInFrames) {
+    if (sessionAlbumSettings.placeAlbumsInFrames && !sessionAlbumSettings.albumWarpMode) {
       const placeholder = placeholderAlbumForSlot(slot);
-      if (placeholder?.imageUrl) {
+      if (placeholder) {
         const clipId = `session-album-clip-${slot.id}`;
         const clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
         clip.setAttribute("id", clipId);
@@ -1080,7 +1369,7 @@ function renderSessionAlbumSlotGuides(): void {
         overlay.appendChild(shadow);
 
         const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        image.setAttribute("href", getSessionAlbumDisplayImageUrl(placeholder));
+        image.setAttribute("href", getSessionAlbumDisplayImageUrl({ ...placeholder, imageUrl: placeholder.imageUrl || SESSION_ALBUM_FALLBACK_ART_URL }));
         image.setAttribute("x", String(bounds.x - imageBleed));
         image.setAttribute("y", String(bounds.y - imageBleed));
         image.setAttribute("width", String(bounds.width + imageBleed * 2));
@@ -1201,6 +1490,7 @@ function renderSessionAlbumSlotPanels(): void {
   const container = document.querySelector<HTMLElement>("#sessionAlbumSlotPanels");
   const showGuides = document.querySelector<HTMLInputElement>("#sessionAlbumShowGuides");
   const placeFrames = document.querySelector<HTMLInputElement>("#sessionAlbumPlaceFrames");
+  const albumWarpMode = document.querySelector<HTMLInputElement>("#sessionAlbumWarpMode");
   const albumPixelAmount = document.querySelector<HTMLInputElement>("#sessionAlbumPixelAmount");
   const albumPixelAmountValue = document.querySelector<HTMLElement>("#sessionAlbumPixelAmountValue");
   const albumWarmBlend = document.querySelector<HTMLInputElement>("#sessionAlbumWarmBlend");
@@ -1209,6 +1499,7 @@ function renderSessionAlbumSlotPanels(): void {
 
   if (showGuides) showGuides.checked = sessionAlbumSettings.showGuides;
   if (placeFrames) placeFrames.checked = sessionAlbumSettings.placeAlbumsInFrames;
+  if (albumWarpMode) albumWarpMode.checked = sessionAlbumSettings.albumWarpMode;
   if (albumPixelAmount) albumPixelAmount.value = sessionAlbumSettings.albumPixelAmount.toFixed(2);
   if (albumPixelAmountValue) albumPixelAmountValue.textContent = sessionAlbumSettings.albumPixelAmount.toFixed(2);
   if (albumWarmBlend) albumWarmBlend.value = sessionAlbumSettings.albumWarmBlend.toFixed(2);
@@ -1380,6 +1671,7 @@ function moveSessionAlbumPrefix(prefix: string, dx: number, dy: number): void {
 function bindSessionWallAlbumControls(): void {
   const showGuides = document.querySelector<HTMLInputElement>("#sessionAlbumShowGuides");
   const placeFrames = document.querySelector<HTMLInputElement>("#sessionAlbumPlaceFrames");
+  const albumWarpMode = document.querySelector<HTMLInputElement>("#sessionAlbumWarpMode");
   const albumPixelAmount = document.querySelector<HTMLInputElement>("#sessionAlbumPixelAmount");
   const albumPixelAmountValue = document.querySelector<HTMLElement>("#sessionAlbumPixelAmountValue");
   const albumWarmBlend = document.querySelector<HTMLInputElement>("#sessionAlbumWarmBlend");
@@ -1410,6 +1702,12 @@ function bindSessionWallAlbumControls(): void {
       assignWallAlbumsForRefresh();
       void loadSessionAlbumPlaceholderAlbums();
     }
+    renderSessionAlbumSlotGuides();
+  });
+
+  albumWarpMode?.addEventListener("change", () => {
+    sessionAlbumSettings = { ...sessionAlbumSettings, albumWarpMode: Boolean(albumWarpMode.checked) };
+    saveSessionAlbumSettings();
     renderSessionAlbumSlotGuides();
   });
 

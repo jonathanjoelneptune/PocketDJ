@@ -7190,10 +7190,10 @@ body.lyrics-marquee-unavailable .marquee::after {
 .session-album-placeholder-image {
   opacity: 0.90;
   filter:
-    saturate(0.82)
-    contrast(0.96)
-    brightness(0.82)
-    sepia(0.18)
+    saturate(0.86)
+    contrast(0.98)
+    brightness(0.90)
+    sepia(0.14)
     drop-shadow(0 3px 5px rgba(0, 0, 0, 0.30));
   image-rendering: auto;
   pointer-events: none;
@@ -7214,3 +7214,35 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 /* v64W: Session wall albums are default-on and use only the curated classic master list.
    Albums and wall positions reshuffle on every page refresh. */
+
+
+/* v64X: Toggleable canvas warp renderer for wall albums */
+.session-album-warp-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 21;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.session-album-warp-canvas.session-album-warp-visible {
+  opacity: 1;
+}
+
+.session-album-placeholder-image {
+  opacity: 0.92;
+  filter:
+    saturate(0.86)
+    contrast(0.98)
+    brightness(0.90)
+    sepia(0.14)
+    drop-shadow(0 3px 5px rgba(0, 0, 0, 0.30));
+}
+
+.session-album-warm-overlay {
+  fill: #4a2412;
+  mix-blend-mode: multiply;
+}
