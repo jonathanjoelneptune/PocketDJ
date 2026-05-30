@@ -7115,3 +7115,8 @@ body.lyrics-marquee-unavailable .marquee::after {
 /* v64S: Full left/right wall album grid is locked in as defaults.
    SVG album previews use exact slot polygon clipping with a tiny image bleed in TS
    to reduce hairline gaps on angled/top-row wall frames. */
+
+
+/* v64T: Wall album slot tuning pass.
+   Adjusted A-1, A-5, A-17, A-22, A-27, B-3, A-30, A-35, A-40, A-50, A-51, and A-52.
+   B-3 corner ordering corrected. */
