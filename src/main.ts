@@ -170,6 +170,7 @@ type RoomUtilitySettings = {
   panelStartY: number;
   panelHeightAdjustEnabled: boolean;
   roomFillStretchMode: boolean;
+  utilityPanelLeftSide: boolean;
   lyricPosterTopLeftX: number;
   lyricPosterTopLeftY: number;
   lyricPosterTopRightX: number;
@@ -317,6 +318,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   panelStartY: 39,
   panelHeightAdjustEnabled: false,
   roomFillStretchMode: false,
+  utilityPanelLeftSide: false,
   lyricPosterTopLeftX: 221,
   lyricPosterTopLeftY: 18,
   lyricPosterTopRightX: 1562,
@@ -439,7 +441,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64o";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64p";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -477,8 +479,14 @@ const ROOM_COORD_HEIGHT = 992;
 const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
   placeAlbumsInFrames: false,
-  nextId: 1,
-  slots: [],
+  nextId: 6,
+  slots: [
+    { id: 1, label: "A-1", tlX: 77, tlY: 12, trX: 177, trY: 70, blX: 78, blY: 141, brX: 173, brY: 182 },
+    { id: 2, label: "A-2", tlX: 187, tlY: 77, trX: 258, trY: 118, blX: 182, blY: 186, brX: 260, brY: 218 },
+    { id: 3, label: "A-3", tlX: 266, tlY: 125, trX: 329, trY: 161, blX: 271, blY: 224, brX: 329, brY: 251 },
+    { id: 4, label: "A-4", tlX: 336, tlY: 164, trX: 384, trY: 195, blX: 337, blY: 255, brX: 386, brY: 273 },
+    { id: 5, label: "A-5", tlX: 391, tlY: 200, trX: 439, trY: 227, blX: 392, blY: 277, brX: 435, brY: 297 },
+  ],
 };
 
 let sessionAlbumSettings = loadSessionAlbumSettings();
@@ -500,7 +508,7 @@ let sessionAlbumPlaceholderFetchStarted = false;
 function loadSessionAlbumSettings(): SessionAlbumSettings {
   try {
     const raw = localStorage.getItem(SESSION_ALBUM_KEY);
-    if (!raw) return { ...DEFAULT_SESSION_ALBUM_SETTINGS, slots: [] };
+    if (!raw) return { ...DEFAULT_SESSION_ALBUM_SETTINGS, slots: [...DEFAULT_SESSION_ALBUM_SETTINGS.slots] };
     const parsed = JSON.parse(raw) as Partial<SessionAlbumSettings>;
     const slots = Array.isArray(parsed.slots)
       ? parsed.slots
@@ -517,7 +525,7 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
     };
   } catch (error) {
     console.warn("Could not load session wall album settings.", error);
-    return { ...DEFAULT_SESSION_ALBUM_SETTINGS, slots: [] };
+    return { ...DEFAULT_SESSION_ALBUM_SETTINGS, slots: [...DEFAULT_SESSION_ALBUM_SETTINGS.slots] };
   }
 }
 
@@ -715,13 +723,16 @@ function renderSessionAlbumSlotGuides(): void {
       const placeholder = placeholderAlbumForSlot(slot);
       if (placeholder) {
         const bounds = sessionAlbumSlotBounds(slot);
+        const previewSize = Math.max(1, Math.min(bounds.width, bounds.height));
+        const previewX = bounds.x + (bounds.width - previewSize) / 2;
+        const previewY = bounds.y + (bounds.height - previewSize) / 2;
         const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
         image.setAttribute("href", placeholder.imageUrl);
-        image.setAttribute("x", String(bounds.x));
-        image.setAttribute("y", String(bounds.y));
-        image.setAttribute("width", String(bounds.width));
-        image.setAttribute("height", String(bounds.height));
-        image.setAttribute("preserveAspectRatio", "xMidYMid slice");
+        image.setAttribute("x", String(previewX));
+        image.setAttribute("y", String(previewY));
+        image.setAttribute("width", String(previewSize));
+        image.setAttribute("height", String(previewSize));
+        image.setAttribute("preserveAspectRatio", "xMidYMid meet");
         image.setAttribute("clip-path", `url(#${clipId})`);
         image.setAttribute("class", "session-album-placeholder-image");
         overlay.appendChild(image);
@@ -893,11 +904,90 @@ function bindSessionAlbumSlotPanelEvents(container: HTMLElement): void {
   });
 }
 
+
+function getSessionAlbumPrefix(slot: SessionAlbumSlot): string {
+  const match = slot.label.match(/^([A-Za-z]+)-\d+$/);
+  return match ? match[1].toUpperCase() : "";
+}
+
+function duplicateSessionAlbumPrefix(sourcePrefix: string, targetPrefix: string, offsetX = 0, offsetY = 0): void {
+  const source = sessionAlbumSettings.slots
+    .filter((slot) => getSessionAlbumPrefix(slot) === sourcePrefix.toUpperCase())
+    .sort((a, b) => a.id - b.id);
+
+  if (!source.length) return;
+
+  let nextId = Math.max(sessionAlbumSettings.nextId, ...sessionAlbumSettings.slots.map((slot) => slot.id + 1), 1);
+  const targetUpper = targetPrefix.toUpperCase();
+  const existingTargetLabels = new Set(
+    sessionAlbumSettings.slots
+      .filter((slot) => getSessionAlbumPrefix(slot) === targetUpper)
+      .map((slot) => slot.label)
+  );
+
+  const duplicates = source.map((slot, index) => {
+    const numberPart = slot.label.split("-")[1] || String(index + 1);
+    const label = `${targetUpper}-${numberPart}`;
+    if (existingTargetLabels.has(label)) return null;
+    return {
+      ...slot,
+      id: nextId++,
+      label,
+      tlX: clampRoomX(slot.tlX + offsetX),
+      tlY: clampRoomY(slot.tlY + offsetY),
+      trX: clampRoomX(slot.trX + offsetX),
+      trY: clampRoomY(slot.trY + offsetY),
+      blX: clampRoomX(slot.blX + offsetX),
+      blY: clampRoomY(slot.blY + offsetY),
+      brX: clampRoomX(slot.brX + offsetX),
+      brY: clampRoomY(slot.brY + offsetY),
+    };
+  }).filter((slot): slot is SessionAlbumSlot => Boolean(slot));
+
+  sessionAlbumSettings = {
+    ...sessionAlbumSettings,
+    nextId,
+    showGuides: true,
+    slots: [...sessionAlbumSettings.slots, ...duplicates],
+  };
+
+  saveSessionAlbumSettings();
+  renderSessionAlbumSlotPanels();
+  renderSessionAlbumSlotGuides();
+}
+
+function moveSessionAlbumPrefix(prefix: string, dx: number, dy: number): void {
+  const cleanPrefix = prefix.trim().toUpperCase();
+  if (!cleanPrefix) return;
+
+  sessionAlbumSettings.slots.forEach((slot) => {
+    if (getSessionAlbumPrefix(slot) !== cleanPrefix) return;
+    slot.tlX = clampRoomX(slot.tlX + dx);
+    slot.tlY = clampRoomY(slot.tlY + dy);
+    slot.trX = clampRoomX(slot.trX + dx);
+    slot.trY = clampRoomY(slot.trY + dy);
+    slot.blX = clampRoomX(slot.blX + dx);
+    slot.blY = clampRoomY(slot.blY + dy);
+    slot.brX = clampRoomX(slot.brX + dx);
+    slot.brY = clampRoomY(slot.brY + dy);
+  });
+
+  saveSessionAlbumSettings();
+  renderSessionAlbumSlotPanels();
+  renderSessionAlbumSlotGuides();
+}
+
+
 function bindSessionWallAlbumControls(): void {
   const showGuides = document.querySelector<HTMLInputElement>("#sessionAlbumShowGuides");
   const placeFrames = document.querySelector<HTMLInputElement>("#sessionAlbumPlaceFrames");
   const copyExport = document.querySelector<HTMLButtonElement>("#sessionAlbumCopyExport");
   const addSlot = document.querySelector<HTMLButtonElement>("#sessionAlbumAddSlot");
+  const duplicateAToB = document.querySelector<HTMLButtonElement>("#sessionAlbumDuplicateAToB");
+  const groupPrefix = document.querySelector<HTMLInputElement>("#sessionAlbumGroupPrefix");
+  const groupMoveX = document.querySelector<HTMLInputElement>("#sessionAlbumGroupMoveX");
+  const groupMoveY = document.querySelector<HTMLInputElement>("#sessionAlbumGroupMoveY");
+  const applyGroupMove = document.querySelector<HTMLButtonElement>("#sessionAlbumApplyGroupMove");
   const room = document.querySelector<HTMLElement>(".room");
 
   showGuides?.addEventListener("change", () => {
@@ -915,6 +1005,14 @@ function bindSessionWallAlbumControls(): void {
 
   copyExport?.addEventListener("click", () => {
     void copySessionAlbumExport();
+  });
+
+  duplicateAToB?.addEventListener("click", () => {
+    duplicateSessionAlbumPrefix("A", "B", 460, 0);
+  });
+
+  applyGroupMove?.addEventListener("click", () => {
+    moveSessionAlbumPrefix(groupPrefix?.value || "B", Number(groupMoveX?.value || 0), Number(groupMoveY?.value || 0));
   });
 
   addSlot?.addEventListener("click", () => {
@@ -2513,6 +2611,7 @@ function bindRoomUtilityControls(): void {
   const lyricPosterEffectSoftBlur = qs<HTMLInputElement>("#lyricPosterEffectSoftBlur");
   const panelHeightAdjustEnabled = qs<HTMLInputElement>("#panelHeightAdjustEnabled");
   const roomFillStretchMode = qs<HTMLInputElement>("#roomFillStretchMode");
+  const utilityPanelLeftSide = qs<HTMLInputElement>("#utilityPanelLeftSide");
   const songChangeMode = qs<HTMLInputElement>("#songChangeMode");
 
   sceneFilter.value = roomUtility.sceneFilter;
@@ -2527,6 +2626,7 @@ function bindRoomUtilityControls(): void {
   lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
   panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
   roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
+  utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
   songChangeMode.checked = roomUtility.songChangeMode;
 
   panelHeightAdjustEnabled.addEventListener("change", () => {
@@ -2535,6 +2635,12 @@ function bindRoomUtilityControls(): void {
 
   roomFillStretchMode.addEventListener("change", () => {
     setRoomFillStretchMode(roomFillStretchMode.checked);
+  });
+
+  utilityPanelLeftSide.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, utilityPanelLeftSide: utilityPanelLeftSide.checked };
+    applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
   });
 
   songChangeMode.addEventListener("change", () => {
@@ -2814,6 +2920,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--panel-start-y-ratio", String(roomUtility.panelStartY / 100));
   root.classList.toggle("panel-height-adjust-enabled", roomUtility.panelHeightAdjustEnabled);
   root.classList.toggle("room-fill-stretch", roomUtility.roomFillStretchMode);
+  root.classList.toggle("utility-panel-left-side", roomUtility.utilityPanelLeftSide);
   syncAspectModeControls();
 
   const filterOverlay = document.querySelector<HTMLElement>("#roomFilterOverlay");

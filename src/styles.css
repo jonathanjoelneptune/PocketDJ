@@ -6975,3 +6975,63 @@ body.lyrics-marquee-unavailable .marquee::after {
 .session-album-guide-overlay.session-album-guides-visible .session-album-placeholder-image + .session-album-guide-polygon {
   stroke-width: 5;
 }
+
+
+/* v64P Session Wall Album fit/group controls + utility panel side switch */
+.session-album-group-move {
+  display: grid;
+  grid-template-columns: 1fr 0.7fr 0.7fr auto;
+  gap: 8px;
+  align-items: end;
+  margin: 10px 0;
+}
+
+.session-album-group-move label {
+  display: grid;
+  gap: 5px;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 0.64rem;
+}
+
+@media (max-width: 760px) {
+  .session-album-group-move {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.session-album-placeholder-image {
+  opacity: 0.92;
+  filter:
+    saturate(0.92)
+    contrast(1.02)
+    drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
+}
+
+/* Mirror the utility menu to the left side when requested. */
+:root.utility-panel-left-side .control-card,
+:root.utility-panel-left-side .control-card.control-card-compact-mode {
+  left: calc(((100vw - var(--room-w)) / 2) + var(--panel-edge-pad)) !important;
+  right: auto !important;
+}
+
+:root.utility-panel-left-side .control-card-hidden,
+:root.utility-panel-left-side .control-card:not(.control-card-open) {
+  transform: translateX(calc((var(--panel-w) + var(--panel-tab-w) + 18px) * -1)) !important;
+}
+
+:root.utility-panel-left-side .side-panel-tab {
+  left: calc((100vw - var(--room-w)) / 2) !important;
+  right: auto !important;
+  border-radius: 0 18px 18px 0 !important;
+}
+
+:root.utility-panel-left-side.room-fill-stretch .control-card,
+:root.utility-panel-left-side.room-fill-stretch .control-card.control-card-compact-mode {
+  left: calc(((100vw - var(--room-w)) / 2) + var(--panel-edge-pad)) !important;
+  right: auto !important;
+}
+
+:root.utility-panel-left-side.room-fill-stretch .side-panel-tab {
+  left: calc((100vw - var(--room-w)) / 2) !important;
+  right: auto !important;
+}

@@ -231,6 +231,19 @@ export function renderShell(state: AppState): void {
             <p class="utility-help">Define 16:9 room-space album slots. These are future wall positions where played album covers will land.</p>
             <div class="button-grid dev-button-grid">
               <button id="sessionAlbumAddSlot" class="secondary" type="button">Add Session Album Slot</button>
+              <button id="sessionAlbumDuplicateAToB" class="secondary" type="button">Duplicate A to B</button>
+            </div>
+            <div class="session-album-group-move">
+              <label>Group prefix
+                <input id="sessionAlbumGroupPrefix" class="text-input" type="text" value="B" />
+              </label>
+              <label>Move X
+                <input id="sessionAlbumGroupMoveX" class="text-input" type="number" step="1" value="0" />
+              </label>
+              <label>Move Y
+                <input id="sessionAlbumGroupMoveY" class="text-input" type="number" step="1" value="0" />
+              </label>
+              <button id="sessionAlbumApplyGroupMove" class="secondary" type="button">Move Group</button>
             </div>
             <label class="utility-checkbox">
               <input id="sessionAlbumShowGuides" type="checkbox" />
@@ -337,6 +350,10 @@ export function renderShell(state: AppState): void {
           <label class="utility-checkbox">
             <input id="roomFillStretchMode" type="checkbox" />
             Fill/stretch scene to browser
+          </label>
+          <label class="utility-checkbox">
+            <input id="utilityPanelLeftSide" type="checkbox" />
+            Utility menu on left side
           </label>
           </div>
 
