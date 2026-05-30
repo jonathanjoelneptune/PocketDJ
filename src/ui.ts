@@ -254,6 +254,9 @@ export function renderShell(state: AppState): void {
               <input id="sessionAlbumPlaceFrames" type="checkbox" />
               Place albums in frames
             </label>
+            <label class="session-album-pixel-control">Album pixel effect <span id="sessionAlbumPixelAmountValue">0.25</span>
+              <input id="sessionAlbumPixelAmount" type="range" min="0" max="1" step="0.01" value="0.25" />
+            </label>
             <div class="button-grid dev-button-grid">
               <button id="sessionAlbumCopyExport" class="secondary" type="button">Copy Slot JSON</button>
             </div>

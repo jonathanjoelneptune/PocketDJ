@@ -441,7 +441,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64t";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64u";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -463,6 +463,7 @@ type SessionAlbumSlot = {
 type SessionAlbumSettings = {
   showGuides: boolean;
   placeAlbumsInFrames: boolean;
+  albumPixelAmount: number;
   nextId: number;
   slots: SessionAlbumSlot[];
 };
@@ -479,6 +480,7 @@ const ROOM_COORD_HEIGHT = 992;
 const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
   placeAlbumsInFrames: false,
+  albumPixelAmount: 0.25,
   nextId: 53,
   slots: [
     { id: 1, label: "A-1", tlX: 77, tlY: 15, trX: 177, trY: 73, blX: 78, blY: 144, brX: 173, brY: 185 },
@@ -541,6 +543,8 @@ type SessionAlbumPlaceholder = {
 
 let sessionAlbumPlaceholderPool: SessionAlbumPlaceholder[] = [];
 let sessionAlbumPlaceholderFetchStarted = false;
+const sessionAlbumPixelCache = new Map<string, string>();
+const sessionAlbumPixelPending = new Set<string>();
 
 
 
@@ -561,6 +565,7 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
     return {
       showGuides: Boolean(parsed.showGuides),
       placeAlbumsInFrames: Boolean(parsed.placeAlbumsInFrames),
+      albumPixelAmount: clamp01(Number(parsed.albumPixelAmount ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumPixelAmount)),
       nextId: Math.max(Number(parsed.nextId || 1), maxId + 1, 1),
       slots,
     };
@@ -597,6 +602,11 @@ function clampRoomX(value: number): number {
 
 function clampRoomY(value: number): number {
   return Math.max(0, Math.min(ROOM_COORD_HEIGHT, Math.round(value)));
+}
+
+function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(1, value));
 }
 
 function createSessionAlbumSlot(): SessionAlbumSlot {
@@ -713,6 +723,71 @@ async function loadSessionAlbumPlaceholderAlbums(): Promise<void> {
     renderSessionAlbumSlotGuides();
   }
 }
+
+
+function sessionAlbumPixelCacheKey(imageUrl: string, amount: number): string {
+  return `${imageUrl}::${Math.round(clamp01(amount) * 100)}`;
+}
+
+function getSessionAlbumDisplayImageUrl(placeholder: SessionAlbumPlaceholder): string {
+  const amount = clamp01(sessionAlbumSettings.albumPixelAmount);
+  if (amount <= 0.01) return placeholder.imageUrl;
+
+  const key = sessionAlbumPixelCacheKey(placeholder.imageUrl, amount);
+  const cached = sessionAlbumPixelCache.get(key);
+  if (cached) return cached;
+
+  if (!sessionAlbumPixelPending.has(key)) {
+    sessionAlbumPixelPending.add(key);
+    void createPixelatedSessionAlbumImage(placeholder.imageUrl, amount, key);
+  }
+
+  return placeholder.imageUrl;
+}
+
+async function createPixelatedSessionAlbumImage(imageUrl: string, amount: number, key: string): Promise<void> {
+  try {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.referrerPolicy = "no-referrer";
+    const loaded = new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error("Could not load album image for pixelation."));
+    });
+    image.src = imageUrl;
+    await loaded;
+
+    const outputSize = 640;
+    const pixelSize = Math.max(18, Math.round(outputSize / (1 + clamp01(amount) * 22)));
+    const smallCanvas = document.createElement("canvas");
+    smallCanvas.width = pixelSize;
+    smallCanvas.height = pixelSize;
+    const smallCtx = smallCanvas.getContext("2d");
+    if (!smallCtx) return;
+
+    smallCtx.imageSmoothingEnabled = amount < 0.08;
+    smallCtx.clearRect(0, 0, pixelSize, pixelSize);
+    smallCtx.drawImage(image, 0, 0, pixelSize, pixelSize);
+
+    const bigCanvas = document.createElement("canvas");
+    bigCanvas.width = outputSize;
+    bigCanvas.height = outputSize;
+    const bigCtx = bigCanvas.getContext("2d");
+    if (!bigCtx) return;
+
+    bigCtx.imageSmoothingEnabled = false;
+    bigCtx.clearRect(0, 0, outputSize, outputSize);
+    bigCtx.drawImage(smallCanvas, 0, 0, outputSize, outputSize);
+
+    sessionAlbumPixelCache.set(key, bigCanvas.toDataURL("image/png"));
+    renderSessionAlbumSlotGuides();
+  } catch (error) {
+    console.warn("Could not generate pixelated album preview.", error);
+  } finally {
+    sessionAlbumPixelPending.delete(key);
+  }
+}
+
 
 function placeholderAlbumForSlot(slot: SessionAlbumSlot): SessionAlbumPlaceholder | null {
   if (!sessionAlbumPlaceholderPool.length) return null;
@@ -870,8 +945,16 @@ function renderSessionAlbumSlotGuides(): void {
 
         const bounds = sessionAlbumSlotBounds(slot);
         const imageBleed = 2;
+        const center = getSessionAlbumSlotCenter(slot);
+        const shadowDx = center.x > ROOM_COORD_WIDTH / 2 ? -4 : 4;
+        const shadow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        shadow.setAttribute("points", sessionAlbumPoints(slot));
+        shadow.setAttribute("class", "session-album-depth-shadow");
+        shadow.setAttribute("transform", `translate(${shadowDx} 5)`);
+        overlay.appendChild(shadow);
+
         const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        image.setAttribute("href", placeholder.imageUrl);
+        image.setAttribute("href", getSessionAlbumDisplayImageUrl(placeholder));
         image.setAttribute("x", String(bounds.x - imageBleed));
         image.setAttribute("y", String(bounds.y - imageBleed));
         image.setAttribute("width", String(bounds.width + imageBleed * 2));
@@ -880,6 +963,21 @@ function renderSessionAlbumSlotGuides(): void {
         image.setAttribute("clip-path", `url(#${clipId})`);
         image.setAttribute("class", "session-album-placeholder-image");
         overlay.appendChild(image);
+
+        const stroke = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        stroke.setAttribute("points", sessionAlbumPoints(slot));
+        stroke.setAttribute("class", "session-album-depth-stroke");
+        overlay.appendChild(stroke);
+
+        const highlight = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        highlight.setAttribute("points", `${slot.blX},${slot.blY} ${slot.tlX},${slot.tlY} ${slot.trX},${slot.trY}`);
+        highlight.setAttribute("class", "session-album-emboss-highlight");
+        overlay.appendChild(highlight);
+
+        const shade = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        shade.setAttribute("points", `${slot.trX},${slot.trY} ${slot.brX},${slot.brY} ${slot.blX},${slot.blY}`);
+        shade.setAttribute("class", "session-album-emboss-shadow");
+        overlay.appendChild(shade);
       }
     }
 
@@ -970,10 +1068,14 @@ function renderSessionAlbumSlotPanels(): void {
   const container = document.querySelector<HTMLElement>("#sessionAlbumSlotPanels");
   const showGuides = document.querySelector<HTMLInputElement>("#sessionAlbumShowGuides");
   const placeFrames = document.querySelector<HTMLInputElement>("#sessionAlbumPlaceFrames");
+  const albumPixelAmount = document.querySelector<HTMLInputElement>("#sessionAlbumPixelAmount");
+  const albumPixelAmountValue = document.querySelector<HTMLElement>("#sessionAlbumPixelAmountValue");
   if (!container) return;
 
   if (showGuides) showGuides.checked = sessionAlbumSettings.showGuides;
   if (placeFrames) placeFrames.checked = sessionAlbumSettings.placeAlbumsInFrames;
+  if (albumPixelAmount) albumPixelAmount.value = sessionAlbumSettings.albumPixelAmount.toFixed(2);
+  if (albumPixelAmountValue) albumPixelAmountValue.textContent = sessionAlbumSettings.albumPixelAmount.toFixed(2);
   updateSessionAlbumExportText();
 
   if (!sessionAlbumSettings.slots.length) {
@@ -1141,6 +1243,8 @@ function moveSessionAlbumPrefix(prefix: string, dx: number, dy: number): void {
 function bindSessionWallAlbumControls(): void {
   const showGuides = document.querySelector<HTMLInputElement>("#sessionAlbumShowGuides");
   const placeFrames = document.querySelector<HTMLInputElement>("#sessionAlbumPlaceFrames");
+  const albumPixelAmount = document.querySelector<HTMLInputElement>("#sessionAlbumPixelAmount");
+  const albumPixelAmountValue = document.querySelector<HTMLElement>("#sessionAlbumPixelAmountValue");
   const copyExport = document.querySelector<HTMLButtonElement>("#sessionAlbumCopyExport");
   const addSlot = document.querySelector<HTMLButtonElement>("#sessionAlbumAddSlot");
   const duplicateAToB = document.querySelector<HTMLButtonElement>("#sessionAlbumDuplicateAToB");
@@ -1160,6 +1264,14 @@ function bindSessionWallAlbumControls(): void {
     sessionAlbumSettings = { ...sessionAlbumSettings, placeAlbumsInFrames: Boolean(placeFrames.checked) };
     saveSessionAlbumSettings();
     if (sessionAlbumSettings.placeAlbumsInFrames) void loadSessionAlbumPlaceholderAlbums();
+    renderSessionAlbumSlotGuides();
+  });
+
+  albumPixelAmount?.addEventListener("input", () => {
+    const amount = clamp01(Number(albumPixelAmount.value));
+    sessionAlbumSettings = { ...sessionAlbumSettings, albumPixelAmount: amount };
+    if (albumPixelAmountValue) albumPixelAmountValue.textContent = amount.toFixed(2);
+    saveSessionAlbumSettings();
     renderSessionAlbumSlotGuides();
   });
 
