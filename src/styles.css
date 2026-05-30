@@ -7210,3 +7210,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 .session-album-emboss-shadow {
   stroke: rgba(0, 0, 0, 0.46);
 }
+
+
+/* v64W: Session wall albums are default-on and use only the curated classic master list.
+   Albums and wall positions reshuffle on every page refresh. */

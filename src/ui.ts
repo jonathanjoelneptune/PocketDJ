@@ -251,7 +251,7 @@ export function renderShell(state: AppState): void {
               Show session album guides
             </label>
             <label class="utility-checkbox">
-              <input id="sessionAlbumPlaceFrames" type="checkbox" />
+              <input id="sessionAlbumPlaceFrames" type="checkbox" checked />
               Place albums in frames
             </label>
             <label class="session-album-pixel-control">Album pixel effect <span id="sessionAlbumPixelAmountValue">0.25</span>

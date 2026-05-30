@@ -442,7 +442,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64v";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64w";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -466,6 +466,7 @@ type SessionAlbumSettings = {
   placeAlbumsInFrames: boolean;
   albumPixelAmount: number;
   albumWarmBlend: number;
+  v64wQuintessentialDefault?: boolean;
   nextId: number;
   slots: SessionAlbumSlot[];
 };
@@ -481,9 +482,10 @@ const ROOM_COORD_HEIGHT = 992;
 
 const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
-  placeAlbumsInFrames: false,
+  placeAlbumsInFrames: true,
   albumPixelAmount: 0.25,
   albumWarmBlend: 0.62,
+  v64wQuintessentialDefault: true,
   nextId: 53,
   slots: [
     { id: 1, label: "A-1", tlX: 77, tlY: 15, trX: 177, trY: 73, blX: 78, blY: 144, brX: 173, brY: 185 },
@@ -549,6 +551,7 @@ let sessionAlbumPlaceholderFetchStarted = false;
 const sessionAlbumPixelCache = new Map<string, string>();
 const sessionAlbumPixelPending = new Set<string>();
 let sessionWallAlbumAssignments: SessionAlbumPlaceholder[] = [];
+let sessionWallAlbumAssignmentsBySlot = new Map<number, SessionAlbumPlaceholder>();
 const sessionWallAlbumUrlCacheKey = "pocketdj-wall-album-url-cache-v1";
 
 
@@ -567,11 +570,13 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
       : [];
 
     const maxId = slots.reduce((max, slot) => Math.max(max, slot.id), 0);
+    const hasV64WDefault = Boolean((parsed as { v64wQuintessentialDefault?: boolean }).v64wQuintessentialDefault);
     return {
       showGuides: Boolean(parsed.showGuides),
-      placeAlbumsInFrames: Boolean(parsed.placeAlbumsInFrames),
+      placeAlbumsInFrames: hasV64WDefault ? Boolean(parsed.placeAlbumsInFrames) : true,
       albumPixelAmount: clamp01(Number(parsed.albumPixelAmount ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumPixelAmount)),
       albumWarmBlend: clamp01(Number(parsed.albumWarmBlend ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumWarmBlend)),
+      v64wQuintessentialDefault: true,
       nextId: Math.max(Number(parsed.nextId || 1), maxId + 1, 1),
       slots,
     };
@@ -774,86 +779,49 @@ async function resolveWallAlbumArtworkUrl(item: WallAlbumMasterItem, cache: Reco
 }
 
 function assignWallAlbumsForRefresh(): void {
-  const slotCount = Math.min(46, sessionAlbumSettings.slots.length);
-  const shuffled = shuffleSessionAlbumArray(WALL_ALBUM_MASTER_LIST).slice(0, slotCount);
-  sessionWallAlbumAssignments = shuffled.map((item) => ({
+  const eligibleSlots = sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id);
+  const slotCount = Math.min(46, eligibleSlots.length, WALL_ALBUM_MASTER_LIST.length);
+  const selectedAlbums = shuffleSessionAlbumArray(WALL_ALBUM_MASTER_LIST).slice(0, slotCount);
+  const selectedSlots = shuffleSessionAlbumArray(eligibleSlots).slice(0, slotCount);
+  const cache = readWallAlbumUrlCache();
+
+  sessionWallAlbumAssignmentsBySlot = new Map<number, SessionAlbumPlaceholder>();
+  sessionWallAlbumAssignments = selectedAlbums.map((item) => ({
     title: item.album,
     artist: item.artist,
-    imageUrl: item.artworkUrl || "",
+    imageUrl: item.artworkUrl || cache[wallAlbumKey(item)] || "",
   }));
 
-  const cache = readWallAlbumUrlCache();
-  shuffled.forEach((item, index) => {
-    const cached = item.artworkUrl || cache[wallAlbumKey(item)];
-    if (cached) {
-      sessionWallAlbumAssignments[index] = {
-        title: item.album,
-        artist: item.artist,
-        imageUrl: cached,
-      };
-      return;
-    }
+  selectedAlbums.forEach((item, index) => {
+    const slot = selectedSlots[index];
+    const placeholder: SessionAlbumPlaceholder = {
+      title: item.album,
+      artist: item.artist,
+      imageUrl: item.artworkUrl || cache[wallAlbumKey(item)] || "",
+    };
+    sessionWallAlbumAssignmentsBySlot.set(slot.id, placeholder);
+
+    if (placeholder.imageUrl) return;
 
     void resolveWallAlbumArtworkUrl(item, cache).then((artworkUrl) => {
       if (!artworkUrl) return;
-      sessionWallAlbumAssignments[index] = {
+      const resolved: SessionAlbumPlaceholder = {
         title: item.album,
         artist: item.artist,
         imageUrl: artworkUrl,
       };
+      sessionWallAlbumAssignments[index] = resolved;
+      sessionWallAlbumAssignmentsBySlot.set(slot.id, resolved);
       renderSessionAlbumSlotGuides();
     });
   });
 }
 
-
 async function loadSessionAlbumPlaceholderAlbums(): Promise<void> {
-  if (sessionAlbumPlaceholderFetchStarted || sessionAlbumPlaceholderPool.length) return;
-  sessionAlbumPlaceholderFetchStarted = true;
-
-  const artists = [
-    "Michael Jackson",
-    "Kanye West",
-    "Kendrick Lamar",
-    "N.E.R.D.",
-  ];
-
-  try {
-    const results = await Promise.all(artists.map(async (artist) => {
-      const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=album&attribute=artistTerm&limit=25`);
-      if (!response.ok) return [];
-      const json = await response.json() as {
-        results?: Array<{
-          collectionName?: string;
-          artistName?: string;
-          artworkUrl100?: string;
-        }>;
-      };
-
-      return (json.results || [])
-        .filter((album) => album.artworkUrl100 && album.collectionName)
-        .map((album) => ({
-          title: album.collectionName || "Album",
-          artist: album.artistName || artist,
-          imageUrl: String(album.artworkUrl100).replace(/100x100bb\.(jpg|png|webp)$/i, "600x600bb.$1"),
-        }));
-    }));
-
-    const flattened = results.flat();
-    const unique = new Map<string, SessionAlbumPlaceholder>();
-    flattened.forEach((album) => {
-      unique.set(`${album.artist}__${album.title}`, album);
-    });
-
-    sessionAlbumPlaceholderPool = [...unique.values()];
-  } catch (error) {
-    console.warn("Could not load placeholder session album covers.", error);
-  } finally {
-    sessionAlbumPlaceholderFetchStarted = false;
-    renderSessionAlbumSlotGuides();
-  }
+  if (!sessionWallAlbumAssignments.length) assignWallAlbumsForRefresh();
+  sessionAlbumPlaceholderPool = sessionWallAlbumAssignments;
+  renderSessionAlbumSlotGuides();
 }
-
 
 function sessionAlbumPixelCacheKey(imageUrl: string, amount: number): string {
   return `${imageUrl}::${Math.round(clamp01(amount) * 100)}`;
@@ -920,11 +888,7 @@ async function createPixelatedSessionAlbumImage(imageUrl: string, amount: number
 
 
 function placeholderAlbumForSlot(slot: SessionAlbumSlot): SessionAlbumPlaceholder | null {
-  if (!sessionAlbumPlaceholderPool.length) return null;
-  const sortedSlots = sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id);
-  const slotIndex = sortedSlots.findIndex((item) => item.id === slot.id);
-  if (slotIndex < 0) return null;
-  return sessionAlbumPlaceholderPool[slotIndex % sessionAlbumPlaceholderPool.length] || null;
+  return sessionWallAlbumAssignmentsBySlot.get(slot.id) || null;
 }
 
 function sessionAlbumSlotBounds(slot: SessionAlbumSlot): { x: number; y: number; width: number; height: number } {
@@ -1095,7 +1059,7 @@ function renderSessionAlbumSlotGuides(): void {
   for (const slot of sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id)) {
     if (sessionAlbumSettings.placeAlbumsInFrames) {
       const placeholder = placeholderAlbumForSlot(slot);
-      if (placeholder) {
+      if (placeholder?.imageUrl) {
         const clipId = `session-album-clip-${slot.id}`;
         const clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
         clip.setAttribute("id", clipId);
@@ -1436,9 +1400,16 @@ function bindSessionWallAlbumControls(): void {
   });
 
   placeFrames?.addEventListener("change", () => {
-    sessionAlbumSettings = { ...sessionAlbumSettings, placeAlbumsInFrames: Boolean(placeFrames.checked) };
+    sessionAlbumSettings = {
+      ...sessionAlbumSettings,
+      placeAlbumsInFrames: Boolean(placeFrames.checked),
+      v64wQuintessentialDefault: true,
+    };
     saveSessionAlbumSettings();
-    if (sessionAlbumSettings.placeAlbumsInFrames) void loadSessionAlbumPlaceholderAlbums();
+    if (sessionAlbumSettings.placeAlbumsInFrames) {
+      assignWallAlbumsForRefresh();
+      void loadSessionAlbumPlaceholderAlbums();
+    }
     renderSessionAlbumSlotGuides();
   });
 

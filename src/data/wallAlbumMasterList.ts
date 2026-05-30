@@ -1,3 +1,7 @@
+// Curated classic wall albums used for the Session Wall Albums feature.
+// The app randomly selects 46 albums from this list on every page refresh.
+// searchUrl is stored in repo; final CDN artworkUrl is resolved in-browser and cached locally.
+
 export type WallAlbumMasterItem = {
   artist: string;
   album: string;
