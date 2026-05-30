@@ -439,7 +439,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64n";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64o";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -460,6 +460,7 @@ type SessionAlbumSlot = {
 
 type SessionAlbumSettings = {
   showGuides: boolean;
+  placeAlbumsInFrames: boolean;
   nextId: number;
   slots: SessionAlbumSlot[];
 };
@@ -475,12 +476,22 @@ const ROOM_COORD_HEIGHT = 992;
 
 const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
+  placeAlbumsInFrames: false,
   nextId: 1,
   slots: [],
 };
 
 let sessionAlbumSettings = loadSessionAlbumSettings();
 let sessionAlbumCornerTarget: SessionAlbumCornerTarget = null;
+
+type SessionAlbumPlaceholder = {
+  title: string;
+  artist: string;
+  imageUrl: string;
+};
+
+let sessionAlbumPlaceholderPool: SessionAlbumPlaceholder[] = [];
+let sessionAlbumPlaceholderFetchStarted = false;
 
 
 
@@ -500,6 +511,7 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
     const maxId = slots.reduce((max, slot) => Math.max(max, slot.id), 0);
     return {
       showGuides: Boolean(parsed.showGuides),
+      placeAlbumsInFrames: Boolean(parsed.placeAlbumsInFrames),
       nextId: Math.max(Number(parsed.nextId || 1), maxId + 1, 1),
       slots,
     };
@@ -568,28 +580,168 @@ function sessionAlbumPoints(slot: SessionAlbumSlot): string {
   return `${slot.tlX},${slot.tlY} ${slot.trX},${slot.trY} ${slot.brX},${slot.brY} ${slot.blX},${slot.blY}`;
 }
 
+
+function updateSessionAlbumExportText(): void {
+  const exportText = document.querySelector<HTMLTextAreaElement>("#sessionAlbumExportText");
+  if (!exportText) return;
+
+  const payload = {
+    version: 1,
+    coordinateSystem: {
+      width: ROOM_COORD_WIDTH,
+      height: ROOM_COORD_HEIGHT,
+    },
+    fillOrder: sessionAlbumSettings.slots
+      .slice()
+      .sort((a, b) => a.id - b.id)
+      .map((slot) => slot.label),
+    slots: sessionAlbumSettings.slots
+      .slice()
+      .sort((a, b) => a.id - b.id),
+  };
+
+  exportText.value = JSON.stringify(payload, null, 2);
+}
+
+async function copySessionAlbumExport(): Promise<void> {
+  updateSessionAlbumExportText();
+  const exportText = document.querySelector<HTMLTextAreaElement>("#sessionAlbumExportText");
+  if (!exportText) return;
+
+  try {
+    await navigator.clipboard.writeText(exportText.value);
+    const status = document.querySelector<HTMLElement>("#sessionAlbumTargetStatus");
+    if (status) status.textContent = "Session album slot JSON copied to clipboard.";
+  } catch {
+    exportText.select();
+    document.execCommand("copy");
+  }
+}
+
+async function loadSessionAlbumPlaceholderAlbums(): Promise<void> {
+  if (sessionAlbumPlaceholderFetchStarted || sessionAlbumPlaceholderPool.length) return;
+  sessionAlbumPlaceholderFetchStarted = true;
+
+  const artists = [
+    "Michael Jackson",
+    "Kanye West",
+    "Kendrick Lamar",
+    "N.E.R.D.",
+  ];
+
+  try {
+    const results = await Promise.all(artists.map(async (artist) => {
+      const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=album&attribute=artistTerm&limit=25`);
+      if (!response.ok) return [];
+      const json = await response.json() as {
+        results?: Array<{
+          collectionName?: string;
+          artistName?: string;
+          artworkUrl100?: string;
+        }>;
+      };
+
+      return (json.results || [])
+        .filter((album) => album.artworkUrl100 && album.collectionName)
+        .map((album) => ({
+          title: album.collectionName || "Album",
+          artist: album.artistName || artist,
+          imageUrl: String(album.artworkUrl100).replace(/100x100bb\.(jpg|png|webp)$/i, "600x600bb.$1"),
+        }));
+    }));
+
+    const flattened = results.flat();
+    const unique = new Map<string, SessionAlbumPlaceholder>();
+    flattened.forEach((album) => {
+      unique.set(`${album.artist}__${album.title}`, album);
+    });
+
+    sessionAlbumPlaceholderPool = [...unique.values()];
+  } catch (error) {
+    console.warn("Could not load placeholder session album covers.", error);
+  } finally {
+    sessionAlbumPlaceholderFetchStarted = false;
+    renderSessionAlbumSlotGuides();
+  }
+}
+
+function placeholderAlbumForSlot(slot: SessionAlbumSlot): SessionAlbumPlaceholder | null {
+  if (!sessionAlbumPlaceholderPool.length) return null;
+  const index = Math.abs(slot.id - 1) % sessionAlbumPlaceholderPool.length;
+  return sessionAlbumPlaceholderPool[index];
+}
+
+function sessionAlbumSlotBounds(slot: SessionAlbumSlot): { x: number; y: number; width: number; height: number } {
+  const xs = [slot.tlX, slot.trX, slot.blX, slot.brX];
+  const ys = [slot.tlY, slot.trY, slot.blY, slot.brY];
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  return {
+    x: minX,
+    y: minY,
+    width: Math.max(1, maxX - minX),
+    height: Math.max(1, maxY - minY),
+  };
+}
+
+
 function renderSessionAlbumSlotGuides(): void {
   const overlay = document.querySelector<SVGSVGElement>("#sessionAlbumGuideOverlay");
   if (!overlay) return;
 
-  overlay.classList.toggle("session-album-guides-visible", sessionAlbumSettings.showGuides);
+  const visible = sessionAlbumSettings.showGuides || sessionAlbumSettings.placeAlbumsInFrames;
+  overlay.classList.toggle("session-album-guides-visible", visible);
   overlay.innerHTML = "";
 
-  if (!sessionAlbumSettings.showGuides) return;
+  updateSessionAlbumExportText();
+
+  if (!visible) return;
+
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  overlay.appendChild(defs);
 
   for (const slot of sessionAlbumSettings.slots) {
-    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    polygon.setAttribute("points", sessionAlbumPoints(slot));
-    polygon.setAttribute("class", "session-album-guide-polygon");
-    overlay.appendChild(polygon);
+    if (sessionAlbumSettings.placeAlbumsInFrames) {
+      const clipId = `session-album-clip-${slot.id}`;
+      const clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+      clip.setAttribute("id", clipId);
+      const clipPolygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      clipPolygon.setAttribute("points", sessionAlbumPoints(slot));
+      clip.appendChild(clipPolygon);
+      defs.appendChild(clip);
 
-    const center = getSessionAlbumSlotCenter(slot);
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    label.setAttribute("x", String(center.x));
-    label.setAttribute("y", String(center.y));
-    label.setAttribute("class", "session-album-guide-label");
-    label.textContent = slot.label;
-    overlay.appendChild(label);
+      const placeholder = placeholderAlbumForSlot(slot);
+      if (placeholder) {
+        const bounds = sessionAlbumSlotBounds(slot);
+        const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        image.setAttribute("href", placeholder.imageUrl);
+        image.setAttribute("x", String(bounds.x));
+        image.setAttribute("y", String(bounds.y));
+        image.setAttribute("width", String(bounds.width));
+        image.setAttribute("height", String(bounds.height));
+        image.setAttribute("preserveAspectRatio", "xMidYMid slice");
+        image.setAttribute("clip-path", `url(#${clipId})`);
+        image.setAttribute("class", "session-album-placeholder-image");
+        overlay.appendChild(image);
+      }
+    }
+
+    if (sessionAlbumSettings.showGuides) {
+      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      polygon.setAttribute("points", sessionAlbumPoints(slot));
+      polygon.setAttribute("class", "session-album-guide-polygon");
+      overlay.appendChild(polygon);
+
+      const center = getSessionAlbumSlotCenter(slot);
+      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      label.setAttribute("x", String(center.x));
+      label.setAttribute("y", String(center.y));
+      label.setAttribute("class", "session-album-guide-label");
+      label.textContent = slot.label;
+      overlay.appendChild(label);
+    }
   }
 }
 
@@ -650,9 +802,12 @@ function syncSessionAlbumCoordinateInputs(slotId: number, key: keyof SessionAlbu
 function renderSessionAlbumSlotPanels(): void {
   const container = document.querySelector<HTMLElement>("#sessionAlbumSlotPanels");
   const showGuides = document.querySelector<HTMLInputElement>("#sessionAlbumShowGuides");
+  const placeFrames = document.querySelector<HTMLInputElement>("#sessionAlbumPlaceFrames");
   if (!container) return;
 
   if (showGuides) showGuides.checked = sessionAlbumSettings.showGuides;
+  if (placeFrames) placeFrames.checked = sessionAlbumSettings.placeAlbumsInFrames;
+  updateSessionAlbumExportText();
 
   if (!sessionAlbumSettings.slots.length) {
     container.innerHTML = `<div class="session-album-empty">No album slots defined yet.</div>`;
@@ -740,6 +895,8 @@ function bindSessionAlbumSlotPanelEvents(container: HTMLElement): void {
 
 function bindSessionWallAlbumControls(): void {
   const showGuides = document.querySelector<HTMLInputElement>("#sessionAlbumShowGuides");
+  const placeFrames = document.querySelector<HTMLInputElement>("#sessionAlbumPlaceFrames");
+  const copyExport = document.querySelector<HTMLButtonElement>("#sessionAlbumCopyExport");
   const addSlot = document.querySelector<HTMLButtonElement>("#sessionAlbumAddSlot");
   const room = document.querySelector<HTMLElement>(".room");
 
@@ -747,6 +904,17 @@ function bindSessionWallAlbumControls(): void {
     sessionAlbumSettings = { ...sessionAlbumSettings, showGuides: Boolean(showGuides.checked) };
     saveSessionAlbumSettings();
     renderSessionAlbumSlotGuides();
+  });
+
+  placeFrames?.addEventListener("change", () => {
+    sessionAlbumSettings = { ...sessionAlbumSettings, placeAlbumsInFrames: Boolean(placeFrames.checked) };
+    saveSessionAlbumSettings();
+    if (sessionAlbumSettings.placeAlbumsInFrames) void loadSessionAlbumPlaceholderAlbums();
+    renderSessionAlbumSlotGuides();
+  });
+
+  copyExport?.addEventListener("click", () => {
+    void copySessionAlbumExport();
   });
 
   addSlot?.addEventListener("click", () => {
@@ -760,7 +928,10 @@ function bindSessionWallAlbumControls(): void {
     saveSessionAlbumSettings();
     renderSessionAlbumSlotPanels();
     renderSessionAlbumSlotGuides();
+    if (sessionAlbumSettings.placeAlbumsInFrames) void loadSessionAlbumPlaceholderAlbums();
   });
+
+  if (sessionAlbumSettings.placeAlbumsInFrames) void loadSessionAlbumPlaceholderAlbums();
 
   room?.addEventListener("click", (event) => {
     if (!sessionAlbumCornerTarget) return;

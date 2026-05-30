@@ -236,6 +236,14 @@ export function renderShell(state: AppState): void {
               <input id="sessionAlbumShowGuides" type="checkbox" />
               Show session album guides
             </label>
+            <label class="utility-checkbox">
+              <input id="sessionAlbumPlaceFrames" type="checkbox" />
+              Place albums in frames
+            </label>
+            <div class="button-grid dev-button-grid">
+              <button id="sessionAlbumCopyExport" class="secondary" type="button">Copy Slot JSON</button>
+            </div>
+            <textarea id="sessionAlbumExportText" class="session-album-export-text" rows="8" readonly></textarea>
             <div id="sessionAlbumTargetStatus" class="session-album-target-status">No corner target selected.</div>
             <div id="sessionAlbumSlotPanels" class="session-album-slot-panels"></div>
           </details>

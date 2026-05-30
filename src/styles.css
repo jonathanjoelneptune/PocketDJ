@@ -6946,3 +6946,32 @@ body.lyrics-marquee-unavailable .marquee::after {
   dominant-baseline: central;
   pointer-events: none;
 }
+
+
+/* v64O Session Wall Album preview/export additions */
+.session-album-export-text {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  margin-top: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(52, 211, 153, 0.16);
+  background: rgba(0, 0, 0, 0.24);
+  color: rgba(209, 250, 229, 0.86);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.62rem;
+  line-height: 1.35;
+  padding: 9px 10px;
+}
+
+.session-album-placeholder-image {
+  opacity: 0.92;
+  filter:
+    saturate(0.92)
+    contrast(1.02)
+    drop-shadow(0 9px 12px rgba(0, 0, 0, 0.55));
+}
+
+.session-album-guide-overlay.session-album-guides-visible .session-album-placeholder-image + .session-album-guide-polygon {
+  stroke-width: 5;
+}
