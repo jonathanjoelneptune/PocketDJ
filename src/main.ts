@@ -441,7 +441,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64q";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64r";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -479,7 +479,7 @@ const ROOM_COORD_HEIGHT = 992;
 const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
   placeAlbumsInFrames: false,
-  nextId: 16,
+  nextId: 30,
   slots: [
     { id: 1, label: "A-1", tlX: 77, tlY: 12, trX: 177, trY: 70, blX: 78, blY: 141, brX: 173, brY: 182 },
     { id: 2, label: "A-2", tlX: 187, tlY: 77, trX: 258, trY: 118, blX: 182, blY: 186, brX: 260, brY: 218 },
@@ -491,6 +491,19 @@ const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
     { id: 13, label: "B-3", tlX: 269, tlY: 250, trX: 271, trY: 346, blX: 327, blY: 275, brX: 327, brY: 359 },
     { id: 14, label: "B-4", tlX: 337, tlY: 277, trX: 386, trY: 297, blX: 336, blY: 362, brX: 386, brY: 373 },
     { id: 15, label: "B-5", tlX: 392, tlY: 300, trX: 435, trY: 320, blX: 392, blY: 375, brX: 437, brY: 385 },
+    { id: 17, label: "A-17", tlX: 81, tlY: 330, trX: 173, trY: 349, blX: 79, blY: 452, brX: 174, brY: 457 },
+    { id: 18, label: "A-18", tlX: 187, tlY: 352, trX: 258, trY: 369, blX: 185, blY: 458, brX: 260, brY: 464 },
+    { id: 19, label: "A-19", tlX: 269, tlY: 369, trX: 326, trY: 382, blX: 268, blY: 463, brX: 324, brY: 466 },
+    { id: 20, label: "A-20", tlX: 335, tlY: 383, trX: 386, trY: 392, blX: 336, blY: 466, brX: 385, brY: 470 },
+    { id: 21, label: "A-21", tlX: 392, tlY: 395, trX: 437, trY: 405, blX: 389, blY: 471, brX: 435, brY: 475 },
+    { id: 22, label: "A-22", tlX: 78, tlY: 478, trX: 174, trY: 483, blX: 81, blY: 598, brX: 174, brY: 589 },
+    { id: 23, label: "A-23", tlX: 186, tlY: 483, trX: 258, trY: 484, blX: 185, blY: 587, brX: 260, brY: 580 },
+    { id: 24, label: "A-24", tlX: 269, tlY: 487, trX: 329, trY: 489, blX: 268, blY: 578, brX: 328, brY: 571 },
+    { id: 25, label: "A-25", tlX: 335, tlY: 487, trX: 386, trY: 492, blX: 336, blY: 572, brX: 384, brY: 566 },
+    { id: 26, label: "A-26", tlX: 392, tlY: 492, trX: 439, trY: 493, blX: 390, blY: 564, brX: 439, brY: 561 },
+    { id: 27, label: "A-27", tlX: 81, tlY: 627, trX: 175, trY: 614, blX: 81, blY: 727, brX: 174, brY: 699 },
+    { id: 28, label: "A-28", tlX: 184, tlY: 610, trX: 258, trY: 603, blX: 187, blY: 696, brX: 260, brY: 676 },
+    { id: 29, label: "A-29", tlX: 269, tlY: 601, trX: 331, trY: 592, blX: 271, blY: 674, brX: 330, brY: 658 },
   ],
 };
 
@@ -802,28 +815,64 @@ function renderSessionAlbumSlotGuides(): void {
   const overlay = document.querySelector<SVGSVGElement>("#sessionAlbumGuideOverlay");
   if (!overlay) return;
 
-  const visible = sessionAlbumSettings.showGuides;
+  const visible = sessionAlbumSettings.showGuides || sessionAlbumSettings.placeAlbumsInFrames;
   overlay.classList.toggle("session-album-guides-visible", visible);
   overlay.innerHTML = "";
 
-  renderSessionAlbumFramePreviews();
   updateSessionAlbumExportText();
+
+  const frameOverlay = document.querySelector<HTMLElement>("#sessionAlbumFrameOverlay");
+  if (frameOverlay) {
+    frameOverlay.classList.remove("session-album-frames-visible");
+    frameOverlay.innerHTML = "";
+  }
 
   if (!visible) return;
 
-  for (const slot of sessionAlbumSettings.slots) {
-    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    polygon.setAttribute("points", sessionAlbumPoints(slot));
-    polygon.setAttribute("class", "session-album-guide-polygon");
-    overlay.appendChild(polygon);
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  overlay.appendChild(defs);
 
-    const center = getSessionAlbumSlotCenter(slot);
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    label.setAttribute("x", String(center.x));
-    label.setAttribute("y", String(center.y));
-    label.setAttribute("class", "session-album-guide-label");
-    label.textContent = slot.label;
-    overlay.appendChild(label);
+  for (const slot of sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id)) {
+    if (sessionAlbumSettings.placeAlbumsInFrames) {
+      const placeholder = placeholderAlbumForSlot(slot);
+      if (placeholder) {
+        const clipId = `session-album-clip-${slot.id}`;
+        const clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+        clip.setAttribute("id", clipId);
+
+        const clipPolygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        clipPolygon.setAttribute("points", sessionAlbumPoints(slot));
+        clip.appendChild(clipPolygon);
+        defs.appendChild(clip);
+
+        const bounds = sessionAlbumSlotBounds(slot);
+        const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        image.setAttribute("href", placeholder.imageUrl);
+        image.setAttribute("x", String(bounds.x));
+        image.setAttribute("y", String(bounds.y));
+        image.setAttribute("width", String(bounds.width));
+        image.setAttribute("height", String(bounds.height));
+        image.setAttribute("preserveAspectRatio", "none");
+        image.setAttribute("clip-path", `url(#${clipId})`);
+        image.setAttribute("class", "session-album-placeholder-image");
+        overlay.appendChild(image);
+      }
+    }
+
+    if (sessionAlbumSettings.showGuides) {
+      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      polygon.setAttribute("points", sessionAlbumPoints(slot));
+      polygon.setAttribute("class", "session-album-guide-polygon");
+      overlay.appendChild(polygon);
+
+      const center = getSessionAlbumSlotCenter(slot);
+      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      label.setAttribute("x", String(center.x));
+      label.setAttribute("y", String(center.y));
+      label.setAttribute("class", "session-album-guide-label");
+      label.textContent = slot.label;
+      overlay.appendChild(label);
+    }
   }
 }
 
@@ -1039,7 +1088,6 @@ function duplicateSessionAlbumPrefix(sourcePrefix: string, targetPrefix: string,
   };
 
   saveSessionAlbumSettings();
-  window.addEventListener("resize", renderSessionAlbumFramePreviews);
   renderSessionAlbumSlotPanels();
   renderSessionAlbumSlotGuides();
 }

@@ -7092,3 +7092,21 @@ body.lyrics-marquee-unavailable .marquee::after {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* v64R: Disable CSS matrix album preview layer.
+   Album previews are now rendered only as SVG images clipped to the exact slot polygon. */
+.session-album-frame-overlay,
+.session-album-frame-overlay.session-album-frames-visible {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.session-album-placeholder-image {
+  opacity: 0.94;
+  filter:
+    saturate(0.94)
+    contrast(1.03)
+    drop-shadow(0 5px 8px rgba(0, 0, 0, 0.48));
+}
