@@ -4059,13 +4059,22 @@ function applyRoomUtilitySettings(): void {
   root.classList.toggle("room-fill-stretch", roomUtility.roomFillStretchMode);
   root.classList.toggle("utility-panel-left-side", roomUtility.utilityPanelLeftSide);
   root.classList.toggle("vinyl-clock-hidden", !roomUtility.vinylClockEnabled);
-  root.style.setProperty("--vinyl-clock-x", `${roomUtility.vinylClockX}px`);
-  root.style.setProperty("--vinyl-clock-y", `${roomUtility.vinylClockY}px`);
-  root.style.setProperty("--vinyl-clock-size", `${roomUtility.vinylClockSize}px`);
-  root.style.setProperty("--vinyl-clock-scale", String(roomUtility.vinylClockScale));
-  root.style.setProperty("--vinyl-clock-tilt", `${roomUtility.vinylClockTilt}deg`);
-  root.style.setProperty("--vinyl-clock-opacity", String(roomUtility.vinylClockOpacity));
-  root.style.setProperty("--vinyl-clock-glow", String(roomUtility.vinylClockGlow));
+  const vinylClockVars: Array<[string, string]> = [
+    ["--vinyl-clock-x", `${roomUtility.vinylClockX}px`],
+    ["--vinyl-clock-y", `${roomUtility.vinylClockY}px`],
+    ["--vinyl-clock-size", `${roomUtility.vinylClockSize}px`],
+    ["--vinyl-clock-scale", String(roomUtility.vinylClockScale)],
+    ["--vinyl-clock-tilt", `${roomUtility.vinylClockTilt}deg`],
+    ["--vinyl-clock-opacity", String(roomUtility.vinylClockOpacity)],
+    ["--vinyl-clock-glow", String(roomUtility.vinylClockGlow)],
+  ];
+  const roomElement = document.querySelector<HTMLElement>(".room");
+  vinylClockVars.forEach(([name, value]) => {
+    root.style.setProperty(name, value);
+    // The room element has local fallback variables for the scene. Mirror the utility
+    // values there so the sliders win over those local defaults immediately.
+    roomElement?.style.setProperty(name, value);
+  });
   syncAspectModeControls();
 
   const filterOverlay = document.querySelector<HTMLElement>("#roomFilterOverlay");
