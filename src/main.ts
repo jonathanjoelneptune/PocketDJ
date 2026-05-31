@@ -173,6 +173,14 @@ type RoomUtilitySettings = {
   panelHeightAdjustEnabled: boolean;
   roomFillStretchMode: boolean;
   utilityPanelLeftSide: boolean;
+  vinylClockEnabled: boolean;
+  vinylClockX: number;
+  vinylClockY: number;
+  vinylClockSize: number;
+  vinylClockScale: number;
+  vinylClockTilt: number;
+  vinylClockOpacity: number;
+  vinylClockGlow: number;
   lyricPosterTopLeftX: number;
   lyricPosterTopLeftY: number;
   lyricPosterTopRightX: number;
@@ -321,6 +329,14 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   panelHeightAdjustEnabled: false,
   roomFillStretchMode: false,
   utilityPanelLeftSide: false,
+  vinylClockEnabled: true,
+  vinylClockX: 544,
+  vinylClockY: 382,
+  vinylClockSize: 86,
+  vinylClockScale: 1,
+  vinylClockTilt: -1,
+  vinylClockOpacity: 1,
+  vinylClockGlow: 0.10,
   lyricPosterTopLeftX: 221,
   lyricPosterTopLeftY: 18,
   lyricPosterTopRightX: 1562,
@@ -3715,6 +3731,7 @@ function bindRoomUtilityControls(): void {
   const roomFillStretchMode = qs<HTMLInputElement>("#roomFillStretchMode");
   const utilityPanelLeftSide = qs<HTMLInputElement>("#utilityPanelLeftSide");
   const songChangeMode = qs<HTMLInputElement>("#songChangeMode");
+  const vinylClockEnabled = qs<HTMLInputElement>("#vinylClockEnabled");
 
   sceneFilter.value = roomUtility.sceneFilter;
   lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
@@ -3730,6 +3747,7 @@ function bindRoomUtilityControls(): void {
   roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
   utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
   songChangeMode.checked = roomUtility.songChangeMode;
+  vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
 
   panelHeightAdjustEnabled.addEventListener("change", () => {
     setPanelHeightAdjustEnabled(panelHeightAdjustEnabled.checked, false);
@@ -3747,6 +3765,12 @@ function bindRoomUtilityControls(): void {
 
   songChangeMode.addEventListener("change", () => {
     roomUtility = { ...roomUtility, songChangeMode: songChangeMode.checked };
+    applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
+  });
+
+  vinylClockEnabled.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, vinylClockEnabled: vinylClockEnabled.checked };
     applyRoomUtilitySettings();
     saveRoomUtilitySettings();
   });
@@ -3771,6 +3795,13 @@ function bindRoomUtilityControls(): void {
     ["songChangeAlbumY", "songChangeAlbumYValue"],
     ["songChangeAlbumSize", "songChangeAlbumSizeValue"],
     ["panelStartY", "panelStartYValue"],
+    ["vinylClockX", "vinylClockXValue"],
+    ["vinylClockY", "vinylClockYValue"],
+    ["vinylClockSize", "vinylClockSizeValue"],
+    ["vinylClockScale", "vinylClockScaleValue"],
+    ["vinylClockTilt", "vinylClockTiltValue"],
+    ["vinylClockOpacity", "vinylClockOpacityValue"],
+    ["vinylClockGlow", "vinylClockGlowValue"],
     ["lyricPosterGuideOpacity", "lyricPosterGuideOpacityValue"],
     ["lyricPosterCenterGuideOpacity", "lyricPosterCenterGuideOpacityValue"],
     ["lyricPosterShortGuideOpacity", "lyricPosterShortGuideOpacityValue"],
@@ -3957,6 +3988,11 @@ function bindRoomUtilityControls(): void {
     lyricPosterEffectInsetEmboss.checked = roomUtility.lyricPosterEffectInsetEmboss;
     lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
     lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
+    panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
+    roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
+    utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
+    songChangeMode.checked = roomUtility.songChangeMode;
+    vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
 
     controls.forEach(([inputId, labelId]) => {
       const input = qs<HTMLInputElement>(`#${inputId}`);
@@ -3967,7 +4003,6 @@ function bindRoomUtilityControls(): void {
 
     lyricAnimationRevision += 1;
     saveRoomUtilitySettings();
-        panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
     applyRoomUtilitySettings();
   });
 }
@@ -4023,6 +4058,14 @@ function applyRoomUtilitySettings(): void {
   root.classList.toggle("panel-height-adjust-enabled", roomUtility.panelHeightAdjustEnabled);
   root.classList.toggle("room-fill-stretch", roomUtility.roomFillStretchMode);
   root.classList.toggle("utility-panel-left-side", roomUtility.utilityPanelLeftSide);
+  root.classList.toggle("vinyl-clock-hidden", !roomUtility.vinylClockEnabled);
+  root.style.setProperty("--vinyl-clock-x", `${roomUtility.vinylClockX}px`);
+  root.style.setProperty("--vinyl-clock-y", `${roomUtility.vinylClockY}px`);
+  root.style.setProperty("--vinyl-clock-size", `${roomUtility.vinylClockSize}px`);
+  root.style.setProperty("--vinyl-clock-scale", String(roomUtility.vinylClockScale));
+  root.style.setProperty("--vinyl-clock-tilt", `${roomUtility.vinylClockTilt}deg`);
+  root.style.setProperty("--vinyl-clock-opacity", String(roomUtility.vinylClockOpacity));
+  root.style.setProperty("--vinyl-clock-glow", String(roomUtility.vinylClockGlow));
   syncAspectModeControls();
 
   const filterOverlay = document.querySelector<HTMLElement>("#roomFilterOverlay");
@@ -4287,8 +4330,11 @@ function setUtilityLabel(id: string, value: number): void {
     id.includes("Tightness") ||
     id.includes("Strength") ||
     id.includes("Stretch") ||
-    id.includes("Perspective")
+    id.includes("Perspective") ||
+    id.includes("Glow")
       ? 2
+      : id.includes("Tilt")
+        ? 1
       : id.includes("Stroke")
         ? 1
         : 0;

@@ -395,6 +395,38 @@ export function renderShell(state: AppState): void {
           </label>
           </div>
 
+          <details class="clock-utility-controls" open>
+            <summary>Vinyl clock utility</summary>
+            <p class="utility-help">Adjust the back-wall vinyl clock overlay without editing CSS. Values are in the same 1764 x 992 room coordinate space as the album slots.</p>
+            <div class="utility-grid">
+              <label class="utility-checkbox">
+                <input id="vinylClockEnabled" type="checkbox" />
+                Show vinyl clock
+              </label>
+              <label>Clock X px <span id="vinylClockXValue">544</span>
+                <input id="vinylClockX" type="range" min="0" max="1764" step="1" value="544" />
+              </label>
+              <label>Clock Y px <span id="vinylClockYValue">382</span>
+                <input id="vinylClockY" type="range" min="0" max="992" step="1" value="382" />
+              </label>
+              <label>Clock size px <span id="vinylClockSizeValue">86</span>
+                <input id="vinylClockSize" type="range" min="24" max="220" step="1" value="86" />
+              </label>
+              <label>Clock scale <span id="vinylClockScaleValue">1.00</span>
+                <input id="vinylClockScale" type="range" min="0.25" max="2.50" step="0.01" value="1" />
+              </label>
+              <label>Clock tilt deg <span id="vinylClockTiltValue">-1.0</span>
+                <input id="vinylClockTilt" type="range" min="-45" max="45" step="0.1" value="-1" />
+              </label>
+              <label>Clock opacity <span id="vinylClockOpacityValue">1.00</span>
+                <input id="vinylClockOpacity" type="range" min="0" max="1" step="0.01" value="1" />
+              </label>
+              <label>Clock glow <span id="vinylClockGlowValue">0.10</span>
+                <input id="vinylClockGlow" type="range" min="0" max="1" step="0.01" value="0.10" />
+              </label>
+            </div>
+          </details>
+
           <div class="lyrics-boundary-utility">
             <div class="utility-subhead">Ceiling lyric poster utility</div>
             <p class="utility-help">Single active lyric poster system. Old karaoke, past/future, background-box, and deprecated lyric block systems have been removed.</p>

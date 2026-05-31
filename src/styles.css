@@ -7562,3 +7562,37 @@ body.lyrics-marquee-unavailable .marquee::after {
     blur(0.34px)
     drop-shadow(7px 8px 2px rgba(0, 0, 0, 0.12)) !important;
 }
+
+
+/* v65J: clock dev utility variables */
+.room {
+  --vinyl-clock-scale: 1;
+  --vinyl-clock-opacity: 1;
+  --vinyl-clock-glow: 0.10;
+}
+
+.vinyl-clock-decor {
+  transform: rotate(var(--vinyl-clock-tilt)) scale(var(--vinyl-clock-scale));
+  opacity: var(--vinyl-clock-opacity);
+  filter:
+    drop-shadow(0 8px 13px rgba(0, 0, 0, 0.42))
+    drop-shadow(0 0 calc(18px * var(--vinyl-clock-glow)) rgba(255, 166, 73, 0.35));
+}
+
+.vinyl-clock-hidden .vinyl-clock-decor {
+  display: none;
+}
+
+.clock-utility-controls {
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  border-radius: 12px;
+  background: rgba(20, 12, 24, 0.42);
+}
+
+.clock-utility-controls summary {
+  cursor: pointer;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
