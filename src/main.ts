@@ -4510,11 +4510,11 @@ function setSpeakerTempo(nextBpm: number | null, source: typeof speakerTempoSour
   setSpeakerPulseBpmLabel();
 }
 
-function setSpeakerPulseBpmLabel(): void {
+function setSpeakerPulseBpmLabel(statusOverride = ""): void {
   const label = document.querySelector<HTMLElement>("#speakerPulseBpmValue");
   if (!label) return;
   const bpm = speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM;
-  const sourceLabel = speakerTempoSource === "getsongbpm" ? "GetSongBPM" : speakerTempoSource === "spotify" ? "Spotify" : speakerTempoSource === "demo" ? "demo" : speakerTempoSource === "estimate" ? "estimated" : "fallback";
+  const sourceLabel = statusOverride || (speakerTempoSource === "getsongbpm" ? "GetSongBPM" : speakerTempoSource === "spotify" ? "Spotify" : speakerTempoSource === "demo" ? "demo" : speakerTempoSource === "estimate" ? "estimated" : "fallback");
   label.textContent = `${Math.round(bpm)} ${sourceLabel}`;
 }
 
@@ -4563,25 +4563,36 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
     setSpeakerTempo(estimateTrackTempoBpm(track), "estimate");
   }
 
-  if (speakerTempoFetchKey === track.trackId) return;
-  speakerTempoFetchKey = track.trackId;
-
   const getSongBpmApiKey = loadGetSongBpmApiKey();
   if (getSongBpmApiKey) {
+    const externalFetchKey = `${track.trackId}:getsongbpm:${getSongBpmApiKey.slice(-6)}`;
+    if (speakerTempoFetchKey === externalFetchKey) return;
+    speakerTempoFetchKey = externalFetchKey;
+    setSpeakerPulseBpmLabel("looking up GetSongBPM...");
+
     void getExternalTrackTempoBpm(getSongBpmApiKey, track.title, track.artist)
       .then((tempo) => {
-        if (!tempo || speakerTempoTrackKey !== track.trackId) return;
+        if (speakerTempoTrackKey !== track.trackId) return;
+        if (!tempo) {
+          setSpeakerPulseBpmLabel("estimated (GetSongBPM no match)");
+          return;
+        }
         externalSpeakerTempoCache.set(externalCacheKey, tempo);
         setSpeakerTempo(tempo, "getsongbpm");
       })
-      .catch(() => {
+      .catch((error) => {
+        console.warn("GetSongBPM tempo lookup failed", error);
         // Keep the local estimate if the external lookup fails.
         if (speakerTempoTrackKey === track.trackId && speakerTempoSource !== "getsongbpm") {
-          setSpeakerPulseBpmLabel();
+          setSpeakerPulseBpmLabel("estimated (GetSongBPM lookup failed)");
         }
       });
     return;
   }
+
+  const spotifyFetchKey = `${track.trackId}:spotify`;
+  if (speakerTempoFetchKey === spotifyFetchKey) return;
+  speakerTempoFetchKey = spotifyFetchKey;
 
   void getTrackTempoBpm(state.spotifyClientId, track.trackId)
     .then((tempo) => {

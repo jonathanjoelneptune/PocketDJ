@@ -319,6 +319,7 @@ function getSongBpmCandidateId(candidate: GetSongBpmSongCandidate): string {
 
 function getSongBpmCandidateArtist(candidate: GetSongBpmSongCandidate): string {
   if (typeof candidate.artist === "string") return candidate.artist;
+  if (Array.isArray(candidate.artist)) return candidate.artist.map((artist) => artist?.name || "").filter(Boolean).join(", ");
   return candidate.artist?.name || candidate.artist_name || "";
 }
 
@@ -351,51 +352,71 @@ function pickBestGetSongBpmCandidate(
   return scored[0]?.candidate || null;
 }
 
+async function fetchGetSongBpmJson<T>(url: URL): Promise<T | null> {
+  // Use URL_PARAM authorization only. A custom X-API-KEY header can trigger
+  // browser CORS preflight behavior that prevents GitHub Pages from calling
+  // the API directly, even when the key itself is valid.
+  const response = await fetch(url.toString());
+  if (!response.ok) return null;
+  return (await response.json()) as T;
+}
+
+async function getGetSongBpmSongDetails(apiKey: string, candidateId: string): Promise<number | null> {
+  const songUrl = new URL("https://api.getsong.co/song/");
+  songUrl.searchParams.set("id", candidateId);
+  songUrl.searchParams.set("api_key", apiKey);
+
+  const songJson = await fetchGetSongBpmJson<GetSongBpmSongResponse>(songUrl);
+  if (!songJson) return null;
+
+  if ("song" in songJson) return getSongBpmCandidateTempo(songJson.song);
+  if ("data" in songJson) return getSongBpmCandidateTempo(songJson.data);
+  return getSongBpmCandidateTempo(songJson as GetSongBpmSongCandidate);
+}
+
 export async function getExternalTrackTempoBpm(apiKey: string, title: string, artist: string): Promise<number | null> {
   const cleanApiKey = apiKey.trim();
   const cleanTitle = title.trim();
   const cleanArtist = artist.trim();
+  const primaryArtist = cleanArtist.split(",")[0].trim() || cleanArtist;
 
-  if (!cleanApiKey || !cleanTitle || !cleanArtist) return null;
+  if (!cleanApiKey || !cleanTitle || !primaryArtist) return null;
 
-  const lookup = `song:${cleanTitle} artist:${cleanArtist.split(",")[0].trim() || cleanArtist}`;
-  const searchUrl = new URL("https://api.getsong.co/search/");
-  searchUrl.searchParams.set("type", "both");
-  searchUrl.searchParams.set("lookup", lookup);
-  searchUrl.searchParams.set("limit", "5");
-  searchUrl.searchParams.set("api_key", cleanApiKey);
+  const searchPlans = [
+    {
+      type: "both",
+      lookup: `song:${cleanTitle} artist:${primaryArtist}`,
+      limit: "10"
+    },
+    {
+      type: "song",
+      lookup: cleanTitle,
+      limit: "15"
+    }
+  ];
 
-  const response = await fetch(searchUrl.toString(), {
-    headers: { "X-API-KEY": cleanApiKey }
-  });
+  for (const plan of searchPlans) {
+    const searchUrl = new URL("https://api.getsong.co/search/");
+    searchUrl.searchParams.set("type", plan.type);
+    searchUrl.searchParams.set("lookup", plan.lookup);
+    searchUrl.searchParams.set("limit", plan.limit);
+    searchUrl.searchParams.set("api_key", cleanApiKey);
 
-  if (!response.ok) return null;
+    const json = await fetchGetSongBpmJson<GetSongBpmSearchResponse>(searchUrl);
+    if (!json) continue;
 
-  const json = (await response.json()) as GetSongBpmSearchResponse;
-  const candidate = pickBestGetSongBpmCandidate(getSongBpmCandidates(json), cleanTitle, cleanArtist);
+    const candidate = pickBestGetSongBpmCandidate(getSongBpmCandidates(json), cleanTitle, primaryArtist);
+    const immediateTempo = getSongBpmCandidateTempo(candidate);
+    if (immediateTempo) return immediateTempo;
 
-  const immediateTempo = getSongBpmCandidateTempo(candidate);
-  if (immediateTempo) return immediateTempo;
+    const candidateId = candidate ? getSongBpmCandidateId(candidate) : "";
+    if (!candidateId) continue;
 
-  if (!candidate) return null;
+    const detailedTempo = await getGetSongBpmSongDetails(cleanApiKey, candidateId);
+    if (detailedTempo) return detailedTempo;
+  }
 
-  const candidateId = getSongBpmCandidateId(candidate);
-  if (!candidateId) return null;
-
-  const songUrl = new URL("https://api.getsong.co/song/");
-  songUrl.searchParams.set("id", candidateId);
-  songUrl.searchParams.set("api_key", cleanApiKey);
-
-  const songResponse = await fetch(songUrl.toString(), {
-    headers: { "X-API-KEY": cleanApiKey }
-  });
-
-  if (!songResponse.ok) return null;
-
-  const songJson = (await songResponse.json()) as GetSongBpmSongResponse;
-  if ("song" in songJson) return getSongBpmCandidateTempo(songJson.song);
-  if ("data" in songJson) return getSongBpmCandidateTempo(songJson.data);
-  return getSongBpmCandidateTempo(songJson as GetSongBpmSongCandidate);
+  return null;
 }
 
 export async function getTrackTempoBpm(clientId: string, trackId: string): Promise<number | null> {
@@ -519,7 +540,7 @@ type GetSongBpmSongCandidate = {
   song_id?: string | number;
   title?: string;
   song_title?: string;
-  artist?: string | { name?: string };
+  artist?: string | { name?: string } | Array<{ name?: string }>;
   artist_name?: string;
   tempo?: number | string;
   bpm?: number | string;
