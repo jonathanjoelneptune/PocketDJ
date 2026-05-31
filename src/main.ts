@@ -134,6 +134,7 @@ let albumRevealPreloadUrl = "";
 let albumRevealLoadedUrl = "";
 let albumRevealPreloadStartedAt = 0;
 let albumRevealPreloadImage: HTMLImageElement | null = null;
+let vinylClockTimer: number | null = null;
 const ALBUM_REVEAL_MAX_WAIT_MS = 500;
 
 type SceneFilter =
@@ -2156,6 +2157,7 @@ async function boot(): Promise<void> {
   bindRoomUtilityControls();
   bindSessionWallAlbumControls();
   applyRoomUtilitySettings();
+  scheduleVinylClockDecorTick();
 
   if (state.spotifyClientId) {
     try {
@@ -4237,6 +4239,45 @@ function updateSpeakerPulse(isPlaying: boolean): void {
   const right = qs<HTMLElement>("#rightSpeaker");
   left.classList.toggle("playing", isPlaying);
   right.classList.toggle("playing", isPlaying);
+}
+
+function updateVinylClockDecor(): void {
+  const hourHand = document.querySelector<HTMLElement>("#vinylClockHourHand");
+  const minuteHand = document.querySelector<HTMLElement>("#vinylClockMinuteHand");
+  const secondHand = document.querySelector<HTMLElement>("#vinylClockSecondHand");
+  const digitalReadout = document.querySelector<HTMLElement>("#vinylClockDigitalReadout");
+  if (!hourHand || !minuteHand || !secondHand || !digitalReadout) return;
+
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+
+  const hourRotation = ((hours % 12) + minutes / 60 + seconds / 3600) * 30;
+  const minuteRotation = (minutes + seconds / 60) * 6;
+  const secondRotation = seconds * 6;
+
+  hourHand.style.transform = `translateX(-50%) rotate(${hourRotation}deg)`;
+  minuteHand.style.transform = `translateX(-50%) rotate(${minuteRotation}deg)`;
+  secondHand.style.transform = `translateX(-50%) rotate(${secondRotation}deg)`;
+
+  const formattedHours = String(hours % 12 || 12);
+  const formattedMinutes = String(minutes).padStart(2, "0");
+  const suffix = hours >= 12 ? "PM" : "AM";
+  digitalReadout.textContent = `${formattedHours}:${formattedMinutes} ${suffix}`;
+  digitalReadout.setAttribute("aria-label", `Current time ${formattedHours}:${formattedMinutes} ${suffix}`);
+}
+
+function scheduleVinylClockDecorTick(): void {
+  if (vinylClockTimer) window.clearTimeout(vinylClockTimer);
+  const loop = () => {
+    updateVinylClockDecor();
+    const now = new Date();
+    const delayMs = Math.max(120, 1000 - now.getMilliseconds());
+    vinylClockTimer = window.setTimeout(loop, delayMs);
+  };
+
+  loop();
 }
 
 function setUtilityLabel(id: string, value: number): void {

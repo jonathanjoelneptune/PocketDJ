@@ -7335,3 +7335,182 @@ body.lyrics-marquee-unavailable .marquee::after {
   font-size: 0.55rem;
   letter-spacing: 0.05em;
 }
+
+/* Vinyl wall clock on the back-left wall */
+.room {
+  --vinyl-clock-x: 498px;
+  --vinyl-clock-y: 355px;
+  --vinyl-clock-size: 104px;
+  --vinyl-clock-tilt: -2deg;
+}
+
+.vinyl-clock-decor {
+  position: absolute;
+  left: var(--vinyl-clock-x);
+  top: var(--vinyl-clock-y);
+  width: var(--vinyl-clock-size);
+  height: var(--vinyl-clock-size);
+  transform: rotate(var(--vinyl-clock-tilt));
+  transform-origin: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.vinyl-clock-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  background:
+    linear-gradient(145deg, rgba(105, 70, 36, 0.96), rgba(63, 36, 17, 0.98));
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.38),
+    inset 0 0 0 2px rgba(251, 208, 145, 0.16),
+    inset 0 1px 0 rgba(255, 231, 190, 0.12);
+}
+
+.vinyl-clock-inner-shadow {
+  position: absolute;
+  inset: 8px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(16, 18, 26, 0.88), rgba(8, 8, 12, 0.96));
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.42);
+}
+
+.vinyl-clock-face {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 47%, rgba(78, 83, 104, 0.2) 0%, rgba(8, 10, 16, 0.96) 42%, rgba(3, 4, 8, 1) 82%),
+    #05060a;
+  border: 2px solid rgba(255, 216, 154, 0.18);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 0 22px rgba(0, 0, 0, 0.45),
+    0 3px 10px rgba(0, 0, 0, 0.24);
+}
+
+.vinyl-clock-face::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.035);
+  box-shadow:
+    0 0 0 7px rgba(255, 255, 255, 0.018),
+    0 0 0 14px rgba(255, 255, 255, 0.014),
+    0 0 0 21px rgba(255, 255, 255, 0.012),
+    0 0 0 28px rgba(255, 255, 255, 0.010);
+}
+
+.vinyl-clock-grooves {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle at center,
+    rgba(255, 255, 255, 0.022) 0 1px,
+    rgba(0, 0, 0, 0) 1px 4px);
+  opacity: 0.75;
+}
+
+.vinyl-clock-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36%;
+  height: 36%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 40% 30%, rgba(255, 234, 188, 0.95), rgba(223, 153, 71, 0.92) 48%, rgba(144, 74, 30, 0.95) 100%);
+  border: 1px solid rgba(56, 18, 4, 0.35);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 251, 232, 0.24),
+    0 0 10px rgba(255, 168, 71, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #2a1307;
+  text-shadow: 0 1px 0 rgba(255, 245, 214, 0.2);
+}
+
+.vinyl-clock-label-top {
+  font-size: 7px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.vinyl-clock-label-bottom {
+  margin-top: 3px;
+  font-size: 6px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.vinyl-clock-ticks {
+  position: absolute;
+  inset: 0;
+}
+
+.vinyl-clock-tick {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 11px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(255, 233, 182, 0.98), rgba(212, 133, 44, 0.98));
+  box-shadow: 0 0 6px rgba(255, 188, 86, 0.32);
+  transform-origin: 50% calc(50% - 27px);
+}
+
+.tick-12 { transform: translate(-50%, -50%) rotate(0deg); }
+.tick-3 { transform: translate(-50%, -50%) rotate(90deg); }
+.tick-6 { transform: translate(-50%, -50%) rotate(180deg); }
+.tick-9 { transform: translate(-50%, -50%) rotate(270deg); }
+
+.vinyl-clock-hand {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  transform-origin: 50% 100%;
+  border-radius: 999px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.22);
+}
+
+.vinyl-clock-hour {
+  width: 4px;
+  height: 21px;
+  background: linear-gradient(180deg, #fbedd1, #b57a32 72%);
+}
+
+.vinyl-clock-minute {
+  width: 3px;
+  height: 30px;
+  background: linear-gradient(180deg, #fbedd1, #d68d3b 76%);
+}
+
+.vinyl-clock-second {
+  width: 2px;
+  height: 34px;
+  background: linear-gradient(180deg, rgba(255, 128, 61, 0.98), rgba(203, 63, 19, 0.98));
+  box-shadow: 0 0 10px rgba(255, 108, 53, 0.34);
+}
+
+.vinyl-clock-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff5d2, #d8862e 58%, #643014 100%);
+  box-shadow: 0 0 0 2px rgba(31, 9, 2, 0.28), 0 0 8px rgba(255, 177, 80, 0.22);
+}

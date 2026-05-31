@@ -34,6 +34,29 @@ export function renderShell(state: AppState): void {
         <canvas id="sessionAlbumWarpCanvas" class="session-album-warp-canvas" width="1764" height="992" aria-hidden="true"></canvas>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
 
+        <div id="vinylClockDecor" class="vinyl-clock-decor" aria-label="Vinyl wall clock" title="Pocket DJ vinyl wall clock">
+          <div class="vinyl-clock-frame">
+            <div class="vinyl-clock-inner-shadow"></div>
+            <div class="vinyl-clock-face">
+              <div class="vinyl-clock-grooves" aria-hidden="true"></div>
+              <div class="vinyl-clock-label" aria-hidden="true">
+                <div class="vinyl-clock-label-top">POCKET DJ</div>
+                <div class="vinyl-clock-label-bottom" id="vinylClockDigitalReadout">--:--</div>
+              </div>
+              <div class="vinyl-clock-ticks" aria-hidden="true">
+                <span class="vinyl-clock-tick tick-12"></span>
+                <span class="vinyl-clock-tick tick-3"></span>
+                <span class="vinyl-clock-tick tick-6"></span>
+                <span class="vinyl-clock-tick tick-9"></span>
+              </div>
+              <div class="vinyl-clock-hand vinyl-clock-hour" id="vinylClockHourHand"></div>
+              <div class="vinyl-clock-hand vinyl-clock-minute" id="vinylClockMinuteHand"></div>
+              <div class="vinyl-clock-hand vinyl-clock-second" id="vinylClockSecondHand"></div>
+              <div class="vinyl-clock-center" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+
         <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
           <div class="lyrics-boundary-guides" aria-hidden="true">
             <div class="lyrics-boundary-guide lyrics-boundary-guide-video"></div>
