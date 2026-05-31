@@ -194,6 +194,9 @@ type RoomUtilitySettings = {
   mixerTempoLedX: number;
   mixerTempoLedY: number;
   mixerTempoLedSize: number;
+  mixerLyricsLedX: number;
+  mixerLyricsLedY: number;
+  mixerLyricsLedSize: number;
   speakerPulseUseTempo: boolean;
   speakerPulseUseExternalTempo: boolean;
   sceneFilter: SceneFilter;
@@ -361,6 +364,9 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   mixerTempoLedX: 45,
   mixerTempoLedY: 63,
   mixerTempoLedSize: 2,
+  mixerLyricsLedX: 55,
+  mixerLyricsLedY: 63,
+  mixerLyricsLedSize: 1.6,
   speakerPulseUseTempo: true,
   speakerPulseUseExternalTempo: true,
   sceneFilter: "neon-purple",
@@ -519,7 +525,9 @@ let roomUtility = loadRoomUtilitySettings();
 
 function setUtilityLabel(id: string, value: number): void {
   const decimals =
-    id.includes("Opacity") ||
+    id.includes("LedSize")
+      ? 2
+      : id.includes("Opacity") ||
     id.includes("Scale") ||
     id.includes("Strength") ||
     id.includes("Stretch") ||
@@ -2461,6 +2469,38 @@ function schedulePostConnectPlaybackRefresh(): void {
 
 
 
+function updateMixerLyricsLedStatus(status: LyricsPayload["status"], enabled: boolean): void {
+  const root = document.documentElement;
+  const led = document.querySelector<HTMLElement>("#mixerLyricsLed");
+  const nextStatus = !enabled
+    ? "off"
+    : status === "loading"
+      ? "searching"
+      : status === "found"
+        ? "found"
+        : status === "idle"
+          ? "idle"
+          : "missing";
+
+  root.dataset.lyricsStatus = nextStatus;
+  root.classList.toggle("lyrics-status-found", nextStatus === "found");
+  root.classList.toggle("lyrics-status-searching", nextStatus === "searching");
+  root.classList.toggle("lyrics-status-missing", nextStatus === "missing");
+  root.classList.toggle("lyrics-status-idle", nextStatus === "idle" || nextStatus === "off");
+
+  if (!led) return;
+  const readable =
+    nextStatus === "found"
+      ? "Lyrics: synced lyrics found"
+      : nextStatus === "searching"
+        ? "Lyrics: searching"
+        : nextStatus === "missing"
+          ? "Lyrics: unavailable"
+          : "Lyrics: idle";
+  led.title = readable;
+  led.setAttribute("aria-label", readable);
+}
+
 function updateMarqueeLyricsAvailability(status: LyricsPayload["status"], enabled: boolean): void {
   const classes = [
     "lyrics-marquee-found",
@@ -2469,6 +2509,7 @@ function updateMarqueeLyricsAvailability(status: LyricsPayload["status"], enable
   ];
 
   document.body.classList.remove(...classes);
+  updateMixerLyricsLedStatus(status, enabled);
 
   if (!enabled) {
     document.body.classList.add("lyrics-marquee-unavailable");
@@ -4544,6 +4585,9 @@ function bindRoomUtilityControls(): void {
     ["mixerTempoLedX", "mixerTempoLedXValue"],
     ["mixerTempoLedY", "mixerTempoLedYValue"],
     ["mixerTempoLedSize", "mixerTempoLedSizeValue"],
+    ["mixerLyricsLedX", "mixerLyricsLedXValue"],
+    ["mixerLyricsLedY", "mixerLyricsLedYValue"],
+    ["mixerLyricsLedSize", "mixerLyricsLedSizeValue"],
     ["filterStrength", "filterStrengthValue"],
     ["vignetteStrength", "vignetteStrengthValue"],
     ["shadowOpacity", "shadowOpacityValue"],
@@ -4816,6 +4860,9 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--mixer-tempo-led-x", `${roomUtility.mixerTempoLedX}%`);
   root.style.setProperty("--mixer-tempo-led-y", `${roomUtility.mixerTempoLedY}%`);
   root.style.setProperty("--mixer-tempo-led-size", `${roomUtility.mixerTempoLedSize}%`);
+  root.style.setProperty("--mixer-lyrics-led-x", `${roomUtility.mixerLyricsLedX}%`);
+  root.style.setProperty("--mixer-lyrics-led-y", `${roomUtility.mixerLyricsLedY}%`);
+  root.style.setProperty("--mixer-lyrics-led-size", `${roomUtility.mixerLyricsLedSize}%`);
   root.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
   root.classList.toggle("speaker-pulse-tempo-enabled", roomUtility.speakerPulseUseTempo);
   root.style.setProperty("--scene-filter-strength", String(roomUtility.filterStrength));

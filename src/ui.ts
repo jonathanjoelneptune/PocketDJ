@@ -87,9 +87,13 @@ export function renderShell(state: AppState): void {
             draggable="false"
             aria-hidden="true"
           />
-          <div id="mixerTempoLed" class="mixer-tempo-led" aria-label="Tempo source indicator" title="Tempo source: fallback" aria-hidden="true">
-            <span class="mixer-tempo-led-glow"></span>
-            <span class="mixer-tempo-led-core"></span>
+          <div id="mixerTempoLed" class="mixer-status-led mixer-tempo-led" aria-label="Tempo source indicator" title="Tempo source: fallback" aria-hidden="true">
+            <span class="mixer-status-led-glow mixer-tempo-led-glow"></span>
+            <span class="mixer-status-led-core mixer-tempo-led-core"></span>
+          </div>
+          <div id="mixerLyricsLed" class="mixer-status-led mixer-lyrics-led" aria-label="Lyrics availability indicator" title="Lyrics: unknown" aria-hidden="true">
+            <span class="mixer-status-led-glow mixer-lyrics-led-glow"></span>
+            <span class="mixer-status-led-core mixer-lyrics-led-core"></span>
           </div>
         </div>
 
@@ -358,6 +362,15 @@ export function renderShell(state: AppState): void {
             </label>
             <label>Tempo LED size % <span id="mixerTempoLedSizeValue">2</span>
               <input id="mixerTempoLedSize" type="range" min="0.5" max="4" step="0.05" value="2" />
+            </label>
+            <label>Lyrics LED X % <span id="mixerLyricsLedXValue">55</span>
+              <input id="mixerLyricsLedX" type="range" min="30" max="70" step="0.1" value="55" />
+            </label>
+            <label>Lyrics LED Y % <span id="mixerLyricsLedYValue">63</span>
+              <input id="mixerLyricsLedY" type="range" min="45" max="78" step="0.1" value="63" />
+            </label>
+            <label>Lyrics LED size % <span id="mixerLyricsLedSizeValue">1.6</span>
+              <input id="mixerLyricsLedSize" type="range" min="0.5" max="4" step="0.05" value="1.6" />
             </label>
             <label>Speaker pulse X % <span id="speakerPulseXValue">50.9</span>
               <input id="speakerPulseX" type="range" min="20" max="80" step="0.1" value="50.9" />
