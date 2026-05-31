@@ -7250,3 +7250,8 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 /* v64Y: Warp-mode performance guard.
    Warp mode uses a 3x3 mesh, throttled redraws, image preload tracking, and no pixel-cache redraw storm. */
+
+
+/* v64Z: Warp wall polish.
+   Every defined wall slot now receives an album or fallback sleeve on each refresh.
+   B-3 is migrated/locked to the corrected corner order so it does not rotate in warp mode. */

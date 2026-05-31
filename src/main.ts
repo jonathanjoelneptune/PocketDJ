@@ -442,7 +442,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64y";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64z";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -588,10 +588,32 @@ let sessionAlbumWarpRenderInProgress = false;
 
 
 
+
+function applySessionAlbumSlotMigrations(slots: SessionAlbumSlot[]): SessionAlbumSlot[] {
+  return slots.map((slot) => {
+    if (slot.label !== "B-3") return slot;
+
+    // B-3 had an early corner-ordering issue in localStorage on some browsers.
+    // Keep it locked to the corrected wall-frame orientation so warp mode does not rotate it.
+    return {
+      ...slot,
+      tlX: 269,
+      tlY: 250,
+      trX: 327,
+      trY: 275,
+      blX: 271,
+      blY: 346,
+      brX: 327,
+      brY: 359,
+    };
+  });
+}
+
+
 function loadSessionAlbumSettings(): SessionAlbumSettings {
   try {
     const raw = localStorage.getItem(SESSION_ALBUM_KEY);
-    if (!raw) return { ...DEFAULT_SESSION_ALBUM_SETTINGS, slots: [...DEFAULT_SESSION_ALBUM_SETTINGS.slots] };
+    if (!raw) return { ...DEFAULT_SESSION_ALBUM_SETTINGS, slots: applySessionAlbumSlotMigrations([...DEFAULT_SESSION_ALBUM_SETTINGS.slots]) };
     const parsed = JSON.parse(raw) as Partial<SessionAlbumSettings>;
     const slots = Array.isArray(parsed.slots)
       ? parsed.slots
@@ -609,11 +631,11 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
       albumWarpMode: Boolean(parsed.albumWarpMode ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumWarpMode),
       v64wQuintessentialDefault: true,
       nextId: Math.max(Number(parsed.nextId || 1), maxId + 1, 1),
-      slots,
+      slots: applySessionAlbumSlotMigrations(slots),
     };
   } catch (error) {
     console.warn("Could not load session wall album settings.", error);
-    return { ...DEFAULT_SESSION_ALBUM_SETTINGS, slots: [...DEFAULT_SESSION_ALBUM_SETTINGS.slots] };
+    return { ...DEFAULT_SESSION_ALBUM_SETTINGS, slots: applySessionAlbumSlotMigrations([...DEFAULT_SESSION_ALBUM_SETTINGS.slots]) };
   }
 }
 
@@ -824,56 +846,49 @@ async function resolveWallAlbumArtworkUrlWithRetry(item: WallAlbumMasterItem, ca
 
 function assignWallAlbumsForRefresh(): void {
   const eligibleSlots = sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id);
-  const slotCount = Math.min(46, eligibleSlots.length, WALL_ALBUM_MASTER_LIST.length);
-  const selectedAlbums = shuffleSessionAlbumArray(WALL_ALBUM_MASTER_LIST).slice(0, slotCount);
-  const selectedSlots = shuffleSessionAlbumArray(eligibleSlots).slice(0, slotCount);
+  if (!eligibleSlots.length) {
+    sessionWallAlbumAssignments = [];
+    sessionWallAlbumAssignmentsBySlot = new Map<number, SessionAlbumPlaceholder>();
+    return;
+  }
+
+  const shuffledSlots = shuffleSessionAlbumArray(eligibleSlots);
+  const shuffledAlbums = shuffleSessionAlbumArray(WALL_ALBUM_MASTER_LIST);
   const cache = readWallAlbumUrlCache();
 
   sessionWallAlbumAssignmentsBySlot = new Map<number, SessionAlbumPlaceholder>();
-  sessionWallAlbumAssignments = selectedAlbums.map((item) => ({
-    title: item.album,
-    artist: item.artist,
-    imageUrl: item.artworkUrl || cache[wallAlbumKey(item)] || SESSION_ALBUM_FALLBACK_ART_URL,
-  }));
-
-  selectedAlbums.forEach((item, index) => {
-    const slot = selectedSlots[index];
+  sessionWallAlbumAssignments = shuffledSlots.map((slot, index) => {
+    const item = shuffledAlbums[index % shuffledAlbums.length];
+    const cachedOrStaticUrl = item.artworkUrl || cache[wallAlbumKey(item)];
     const placeholder: SessionAlbumPlaceholder = {
       title: item.album,
       artist: item.artist,
-      imageUrl: item.artworkUrl || cache[wallAlbumKey(item)] || SESSION_ALBUM_FALLBACK_ART_URL,
+      imageUrl: cachedOrStaticUrl || SESSION_ALBUM_FALLBACK_ART_URL,
     };
+
     sessionWallAlbumAssignmentsBySlot.set(slot.id, placeholder);
     requestSessionAlbumImageLoad(placeholder.imageUrl);
 
-    const cachedOrStaticUrl = item.artworkUrl || cache[wallAlbumKey(item)];
-    if (cachedOrStaticUrl) {
-      void loadSessionAlbumImage(cachedOrStaticUrl).then(() => {
-        const resolved: SessionAlbumPlaceholder = {
-          title: item.album,
-          artist: item.artist,
-          imageUrl: cachedOrStaticUrl,
-        };
-        sessionWallAlbumAssignments[index] = resolved;
-        sessionWallAlbumAssignmentsBySlot.set(slot.id, resolved);
-        scheduleSessionAlbumRender();
+    if (!cachedOrStaticUrl) {
+      void resolveWallAlbumArtworkUrlWithRetry(item, cache, 2).then((artworkUrl) => {
+        if (!artworkUrl) return;
+        void loadSessionAlbumImage(artworkUrl).then(() => {
+          const resolved: SessionAlbumPlaceholder = {
+            title: item.album,
+            artist: item.artist,
+            imageUrl: artworkUrl,
+          };
+          sessionWallAlbumAssignments[index] = resolved;
+          sessionWallAlbumAssignmentsBySlot.set(slot.id, resolved);
+          scheduleSessionAlbumRender();
+        });
       });
-      return;
+    } else if (cachedOrStaticUrl !== placeholder.imageUrl) {
+      // Reserved for future static artwork path support.
+      requestSessionAlbumImageLoad(cachedOrStaticUrl);
     }
 
-    void resolveWallAlbumArtworkUrlWithRetry(item, cache, 2).then((artworkUrl) => {
-      if (!artworkUrl) return;
-      void loadSessionAlbumImage(artworkUrl).then(() => {
-        const resolved: SessionAlbumPlaceholder = {
-          title: item.album,
-          artist: item.artist,
-          imageUrl: artworkUrl,
-        };
-        sessionWallAlbumAssignments[index] = resolved;
-        sessionWallAlbumAssignmentsBySlot.set(slot.id, resolved);
-        scheduleSessionAlbumRender();
-      });
-    });
+    return placeholder;
   });
 }
 
@@ -1704,6 +1719,8 @@ function bindSessionWallAlbumControls(): void {
   const groupMoveY = document.querySelector<HTMLInputElement>("#sessionAlbumGroupMoveY");
   const applyGroupMove = document.querySelector<HTMLButtonElement>("#sessionAlbumApplyGroupMove");
   const room = document.querySelector<HTMLElement>(".room");
+
+  requestSessionAlbumImageLoad(SESSION_ALBUM_FALLBACK_ART_URL);
 
   showGuides?.addEventListener("change", () => {
     sessionAlbumSettings = { ...sessionAlbumSettings, showGuides: Boolean(showGuides.checked) };
