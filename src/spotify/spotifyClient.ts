@@ -283,142 +283,6 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
   };
 }
 
-function readTempoBpm(value: unknown): number | null {
-  const tempo = Number(value || 0);
-  return Number.isFinite(tempo) && tempo >= 40 && tempo <= 220 ? tempo : null;
-}
-
-function normalizeLookupText(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/\([^)]*\)/g, " ")
-    .replace(/\[[^\]]*\]/g, " ")
-    .replace(/\b(feat|ft|featuring|remaster(ed)?|explicit|clean|radio edit|single version|album version)\b\.?/g, " ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function getSongBpmCandidates(json: GetSongBpmSearchResponse): GetSongBpmSongCandidate[] {
-  if (Array.isArray(json)) return json;
-  if (Array.isArray(json.search)) return json.search;
-  if (Array.isArray(json.songs)) return json.songs;
-  if (Array.isArray(json.data)) return json.data;
-  if (Array.isArray(json.results)) return json.results;
-  return [];
-}
-
-function getSongBpmCandidateTempo(candidate: GetSongBpmSongCandidate | null | undefined): number | null {
-  if (!candidate) return null;
-  return readTempoBpm(candidate.tempo) || readTempoBpm(candidate.bpm);
-}
-
-function getSongBpmCandidateId(candidate: GetSongBpmSongCandidate): string {
-  return String(candidate.id ?? candidate.song_id ?? "").trim();
-}
-
-function getSongBpmCandidateArtist(candidate: GetSongBpmSongCandidate): string {
-  if (typeof candidate.artist === "string") return candidate.artist;
-  if (Array.isArray(candidate.artist)) return candidate.artist.map((artist) => artist?.name || "").filter(Boolean).join(", ");
-  return candidate.artist?.name || candidate.artist_name || "";
-}
-
-function pickBestGetSongBpmCandidate(
-  candidates: GetSongBpmSongCandidate[],
-  title: string,
-  artist: string
-): GetSongBpmSongCandidate | null {
-  if (!candidates.length) return null;
-
-  const targetTitle = normalizeLookupText(title);
-  const targetArtist = normalizeLookupText(artist.split(",")[0] || artist);
-
-  const scored = candidates.map((candidate, index) => {
-    const candidateTitle = normalizeLookupText(candidate.title || candidate.song_title || "");
-    const candidateArtist = normalizeLookupText(getSongBpmCandidateArtist(candidate));
-    let score = 0;
-
-    if (candidateTitle === targetTitle) score += 8;
-    else if (candidateTitle.includes(targetTitle) || targetTitle.includes(candidateTitle)) score += 4;
-
-    if (targetArtist && candidateArtist === targetArtist) score += 6;
-    else if (targetArtist && (candidateArtist.includes(targetArtist) || targetArtist.includes(candidateArtist))) score += 3;
-
-    if (getSongBpmCandidateTempo(candidate)) score += 2;
-    return { candidate, score, index };
-  });
-
-  scored.sort((a, b) => b.score - a.score || a.index - b.index);
-  return scored[0]?.candidate || null;
-}
-
-async function fetchGetSongBpmJson<T>(url: URL): Promise<T | null> {
-  // Use URL_PARAM authorization only. A custom X-API-KEY header can trigger
-  // browser CORS preflight behavior that prevents GitHub Pages from calling
-  // the API directly, even when the key itself is valid.
-  const response = await fetch(url.toString());
-  if (!response.ok) return null;
-  return (await response.json()) as T;
-}
-
-async function getGetSongBpmSongDetails(apiKey: string, candidateId: string): Promise<number | null> {
-  const songUrl = new URL("https://api.getsong.co/song/");
-  songUrl.searchParams.set("id", candidateId);
-  songUrl.searchParams.set("api_key", apiKey);
-
-  const songJson = await fetchGetSongBpmJson<GetSongBpmSongResponse>(songUrl);
-  if (!songJson) return null;
-
-  if ("song" in songJson) return getSongBpmCandidateTempo(songJson.song);
-  if ("data" in songJson) return getSongBpmCandidateTempo(songJson.data);
-  return getSongBpmCandidateTempo(songJson as GetSongBpmSongCandidate);
-}
-
-export async function getExternalTrackTempoBpm(apiKey: string, title: string, artist: string): Promise<number | null> {
-  const cleanApiKey = apiKey.trim();
-  const cleanTitle = title.trim();
-  const cleanArtist = artist.trim();
-  const primaryArtist = cleanArtist.split(",")[0].trim() || cleanArtist;
-
-  if (!cleanApiKey || !cleanTitle || !primaryArtist) return null;
-
-  const searchPlans = [
-    {
-      type: "both",
-      lookup: `song:${cleanTitle} artist:${primaryArtist}`,
-      limit: "10"
-    },
-    {
-      type: "song",
-      lookup: cleanTitle,
-      limit: "15"
-    }
-  ];
-
-  for (const plan of searchPlans) {
-    const searchUrl = new URL("https://api.getsong.co/search/");
-    searchUrl.searchParams.set("type", plan.type);
-    searchUrl.searchParams.set("lookup", plan.lookup);
-    searchUrl.searchParams.set("limit", plan.limit);
-    searchUrl.searchParams.set("api_key", cleanApiKey);
-
-    const json = await fetchGetSongBpmJson<GetSongBpmSearchResponse>(searchUrl);
-    if (!json) continue;
-
-    const candidate = pickBestGetSongBpmCandidate(getSongBpmCandidates(json), cleanTitle, primaryArtist);
-    const immediateTempo = getSongBpmCandidateTempo(candidate);
-    if (immediateTempo) return immediateTempo;
-
-    const candidateId = candidate ? getSongBpmCandidateId(candidate) : "";
-    if (!candidateId) continue;
-
-    const detailedTempo = await getGetSongBpmSongDetails(cleanApiKey, candidateId);
-    if (detailedTempo) return detailedTempo;
-  }
-
-  return null;
-}
-
 export async function getTrackTempoBpm(clientId: string, trackId: string): Promise<number | null> {
   const cleanTrackId = trackId.trim();
   if (!cleanTrackId) return null;
@@ -429,6 +293,11 @@ export async function getTrackTempoBpm(clientId: string, trackId: string): Promi
   const headers = { Authorization: `Bearer ${token}` };
   const encodedTrackId = encodeURIComponent(cleanTrackId);
 
+  const readTempo = (value: unknown): number | null => {
+    const tempo = Number(value || 0);
+    return Number.isFinite(tempo) && tempo > 0 ? tempo : null;
+  };
+
   const featuresResponse = await fetch(`https://api.spotify.com/v1/audio-features/${encodedTrackId}`, { headers });
 
   if (featuresResponse.status === 401) {
@@ -438,7 +307,7 @@ export async function getTrackTempoBpm(clientId: string, trackId: string): Promi
 
   if (featuresResponse.ok) {
     const json = (await featuresResponse.json()) as SpotifyAudioFeaturesResponse;
-    const tempo = readTempoBpm(json.tempo);
+    const tempo = readTempo(json.tempo);
     if (tempo) return tempo;
   }
 
@@ -454,7 +323,7 @@ export async function getTrackTempoBpm(clientId: string, trackId: string): Promi
   if (!analysisResponse.ok) return null;
 
   const analysisJson = (await analysisResponse.json()) as SpotifyAudioAnalysisResponse;
-  return readTempoBpm(analysisJson.track?.tempo);
+  return readTempo(analysisJson.track?.tempo);
 }
 
 export function disconnectSpotify(): void {
@@ -533,29 +402,6 @@ type SpotifyAudioAnalysisResponse = {
   track?: {
     tempo?: number;
   };
-};
-
-type GetSongBpmSongCandidate = {
-  id?: string | number;
-  song_id?: string | number;
-  title?: string;
-  song_title?: string;
-  artist?: string | { name?: string } | Array<{ name?: string }>;
-  artist_name?: string;
-  tempo?: number | string;
-  bpm?: number | string;
-};
-
-type GetSongBpmSearchResponse = GetSongBpmSongCandidate[] | {
-  search?: GetSongBpmSongCandidate[];
-  songs?: GetSongBpmSongCandidate[];
-  data?: GetSongBpmSongCandidate[];
-  results?: GetSongBpmSongCandidate[];
-};
-
-type GetSongBpmSongResponse = GetSongBpmSongCandidate | {
-  song?: GetSongBpmSongCandidate;
-  data?: GetSongBpmSongCandidate;
 };
 
 type SpotifySearchResponse = {

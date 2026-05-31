@@ -1,0 +1,3526 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+:root {
+  --bg: #050816;
+  --panel: rgba(13, 18, 35, 0.78);
+  --panel-strong: rgba(13, 18, 35, 0.92);
+  --text: #f8fafc;
+  --muted: #a7b0c5;
+  --accent: #7dd3fc;
+  --accent-2: #f0abfc;
+  --green: #34d399;
+
+  --room-w: min(100vw, calc(100vh * 16 / 9));
+  --room-h: calc(var(--room-w) * 9 / 16);
+  --room-bg-scale: 1.13;
+  --room-bg-x: 50%;
+  --room-bg-y: 43.1%;
+
+  --rug-center-x: 50.6%;
+  --rug-bottom: 21.5%;
+  --rug-width: 34.0%;
+  --rug-height: 18.0%;
+
+  --sprite-rug-width-ratio: 0.92;
+  --sprite-rug-height-ratio: 2.35;
+  --sprite-floor-offset-ratio: -0.05;
+  --sprite-x-offset-ratio: 0.00;
+
+  --marquee-top: 21%;
+  --marquee-width: 45.8%;
+  --marquee-height: 8.8%;
+
+  --speaker-left-x: 36.9%;
+  --speaker-right-x: 64.9%;
+  --speaker-base-width: 7.1%;
+  --speaker-y: 70.5%;
+  --speaker-scale: 1.47;
+  --speaker-opacity: 1.00;
+  --speaker-pulse: 0.50;
+  --speaker-pulse-x: 50.9%;
+  --speaker-pulse-y: 48.8%;
+  --speaker-pulse-size: 55.3%;
+  --speaker-warp-opacity: 1.00;
+  --scene-filter-strength: 0.20;
+  --scene-vignette-strength: 0.20;
+  --shadow-opacity: 1.00;
+  --table-shadow-scale: 1.16;
+
+  color: var(--text);
+  background: var(--bg);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #app {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: #07101f;
+}
+
+button, input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #07101f;
+}
+
+.room {
+  position: relative;
+  width: var(--room-w);
+  height: var(--room-h);
+  overflow: hidden;
+  background: #08101f;
+  box-shadow: 0 0 48px rgba(0,0,0,0.45);
+}
+
+.room-bg {
+  position: absolute;
+  inset: 0;
+  background-position: var(--room-bg-x) var(--room-bg-y);
+  background-repeat: no-repeat;
+  background-size: calc(var(--room-bg-scale) * 100%) auto;
+  user-select: none;
+  pointer-events: none;
+}
+
+.room-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center, rgba(255,255,255,0.015), transparent 45%),
+    linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0.12));
+}
+
+.album-wash {
+  position: absolute;
+  inset: -12%;
+  opacity: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(48px) saturate(1.4);
+  transform: scale(1.12);
+  mix-blend-mode: screen;
+  transition: background-image 500ms ease, opacity 500ms ease;
+  pointer-events: none;
+}
+
+.marquee {
+  position: absolute;
+  left: 50%;
+  top: var(--marquee-top);
+  width: var(--marquee-width);
+  height: var(--marquee-height);
+  min-height: 42px;
+  transform: translateX(-50%);
+  border: 4px solid rgba(31, 17, 8, 0.94);
+  background:
+    linear-gradient(180deg, rgba(8, 7, 6, 0.96), rgba(0, 0, 0, 0.86)),
+    radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.13), transparent 62%);
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.50),
+    inset 0 0 18px rgba(0, 0, 0, 0.86),
+    inset 0 0 22px rgba(245, 158, 11, 0.18),
+    0 0 20px rgba(245, 158, 11, 0.22);
+  overflow: hidden;
+  z-index: 3;
+}
+
+.marquee::before,
+.marquee::after {
+  content: "";
+  position: absolute;
+  top: 16%;
+  bottom: 16%;
+  width: 1.4%;
+  min-width: 6px;
+  max-width: 10px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #fbbf24 0 8px,
+    transparent 8px 18px
+  );
+  filter: drop-shadow(0 0 5px rgba(251,191,36,0.8));
+  z-index: 2;
+}
+
+.marquee::before { left: 2.2%; }
+.marquee::after { right: 2.2%; }
+
+.marquee-viewport {
+  position: absolute;
+  inset: 0 7.5%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.marquee-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(5px, 0.55vw, 10px);
+  opacity: 1;
+  transform: translateX(0) translateY(-2px);
+  transition: opacity 260ms ease, transform 260ms ease, filter 260ms ease;
+  overflow: hidden;
+}
+
+.marquee-content.marquee-exiting .marquee-title {
+  animation: marqueeTitleExitLeft 2300ms cubic-bezier(.45,0,.72,.18) both;
+}
+
+.marquee-content.marquee-exiting .marquee-artist {
+  animation: marqueeArtistExitLeft 2300ms cubic-bezier(.45,0,.72,.18) 900ms both;
+}
+
+.marquee-content.marquee-entering .marquee-title {
+  animation: marqueeTitleEnterRight 3000ms cubic-bezier(.16,.88,.22,1) both;
+}
+
+.marquee-content.marquee-entering .marquee-artist {
+  animation: marqueeArtistEnterRight 3000ms cubic-bezier(.16,.88,.22,1) 1800ms both;
+}
+
+.marquee-title,
+.marquee-artist {
+  --marquee-title-pan: 0px;
+  --marquee-artist-pan: 0px;
+  --marquee-title-duration: 22s;
+  --marquee-title-hold: 22%;
+  --marquee-artist-duration: 0s;
+  width: max-content;
+  max-width: none;
+  overflow: visible;
+  white-space: nowrap;
+  text-align: center;
+  align-self: center;
+  font-family: "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #fbbf24;
+  text-shadow:
+    2px 2px 0 #7c2d12,
+    0 0 5px rgba(251, 191, 36, 0.82),
+    0 0 14px rgba(251, 191, 36, 0.55),
+    0 0 28px rgba(245, 158, 11, 0.24);
+  will-change: transform, opacity, text-shadow, filter;
+}
+
+.marquee-title {
+  font-size: clamp(8px, 0.90vw, 17px);
+  line-height: 1.05;
+  letter-spacing: 0.045em;
+}
+
+.marquee-artist {
+  font-size: clamp(8px, 0.90vw, 17px);
+  line-height: 1.05;
+  letter-spacing: 0.045em;
+  color: #fde68a;
+  opacity: 0.82;
+  text-shadow:
+    1px 1px 0 #7c2d12,
+    0 0 4px rgba(253, 230, 138, 0.64),
+    0 0 14px rgba(251, 191, 36, 0.30);
+}
+
+.marquee-playing .marquee-title,
+.marquee-playing .marquee-artist {
+  animation:
+    marqueeLedGlow 920ms ease-in-out infinite alternate;
+}
+
+.marquee-title-short .marquee-title {
+  align-self: center;
+  animation-name: marqueeLedGlow;
+}
+
+.marquee-title-long .marquee-title {
+  align-self: flex-start;
+  width: max-content;
+  max-width: none;
+  animation: marqueeLedGlow 920ms ease-in-out infinite alternate;
+}
+
+.marquee-artist-short .marquee-artist {
+  align-self: center;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  transform: translateX(0);
+}
+
+.marquee-artist-long .marquee-artist {
+  align-self: center;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  transform: translateX(0);
+  animation: marqueeLedGlow 1150ms ease-in-out infinite alternate;
+}
+
+.marquee-paused .marquee-title,
+.marquee-paused .marquee-artist {
+  color: #fde68a;
+  opacity: 0.80;
+  animation: none;
+}
+
+.marquee-empty .marquee-title {
+  color: #fbbf24;
+  animation: marqueeIdleFlicker 5.2s ease-in-out infinite;
+}
+
+.marquee-empty .marquee-artist {
+  color: #fde68a;
+  opacity: 0.72;
+}
+
+/* Song-change movement is handled by .marquee-exiting and .marquee-entering. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Long title rows pause, then constant-speed train scroll. Artist rows remain static. */
+@keyframes marqueeTitleCenterHold {
+  0% {
+    transform: translateX(110%);
+    opacity: 0;
+  }
+  13% {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  62% {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-110%);
+    opacity: 0;
+  }
+}
+
+/* Artists drift independently and slower than the title. */
+@keyframes marqueeArtistDrift {
+  0%, 100% { transform: translateX(0); }
+}
+
+@keyframes marqueeLedGlow {
+  from {
+    filter: brightness(0.94);
+    text-shadow:
+      2px 2px 0 #7c2d12,
+      0 0 4px rgba(251, 191, 36, 0.65),
+      0 0 12px rgba(251, 191, 36, 0.40),
+      0 0 22px rgba(245, 158, 11, 0.18);
+  }
+  to {
+    filter: brightness(1.18);
+    text-shadow:
+      2px 2px 0 #7c2d12,
+      0 0 6px rgba(251, 191, 36, 0.95),
+      0 0 18px rgba(251, 191, 36, 0.66),
+      0 0 34px rgba(245, 158, 11, 0.36);
+  }
+}
+
+@keyframes marqueeTitleExitLeft {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0) brightness(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-50% - 35vw));
+    filter: blur(1px) brightness(0.65);
+  }
+}
+
+@keyframes marqueeArtistExitLeft {
+  0% {
+    opacity: 0.92;
+    transform: translateX(0);
+    filter: blur(0) brightness(1);
+  }
+
+  88% {
+    opacity: 0.92;
+    transform: translateX(calc(-58% - 42vw));
+    filter: blur(0) brightness(0.90);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(calc(-78% - 56vw));
+    filter: blur(1px) brightness(0.68);
+  }
+}
+
+@keyframes marqueeTitleEnterRight {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(50% + 35vw));
+    filter: blur(1px) brightness(0.7);
+  }
+  72% {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0) brightness(1.25);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0) brightness(1);
+  }
+}
+
+@keyframes marqueeArtistEnterRight {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(50% + 35vw));
+    filter: blur(1px) brightness(0.7);
+  }
+  72% {
+    opacity: 0.86;
+    transform: translateX(0);
+    filter: blur(0) brightness(1.15);
+  }
+  100% {
+    opacity: 0.82;
+    transform: translateX(0);
+    filter: blur(0) brightness(1);
+  }
+}
+
+@keyframes marqueeSongChangeFlash {
+  0% {
+    opacity: 0;
+    transform: translateY(8%);
+    filter: blur(2px) brightness(0.7);
+  }
+  45% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0) brightness(1.35);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0) brightness(1);
+  }
+}
+
+@keyframes marqueeIdleFlicker {
+  0%, 92%, 100% { opacity: 1; }
+  94% { opacity: 0.70; }
+  96% { opacity: 0.92; }
+}
+
+.dj-wrap {
+  position: absolute;
+  left: calc(var(--rug-center-x) + var(--rug-width) * var(--sprite-x-offset-ratio));
+  bottom: calc(var(--rug-bottom) + var(--rug-height) * var(--sprite-floor-offset-ratio));
+  width: calc(var(--rug-width) * var(--sprite-rug-width-ratio));
+  height: calc(var(--rug-height) * var(--sprite-rug-height-ratio));
+  transform: translateX(-50%);
+  z-index: 4;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.dj-frame-img {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 100%;
+  width: auto;
+  transform: translateX(-50%);
+  user-select: none;
+  pointer-events: none;
+  object-fit: contain;
+  image-rendering: auto;
+  filter: drop-shadow(0 28px 32px rgba(0,0,0,0.42));
+  z-index: 1;
+}
+
+
+
+/* Organic grounding shadows for the DJ/table on the rug */
+.floor-shadow {
+  position: absolute;
+  left: var(--rug-center-x);
+  bottom: calc(var(--rug-bottom) - 0.8%);
+  transform: translateX(-50%);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.table-floor-shadow {
+  opacity: var(--shadow-opacity);
+  width: calc(var(--rug-width) * 0.90);
+  height: calc(var(--rug-height) * 0.22);
+  transform: translateX(-50%) scale(var(--table-shadow-scale));
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(0,0,0,0.42) 0%,
+      rgba(0,0,0,0.20) 48%,
+      rgba(0,0,0,0) 76%);
+  filter: blur(13px);
+  z-index: 3;
+}
+
+.dj-feet-shadow {
+  opacity: var(--shadow-opacity);
+  width: calc(var(--rug-width) * 0.42);
+  height: calc(var(--rug-height) * 0.13);
+  bottom: calc(var(--rug-bottom) + 1.0%);
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(0,0,0,0.36) 0%,
+      rgba(0,0,0,0.16) 50%,
+      rgba(0,0,0,0) 78%);
+  filter: blur(10px);
+  z-index: 3;
+}
+
+/* Tunable DJ speakers, image-based vintage cabinet with visible top depth */
+.room-speaker {
+  position: absolute;
+  top: var(--speaker-y);
+  width: var(--speaker-base-width);
+
+  /* Lock the speaker canvas to the actual speaker asset proportions.
+     The driver anchor below is positioned inside this same local coordinate system. */
+  aspect-ratio: 768 / 1332;
+
+  opacity: var(--speaker-opacity);
+  transform: translate(-50%, -50%) scale(var(--speaker-scale));
+  transform-origin: center bottom;
+  z-index: 2;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 18px 18px rgba(0,0,0,0.38))
+    drop-shadow(0 6px 0 rgba(0,0,0,0.18));
+}
+
+.room-speaker-left { left: var(--speaker-left-x); }
+.room-speaker-right { left: var(--speaker-right-x); }
+
+.speaker-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+  image-rendering: auto;
+  transform-origin: center bottom;
+  filter: none;
+}
+
+/* Contact shadow so the stand feels planted on the rug/floor. */
+.room-speaker::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -3.5%;
+  width: 78%;
+  height: 9%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(0,0,0,0.42) 0%,
+      rgba(0,0,0,0.18) 55%,
+      rgba(0,0,0,0) 80%);
+  filter: blur(7px);
+  opacity: 0.70;
+  z-index: -1;
+}
+
+/* Speaker-local driver anchor.
+   This wrapper is the only element positioned by the tuning controls.
+   The PNG inside the wrapper is what pulses, so scaling cannot move the anchor point. */
+.speaker-driver-anchor {
+  position: absolute;
+  left: var(--speaker-pulse-x);
+  top: var(--speaker-pulse-y);
+  width: var(--speaker-pulse-size);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  z-index: 4;
+  pointer-events: none;
+  opacity: var(--speaker-warp-opacity);
+  will-change: transform;
+}
+
+.speaker-driver {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  image-rendering: auto;
+  transform: scale(1);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.room-speaker.playing .speaker-driver {
+  animation: speakerDriverPulse 520ms ease-in-out infinite alternate;
+}
+
+@keyframes speakerDriverPulse {
+  from {
+    transform: scale(0.96);
+  }
+
+  to {
+    transform: scale(calc(1.02 + (var(--speaker-pulse) * 0.08)));
+  }
+}
+
+
+/* Global room vibe filter */
+.room-filter-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  opacity: var(--scene-filter-strength);
+  mix-blend-mode: soft-light;
+}
+
+.room-filter-overlay::before,
+.room-filter-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.room-filter-overlay::after {
+  background:
+    radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,var(--scene-vignette-strength)) 100%);
+  mix-blend-mode: multiply;
+}
+
+.room-filter-overlay.none::before {
+  background: transparent;
+}
+
+.room-filter-overlay.warm-club::before {
+  background: rgba(255, 156, 66, 1);
+}
+
+.room-filter-overlay.dreamy-blue::before {
+  background: rgba(72, 128, 255, 1);
+}
+
+.room-filter-overlay.deep-night::before {
+  background: rgba(18, 35, 96, 1);
+}
+
+.room-filter-overlay.retro-vhs::before {
+  background:
+    linear-gradient(180deg,
+      rgba(255, 100, 80, 0.65),
+      rgba(80, 160, 255, 0.85));
+  filter: saturate(0.94) contrast(1.06);
+}
+
+.room-filter-overlay.neon-purple::before {
+  background: rgba(173, 75, 255, 1);
+}
+
+.room-filter-overlay.cinematic-amber::before {
+  background: rgba(255, 184, 78, 1);
+}
+
+.room-filter-overlay.moody-lowlight::before {
+  background: rgba(0, 0, 0, 1);
+  mix-blend-mode: multiply;
+}
+
+
+.control-card {
+  position: absolute;
+  right: clamp(14px, 2.5vw, 34px);
+  top: clamp(14px, 2.5vh, 28px);
+  z-index: 5;
+  width: min(370px, calc(100vw - 28px));
+  max-height: calc(100vh - 28px);
+  overflow: auto;
+  padding: 20px;
+  background: rgba(6, 11, 26, 0.66);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 24px;
+  box-shadow: 0 22px 80px rgba(0,0,0,0.48);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 260ms ease, opacity 200ms ease, visibility 200ms ease;
+}
+
+.control-card-hidden {
+  transform: translateX(calc(100% + 42px));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.panel-toggle {
+  position: absolute;
+  right: clamp(14px, 2.3vw, 32px);
+  top: clamp(14px, 2.3vh, 28px);
+  z-index: 6;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fde68a;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(253,224,71,0.28), transparent 44%),
+    rgba(8, 6, 12, 0.72);
+  border: 1px solid rgba(251,191,36,0.38);
+  box-shadow:
+    0 16px 42px rgba(0,0,0,0.42),
+    0 0 18px rgba(251,191,36,0.22),
+    inset 0 0 18px rgba(255,255,255,0.06);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.panel-toggle-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.panel-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: #dbeafe;
+  background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.brand-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.brand-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+  line-height: 0.9;
+  letter-spacing: -0.08em;
+}
+
+.mode-pill {
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(125,211,252,0.14);
+  border: 1px solid rgba(125,211,252,0.32);
+  color: #bae6fd;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.connection-banner {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  background: rgba(251,191,36,0.09);
+  border: 1px solid rgba(251,191,36,0.22);
+  color: #fde68a;
+}
+
+.connection-banner span {
+  color: var(--muted);
+}
+
+.connection-banner.connected {
+  background: rgba(52,211,153,0.10);
+  border-color: rgba(52,211,153,0.24);
+  color: #bbf7d0;
+}
+
+.connection-banner.demo {
+  background: rgba(125,211,252,0.10);
+  border-color: rgba(125,211,252,0.24);
+  color: #bae6fd;
+}
+
+.now-card {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.art {
+  width: 86px;
+  height: 86px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(125,211,252,0.35), rgba(240,171,252,0.24));
+  background-size: cover;
+  background-position: center;
+  display: grid;
+  place-items: center;
+  color: rgba(255,255,255,0.9);
+  font-size: 2.2rem;
+  box-shadow: inset 0 0 30px rgba(255,255,255,0.08);
+}
+
+.track-copy { min-width: 0; }
+.track-title { font-weight: 900; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track-artist { color: var(--muted); font-size: 0.9rem; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.progress-row {
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.progress {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  overflow: hidden;
+}
+
+.progress div {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width 200ms linear;
+}
+
+.field-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.redirect-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(125,211,252,0.08);
+  border: 1px solid rgba(125,211,252,0.18);
+}
+
+.redirect-card code {
+  display: block;
+  overflow-wrap: anywhere;
+  padding: 10px 11px;
+  border-radius: 12px;
+  color: #dff6ff;
+  background: rgba(0,0,0,0.26);
+  border: 1px solid rgba(255,255,255,0.09);
+  font-size: 0.78rem;
+}
+
+.redirect-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.text-input {
+  width: 100%;
+  padding: 13px 14px;
+  color: var(--text);
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+  outline: none;
+}
+
+.text-input:focus {
+  border-color: rgba(125,211,252,0.62);
+  box-shadow: 0 0 0 4px rgba(125,211,252,0.12);
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+button {
+  border: 0;
+  border-radius: 16px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-weight: 900;
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.07);
+}
+
+.primary { background: linear-gradient(135deg, #0284c7, #9333ea); }
+.secondary { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); }
+
+.setup-notes {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.setup-notes summary {
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.debug-panel {
+  max-height: 260px;
+  overflow: auto;
+  padding: 14px;
+  border-radius: 18px;
+  color: #bbf7d0;
+  background: rgba(0,0,0,0.44);
+  border: 1px solid rgba(52,211,153,0.22);
+  font-size: 0.72rem;
+}
+
+@keyframes marqueeMove {
+  from { transform: translate(0, -50%); }
+  to { transform: translate(calc(-100% - 72px), -50%); }
+}
+
+
+
+.room-utility-controls {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(255,255,255,0.09);
+}
+
+.room-utility-controls summary {
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.utility-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.utility-grid label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.25;
+}
+
+.utility-grid span {
+  color: #fde68a;
+  font-weight: 800;
+}
+
+.utility-grid input[type="range"] {
+  accent-color: #fbbf24;
+}
+
+.utility-buttons {
+  margin-top: 4px;
+}
+
+@media (max-width: 980px) {
+  
+.control-card {
+    top: auto;
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: auto;
+    max-height: 42vh;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .now-card { grid-template-columns: 64px 1fr; }
+  .art { width: 64px; height: 64px; border-radius: 16px; }
+  .redirect-card { display: none; }
+  .setup-notes { display: none; }
+  .button-grid { grid-template-columns: 1fr; }
+}
+
+/* Phase 3 marquee behavior */
+.marquee-swap {
+  animation: marqueeFlash 520ms ease;
+}
+
+.marquee-text-changing {
+  opacity: 0;
+  filter: blur(1px);
+  transition: opacity 110ms ease, filter 110ms ease;
+}
+
+.marquee-empty span {
+  opacity: 0.92;
+}
+
+html[data-dj-mode="audition"] .dj-wrap,
+html[data-dj-mode="cinematic"] .dj-wrap {
+  animation: djBob 1.25s ease-in-out infinite;
+}
+
+@keyframes marqueeFlash {
+  0% { filter: brightness(1); }
+  40% { filter: brightness(1.22); }
+  100% { filter: brightness(1); }
+}
+
+
+/* Animation utility display */
+
+/* Phase 1 Spotify floor controls */
+.floor-controls-toggle {
+  position: absolute;
+  left: clamp(12px, calc(var(--room-w) * 0.013), 24px);
+  bottom: clamp(12px, calc(var(--room-w) * 0.013), 24px);
+  z-index: 9;
+  width: auto;
+  min-width: calc(var(--room-w) * 0.074);
+  height: calc(var(--room-w) * 0.024);
+  min-height: 36px;
+  max-height: 46px;
+  padding: 0 calc(var(--room-w) * 0.009);
+  border-radius: 999px;
+  color: #ffbf47;
+  background:
+    linear-gradient(180deg, rgba(16, 10, 4, 0.46), rgba(2, 2, 5, 0.36));
+  border: 1px solid rgba(255, 170, 40, 0.28);
+  box-shadow:
+    0 12px 34px rgba(0,0,0,0.42),
+    0 0 14px rgba(255,170,40,0.10),
+    inset 0 0 16px rgba(255,170,40,0.030);
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(0.46rem, calc(var(--room-w) * 0.0047), 0.62rem);
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  text-shadow:
+    0 0 4px rgba(255, 170, 40, 0.75),
+    0 0 10px rgba(255, 170, 40, 0.28);
+  backdrop-filter: blur(12px);
+}
+
+.floor-controls-toggle-open,
+.floor-controls-toggle-playing {
+  color: #ffd98a;
+  border-color: rgba(255, 190, 76, 0.46);
+  box-shadow:
+    0 12px 34px rgba(0,0,0,0.42),
+    0 0 20px rgba(255,170,40,0.16),
+    inset 0 0 18px rgba(255,170,40,0.055);
+}
+
+.floor-player {
+  position: absolute;
+  left: 50%;
+  bottom: 4.55%;
+
+  /* Room-relative sizing keeps the control deck the same floor footprint at every window size. */
+  width: 33%;
+  height: calc(var(--room-h) * 0.132);
+
+  transform:
+    translateX(-50%)
+    perspective(760px)
+    rotateX(63deg)
+    skewX(7deg);
+  transform-origin: center bottom;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr 0.62fr;
+  grid-template-rows: 1fr calc(var(--room-h) * 0.016);
+  gap: calc(var(--room-w) * 0.006) calc(var(--room-w) * 0.008);
+  align-items: center;
+  justify-items: center;
+  z-index: 6;
+  opacity: 1;
+  pointer-events: auto;
+  transition:
+    opacity 260ms ease,
+    transform 260ms ease,
+    filter 260ms ease;
+  filter: drop-shadow(0 18px 26px rgba(0,0,0,0.34));
+}
+
+.floor-player-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform:
+    translateX(-50%)
+    translateY(calc(var(--room-h) * 0.015))
+    perspective(760px)
+    rotateX(63deg)
+    skewX(7deg);
+  filter: blur(2px) drop-shadow(0 18px 26px rgba(0,0,0,0.20));
+}
+
+.floor-control {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid rgba(255, 170, 40, 0.20);
+  border-radius: 6px;
+  color: #ffbf47;
+  background:
+    linear-gradient(180deg, rgba(16, 10, 4, 0.24), rgba(1,1,4,0.16)),
+    radial-gradient(ellipse at center, rgba(255,170,40,0.045), transparent 72%);
+  box-shadow:
+    inset 0 0 22px rgba(0,0,0,0.42),
+    inset 0 0 10px rgba(255,170,40,0.030),
+    0 12px 24px rgba(0,0,0,0.30);
+  display: grid;
+  place-items: center;
+  backdrop-filter: blur(8px);
+  transform: translateZ(0);
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+.floor-control:hover:not(:disabled) {
+  color: #ffd98a;
+  border-color: rgba(255, 190, 76, 0.40);
+  background:
+    linear-gradient(180deg, rgba(24, 14, 4, 0.32), rgba(1,1,4,0.20)),
+    radial-gradient(ellipse at center, rgba(255,170,40,0.08), transparent 72%);
+  box-shadow:
+    inset 0 0 24px rgba(0,0,0,0.48),
+    inset 0 0 14px rgba(255,170,40,0.08),
+    0 0 18px rgba(255,170,40,0.18),
+    0 16px 30px rgba(0,0,0,0.34);
+}
+
+.floor-control:active:not(:disabled) {
+  transform: translateZ(0) scale(0.96);
+}
+
+.floor-control-disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+.floor-icon {
+  display: block;
+  font-family: "Press Start 2P", monospace;
+  font-size: calc(var(--room-w) * 0.022);
+  line-height: 1;
+  color: #ffbf47;
+  text-shadow:
+    0 0 4px rgba(255, 170, 40, 0.78),
+    0 0 10px rgba(255, 170, 40, 0.38),
+    0 0 18px rgba(255, 170, 40, 0.18);
+}
+
+.floor-control-play .floor-icon {
+  font-size: calc(var(--room-w) * 0.025);
+  letter-spacing: -0.08em;
+}
+
+.floor-control-more {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--room-h) * 0.006);
+}
+
+.floor-dot {
+  width: calc(var(--room-w) * 0.0072);
+  min-width: 7px;
+  max-width: 14px;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: #ffbf47;
+  box-shadow:
+    0 0 5px rgba(255, 170, 40, 0.70),
+    0 0 12px rgba(255, 170, 40, 0.30);
+}
+
+.floor-progress {
+  grid-column: 1 / 5;
+  grid-row: 2;
+  width: 100%;
+  height: calc(var(--room-h) * 0.016);
+  min-height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.62), rgba(255,170,40,0.045), rgba(0,0,0,0.58));
+  border: 1px solid rgba(255, 170, 40, 0.24);
+  box-shadow:
+    inset 0 0 10px rgba(0,0,0,0.72),
+    inset 0 0 8px rgba(255,170,40,0.04),
+    0 0 12px rgba(255,170,40,0.08);
+}
+
+.floor-progress-fill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg,
+      rgba(180, 107, 20, 0.76),
+      rgba(255, 191, 71, 0.98),
+      rgba(255, 216, 134, 0.92));
+  box-shadow:
+    0 0 10px rgba(255,170,40,0.34),
+    0 0 18px rgba(255,170,40,0.16),
+    inset 0 0 4px rgba(255,255,255,0.22);
+  transition: width 360ms linear;
+}
+
+.floor-player-playing .floor-control-play {
+  animation: floorControlGlow 920ms ease-in-out infinite alternate;
+}
+
+.floor-player-playing .floor-progress-fill {
+  box-shadow:
+    0 0 12px rgba(255,170,40,0.40),
+    0 0 22px rgba(255,170,40,0.20),
+    inset 0 0 5px rgba(255,255,255,0.24);
+}
+
+@keyframes floorControlGlow {
+  from {
+    box-shadow:
+      inset 0 0 22px rgba(0,0,0,0.42),
+      inset 0 0 10px rgba(255,170,40,0.04),
+      0 12px 24px rgba(0,0,0,0.30);
+  }
+  to {
+    box-shadow:
+      inset 0 0 22px rgba(0,0,0,0.46),
+      inset 0 0 18px rgba(255,170,40,0.14),
+      0 0 22px rgba(255,170,40,0.24),
+      0 16px 30px rgba(0,0,0,0.36);
+  }
+}
+
+@media (max-width: 900px) {
+  .floor-player {
+    width: 46%;
+    bottom: 4.9%;
+  }
+
+  .floor-icon {
+    font-size: calc(var(--room-w) * 0.024);
+  }
+
+  .floor-control-play .floor-icon {
+    font-size: calc(var(--room-w) * 0.027);
+  }
+
+  .floor-controls-toggle {
+    font-size: 0.46rem;
+  }
+}
+
+.animation-debug-toggle {
+  position: absolute;
+  left: clamp(12px, 2vw, 24px);
+  bottom: clamp(12px, 2vw, 24px);
+  z-index: 7;
+  width: auto;
+  min-width: 70px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #fde68a;
+  background: rgba(8, 6, 12, 0.72);
+  border: 1px solid rgba(251,191,36,0.34);
+  box-shadow:
+    0 12px 34px rgba(0,0,0,0.38),
+    0 0 14px rgba(251,191,36,0.18),
+    inset 0 0 14px rgba(255,255,255,0.05);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.animation-debug-panel {
+  position: absolute;
+  left: clamp(12px, 2vw, 24px);
+  bottom: calc(clamp(12px, 2vw, 24px) + 48px);
+  z-index: 7;
+  width: min(340px, calc(100vw - 28px));
+  max-width: calc(100vw - 28px);
+  margin: 0;
+  padding: 12px 13px;
+  border-radius: 14px;
+  color: #bbf7d0;
+  background: rgba(3, 7, 18, 0.78);
+  border: 1px solid rgba(52,211,153,0.24);
+  box-shadow: 0 18px 54px rgba(0,0,0,0.42);
+  backdrop-filter: blur(14px);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  pointer-events: none;
+}
+
+
+.utility-grid {
+  align-items: start;
+}
+
+.utility-grid label {
+  min-width: 0;
+}
+
+@media (max-width: 1500px) {
+  .utility-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+.marquee-content.marquee-entering .marquee-title,
+.marquee-content.marquee-exiting .marquee-title,
+.marquee-content.marquee-entering .marquee-artist,
+.marquee-content.marquee-exiting .marquee-artist {
+  animation-fill-mode: both;
+}
+
+
+.marquee-content.marquee-entering .marquee-artist,
+.marquee-content.marquee-exiting .marquee-artist {
+  align-self: center;
+}
+
+.marquee-title-short .marquee-content.marquee-entering .marquee-title,
+.marquee-title-short .marquee-content.marquee-exiting .marquee-title {
+  align-self: center;
+}
+
+.marquee-title-long .marquee-content.marquee-entering .marquee-title,
+.marquee-title-long .marquee-content.marquee-exiting .marquee-title {
+  align-self: flex-start;
+}
+
+
+.marquee-artist-long .marquee-artist {
+  align-self: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  transform: translateX(0);
+  animation: marqueeLedGlow 1150ms ease-in-out infinite alternate;
+}
+
+
+
+
+
+.marquee-title-long .marquee-content.marquee-entering .marquee-title,
+.marquee-title-long .marquee-content.marquee-exiting .marquee-title {
+  align-self: flex-start;
+}
+
+.marquee-title-short .marquee-content.marquee-entering .marquee-title,
+.marquee-title-short .marquee-content.marquee-exiting .marquee-title {
+  align-self: center;
+}
+
+
+/* Correct short-title centering after a previous long scrolling title. */
+.marquee.marquee-title-short .marquee-title {
+  align-self: center !important;
+  width: max-content !important;
+  max-width: 100%;
+  transform: translateX(0);
+  text-align: center;
+}
+
+.marquee.marquee-title-long .marquee-title {
+  align-self: flex-start !important;
+  width: max-content !important;
+  max-width: none;
+}
+
+
+/* Final marquee text clipping and song-change train guards */
+.marquee-viewport {
+  inset: -3px 7.5% 0 7.5%;
+}
+
+.marquee-content {
+  transform: translateX(0) translateY(1px);
+  gap: clamp(6px, 0.62vw, 11px);
+  overflow: hidden;
+}
+
+.marquee-title,
+.marquee-artist {
+  line-height: 1.22;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  overflow: visible;
+}
+
+/* Short/non-scrolling titles stay centered; long/scrolled titles stay left anchored. */
+.marquee.marquee-title-short .marquee-title {
+  align-self: center !important;
+  width: max-content !important;
+  max-width: 100%;
+  transform: translateX(0);
+  text-align: center;
+}
+
+.marquee.marquee-title-long .marquee-title {
+  align-self: flex-start !important;
+  width: max-content !important;
+  max-width: none;
+}
+
+/* During the song-change animation, keep the clean single title visible.
+   The duplicated train is created by JS only after the transition completes. */
+.marquee-swap .marquee-title,
+.marquee-swap .marquee-artist {
+  white-space: nowrap;
+}
+
+.animation-debug-toggle { display: none !important; }
+
+
+/* Final floor-control transparency and pause-glyph tune */
+.floor-controls-toggle {
+  background:
+    linear-gradient(180deg, rgba(16, 10, 4, 0.46), rgba(2, 2, 5, 0.36));
+}
+
+.floor-control {
+  background:
+    linear-gradient(180deg, rgba(16, 10, 4, 0.24), rgba(1,1,4,0.16)),
+    radial-gradient(ellipse at center, rgba(255,170,40,0.045), transparent 72%);
+}
+
+.floor-control:hover:not(:disabled) {
+  background:
+    linear-gradient(180deg, rgba(24, 14, 4, 0.32), rgba(1,1,4,0.20)),
+    radial-gradient(ellipse at center, rgba(255,170,40,0.08), transparent 72%);
+}
+
+/* The pause state uses two clean vertical bars instead of the roman-numeral glyph. */
+.floor-control-play .floor-icon {
+  letter-spacing: -0.08em;
+}
+
+
+/* Final room-scaled marquee text tuning */
+.marquee-title,
+.marquee-artist {
+  font-size: calc(var(--room-w) * 0.0096) !important;
+  line-height: 1.16 !important;
+  padding-top: calc(var(--room-h) * 0.0022) !important;
+  padding-bottom: calc(var(--room-h) * 0.0022) !important;
+}
+
+.marquee-content {
+  gap: calc(var(--room-h) * 0.0052) !important;
+  transform: translateX(0) translateY(0) !important;
+}
+
+.marquee-viewport {
+  inset: -2px 7.5% 0 7.5% !important;
+}
+
+/* Speaker sizing is room-local so it stays elbow-height consistent when fullscreen. */
+:root {
+  --speaker-base-width: 7.1%;
+}
+
+/* Floor controls perspective correction to better match the floor angle. */
+.floor-player {
+  width: 33% !important;
+  bottom: 4.55% !important;
+  transform:
+    translateX(-50%)
+    perspective(760px)
+    rotateX(63deg)
+    skewX(7deg) !important;
+}
+
+.floor-player.floor-player-hidden {
+  transform:
+    translateX(-50%)
+    translateY(calc(var(--room-h) * 0.015))
+    perspective(760px)
+    rotateX(63deg)
+    skewX(7deg) !important;
+}
+
+
+/* Final floor controls angle, dots, and no-pulse cleanup */
+.floor-player {
+  width: 33% !important;
+  bottom: 4.55% !important;
+  transform:
+    translateX(-50%)
+    perspective(920px)
+    rotateX(62deg)
+    skewX(0deg) !important;
+  filter: drop-shadow(0 16px 22px rgba(0,0,0,0.30)) !important;
+}
+
+.floor-player.floor-player-hidden {
+  transform:
+    translateX(-50%)
+    translateY(calc(var(--room-h) * 0.015))
+    perspective(920px)
+    rotateX(62deg)
+    skewX(0deg) !important;
+}
+
+/* Keep each floor tile subtle and flat. No pulsing/glow animation. */
+.floor-player-playing .floor-control-play,
+.floor-control,
+.floor-control:hover:not(:disabled) {
+  animation: none !important;
+}
+
+.floor-player-playing .floor-control-play {
+  box-shadow:
+    inset 0 0 22px rgba(0,0,0,0.42),
+    inset 0 0 10px rgba(255,170,40,0.030),
+    0 12px 24px rgba(0,0,0,0.30) !important;
+}
+
+.floor-player-playing .floor-progress-fill {
+  box-shadow:
+    0 0 10px rgba(255,170,40,0.26),
+    0 0 14px rgba(255,170,40,0.12),
+    inset 0 0 4px rgba(255,255,255,0.20) !important;
+}
+
+/* The three-dot button was getting distorted by the floor transform.
+   Make the dots read horizontally like a clean marquee/menu mark. */
+.floor-control-more {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: calc(var(--room-w) * 0.0036) !important;
+}
+
+.floor-dot {
+  width: calc(var(--room-w) * 0.0054) !important;
+  min-width: 5px !important;
+  max-width: 10px !important;
+  opacity: 0.92;
+}
+
+/* Slightly simplify the floor panel so it reads as an inset glass panel rather than four warped cards. */
+.floor-control {
+  border-color: rgba(255, 170, 40, 0.16) !important;
+  background:
+    linear-gradient(180deg, rgba(16, 10, 4, 0.18), rgba(1,1,4,0.12)),
+    radial-gradient(ellipse at center, rgba(255,170,40,0.030), transparent 72%) !important;
+}
+
+.floor-control:hover:not(:disabled) {
+  border-color: rgba(255, 190, 76, 0.30) !important;
+  background:
+    linear-gradient(180deg, rgba(24, 14, 4, 0.24), rgba(1,1,4,0.16)),
+    radial-gradient(ellipse at center, rgba(255,170,40,0.055), transparent 72%) !important;
+}
+
+/* Disable the old keyframed glow by making it inert if any previous rule still references it. */
+@keyframes floorControlGlow {
+  from {
+    box-shadow:
+      inset 0 0 22px rgba(0,0,0,0.42),
+      inset 0 0 10px rgba(255,170,40,0.030),
+      0 12px 24px rgba(0,0,0,0.30);
+  }
+  to {
+    box-shadow:
+      inset 0 0 22px rgba(0,0,0,0.42),
+      inset 0 0 10px rgba(255,170,40,0.030),
+      0 12px 24px rgba(0,0,0,0.30);
+  }
+}
+
+
+/* Final floor controls lock, panel toggle, and full-size dots */
+.floor-toggle-cluster {
+  position: absolute;
+  left: clamp(12px, 2vw, 24px);
+  bottom: clamp(12px, 2vw, 24px);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.floor-toggle-cluster .floor-controls-toggle {
+  position: static !important;
+  left: auto !important;
+  bottom: auto !important;
+}
+
+.floor-lock-toggle {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  color: rgba(255, 191, 71, 0.64);
+  background:
+    linear-gradient(180deg, rgba(16, 10, 4, 0.30), rgba(2, 2, 5, 0.24));
+  border: 1px solid rgba(255, 170, 40, 0.22);
+  box-shadow:
+    0 10px 28px rgba(0,0,0,0.28),
+    inset 0 0 12px rgba(255,170,40,0.025);
+  display: grid;
+  place-items: center;
+  font-size: 0.74rem;
+  opacity: 0.58;
+  transform: translateX(-4px) scale(0.96);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease;
+  backdrop-filter: blur(10px);
+}
+
+.floor-lock-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-10px) scale(0.90);
+}
+
+.floor-lock-visible {
+  opacity: 0.54;
+  pointer-events: auto;
+}
+
+.floor-lock-toggle:hover,
+.floor-lock-active {
+  opacity: 0.95;
+  color: #ffd98a;
+  border-color: rgba(255, 190, 76, 0.48);
+  box-shadow:
+    0 10px 28px rgba(0,0,0,0.30),
+    0 0 14px rgba(255,170,40,0.12),
+    inset 0 0 14px rgba(255,170,40,0.06);
+  transform: translateX(0) scale(1);
+}
+
+.floor-controls-toggle-locked {
+  border-color: rgba(255, 190, 76, 0.54) !important;
+}
+
+/* Scale the three dots up so the more button has the same visual weight at fullscreen. */
+.floor-control-more {
+  flex-direction: row !important;
+  gap: calc(var(--room-w) * 0.0048) !important;
+}
+
+.floor-dot {
+  width: calc(var(--room-w) * 0.0076) !important;
+  min-width: 7px !important;
+  max-width: 15px !important;
+  opacity: 0.95;
+}
+
+/* Keep the controls stable when locked or playing. No pulse/glow animation. */
+.floor-player-playing .floor-control-play,
+.floor-player-locked .floor-control,
+.floor-control {
+  animation: none !important;
+}
+
+
+/* Phase 2 right-panel cleanup and Spotify utility controls */
+.brand-actions {
+  align-items: center;
+}
+
+.connect-pill-wrap {
+  position: relative;
+}
+
+.connect-pill {
+  min-width: 82px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.48rem;
+  color: #c7d2fe;
+  background: rgba(17, 24, 39, 0.64);
+  border: 1px solid rgba(125, 211, 252, 0.30);
+  box-shadow: inset 0 0 12px rgba(125,211,252,0.05);
+}
+
+.connect-pill.connected {
+  color: #bbf7d0;
+  border-color: rgba(52,211,153,0.36);
+  background: rgba(6, 78, 59, 0.36);
+}
+
+.connect-pill.disconnected {
+  color: #fde68a;
+  border-color: rgba(251,191,36,0.34);
+}
+
+.connect-pill.demo {
+  color: #f0abfc;
+  border-color: rgba(240,171,252,0.36);
+}
+
+.connect-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 142px;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(10, 14, 26, 0.96);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.42);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  z-index: 20;
+}
+
+.connect-dropdown-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.connect-dropdown button {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  color: #f8fafc;
+  background: rgba(255,255,255,0.07);
+  padding: 10px;
+  font-weight: 800;
+}
+
+.spotify-utility-panel {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(20, 16, 33, 0.64);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: inset 0 0 18px rgba(0,0,0,0.18);
+}
+
+.utility-row {
+  display: grid;
+  gap: 8px;
+}
+
+.utility-row label {
+  display: flex;
+  justify-content: space-between;
+  color: #cbd5e1;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+}
+
+.spotify-toggle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.spotify-toggle {
+  min-height: 42px;
+  font-size: 0.82rem;
+}
+
+.spotify-control-active {
+  color: #fde68a !important;
+  border-color: rgba(251,191,36,0.42) !important;
+  background: rgba(92, 59, 12, 0.34) !important;
+}
+
+.phase2-placeholder {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  color: #a7b0c5;
+  background: rgba(2,6,23,0.36);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+.phase2-placeholder span {
+  display: block;
+  color: #e2e8f0;
+  font-weight: 900;
+}
+
+.phase2-placeholder small {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.dev-tools {
+  margin-top: 14px;
+  border-radius: 18px;
+  background: rgba(2, 6, 23, 0.32);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 0 12px 12px;
+}
+
+.dev-tools > summary {
+  cursor: pointer;
+  padding: 13px 2px;
+  color: #a7b0c5;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.74rem;
+}
+
+.dev-button-grid {
+  margin-bottom: 12px;
+}
+
+/* Hide old connection/setup visual blocks if any survive from older markup. */
+.connection-banner,
+.redirect-card,
+.setup-notes:not(.dev-tools .setup-notes) {
+  display: none;
+}
+
+/* Better centered lock glyph */
+.floor-lock-toggle {
+  line-height: 1 !important;
+  padding: 0 !important;
+  place-items: center !important;
+}
+
+.floor-lock-toggle {
+  font-size: 0 !important;
+}
+
+.floor-lock-toggle::before {
+  content: "🔒";
+  font-size: 0.78rem;
+  line-height: 1;
+  transform: translateY(-0.5px);
+}
+
+.floor-lock-active::before {
+  content: "🔒";
+}
+
+
+/* Compact Phase 2 panel player */
+.control-card {
+  width: min(350px, calc(100vw - 28px));
+  padding: 16px 16px 14px;
+}
+
+.compact-brand-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.mini-brand {
+  font-family: "Press Start 2P", monospace;
+  color: #7dd3fc;
+  font-size: 0.66rem;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(125,211,252,0.20);
+  white-space: nowrap;
+}
+
+.brand-actions {
+  justify-content: end;
+  gap: 7px;
+}
+
+.mode-pill,
+.connect-pill {
+  height: 30px;
+  min-width: 66px;
+  padding: 0 10px;
+  font-size: 0.44rem;
+}
+
+.panel-close {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+}
+
+.now-card-compact {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 20px;
+  margin-top: 6px;
+}
+
+.now-card-compact .art {
+  width: 70px;
+  height: 70px;
+  border-radius: 16px;
+}
+
+.now-card-compact .track-title {
+  font-size: 0.93rem;
+  line-height: 1.12;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.now-card-compact .track-artist {
+  font-size: 0.76rem;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.now-card-compact .progress-row {
+  margin-top: 8px;
+  gap: 7px;
+}
+
+.now-card-compact .progress-row span {
+  font-size: 0.66rem;
+}
+
+.panel-playback-row {
+  margin-top: 9px;
+  display: grid;
+  grid-template-columns: 0.88fr 0.88fr 1fr 0.88fr 0.88fr;
+  gap: 7px;
+  align-items: center;
+}
+
+.panel-icon-button,
+.panel-play-button {
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.11);
+  background: rgba(255,255,255,0.065);
+  color: #e5e7eb;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.20);
+}
+
+.panel-icon-button {
+  font-size: 0.84rem;
+}
+
+.panel-play-button {
+  color: #0f172a;
+  background: rgba(248,250,252,0.95);
+  font-size: 1.05rem;
+}
+
+.panel-icon-button:hover,
+.panel-play-button:hover {
+  border-color: rgba(251,191,36,0.38);
+  color: #fde68a;
+}
+
+.panel-play-button:hover {
+  color: #0f172a;
+}
+
+.panel-volume-row {
+  margin-top: 9px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 9px;
+  align-items: center;
+  color: #cbd5e1;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.panel-volume-row input {
+  min-width: 0;
+}
+
+.spotify-control-active {
+  color: #22c55e !important;
+  border-color: rgba(34,197,94,0.38) !important;
+  background: rgba(21,128,61,0.18) !important;
+  box-shadow: 0 0 12px rgba(34,197,94,0.12), inset 0 0 12px rgba(0,0,0,0.22) !important;
+}
+
+.spotify-utility-panel,
+.phase2-placeholder {
+  display: none !important;
+}
+
+.dev-tools {
+  margin-top: 10px;
+}
+
+.dev-tools > summary {
+  padding: 11px 2px;
+}
+
+
+/* Final right-edge room-relative utility panel placement */
+.control-card {
+  position: absolute !important;
+
+  /* Anchor panel to the room's right edge, not the browser viewport. */
+  right: calc((100vw - var(--room-w)) / 2) !important;
+  top: calc((100vh - var(--room-h)) / 2 + var(--room-h) * 0.032) !important;
+
+  /* Keep the panel a constant room-relative footprint. */
+  width: calc(var(--room-w) * 0.25) !important;
+  max-width: calc(var(--room-w) * 0.25) !important;
+  min-width: 0 !important;
+  max-height: calc(var(--room-h) * 0.90) !important;
+
+  padding: calc(var(--room-w) * 0.010) !important;
+  border-radius: calc(var(--room-w) * 0.014) !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transform: translateX(0) !important;
+}
+
+.control-card:not(.control-card-open) {
+  transform: translateX(calc(100% + 18px)) !important;
+}
+
+.compact-brand-row,
+.brand-row {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: calc(var(--room-w) * 0.006) !important;
+  margin-bottom: calc(var(--room-h) * 0.014) !important;
+}
+
+.mini-brand {
+  min-width: 0;
+  font-size: calc(var(--room-w) * 0.0048) !important;
+  line-height: 1.2 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brand-actions {
+  gap: calc(var(--room-w) * 0.0042) !important;
+}
+
+.mode-pill,
+.connect-pill {
+  height: calc(var(--room-h) * 0.038) !important;
+  min-height: 22px !important;
+  max-height: 32px !important;
+  min-width: calc(var(--room-w) * 0.038) !important;
+  padding: 0 calc(var(--room-w) * 0.006) !important;
+  font-size: calc(var(--room-w) * 0.0034) !important;
+}
+
+.panel-close {
+  width: calc(var(--room-h) * 0.038) !important;
+  height: calc(var(--room-h) * 0.038) !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+}
+
+.now-card-compact {
+  grid-template-columns: calc(var(--room-w) * 0.052) minmax(0, 1fr) !important;
+  gap: calc(var(--room-w) * 0.008) !important;
+  padding: calc(var(--room-w) * 0.009) !important;
+  border-radius: calc(var(--room-w) * 0.013) !important;
+  margin-top: calc(var(--room-h) * 0.006) !important;
+}
+
+.now-card-compact .art {
+  width: calc(var(--room-w) * 0.052) !important;
+  height: calc(var(--room-w) * 0.052) !important;
+  border-radius: calc(var(--room-w) * 0.010) !important;
+}
+
+.now-card-compact .track-title {
+  font-size: calc(var(--room-w) * 0.0075) !important;
+  line-height: 1.12 !important;
+}
+
+.now-card-compact .track-artist {
+  font-size: calc(var(--room-w) * 0.0060) !important;
+  line-height: 1.15 !important;
+}
+
+.now-card-compact .progress-row {
+  margin-top: calc(var(--room-h) * 0.007) !important;
+  gap: calc(var(--room-w) * 0.0055) !important;
+}
+
+.now-card-compact .progress-row span {
+  font-size: calc(var(--room-w) * 0.0046) !important;
+}
+
+.panel-playback-row {
+  margin-top: calc(var(--room-h) * 0.008) !important;
+  grid-template-columns: 0.85fr 0.85fr 1fr 0.85fr 0.85fr !important;
+  gap: calc(var(--room-w) * 0.0046) !important;
+}
+
+.panel-icon-button,
+.panel-play-button {
+  height: calc(var(--room-h) * 0.040) !important;
+  min-height: 22px !important;
+  max-height: 34px !important;
+}
+
+.panel-icon-button {
+  font-size: calc(var(--room-w) * 0.0066) !important;
+}
+
+.panel-play-button {
+  font-size: calc(var(--room-w) * 0.0084) !important;
+}
+
+.panel-volume-row {
+  margin-top: calc(var(--room-h) * 0.008) !important;
+  gap: calc(var(--room-w) * 0.0055) !important;
+  font-size: calc(var(--room-w) * 0.0048) !important;
+}
+
+.dev-tools {
+  margin-top: calc(var(--room-h) * 0.012) !important;
+  border-radius: calc(var(--room-w) * 0.012) !important;
+}
+
+.dev-tools > summary {
+  padding: calc(var(--room-h) * 0.012) 2px !important;
+  font-size: calc(var(--room-w) * 0.0050) !important;
+}
+
+/* On narrow browser windows, the panel still follows the room edge and room percent sizing. */
+@media (max-width: 900px) {
+  .control-card {
+    width: calc(var(--room-w) * 0.25) !important;
+    max-width: calc(var(--room-w) * 0.25) !important;
+    right: calc((100vw - var(--room-w)) / 2) !important;
+  }
+}
+
+
+/* Final side-panel playback buttons cleanup
+   These are intentionally different from the floor controls:
+   flatter, cleaner, and sized for the compact side utility panel. */
+.panel-playback-row {
+  margin-top: calc(var(--room-h) * 0.009) !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1.22fr 1fr 1fr !important;
+  gap: calc(var(--room-w) * 0.0044) !important;
+  align-items: center !important;
+}
+
+.panel-icon-button,
+.panel-play-button {
+  position: relative;
+  height: calc(var(--room-h) * 0.042) !important;
+  min-height: 26px !important;
+  max-height: 38px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035)) !important;
+  color: rgba(226, 232, 240, 0.88) !important;
+  display: grid !important;
+  place-items: center !important;
+  box-shadow:
+    inset 0 0 10px rgba(0,0,0,0.18),
+    0 8px 16px rgba(0,0,0,0.12) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    color 140ms ease,
+    transform 120ms ease,
+    box-shadow 140ms ease !important;
+}
+
+.panel-icon-button {
+  font-size: calc(var(--room-w) * 0.0062) !important;
+  letter-spacing: -0.04em !important;
+}
+
+.panel-play-button {
+  height: calc(var(--room-h) * 0.049) !important;
+  min-height: 32px !important;
+  max-height: 44px !important;
+  color: #0f172a !important;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255,255,255,1), rgba(226,232,240,0.94) 68%, rgba(203,213,225,0.88)) !important;
+  border-color: rgba(255,255,255,0.48) !important;
+  box-shadow:
+    inset 0 -2px 5px rgba(15,23,42,0.18),
+    inset 0 2px 5px rgba(255,255,255,0.60),
+    0 10px 22px rgba(0,0,0,0.20) !important;
+}
+
+.panel-play-button #panelPlayIcon {
+  display: inline-block;
+  font-size: calc(var(--room-w) * 0.0105) !important;
+  letter-spacing: -0.10em !important;
+  transform: translateX(-0.02em);
+}
+
+.panel-icon-button:hover,
+.panel-play-button:hover {
+  transform: translateY(-1px) !important;
+  border-color: rgba(125, 211, 252, 0.34) !important;
+  box-shadow:
+    inset 0 0 10px rgba(0,0,0,0.16),
+    0 0 14px rgba(125,211,252,0.10),
+    0 10px 18px rgba(0,0,0,0.15) !important;
+}
+
+.panel-play-button:hover {
+  color: #020617 !important;
+}
+
+.panel-icon-button:active,
+.panel-play-button:active {
+  transform: translateY(0) scale(0.97) !important;
+}
+
+/* Use clean labels for shuffle/repeat rather than warped symbol-only buttons. */
+.panel-shuffle,
+.panel-repeat {
+  font-size: calc(var(--room-w) * 0.0046) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+.panel-shuffle::before {
+  content: "SHUF";
+}
+
+.panel-repeat::before {
+  content: "REP";
+}
+
+.panel-shuffle,
+.panel-repeat {
+  color: rgba(203, 213, 225, 0.74) !important;
+}
+
+.panel-shuffle,
+.panel-repeat {
+  font-size: 0 !important;
+}
+
+.panel-shuffle::before,
+.panel-repeat::before {
+  font-size: calc(var(--room-w) * 0.0046) !important;
+  line-height: 1 !important;
+}
+
+/* Previous / next use simple chevrons that scale cleaner than emoji glyphs. */
+#panelPrevButton,
+#panelNextButton {
+  font-size: 0 !important;
+}
+
+#panelPrevButton::before {
+  content: "◀◀";
+  font-size: calc(var(--room-w) * 0.0062) !important;
+  letter-spacing: -0.12em;
+}
+
+#panelNextButton::before {
+  content: "▶▶";
+  font-size: calc(var(--room-w) * 0.0062) !important;
+  letter-spacing: -0.12em;
+}
+
+/* Active shuffle/repeat should be clear without becoming loud. */
+.spotify-control-active {
+  color: #bbf7d0 !important;
+  border-color: rgba(52, 211, 153, 0.40) !important;
+  background:
+    linear-gradient(180deg, rgba(6, 78, 59, 0.34), rgba(6, 95, 70, 0.20)) !important;
+  box-shadow:
+    inset 0 0 12px rgba(0,0,0,0.16),
+    0 0 12px rgba(52,211,153,0.10) !important;
+}
+
+.spotify-control-active::before {
+  color: #bbf7d0 !important;
+}
+
+/* Keep panel volume compact and aligned with the cleaned buttons. */
+.panel-volume-row {
+  margin-top: calc(var(--room-h) * 0.008) !important;
+  grid-template-columns: auto 1fr auto !important;
+  gap: calc(var(--room-w) * 0.006) !important;
+}
+
+.panel-volume-row input {
+  height: 4px !important;
+  accent-color: #38bdf8;
+}
+
+
+/* Final side-panel top-row pill alignment and pause-button cleanup */
+.compact-brand-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: calc(var(--room-w) * 0.0052) !important;
+  min-height: calc(var(--room-h) * 0.046) !important;
+}
+
+.mini-brand {
+  align-self: center !important;
+  display: flex !important;
+  align-items: center !important;
+  height: calc(var(--room-h) * 0.034) !important;
+  line-height: 1 !important;
+  font-size: calc(var(--room-w) * 0.0046) !important;
+  padding-top: 1px !important;
+}
+
+.brand-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: calc(var(--room-w) * 0.0046) !important;
+  min-height: calc(var(--room-h) * 0.046) !important;
+}
+
+.mode-pill,
+.connect-pill,
+.panel-close {
+  display: inline-grid !important;
+  place-items: center !important;
+  align-self: center !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+}
+
+.mode-pill,
+.connect-pill {
+  height: calc(var(--room-h) * 0.034) !important;
+  min-height: 24px !important;
+  max-height: 30px !important;
+  min-width: calc(var(--room-w) * 0.041) !important;
+  padding: 0 calc(var(--room-w) * 0.0058) !important;
+  font-size: calc(var(--room-w) * 0.0031) !important;
+  border-radius: 999px !important;
+  white-space: nowrap !important;
+}
+
+.connect-pill {
+  min-width: calc(var(--room-w) * 0.054) !important;
+}
+
+.panel-close {
+  width: calc(var(--room-h) * 0.034) !important;
+  height: calc(var(--room-h) * 0.034) !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  max-width: 30px !important;
+  max-height: 30px !important;
+  padding: 0 !important;
+  font-size: calc(var(--room-w) * 0.0062) !important;
+  transform: none !important;
+}
+
+/* Clean pause/play control inside the side panel.
+   Use drawn pause bars instead of a font glyph so it does not look like odd roman numerals. */
+.panel-play-button {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.panel-play-button #panelPlayIcon {
+  font-size: 0 !important;
+  letter-spacing: 0 !important;
+  transform: none !important;
+  width: calc(var(--room-w) * 0.0135) !important;
+  height: calc(var(--room-w) * 0.0135) !important;
+  display: block !important;
+  position: relative !important;
+}
+
+.panel-play-button #panelPlayIcon::before,
+.panel-play-button #panelPlayIcon::after {
+  content: "";
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  width: 29%;
+  border-radius: 2px;
+  background: #0f172a;
+  box-shadow: inset 0 0 1px rgba(255,255,255,0.25);
+}
+
+/* pause bars */
+.panel-play-button #panelPlayIcon::before {
+  left: 16%;
+}
+
+.panel-play-button #panelPlayIcon::after {
+  right: 16%;
+}
+
+/* When paused, JS places a play triangle. Hide the after bar and make the before pseudo a triangle. */
+.panel-play-button #panelPlayIcon:not(:empty) {
+  width: calc(var(--room-w) * 0.014) !important;
+  height: calc(var(--room-w) * 0.014) !important;
+}
+
+/* The text content is either || or ▶. Detect the play state with a class-independent fallback:
+   if the app writes ▶, the actual text is hidden by font-size 0, so use aria-label to draw triangle. */
+.panel-play-button[aria-label="Play Spotify"] #panelPlayIcon::before {
+  left: 28%;
+  top: 14%;
+  bottom: auto;
+  width: 0;
+  height: 0;
+  border-radius: 0;
+  background: transparent;
+  border-left: calc(var(--room-w) * 0.010) solid #0f172a;
+  border-top: calc(var(--room-w) * 0.0065) solid transparent;
+  border-bottom: calc(var(--room-w) * 0.0065) solid transparent;
+  box-shadow: none;
+}
+
+.panel-play-button[aria-label="Play Spotify"] #panelPlayIcon::after {
+  display: none;
+}
+
+/* Smaller screens still keep the top row aligned and readable. */
+@media (max-width: 900px) {
+  .mini-brand {
+    font-size: calc(var(--room-w) * 0.0052) !important;
+  }
+
+  .mode-pill,
+  .connect-pill {
+    font-size: calc(var(--room-w) * 0.0036) !important;
+  }
+}
+
+
+/* Final side-panel button consistency pass */
+.control-card {
+  padding-top: calc(var(--room-w) * 0.008) !important;
+}
+
+/* Tighten the top row and reduce the dead space above the now-playing block. */
+.compact-brand-row,
+.brand-row {
+  min-height: calc(var(--room-h) * 0.033) !important;
+  margin-bottom: calc(var(--room-h) * 0.006) !important;
+  align-items: center !important;
+}
+
+.brand-actions {
+  min-height: calc(var(--room-h) * 0.033) !important;
+  align-items: center !important;
+}
+
+/* Shared side-panel button sizing.
+   This makes mode, connected, shuffle, repeat, close, and dev buttons feel like one system. */
+.mode-pill,
+.connect-pill,
+.panel-icon-button,
+.panel-play-button,
+.dev-tools button,
+.dev-button-grid button,
+.utility-buttons button,
+.connect-dropdown button {
+  min-height: 28px !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  max-height: 34px !important;
+  border-radius: 999px !important;
+  box-sizing: border-box !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+  font-family: "Press Start 2P", monospace !important;
+  font-size: calc(var(--room-w) * 0.00345) !important;
+  letter-spacing: 0.025em !important;
+  white-space: nowrap !important;
+  text-transform: uppercase !important;
+}
+
+/* Top row pills should fill their shape like SHUF/REP. */
+.mode-pill,
+.connect-pill {
+  min-width: calc(var(--room-w) * 0.051) !important;
+  padding: 0 calc(var(--room-w) * 0.0065) !important;
+  font-size: calc(var(--room-w) * 0.00345) !important;
+}
+
+/* Close button remains round, but matches the top-row height. */
+.panel-close {
+  width: calc(var(--room-h) * 0.036) !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+}
+
+/* Bring the track block up closer to the top row. */
+.now-card-compact {
+  margin-top: calc(var(--room-h) * 0.002) !important;
+  padding-top: calc(var(--room-w) * 0.0085) !important;
+  padding-bottom: calc(var(--room-w) * 0.0085) !important;
+}
+
+/* Make all five playback buttons uniform in height.
+   The play button can be visually emphasized by fill, not by awkward size. */
+.panel-playback-row {
+  margin-top: calc(var(--room-h) * 0.007) !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: calc(var(--room-w) * 0.0046) !important;
+}
+
+.panel-icon-button,
+.panel-play-button {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  min-height: 28px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+}
+
+/* Clean play/pause mark. Use the same button footprint, and draw only the icon inside it. */
+.panel-play-button #panelPlayIcon {
+  width: calc(var(--room-w) * 0.0105) !important;
+  height: calc(var(--room-w) * 0.0105) !important;
+  min-width: 12px !important;
+  min-height: 12px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+}
+
+.panel-play-button #panelPlayIcon::before,
+.panel-play-button #panelPlayIcon::after {
+  top: 8% !important;
+  bottom: 8% !important;
+  width: 24% !important;
+  border-radius: 1.5px !important;
+}
+
+.panel-play-button #panelPlayIcon::before {
+  left: 21% !important;
+}
+
+.panel-play-button #panelPlayIcon::after {
+  right: 21% !important;
+}
+
+.panel-play-button[aria-label="Play Spotify"] #panelPlayIcon::before {
+  left: 30% !important;
+  top: 12% !important;
+  border-left-width: calc(var(--room-w) * 0.0082) !important;
+  border-top-width: calc(var(--room-w) * 0.0054) !important;
+  border-bottom-width: calc(var(--room-w) * 0.0054) !important;
+}
+
+/* SHUF/REP labels define the button text scale. */
+.panel-shuffle::before,
+.panel-repeat::before {
+  font-size: calc(var(--room-w) * 0.00345) !important;
+  letter-spacing: 0.025em !important;
+  line-height: 1 !important;
+}
+
+/* Previous/next icon scale should match the SHUF/REP visual weight. */
+#panelPrevButton::before,
+#panelNextButton::before {
+  font-size: calc(var(--room-w) * 0.0054) !important;
+  letter-spacing: -0.12em !important;
+  line-height: 1 !important;
+}
+
+/* Dev tool buttons and room utility buttons match the compact side-panel button system. */
+.dev-button-grid,
+.utility-buttons,
+.button-grid {
+  gap: calc(var(--room-w) * 0.006) !important;
+}
+
+.dev-tools button,
+.dev-button-grid button,
+.utility-buttons button {
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 calc(var(--room-w) * 0.006) !important;
+}
+
+/* Dev tools header is compact and sits consistently under the player card. */
+.dev-tools {
+  margin-top: calc(var(--room-h) * 0.008) !important;
+}
+
+.dev-tools > summary {
+  padding: calc(var(--room-h) * 0.010) 2px !important;
+}
+
+/* Keep the connection dropdown button in the same family. */
+.connect-dropdown button {
+  width: 100% !important;
+  min-width: calc(var(--room-w) * 0.060) !important;
+  padding: 0 calc(var(--room-w) * 0.008) !important;
+}
+
+/* Keep volume close to the button row so the card feels like one compact module. */
+.panel-volume-row {
+  margin-top: calc(var(--room-h) * 0.006) !important;
+}
+
+
+/* Final seek alignment, centered buttons, and interactive progress polish */
+.seek-surface {
+  cursor: pointer;
+  touch-action: none;
+}
+
+.now-card-compact .progress-row {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto !important;
+  align-items: center !important;
+  column-gap: calc(var(--room-w) * 0.006) !important;
+}
+
+.now-card-compact .progress-row span {
+  min-width: calc(var(--room-w) * 0.022) !important;
+  text-align: center !important;
+  line-height: 1 !important;
+}
+
+/* Align the track progress span with the volume slider span. */
+.now-card-compact .progress,
+.panel-volume-row input {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.panel-volume-row {
+  display: grid !important;
+  grid-template-columns: calc(var(--room-w) * 0.026) 1fr calc(var(--room-w) * 0.022) !important;
+  align-items: center !important;
+  column-gap: calc(var(--room-w) * 0.006) !important;
+}
+
+.panel-volume-row span,
+.panel-volume-row strong {
+  text-align: center !important;
+  line-height: 1 !important;
+}
+
+/* Center previous/next glyphs exactly inside their pills. */
+#panelPrevButton,
+#panelNextButton {
+  position: relative !important;
+  overflow: hidden !important;
+  color: transparent !important;
+}
+
+#panelPrevButton::before,
+#panelNextButton::before {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  display: block !important;
+  text-align: center !important;
+  width: auto !important;
+  letter-spacing: -0.16em !important;
+  color: rgba(226, 232, 240, 0.92) !important;
+}
+
+/* Make the play/pause mark cleaner and more centered. */
+.panel-play-button {
+  display: grid !important;
+  place-items: center !important;
+}
+
+.panel-play-button #panelPlayIcon {
+  position: relative !important;
+  display: block !important;
+  margin: 0 auto !important;
+  transform: none !important;
+  width: calc(var(--room-w) * 0.0102) !important;
+  height: calc(var(--room-w) * 0.0102) !important;
+  min-width: 13px !important;
+  min-height: 13px !important;
+  max-width: 17px !important;
+  max-height: 17px !important;
+}
+
+.panel-play-button #panelPlayIcon::before,
+.panel-play-button #panelPlayIcon::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 9% !important;
+  bottom: 9% !important;
+  width: 23% !important;
+  border-radius: 999px !important;
+  background: #0f172a !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.panel-play-button #panelPlayIcon::before {
+  left: 22% !important;
+}
+
+.panel-play-button #panelPlayIcon::after {
+  right: 22% !important;
+}
+
+/* Play state triangle */
+.panel-play-button[aria-label="Play Spotify"] #panelPlayIcon::before {
+  left: 32% !important;
+  top: 15% !important;
+  bottom: auto !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  border-left: calc(var(--room-w) * 0.0080) solid #0f172a !important;
+  border-top: calc(var(--room-w) * 0.0052) solid transparent !important;
+  border-bottom: calc(var(--room-w) * 0.0052) solid transparent !important;
+}
+
+.panel-play-button[aria-label="Play Spotify"] #panelPlayIcon::after {
+  display: none !important;
+}
+
+/* Make both progress rails visually grab-able but not loud. */
+.progress,
+.floor-progress {
+  position: relative !important;
+}
+
+.progress::after,
+.floor-progress::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -8px;
+  bottom: -8px;
+}
+
+.progress:hover,
+.floor-progress:hover {
+  box-shadow:
+    inset 0 0 8px rgba(0,0,0,0.42),
+    0 0 10px rgba(125,211,252,0.12) !important;
+}
+
+
+/* Responsive side-panel sizing and auto-hide tab */
+.control-card {
+  /* Fullscreen stays close to 25% of the room. Small windows can grow to 50-75%. */
+  --side-panel-width: min(calc(var(--room-w) * 0.75), max(340px, calc(var(--room-w) * 0.25)));
+
+  position: absolute !important;
+  right: calc((100vw - var(--room-w)) / 2) !important;
+  top: calc((100vh - var(--room-h)) / 2 + var(--room-h) * 0.032) !important;
+  width: var(--side-panel-width) !important;
+  max-width: var(--side-panel-width) !important;
+  min-width: 0 !important;
+  max-height: calc(var(--room-h) * 0.90) !important;
+  transform: translateX(0) !important;
+}
+
+.control-card.control-card-hidden,
+.control-card:not(.control-card-open) {
+  transform: translateX(calc(100% + 18px)) !important;
+  pointer-events: none;
+}
+
+.side-panel-tab {
+  position: absolute;
+  right: calc((100vw - var(--room-w)) / 2);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 13;
+  width: clamp(32px, calc(var(--room-w) * 0.026), 46px);
+  height: clamp(72px, calc(var(--room-h) * 0.135), 118px);
+  border-radius: 18px 0 0 18px;
+  border: 1px solid rgba(255, 191, 71, 0.36);
+  border-right: 0;
+  color: #ffbf47;
+  background:
+    linear-gradient(180deg, rgba(17, 12, 23, 0.78), rgba(6, 8, 15, 0.72)),
+    radial-gradient(circle at 50% 35%, rgba(255,191,71,0.13), transparent 58%);
+  box-shadow:
+    -10px 0 30px rgba(0,0,0,0.26),
+    inset 0 0 18px rgba(255,191,71,0.055);
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+  backdrop-filter: blur(10px);
+  font-family: "Press Start 2P", monospace;
+}
+
+.side-panel-tab-visible {
+  opacity: 0.78;
+  pointer-events: auto;
+}
+
+.side-panel-tab:hover {
+  opacity: 1;
+  transform: translateY(-50%) translateX(-3px);
+  box-shadow:
+    -12px 0 34px rgba(0,0,0,0.30),
+    0 0 18px rgba(255,191,71,0.16),
+    inset 0 0 20px rgba(255,191,71,0.08);
+}
+
+.side-panel-tab span:first-child {
+  font-size: clamp(0.80rem, calc(var(--room-w) * 0.008), 1.05rem);
+  line-height: 1;
+}
+
+.side-panel-tab-arrow {
+  font-size: clamp(1.25rem, calc(var(--room-w) * 0.014), 1.8rem);
+  line-height: 0.9;
+}
+
+.panel-lock-toggle {
+  width: calc(var(--room-h) * 0.036) !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 191, 71, 0.18);
+  background: rgba(255,255,255,0.045);
+  color: rgba(255, 191, 71, 0.62);
+  font-size: 0 !important;
+}
+
+.panel-lock-toggle::before {
+  content: "🔒";
+  font-size: calc(var(--room-w) * 0.0048);
+  line-height: 1;
+  transform: translateY(-0.5px);
+}
+
+.panel-lock-active {
+  color: #ffd98a;
+  border-color: rgba(255, 191, 71, 0.48);
+  background: rgba(92, 59, 12, 0.26);
+  box-shadow: 0 0 14px rgba(255,191,71,0.14), inset 0 0 12px rgba(255,191,71,0.06);
+}
+
+/* Better centering for the bottom-left floor lock */
+.floor-lock-toggle {
+  display: inline-grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+.floor-lock-toggle::before {
+  display: block !important;
+  line-height: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Prevent the panel from becoming unreadable in very small windows. */
+@media (max-width: 760px) {
+  .control-card {
+    --side-panel-width: min(calc(var(--room-w) * 0.75), max(300px, calc(var(--room-w) * 0.25))) !important;
+  }
+
+  .side-panel-tab {
+    width: 34px;
+  }
+}
+
+
+
+/* Final side-panel auto-hide, opener relocation, lock drawing, and warm room palette */
+
+/* Retire the old top-right music-note panel button. The right-edge tab is the opener now. */
+.panel-toggle {
+  display: none !important;
+}
+
+/* Move the hover tab up to where the old top music button visually lived, and make it feel attached to the panel. */
+.side-panel-tab {
+  right: calc((100vw - var(--room-w)) / 2) !important;
+  top: calc((100vh - var(--room-h)) / 2 + var(--room-h) * 0.095) !important;
+  transform: translateY(-50%) !important;
+  width: clamp(34px, calc(var(--room-w) * 0.030), 52px) !important;
+  height: clamp(62px, calc(var(--room-h) * 0.105), 96px) !important;
+  border-radius: 18px 0 0 18px !important;
+  border: 1px solid rgba(255, 184, 76, 0.36) !important;
+  border-right: 0 !important;
+  background:
+    linear-gradient(180deg, rgba(32, 18, 30, 0.82), rgba(12, 8, 15, 0.76)),
+    radial-gradient(circle at 45% 25%, rgba(255, 184, 76, 0.16), transparent 56%),
+    radial-gradient(circle at 55% 74%, rgba(179, 95, 255, 0.12), transparent 60%) !important;
+  color: #ffc25f !important;
+  box-shadow:
+    -12px 0 34px rgba(0,0,0,0.30),
+    0 0 18px rgba(255,184,76,0.12),
+    inset 0 0 18px rgba(255,184,76,0.055) !important;
+}
+
+.side-panel-tab-visible {
+  opacity: 0.84 !important;
+}
+
+.side-panel-tab:hover {
+  opacity: 1 !important;
+  transform: translateY(-50%) translateX(-4px) !important;
+  box-shadow:
+    -16px 0 38px rgba(0,0,0,0.34),
+    0 0 22px rgba(255,184,76,0.18),
+    inset 0 0 20px rgba(255,184,76,0.08) !important;
+}
+
+.side-panel-tab-note {
+  color: #ffd98a;
+  text-shadow: 0 0 8px rgba(255, 184, 76, 0.44);
+}
+
+.side-panel-tab-arrow {
+  color: rgba(255, 218, 138, 0.78);
+}
+
+/* Warm violet/amber panel palette. This smooths out the blues/greens/purples into the room vibe. */
+.control-card {
+  background:
+    linear-gradient(180deg, rgba(28, 16, 32, 0.88), rgba(10, 8, 18, 0.84)),
+    radial-gradient(circle at 18% 20%, rgba(255, 166, 65, 0.08), transparent 35%),
+    radial-gradient(circle at 80% 30%, rgba(168, 85, 247, 0.10), transparent 42%) !important;
+  border-color: rgba(255, 184, 76, 0.16) !important;
+  box-shadow:
+    0 22px 58px rgba(0,0,0,0.36),
+    inset 0 0 30px rgba(255,184,76,0.025) !important;
+}
+
+.mini-brand {
+  color: #ffc25f !important;
+  text-shadow:
+    0 0 5px rgba(255, 184, 76, 0.42),
+    0 0 12px rgba(255, 184, 76, 0.18) !important;
+}
+
+.mode-pill,
+.connect-pill,
+.panel-close,
+.panel-lock-toggle {
+  border-color: rgba(255, 184, 76, 0.24) !important;
+  background: rgba(36, 23, 38, 0.54) !important;
+  color: rgba(255, 218, 155, 0.90) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255,184,76,0.035),
+    0 0 12px rgba(0,0,0,0.14) !important;
+}
+
+.mode-pill {
+  color: #ffd98a !important;
+}
+
+.connect-pill.connected {
+  color: #f7d68c !important;
+  border-color: rgba(255, 184, 76, 0.38) !important;
+  background: rgba(72, 43, 21, 0.44) !important;
+}
+
+.connect-pill.disconnected {
+  color: #ffd98a !important;
+  border-color: rgba(255, 184, 76, 0.36) !important;
+}
+
+.now-card,
+.now-card-compact,
+.spotify-utility-panel,
+.dev-tools {
+  background:
+    linear-gradient(180deg, rgba(45, 28, 53, 0.62), rgba(20, 13, 28, 0.58)) !important;
+  border-color: rgba(255, 184, 76, 0.14) !important;
+  box-shadow:
+    inset 0 0 22px rgba(0,0,0,0.18),
+    0 0 18px rgba(168,85,247,0.045) !important;
+}
+
+.progress,
+.floor-progress,
+.panel-volume-row input {
+  accent-color: #f59e2f !important;
+}
+
+.progress #progressFill,
+.floor-progress-fill {
+  background:
+    linear-gradient(90deg, rgba(174, 92, 27, 0.82), rgba(255, 184, 76, 0.96), rgba(216, 122, 255, 0.80)) !important;
+  box-shadow:
+    0 0 10px rgba(255,184,76,0.28),
+    0 0 18px rgba(168,85,247,0.12) !important;
+}
+
+.panel-volume-row input::-webkit-slider-thumb {
+  background: #f7b955 !important;
+}
+
+.panel-icon-button,
+.panel-play-button,
+.dev-tools button,
+.dev-button-grid button,
+.utility-buttons button {
+  border-color: rgba(255, 184, 76, 0.18) !important;
+}
+
+.panel-icon-button {
+  background:
+    linear-gradient(180deg, rgba(60, 37, 63, 0.46), rgba(28, 17, 34, 0.38)) !important;
+  color: rgba(255, 224, 167, 0.90) !important;
+}
+
+.panel-play-button {
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 230, 183, 1), rgba(245, 178, 77, 0.95) 60%, rgba(142, 78, 32, 0.88)) !important;
+  color: #1d1208 !important;
+  border-color: rgba(255, 218, 138, 0.48) !important;
+}
+
+.spotify-control-active {
+  color: #ffe3a3 !important;
+  border-color: rgba(255, 184, 76, 0.44) !important;
+  background:
+    linear-gradient(180deg, rgba(111, 63, 24, 0.42), rgba(72, 40, 18, 0.26)) !important;
+  box-shadow:
+    inset 0 0 12px rgba(0,0,0,0.16),
+    0 0 12px rgba(255,184,76,0.12) !important;
+}
+
+/* Lock icons: draw a single centered lock using CSS, not emoji text.
+   This avoids the apparent two-row/vertical-baseline issue. */
+.panel-lock-toggle,
+.floor-lock-toggle {
+  font-size: 0 !important;
+  position: relative !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  overflow: hidden !important;
+}
+
+.panel-lock-toggle::before,
+.floor-lock-toggle::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 39% !important;
+  width: 34% !important;
+  height: 30% !important;
+  transform: translate(-50%, -50%) !important;
+  border: 2px solid rgba(255, 218, 138, 0.78) !important;
+  border-bottom: 0 !important;
+  border-radius: 999px 999px 0 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.panel-lock-toggle::after,
+.floor-lock-toggle::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 58% !important;
+  width: 42% !important;
+  height: 34% !important;
+  transform: translate(-50%, -50%) !important;
+  border-radius: 3px !important;
+  background: rgba(255, 218, 138, 0.80) !important;
+  box-shadow:
+    0 0 7px rgba(255,184,76,0.20),
+    inset 0 -1px 1px rgba(0,0,0,0.24) !important;
+}
+
+.panel-lock-active::before,
+.floor-lock-active::before {
+  border-color: #ffd98a !important;
+}
+
+.panel-lock-active::after,
+.floor-lock-active::after {
+  background: #ffd98a !important;
+}
+
+/* Always hide the panel when not locked unless hovered/opened again.
+   The tab stays visible as the panel's handle. */
+.control-card-locked {
+  border-color: rgba(255, 184, 76, 0.28) !important;
+}
+
+
+/* Final side-panel lock state, dropdown, and small-window responsive fixes */
+
+/* Locked side-panel lock button matches the connected pill.
+   Unlocked lock button matches the current playing/idle pill. */
+.panel-lock-toggle {
+  border-color: rgba(255, 184, 76, 0.24) !important;
+  background: rgba(36, 23, 38, 0.54) !important;
+  color: rgba(255, 218, 155, 0.90) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255,184,76,0.035),
+    0 0 12px rgba(0,0,0,0.14) !important;
+}
+
+.panel-lock-active {
+  color: #f7d68c !important;
+  border-color: rgba(255, 184, 76, 0.38) !important;
+  background: rgba(72, 43, 21, 0.44) !important;
+  box-shadow:
+    inset 0 0 12px rgba(255,184,76,0.050),
+    0 0 12px rgba(255,184,76,0.10) !important;
+}
+
+/* The side-panel lock icon stays a single centered CSS-drawn shape. */
+.panel-lock-toggle::before,
+.floor-lock-toggle::before {
+  top: 38% !important;
+}
+
+.panel-lock-toggle::after,
+.floor-lock-toggle::after {
+  top: 59% !important;
+}
+
+/* Center the Connected dropdown directly below the Connected pill and remove the heavy menu box. */
+.connect-pill-wrap {
+  position: relative !important;
+}
+
+.connect-dropdown {
+  left: 50% !important;
+  right: auto !important;
+  top: calc(100% + 7px) !important;
+  min-width: 0 !important;
+  width: max-content !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: translate(-50%, -4px) !important;
+  z-index: 40 !important;
+}
+
+.connect-dropdown-open {
+  transform: translate(-50%, 0) !important;
+}
+
+.connect-dropdown button {
+  width: auto !important;
+  min-width: calc(var(--room-w) * 0.065) !important;
+  height: max(28px, calc(var(--room-h) * 0.036)) !important;
+  padding: 0 calc(var(--room-w) * 0.010) !important;
+  border-radius: 999px !important;
+  color: rgba(255, 218, 155, 0.96) !important;
+  background: rgba(36, 23, 38, 0.88) !important;
+  border: 1px solid rgba(255, 184, 76, 0.22) !important;
+  box-shadow:
+    0 12px 26px rgba(0,0,0,0.28),
+    inset 0 0 12px rgba(255,184,76,0.04) !important;
+}
+
+/* Better responsive panel width:
+   Fullscreen remains around 25% of room. Smaller windows can use up to 80%
+   of the actual browser viewport so it never jumps left or becomes unreadable. */
+.control-card {
+  --side-panel-target: max(360px, calc(var(--room-w) * 0.25));
+  --side-panel-width: min(80vw, var(--side-panel-target)) !important;
+  width: var(--side-panel-width) !important;
+  max-width: var(--side-panel-width) !important;
+
+  /* Clamp to the visible viewport so the panel stays on the right even in very small windows. */
+  right: max(8px, calc((100vw - var(--room-w)) / 2)) !important;
+  left: auto !important;
+}
+
+/* If 360px cannot fit, use most of the viewport. */
+@media (max-width: 460px) {
+  .control-card {
+    --side-panel-width: 80vw !important;
+    right: 8px !important;
+  }
+}
+
+/* Keep the right-edge hover tab aligned to the visible right side, too. */
+.side-panel-tab {
+  right: max(0px, calc((100vw - var(--room-w)) / 2)) !important;
+}
+
+/* Do not let side-panel text shrink below the bottom-left Controls button feel. */
+.control-card,
+.control-card button,
+.control-card summary,
+.control-card label,
+.control-card span,
+.control-card strong,
+.control-card small,
+.control-card .track-title,
+.control-card .track-artist {
+  font-size-adjust: none;
+}
+
+.mini-brand {
+  font-size: clamp(0.52rem, calc(var(--room-w) * 0.0046), 0.74rem) !important;
+}
+
+.mode-pill,
+.connect-pill,
+.panel-lock-toggle,
+.panel-close,
+.panel-icon-button,
+.panel-play-button,
+.dev-tools button,
+.dev-button-grid button,
+.utility-buttons button,
+.connect-dropdown button {
+  font-size: clamp(0.42rem, calc(var(--room-w) * 0.00345), 0.58rem) !important;
+}
+
+.panel-shuffle::before,
+.panel-repeat::before {
+  font-size: clamp(0.42rem, calc(var(--room-w) * 0.00345), 0.58rem) !important;
+}
+
+.now-card-compact .track-title {
+  font-size: clamp(0.72rem, calc(var(--room-w) * 0.0075), 0.96rem) !important;
+}
+
+.now-card-compact .track-artist {
+  font-size: clamp(0.58rem, calc(var(--room-w) * 0.0060), 0.78rem) !important;
+}
+
+.now-card-compact .progress-row span,
+.panel-volume-row {
+  font-size: clamp(0.44rem, calc(var(--room-w) * 0.0048), 0.62rem) !important;
+}
+
+.dev-tools > summary {
+  font-size: clamp(0.48rem, calc(var(--room-w) * 0.0050), 0.66rem) !important;
+}
+
+/* In compact windows, preserve usability by letting the card breathe horizontally. */
+@media (max-width: 760px) {
+  .control-card {
+    --side-panel-width: min(80vw, max(320px, calc(var(--room-w) * 0.52))) !important;
+    right: max(8px, calc((100vw - var(--room-w)) / 2)) !important;
+  }
+
+  .now-card-compact {
+    grid-template-columns: clamp(54px, calc(var(--room-w) * 0.085), 72px) minmax(0, 1fr) !important;
+  }
+
+  .now-card-compact .art {
+    width: clamp(54px, calc(var(--room-w) * 0.085), 72px) !important;
+    height: clamp(54px, calc(var(--room-w) * 0.085), 72px) !important;
+  }
+}
+
+/* Slightly stronger small-window floor lock centering, same single-row lock shape. */
+.floor-lock-toggle {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+
+/* Final side-panel close behavior polish */
+.panel-close {
+  font-size: clamp(0.52rem, calc(var(--room-w) * 0.0048), 0.72rem) !important;
+  font-family: "Press Start 2P", monospace !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  text-align: center !important;
+  padding: 0 !important;
+  color: rgba(255, 218, 155, 0.94) !important;
+}
+
+.panel-close:hover {
+  color: #ffd98a !important;
+  border-color: rgba(255, 184, 76, 0.42) !important;
+  background: rgba(72, 43, 21, 0.40) !important;
+}
+
+/* Keep the side panel interactive while allowing the room/background to close it. */
+.control-card {
+  pointer-events: auto !important;
+}
+
+
+/* Final side-panel close/outside-click behavior refinements */
+.panel-close {
+  position: relative !important;
+  z-index: 60 !important;
+  pointer-events: auto !important;
+}
+
+/* Lyrics ceiling source group */
+.lyrics-ceiling {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 4.5%;
+  height: 25%;
+  z-index: 4;
+  pointer-events: none;
+  perspective: 900px;
+  opacity: 0.72;
+}
+
+.lyrics-ceiling-inner {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 0%;
+  transform: rotateX(58deg) skewX(-1deg);
+  border-radius: 22px;
+  padding: 12px 22px 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(126, 68, 255, 0.16), transparent 55%),
+    linear-gradient(180deg, rgba(12, 6, 28, 0.22), rgba(4, 2, 10, 0.04));
+  box-shadow:
+    inset 0 0 30px rgba(255, 190, 90, 0.08),
+    0 0 28px rgba(125, 76, 255, 0.12);
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%);
+}
+
+.lyrics-source-pill {
+  width: fit-content;
+  margin: 0 auto 6px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(7px, calc(var(--room-w) * 0.0052), 11px);
+  letter-spacing: 0.14em;
+  color: rgba(255, 197, 92, 0.74);
+  background: rgba(10, 4, 18, 0.36);
+  text-shadow: 0 0 8px rgba(255, 167, 42, 0.7);
+}
+
+.lyrics-block {
+  height: calc(100% - 26px);
+  overflow: hidden;
+  text-align: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(8px, calc(var(--room-w) * 0.0062), 13px);
+  line-height: 1.55;
+  letter-spacing: 0.04em;
+  color: rgba(255, 218, 154, 0.48);
+  text-shadow:
+    0 0 8px rgba(255, 170, 54, 0.25),
+    0 0 18px rgba(118, 63, 255, 0.20);
+  scroll-behavior: smooth;
+}
+
+.lyrics-line {
+  margin: 5px 0;
+  opacity: 0.30;
+  transform: scale(0.96);
+  transition:
+    opacity 260ms ease,
+    transform 260ms ease,
+    color 260ms ease,
+    text-shadow 260ms ease;
+}
+
+.lyrics-line-near {
+  opacity: 0.54;
+}
+
+.lyrics-line-past {
+  opacity: 0.20;
+}
+
+.lyrics-line-active {
+  opacity: 0.95;
+  transform: scale(1.035);
+  color: rgba(255, 205, 96, 0.92);
+  text-shadow:
+    0 0 7px rgba(255, 174, 45, 0.95),
+    0 0 18px rgba(255, 121, 42, 0.55),
+    0 0 28px rgba(132, 77, 255, 0.45);
+}
+
+.lyrics-placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  opacity: 0.62;
+  color: rgba(255, 207, 139, 0.55);
+}
+
+@media (max-width: 760px) {
+  .lyrics-ceiling {
+    left: 8%;
+    right: 8%;
+    top: 5%;
+    height: 22%;
+  }
+
+  .lyrics-ceiling-inner {
+    transform: rotateX(54deg);
+    padding-inline: 14px;
+  }
+}

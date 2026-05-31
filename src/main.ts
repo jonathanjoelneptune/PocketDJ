@@ -3,7 +3,7 @@ import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlb
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getExternalTrackTempoBpm, getPlaylistTracks, getTrackTempoBpm, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
+import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getTrackTempoBpm, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import {
   emptyLyrics,
@@ -19,7 +19,6 @@ const STANDARD_SPOTIFY_CLIENT_ID = "37da51db24384ad3a07c222f71b1525e";
 const SPOTIFY_WEB_PLAYBACK_SDK_URL = "https://sdk.scdn.co/spotify-player.js";
 const POCKET_DJ_DEVICE_NAME = "Pocket DJ";
 const PREFERRED_SPOTIFY_SOURCE_KEY = "pocketdj-preferred-spotify-source-v1";
-const GETSONGBPM_API_KEY_STORAGE_KEY = "pocketdj-getsongbpm-api-key-v1";
 
 type SpotifyWebPlaybackPlayer = {
   addListener: (event: string, callback: (payload: any) => void) => boolean;
@@ -139,9 +138,8 @@ let vinylClockTimer: number | null = null;
 let speakerTempoTrackKey = "";
 let speakerTempoFetchKey = "";
 let speakerTempoBpm: number | null = null;
-let speakerTempoSource: "getsongbpm" | "spotify" | "demo" | "estimate" | "fallback" = "fallback";
+let speakerTempoSource: "spotify" | "demo" | "estimate" | "fallback" = "fallback";
 const speakerTempoCache = new Map<string, number>();
-const externalSpeakerTempoCache = new Map<string, number>();
 const ALBUM_REVEAL_MAX_WAIT_MS = 500;
 const SPEAKER_PULSE_FALLBACK_BPM = 96;
 
@@ -500,27 +498,6 @@ function setUtilityLabel(id: string, value: number): void {
         : 0;
   const label = document.querySelector<HTMLElement>(`#${id}`);
   if (label) label.textContent = value.toFixed(decimals);
-}
-
-function loadGetSongBpmApiKey(): string {
-  try {
-    return window.localStorage.getItem(GETSONGBPM_API_KEY_STORAGE_KEY) || "";
-  } catch (error) {
-    console.warn("Could not load GetSongBPM API key", error);
-    return "";
-  }
-}
-
-function saveGetSongBpmApiKey(apiKey: string): void {
-  try {
-    window.localStorage.setItem(GETSONGBPM_API_KEY_STORAGE_KEY, apiKey.trim());
-  } catch (error) {
-    console.warn("Could not save GetSongBPM API key", error);
-  }
-}
-
-function getExternalTempoCacheKey(track: AppState["playback"]): string {
-  return `${track.title.trim().toLowerCase()}::${track.artist.trim().toLowerCase()}`;
 }
 
 function loadRoomUtilitySettings(): RoomUtilitySettings {
@@ -3862,10 +3839,6 @@ function bindRoomUtilityControls(): void {
   const songChangeMode = qs<HTMLInputElement>("#songChangeMode");
   const vinylClockEnabled = qs<HTMLInputElement>("#vinylClockEnabled");
   const speakerPulseUseTempo = qs<HTMLInputElement>("#speakerPulseUseTempo");
-  const getSongBpmApiKeyInput = qs<HTMLInputElement>("#getSongBpmApiKey");
-  const saveGetSongBpmApiKeyButton = qs<HTMLButtonElement>("#saveGetSongBpmApiKey");
-  const clearGetSongBpmApiKeyButton = qs<HTMLButtonElement>("#clearGetSongBpmApiKey");
-  const getSongBpmApiKeyStatus = qs<HTMLElement>("#getSongBpmApiKeyStatus");
 
   sceneFilter.value = roomUtility.sceneFilter;
   lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
@@ -3883,8 +3856,6 @@ function bindRoomUtilityControls(): void {
   songChangeMode.checked = roomUtility.songChangeMode;
   vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
   speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
-  getSongBpmApiKeyInput.value = loadGetSongBpmApiKey();
-  getSongBpmApiKeyStatus.textContent = getSongBpmApiKeyInput.value ? "GetSongBPM key saved. External BPM lookup enabled." : "No GetSongBPM key saved. Using Spotify/estimated BPM.";
 
   panelHeightAdjustEnabled.addEventListener("change", () => {
     setPanelHeightAdjustEnabled(panelHeightAdjustEnabled.checked, false);
@@ -3916,31 +3887,6 @@ function bindRoomUtilityControls(): void {
     roomUtility = { ...roomUtility, speakerPulseUseTempo: speakerPulseUseTempo.checked };
     applyRoomUtilitySettings();
     saveRoomUtilitySettings();
-  });
-
-  saveGetSongBpmApiKeyButton.addEventListener("click", () => {
-    saveGetSongBpmApiKey(getSongBpmApiKeyInput.value);
-    externalSpeakerTempoCache.clear();
-    speakerTempoFetchKey = "";
-    getSongBpmApiKeyStatus.textContent = getSongBpmApiKeyInput.value.trim()
-      ? "GetSongBPM key saved. The next track refresh will use external BPM lookup."
-      : "No GetSongBPM key saved. Using Spotify/estimated BPM.";
-    applySpeakerPulseTempo(state.playback);
-  });
-
-  clearGetSongBpmApiKeyButton.addEventListener("click", () => {
-    getSongBpmApiKeyInput.value = "";
-    saveGetSongBpmApiKey("");
-    externalSpeakerTempoCache.clear();
-    speakerTempoFetchKey = "";
-    getSongBpmApiKeyStatus.textContent = "GetSongBPM key cleared. Using Spotify/estimated BPM.";
-    applySpeakerPulseTempo(state.playback);
-  });
-
-  getSongBpmApiKeyInput.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter") return;
-    event.preventDefault();
-    saveGetSongBpmApiKeyButton.click();
   });
 
   const controls = [
@@ -4510,11 +4456,11 @@ function setSpeakerTempo(nextBpm: number | null, source: typeof speakerTempoSour
   setSpeakerPulseBpmLabel();
 }
 
-function setSpeakerPulseBpmLabel(statusOverride = ""): void {
+function setSpeakerPulseBpmLabel(): void {
   const label = document.querySelector<HTMLElement>("#speakerPulseBpmValue");
   if (!label) return;
   const bpm = speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM;
-  const sourceLabel = statusOverride || (speakerTempoSource === "getsongbpm" ? "GetSongBPM" : speakerTempoSource === "spotify" ? "Spotify" : speakerTempoSource === "demo" ? "demo" : speakerTempoSource === "estimate" ? "estimated" : "fallback");
+  const sourceLabel = speakerTempoSource === "spotify" ? "Spotify" : speakerTempoSource === "demo" ? "demo" : speakerTempoSource === "estimate" ? "estimated" : "fallback";
   label.textContent = `${Math.round(bpm)} ${sourceLabel}`;
 }
 
@@ -4543,14 +4489,6 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
     return;
   }
 
-  const externalCacheKey = getExternalTempoCacheKey(track);
-  const externalCached = externalSpeakerTempoCache.get(externalCacheKey);
-  if (externalCached) {
-    speakerTempoTrackKey = track.trackId;
-    setSpeakerTempo(externalCached, "getsongbpm");
-    return;
-  }
-
   const cached = speakerTempoCache.get(track.trackId);
   if (cached) {
     speakerTempoTrackKey = track.trackId;
@@ -4563,37 +4501,8 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
     setSpeakerTempo(estimateTrackTempoBpm(track), "estimate");
   }
 
-  const getSongBpmApiKey = loadGetSongBpmApiKey();
-  if (getSongBpmApiKey) {
-    const externalFetchKey = `${track.trackId}:getsongbpm:${getSongBpmApiKey.slice(-6)}`;
-    if (speakerTempoFetchKey === externalFetchKey) return;
-    speakerTempoFetchKey = externalFetchKey;
-    setSpeakerPulseBpmLabel("looking up GetSongBPM...");
-
-    void getExternalTrackTempoBpm(getSongBpmApiKey, track.title, track.artist)
-      .then((tempo) => {
-        if (speakerTempoTrackKey !== track.trackId) return;
-        if (!tempo) {
-          setSpeakerPulseBpmLabel("estimated (GetSongBPM no match)");
-          return;
-        }
-        externalSpeakerTempoCache.set(externalCacheKey, tempo);
-        setSpeakerTempo(tempo, "getsongbpm");
-      })
-      .catch((error) => {
-        console.warn("GetSongBPM tempo lookup failed", error);
-        // Keep the local estimate if the external lookup fails.
-        if (speakerTempoTrackKey === track.trackId && speakerTempoSource !== "getsongbpm") {
-          setSpeakerPulseBpmLabel("estimated (GetSongBPM lookup failed)");
-        }
-      });
-    return;
-  }
-
-  const spotifyFetchKey = `${track.trackId}:spotify`;
-  if (speakerTempoFetchKey === spotifyFetchKey) return;
-  speakerTempoFetchKey = spotifyFetchKey;
-
+  if (speakerTempoFetchKey === track.trackId) return;
+  speakerTempoFetchKey = track.trackId;
   void getTrackTempoBpm(state.spotifyClientId, track.trackId)
     .then((tempo) => {
       if (!tempo || speakerTempoTrackKey !== track.trackId) return;
