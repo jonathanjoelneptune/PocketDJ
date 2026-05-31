@@ -442,7 +442,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
 
-const ROOM_UTILITY_KEY = "pocketdj-room-utility-v64z";
+const ROOM_UTILITY_KEY = "pocketdj-room-utility-v65a";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -468,6 +468,7 @@ type SessionAlbumSettings = {
   albumWarmBlend: number;
   albumWarpMode: boolean;
   v64wQuintessentialDefault?: boolean;
+  v65aWarpDefault?: boolean;
   nextId: number;
   slots: SessionAlbumSlot[];
 };
@@ -486,8 +487,9 @@ const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   placeAlbumsInFrames: true,
   albumPixelAmount: 0.25,
   albumWarmBlend: 0.54,
-  albumWarpMode: false,
+  albumWarpMode: true,
   v64wQuintessentialDefault: true,
+  v65aWarpDefault: true,
   nextId: 53,
   slots: [
     { id: 1, label: "A-1", tlX: 77, tlY: 15, trX: 177, trY: 73, blX: 78, blY: 144, brX: 173, brY: 185 },
@@ -623,13 +625,15 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
 
     const maxId = slots.reduce((max, slot) => Math.max(max, slot.id), 0);
     const hasV64WDefault = Boolean((parsed as { v64wQuintessentialDefault?: boolean }).v64wQuintessentialDefault);
+    const hasV65AWarpDefault = Boolean((parsed as { v65aWarpDefault?: boolean }).v65aWarpDefault);
     return {
       showGuides: Boolean(parsed.showGuides),
       placeAlbumsInFrames: hasV64WDefault ? Boolean(parsed.placeAlbumsInFrames) : true,
       albumPixelAmount: clamp01(Number(parsed.albumPixelAmount ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumPixelAmount)),
       albumWarmBlend: clamp01(Number(parsed.albumWarmBlend ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumWarmBlend)),
-      albumWarpMode: Boolean(parsed.albumWarpMode ?? DEFAULT_SESSION_ALBUM_SETTINGS.albumWarpMode),
+      albumWarpMode: hasV65AWarpDefault ? Boolean(parsed.albumWarpMode) : true,
       v64wQuintessentialDefault: true,
+      v65aWarpDefault: true,
       nextId: Math.max(Number(parsed.nextId || 1), maxId + 1, 1),
       slots: applySessionAlbumSlotMigrations(slots),
     };
@@ -844,6 +848,22 @@ async function resolveWallAlbumArtworkUrlWithRetry(item: WallAlbumMasterItem, ca
 }
 
 
+
+function usedWallAlbumKeys(): Set<string> {
+  const used = new Set<string>();
+  sessionWallAlbumAssignmentsBySlot.forEach((placeholder) => {
+    used.add(`${placeholder.artist}__${placeholder.title}`);
+  });
+  return used;
+}
+
+function findReplacementWallAlbum(cache: Record<string, string>): WallAlbumMasterItem | null {
+  const used = usedWallAlbumKeys();
+  const candidates = shuffleSessionAlbumArray(WALL_ALBUM_MASTER_LIST).filter((item) => !used.has(wallAlbumKey(item)));
+  return candidates.find((item) => Boolean(item.artworkUrl || cache[wallAlbumKey(item)])) || candidates[0] || null;
+}
+
+
 function assignWallAlbumsForRefresh(): void {
   const eligibleSlots = sessionAlbumSettings.slots.slice().sort((a, b) => a.id - b.id);
   if (!eligibleSlots.length) {
@@ -871,7 +891,22 @@ function assignWallAlbumsForRefresh(): void {
 
     if (!cachedOrStaticUrl) {
       void resolveWallAlbumArtworkUrlWithRetry(item, cache, 2).then((artworkUrl) => {
-        if (!artworkUrl) return;
+        if (!artworkUrl) {
+        const replacement = findReplacementWallAlbum(cache);
+        const replacementUrl = replacement ? replacement.artworkUrl || cache[wallAlbumKey(replacement)] : "";
+        if (!replacement || !replacementUrl) return;
+        void loadSessionAlbumImage(replacementUrl).then(() => {
+          const resolved: SessionAlbumPlaceholder = {
+            title: replacement.album,
+            artist: replacement.artist,
+            imageUrl: replacementUrl,
+          };
+          sessionWallAlbumAssignments[index] = resolved;
+          sessionWallAlbumAssignmentsBySlot.set(slot.id, resolved);
+          scheduleSessionAlbumRender();
+        });
+        return;
+      }
         void loadSessionAlbumImage(artworkUrl).then(() => {
           const resolved: SessionAlbumPlaceholder = {
             title: item.album,
@@ -1213,6 +1248,47 @@ function drawSessionAlbumPolygon(ctx: CanvasRenderingContext2D, slot: SessionAlb
   ctx.closePath();
 }
 
+
+function drawSessionAlbumFallbackSleeve(ctx: CanvasRenderingContext2D, slot: SessionAlbumSlot): void {
+  const bounds = sessionAlbumSlotBounds(slot);
+  const gradient = ctx.createLinearGradient(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height);
+  gradient.addColorStop(0, "#2b1a12");
+  gradient.addColorStop(0.52, "#111018");
+  gradient.addColorStop(1, "#4a2412");
+
+  ctx.save();
+  drawSessionAlbumPolygon(ctx, slot);
+  ctx.clip();
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(bounds.x - 4, bounds.y - 4, bounds.width + 8, bounds.height + 8);
+
+  const cx = bounds.x + bounds.width / 2;
+  const cy = bounds.y + bounds.height / 2;
+  const r = Math.max(8, Math.min(bounds.width, bounds.height) * 0.32);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(5, 5, 8, 0.82)";
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, Math.max(2, r * 0.18), 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(210, 148, 56, 0.78)";
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(241, 185, 93, 0.72)";
+  ctx.font = "700 16px monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  if (bounds.width > 42 && bounds.height > 42) {
+    ctx.fillText("POCKET", cx, bounds.y + Math.max(12, bounds.height * 0.18));
+    ctx.fillText("DJ", cx, bounds.y + Math.max(26, bounds.height * 0.32));
+  }
+
+  ctx.restore();
+}
+
+
 function drawSessionAlbumCanvasDepth(ctx: CanvasRenderingContext2D, slot: SessionAlbumSlot): void {
   const center = getSessionAlbumSlotCenter(slot);
   const shadowDx = center.x > ROOM_COORD_WIDTH / 2 ? -4 : 4;
@@ -1308,9 +1384,13 @@ function renderSessionAlbumWarpCanvas(): void {
         image = fallback;
       }
 
-      if (!image?.complete || image.naturalWidth <= 0) return;
-
       drawSessionAlbumCanvasDepth(ctx, slot);
+      if (!image?.complete || image.naturalWidth <= 0) {
+        drawSessionAlbumFallbackSleeve(ctx, slot);
+        drawSessionAlbumCanvasFinish(ctx, slot);
+        return;
+      }
+
       ctx.save();
       applySessionAlbumCanvasWarmFilter(ctx);
       drawWarpedAlbumImage(ctx, image, slot);

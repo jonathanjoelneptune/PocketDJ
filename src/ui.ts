@@ -256,7 +256,7 @@ export function renderShell(state: AppState): void {
               Place albums in frames
             </label>
             <label class="utility-checkbox">
-              <input id="sessionAlbumWarpMode" type="checkbox" />
+              <input id="sessionAlbumWarpMode" type="checkbox" checked />
               Warp albums to frame corners
             </label>
             <label class="session-album-pixel-control">Album pixel effect <span id="sessionAlbumPixelAmountValue">0.25</span>

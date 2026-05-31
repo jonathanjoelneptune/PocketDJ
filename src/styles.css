@@ -7255,3 +7255,8 @@ body.lyrics-marquee-unavailable .marquee::after {
 /* v64Z: Warp wall polish.
    Every defined wall slot now receives an album or fallback sleeve on each refresh.
    B-3 is migrated/locked to the corrected corner order so it does not rotate in warp mode. */
+
+
+/* v65A: Warp mode is now the default wall-album renderer.
+   Canvas draws a direct fallback sleeve per slot if an external album image is not loaded yet,
+   so wall frames should not appear empty while artwork is resolving. */
