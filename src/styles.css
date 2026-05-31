@@ -7300,3 +7300,21 @@ body.lyrics-marquee-unavailable .marquee::after {
   stroke: rgba(255, 184, 92, 0.96);
   stroke-dasharray: 10 6;
 }
+
+/* v65C: Partial albums can be edited from visible corners only. */
+.session-album-partial-helper {
+  border: 1px solid rgba(255, 184, 92, 0.22);
+  border-radius: 10px;
+  padding: 8px;
+  margin: 6px 0 10px;
+  background: rgba(18, 10, 6, 0.36);
+}
+
+.session-album-partial-helper-title {
+  color: rgba(255, 218, 150, 0.9);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
