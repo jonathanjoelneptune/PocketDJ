@@ -346,6 +346,7 @@ export function renderShell(state: AppState): void {
                 <button id="clearGetSongBpmApiKey" class="secondary" type="button">Clear BPM Key</button>
               </div>
               <div id="getSongBpmApiKeyStatus" class="utility-readout">No GetSongBPM key saved.</div>
+              <a class="getsongbpm-credit-link" href="https://getsongbpm.com/" target="_blank" rel="noreferrer">Tempo data by GetSongBPM</a>
             </div>
             <label>Speaker pulse X % <span id="speakerPulseXValue">50.9</span>
               <input id="speakerPulseX" type="range" min="20" max="80" step="0.1" value="50.9" />
