@@ -668,24 +668,24 @@ type StringLightSettings = {
 };
 
 const STRING_LIGHT_KEY = "pocketdj-string-light-points-v1";
-const STRING_LIGHT_PRESET_MIGRATION_KEY = "pocketdj-v65r-string-light-preset-applied";
+const STRING_LIGHT_PRESET_MIGRATION_KEY = "pocketdj-v65u-string-light-preset-applied";
 const DEFAULT_STRING_LIGHT_POINTS: StringLightPoint[] = [
   { id: 1, x: 591, y: 331, size: 13, intensity: 0.95, warmth: 0.72, flicker: 0.18, phase: 0.02 },
   { id: 2, x: 639, y: 327, size: 15, intensity: 1.05, warmth: 0.76, flicker: 0.16, phase: 0.19 },
-  { id: 3, x: 681, y: 315, size: 13, intensity: 0.90, warmth: 0.68, flicker: 0.22, phase: 0.38 },
-  { id: 4, x: 725, y: 326, size: 14, intensity: 1.02, warmth: 0.74, flicker: 0.14, phase: 0.53 },
-  { id: 5, x: 762, y: 327, size: 13, intensity: 0.88, warmth: 0.69, flicker: 0.20, phase: 0.71 },
-  { id: 6, x: 800, y: 317, size: 15, intensity: 1.10, warmth: 0.78, flicker: 0.16, phase: 0.87 },
-  { id: 7, x: 839, y: 327, size: 13, intensity: 0.92, warmth: 0.73, flicker: 0.24, phase: 0.31 },
+  { id: 3, x: 681, y: 313, size: 13, intensity: 0.90, warmth: 0.68, flicker: 0.22, phase: 0.38 },
+  { id: 4, x: 724, y: 326, size: 14, intensity: 1.02, warmth: 0.74, flicker: 0.14, phase: 0.53 },
+  { id: 5, x: 762, y: 326, size: 13, intensity: 0.88, warmth: 0.69, flicker: 0.20, phase: 0.71 },
+  { id: 6, x: 800, y: 316, size: 15, intensity: 1.10, warmth: 0.78, flicker: 0.16, phase: 0.87 },
+  { id: 7, x: 839, y: 325, size: 13, intensity: 0.92, warmth: 0.73, flicker: 0.24, phase: 0.31 },
   { id: 8, x: 876, y: 329, size: 14, intensity: 1.06, warmth: 0.76, flicker: 0.17, phase: 0.62 },
-  { id: 9, x: 914, y: 333, size: 13, intensity: 0.96, warmth: 0.70, flicker: 0.19, phase: 0.44 },
-  { id: 10, x: 955, y: 330, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.79 },
-  { id: 11, x: 986, y: 328, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.00 },
-  { id: 12, x: 1020, y: 315, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.09090909090909091 },
-  { id: 13, x: 1056, y: 326, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.18181818181818182 },
-  { id: 14, x: 1092, y: 328, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.2727272727272727 },
-  { id: 15, x: 1126, y: 317, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.36363636363636365 },
-  { id: 16, x: 1159, y: 327, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.45454545454545453 },
+  { id: 9, x: 915, y: 333, size: 13, intensity: 0.96, warmth: 0.70, flicker: 0.19, phase: 0.44 },
+  { id: 10, x: 954, y: 330, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.79 },
+  { id: 11, x: 985, y: 326, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.00 },
+  { id: 12, x: 1020, y: 314, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.09090909090909091 },
+  { id: 13, x: 1055, y: 326, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.18181818181818182 },
+  { id: 14, x: 1092, y: 326, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.2727272727272727 },
+  { id: 15, x: 1126, y: 315, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.36363636363636365 },
+  { id: 16, x: 1160, y: 326, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.45454545454545453 },
   { id: 18, x: 1197, y: 331, size: 13, intensity: 0.95, warmth: 0.72, flicker: 0.18, phase: 0.6363636363636364 },
 ];
 
@@ -693,10 +693,10 @@ const DEFAULT_STRING_LIGHT_SETTINGS: StringLightSettings = {
   enabled: true,
   editMode: false,
   showGuides: false,
-  glow: 0.84,
-  pulse: 0.76,
-  flicker: 0.94,
-  selectedId: 18,
+  glow: 0.75,
+  pulse: 0.36,
+  flicker: 0.74,
+  selectedId: 16,
   nextId: 19,
   points: DEFAULT_STRING_LIGHT_POINTS.map((point) => ({ ...point })),
 };
@@ -5088,11 +5088,43 @@ function estimateTrackTempoBpm(track: AppState["playback"]): number {
   return Math.max(62, Math.min(168, Math.round(estimate)));
 }
 
+function updateMixerTempoLedStatus(source: typeof speakerTempoSource): void {
+  const root = document.documentElement;
+  const led = document.querySelector<HTMLElement>("#mixerTempoLed");
+  const status =
+    source === "getsongbpm" || source === "spotify" || source === "demo"
+      ? "locked"
+      : source === "lookup"
+        ? "lookup"
+        : source === "estimate" || source === "nomatch"
+          ? "estimated"
+          : "fallback";
+
+  root.dataset.tempoStatus = status;
+  root.classList.toggle("tempo-status-locked", status === "locked");
+  root.classList.toggle("tempo-status-lookup", status === "lookup");
+  root.classList.toggle("tempo-status-estimated", status === "estimated");
+  root.classList.toggle("tempo-status-fallback", status === "fallback");
+
+  if (!led) return;
+  const readable =
+    status === "locked"
+      ? "Tempo source: lookup succeeded"
+      : status === "lookup"
+        ? "Tempo source: looking up"
+        : status === "estimated"
+          ? "Tempo source: estimated"
+          : "Tempo source: fallback";
+  led.title = readable;
+  led.setAttribute("aria-label", readable);
+}
+
 function setSpeakerTempo(nextBpm: number | null, source: typeof speakerTempoSource): void {
   speakerTempoBpm = nextBpm && Number.isFinite(nextBpm) && nextBpm > 0 ? nextBpm : SPEAKER_PULSE_FALLBACK_BPM;
   speakerTempoSource = source;
   document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
   setSpeakerPulseBpmLabel();
+  updateMixerTempoLedStatus(source);
 }
 
 function setSpeakerPulseBpmLabel(): void {

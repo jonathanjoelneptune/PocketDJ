@@ -8170,3 +8170,97 @@ body.lyrics-marquee-unavailable .marquee::after {
   height: 32%;
   border-width: 3px;
 }
+
+/* v65U: subtle mixer tempo-source LED. This keeps BPM state in-world instead of adding more UI. */
+.mixer-tempo-led {
+  position: absolute;
+  left: 50.3%;
+  top: 68.1%;
+  width: 1.15%;
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0.50;
+  mix-blend-mode: screen;
+  --tempo-led-rgb: 196, 76, 38;
+  --tempo-led-core-rgb: 255, 129, 75;
+  --tempo-led-opacity: 0.46;
+  --tempo-led-glow: 0.22;
+  transition: opacity 900ms ease, filter 900ms ease;
+}
+
+.music-reactive-playing .mixer-tempo-led {
+  opacity: var(--tempo-led-opacity);
+}
+
+.mixer-tempo-led-glow,
+.mixer-tempo-led-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.mixer-tempo-led-glow {
+  width: 320%;
+  height: 320%;
+  background: radial-gradient(circle, rgba(var(--tempo-led-rgb), calc(var(--tempo-led-glow) * 0.62)) 0%, rgba(var(--tempo-led-rgb), calc(var(--tempo-led-glow) * 0.32)) 28%, rgba(var(--tempo-led-rgb), 0) 70%);
+  filter: blur(3px);
+}
+
+.mixer-tempo-led-core {
+  width: 46%;
+  height: 46%;
+  background: radial-gradient(circle at 35% 28%, rgba(255,255,235,0.92) 0 13%, rgba(var(--tempo-led-core-rgb), 0.96) 36%, rgba(var(--tempo-led-rgb), 0.82) 78%, rgba(28, 14, 8, 0.55) 100%);
+  box-shadow:
+    0 0 4px rgba(var(--tempo-led-rgb), calc(var(--tempo-led-glow) * 0.7)),
+    0 1px 1px rgba(0,0,0,0.55);
+}
+
+:root.tempo-status-locked .mixer-tempo-led {
+  --tempo-led-rgb: 91, 205, 113;
+  --tempo-led-core-rgb: 178, 255, 170;
+  --tempo-led-opacity: 0.58;
+  --tempo-led-glow: 0.34;
+}
+
+:root.tempo-status-estimated .mixer-tempo-led,
+:root.tempo-status-nomatch .mixer-tempo-led {
+  --tempo-led-rgb: 224, 166, 63;
+  --tempo-led-core-rgb: 255, 220, 124;
+  --tempo-led-opacity: 0.52;
+  --tempo-led-glow: 0.28;
+}
+
+:root.tempo-status-fallback .mixer-tempo-led {
+  --tempo-led-rgb: 184, 68, 38;
+  --tempo-led-core-rgb: 255, 126, 70;
+  --tempo-led-opacity: 0.46;
+  --tempo-led-glow: 0.22;
+}
+
+:root.tempo-status-lookup .mixer-tempo-led {
+  --tempo-led-rgb: 240, 202, 118;
+  --tempo-led-core-rgb: 255, 237, 172;
+  --tempo-led-opacity: 0.60;
+  --tempo-led-glow: 0.34;
+  animation: mixerTempoLookupBlink 1100ms ease-in-out infinite;
+}
+
+:root:not(.music-reactive-playing) .mixer-tempo-led {
+  opacity: 0.32;
+  filter: saturate(0.82) brightness(0.82);
+}
+
+@keyframes mixerTempoLookupBlink {
+  0%, 100% {
+    opacity: 0.35;
+    filter: brightness(0.9);
+  }
+  50% {
+    opacity: 0.72;
+    filter: brightness(1.18);
+  }
+}

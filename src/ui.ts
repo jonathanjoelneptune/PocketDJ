@@ -87,6 +87,10 @@ export function renderShell(state: AppState): void {
             draggable="false"
             aria-hidden="true"
           />
+          <div id="mixerTempoLed" class="mixer-tempo-led" aria-label="Tempo source indicator" title="Tempo source: fallback" aria-hidden="true">
+            <span class="mixer-tempo-led-glow"></span>
+            <span class="mixer-tempo-led-core"></span>
+          </div>
         </div>
 
         <div class="floor-player floor-player-visible" id="floorPlayer" aria-label="Spotify floor playback controls">
