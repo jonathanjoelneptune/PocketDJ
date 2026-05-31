@@ -191,6 +191,9 @@ type RoomUtilitySettings = {
   speakerPulseY: number;
   speakerPulseSize: number;
   speakerWarpOpacity: number;
+  mixerTempoLedX: number;
+  mixerTempoLedY: number;
+  mixerTempoLedSize: number;
   speakerPulseUseTempo: boolean;
   speakerPulseUseExternalTempo: boolean;
   sceneFilter: SceneFilter;
@@ -355,6 +358,9 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   speakerPulseY: 49,
   speakerPulseSize: 55,
   speakerWarpOpacity: 1.00,
+  mixerTempoLedX: 50.2,
+  mixerTempoLedY: 63.2,
+  mixerTempoLedSize: 1.65,
   speakerPulseUseTempo: true,
   speakerPulseUseExternalTempo: true,
   sceneFilter: "neon-purple",
@@ -4535,6 +4541,9 @@ function bindRoomUtilityControls(): void {
     ["speakerPulseY", "speakerPulseYValue"],
     ["speakerPulseSize", "speakerPulseSizeValue"],
     ["speakerWarpOpacity", "speakerWarpOpacityValue"],
+    ["mixerTempoLedX", "mixerTempoLedXValue"],
+    ["mixerTempoLedY", "mixerTempoLedYValue"],
+    ["mixerTempoLedSize", "mixerTempoLedSizeValue"],
     ["filterStrength", "filterStrengthValue"],
     ["vignetteStrength", "vignetteStrengthValue"],
     ["shadowOpacity", "shadowOpacityValue"],
@@ -4804,6 +4813,9 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--speaker-pulse-y", `${roomUtility.speakerPulseY}%`);
   root.style.setProperty("--speaker-pulse-size", `${roomUtility.speakerPulseSize}%`);
   root.style.setProperty("--speaker-warp-opacity", String(roomUtility.speakerWarpOpacity));
+  root.style.setProperty("--mixer-tempo-led-x", `${roomUtility.mixerTempoLedX}%`);
+  root.style.setProperty("--mixer-tempo-led-y", `${roomUtility.mixerTempoLedY}%`);
+  root.style.setProperty("--mixer-tempo-led-size", `${roomUtility.mixerTempoLedSize}%`);
   root.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
   root.classList.toggle("speaker-pulse-tempo-enabled", roomUtility.speakerPulseUseTempo);
   root.style.setProperty("--scene-filter-strength", String(roomUtility.filterStrength));

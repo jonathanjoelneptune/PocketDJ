@@ -8174,9 +8174,9 @@ body.lyrics-marquee-unavailable .marquee::after {
 /* v65U: subtle mixer tempo-source LED. This keeps BPM state in-world instead of adding more UI. */
 .mixer-tempo-led {
   position: absolute;
-  left: 50.3%;
-  top: 68.1%;
-  width: 1.15%;
+  left: var(--mixer-tempo-led-x, 50.2%);
+  top: var(--mixer-tempo-led-y, 63.2%);
+  width: var(--mixer-tempo-led-size, 1.65%);
   aspect-ratio: 1 / 1;
   transform: translate(-50%, -50%);
   z-index: 8;
