@@ -3,7 +3,7 @@ import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlb
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
+import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getTrackTempoBpm, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import {
   emptyLyrics,
@@ -135,7 +135,12 @@ let albumRevealLoadedUrl = "";
 let albumRevealPreloadStartedAt = 0;
 let albumRevealPreloadImage: HTMLImageElement | null = null;
 let vinylClockTimer: number | null = null;
+let speakerTempoTrackKey = "";
+let speakerTempoFetchKey = "";
+let speakerTempoBpm: number | null = null;
+const speakerTempoCache = new Map<string, number>();
 const ALBUM_REVEAL_MAX_WAIT_MS = 500;
+const SPEAKER_PULSE_FALLBACK_BPM = 96;
 
 type SceneFilter =
   | "none"
@@ -159,6 +164,7 @@ type RoomUtilitySettings = {
   speakerPulseY: number;
   speakerPulseSize: number;
   speakerWarpOpacity: number;
+  speakerPulseUseTempo: boolean;
   sceneFilter: SceneFilter;
   filterStrength: number;
   vignetteStrength: number;
@@ -321,6 +327,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   speakerPulseY: 49,
   speakerPulseSize: 55,
   speakerWarpOpacity: 1.00,
+  speakerPulseUseTempo: true,
   sceneFilter: "neon-purple",
   filterStrength: 0.20,
   vignetteStrength: 0.20,
@@ -335,7 +342,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   panelHeightAdjustEnabled: false,
   roomFillStretchMode: false,
   utilityPanelLeftSide: false,
-  vinylClockEnabled: true,
+  vinylClockEnabled: false,
   vinylClockX: 544,
   vinylClockY: 382,
   vinylClockSize: 86,
@@ -472,6 +479,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTransition: "none"};
 
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v65a";
+const CLOCK_DISABLED_MIGRATION_KEY = "pocketdj-v65m-clock-disabled-default-applied";
 let roomUtility = loadRoomUtilitySettings();
 
 
@@ -2184,6 +2192,7 @@ async function boot(): Promise<void> {
   scheduleSidePanelAutoHide();
   bindRoomUtilityControls();
   bindSessionWallAlbumControls();
+  applyClockDisabledDefaultMigration();
   applyRoomUtilitySettings();
   scheduleVinylClockDecorTick();
 
@@ -3744,6 +3753,7 @@ function bindRoomUtilityControls(): void {
   const utilityPanelLeftSide = qs<HTMLInputElement>("#utilityPanelLeftSide");
   const songChangeMode = qs<HTMLInputElement>("#songChangeMode");
   const vinylClockEnabled = qs<HTMLInputElement>("#vinylClockEnabled");
+  const speakerPulseUseTempo = qs<HTMLInputElement>("#speakerPulseUseTempo");
 
   sceneFilter.value = roomUtility.sceneFilter;
   lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
@@ -3760,6 +3770,7 @@ function bindRoomUtilityControls(): void {
   utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
   songChangeMode.checked = roomUtility.songChangeMode;
   vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
+  speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
 
   panelHeightAdjustEnabled.addEventListener("change", () => {
     setPanelHeightAdjustEnabled(panelHeightAdjustEnabled.checked, false);
@@ -3783,6 +3794,12 @@ function bindRoomUtilityControls(): void {
 
   vinylClockEnabled.addEventListener("change", () => {
     roomUtility = { ...roomUtility, vinylClockEnabled: vinylClockEnabled.checked };
+    applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
+  });
+
+  speakerPulseUseTempo.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, speakerPulseUseTempo: speakerPulseUseTempo.checked };
     applyRoomUtilitySettings();
     saveRoomUtilitySettings();
   });
@@ -4011,6 +4028,7 @@ function bindRoomUtilityControls(): void {
     utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
     songChangeMode.checked = roomUtility.songChangeMode;
     vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
+    speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
 
     controls.forEach(([inputId, labelId]) => {
       const input = qs<HTMLInputElement>(`#${inputId}`);
@@ -4062,6 +4080,8 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--speaker-pulse-y", `${roomUtility.speakerPulseY}%`);
   root.style.setProperty("--speaker-pulse-size", `${roomUtility.speakerPulseSize}%`);
   root.style.setProperty("--speaker-warp-opacity", String(roomUtility.speakerWarpOpacity));
+  root.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
+  root.classList.toggle("speaker-pulse-tempo-enabled", roomUtility.speakerPulseUseTempo);
   root.style.setProperty("--scene-filter-strength", String(roomUtility.filterStrength));
   root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength));
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
@@ -4315,6 +4335,79 @@ function updateSongChangeAlbumOverlay(track: AppState["playback"]): void {
   albumCover.alt = readyUrl ? `${track.title} album cover` : "";
 }
 
+function speakerPulseDurationMs(): number {
+  const bpm = Math.max(55, Math.min(190, speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM));
+  return Math.round(60_000 / bpm);
+}
+
+function setSpeakerPulseBpmLabel(): void {
+  const label = document.querySelector<HTMLElement>("#speakerPulseBpmValue");
+  if (!label) return;
+  const bpm = speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM;
+  label.textContent = `${Math.round(bpm)}${speakerTempoBpm ? "" : " fallback"}`;
+}
+
+function applySpeakerPulseTempo(track: AppState["playback"]): void {
+  const trackKey = track.trackId || `${track.source}:${track.title}:${track.artist}`;
+  if (!roomUtility.speakerPulseUseTempo) {
+    speakerTempoBpm = SPEAKER_PULSE_FALLBACK_BPM;
+    document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
+    setSpeakerPulseBpmLabel();
+    return;
+  }
+
+  if (!track.isPlaying && track.source !== "demo") {
+    setSpeakerPulseBpmLabel();
+    return;
+  }
+
+  if (typeof track.tempoBpm === "number" && Number.isFinite(track.tempoBpm) && track.tempoBpm > 0) {
+    speakerTempoTrackKey = trackKey;
+    speakerTempoBpm = track.tempoBpm;
+    document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
+    setSpeakerPulseBpmLabel();
+    return;
+  }
+
+  if (!track.trackId || track.source !== "spotify") {
+    speakerTempoTrackKey = trackKey;
+    speakerTempoBpm = SPEAKER_PULSE_FALLBACK_BPM;
+    document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
+    setSpeakerPulseBpmLabel();
+    return;
+  }
+
+  const cached = speakerTempoCache.get(track.trackId);
+  if (cached) {
+    speakerTempoTrackKey = track.trackId;
+    speakerTempoBpm = cached;
+    document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
+    setSpeakerPulseBpmLabel();
+    return;
+  }
+
+  if (speakerTempoTrackKey !== track.trackId) {
+    speakerTempoTrackKey = track.trackId;
+    speakerTempoBpm = SPEAKER_PULSE_FALLBACK_BPM;
+    document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
+    setSpeakerPulseBpmLabel();
+  }
+
+  if (speakerTempoFetchKey === track.trackId) return;
+  speakerTempoFetchKey = track.trackId;
+  void getTrackTempoBpm(state.spotifyClientId, track.trackId)
+    .then((tempo) => {
+      if (!tempo || speakerTempoTrackKey !== track.trackId) return;
+      speakerTempoCache.set(track.trackId || "", tempo);
+      speakerTempoBpm = tempo;
+      document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
+      setSpeakerPulseBpmLabel();
+    })
+    .catch(() => {
+      // Keep the fallback pulse if Spotify audio features are unavailable for this track.
+    });
+}
+
 function updateSpeakerPulse(isPlaying: boolean): void {
   const left = qs<HTMLElement>("#leftSpeaker");
   const right = qs<HTMLElement>("#rightSpeaker");
@@ -4377,6 +4470,17 @@ function setUtilityLabel(id: string, value: number): void {
         ? 1
         : 0;
   qs(`#${id}`).textContent = value.toFixed(decimals);
+}
+
+function applyClockDisabledDefaultMigration(): void {
+  try {
+    if (window.localStorage.getItem(CLOCK_DISABLED_MIGRATION_KEY) === "1") return;
+    roomUtility = { ...roomUtility, vinylClockEnabled: false };
+    window.localStorage.setItem(CLOCK_DISABLED_MIGRATION_KEY, "1");
+    saveRoomUtilitySettings();
+  } catch (error) {
+    console.warn("Could not apply Pocket DJ clock disabled migration", error);
+  }
 }
 
 function loadRoomUtilitySettings(): RoomUtilitySettings {
@@ -4475,6 +4579,7 @@ function tick(): void {
   }
 
   updateSongChangeAlbumOverlay(state.playback);
+  applySpeakerPulseTempo(state.playback);
   updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
   updatePlaybackUi(state.playback, state.debugOpen);
 

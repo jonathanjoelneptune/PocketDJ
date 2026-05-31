@@ -1,9 +1,9 @@
 import type { NormalizedTrack } from "./state/types";
 
 const demoTracks = [
-  { title: "Neon Side Quest", artist: "Pocket DJ", durationMs: 182_000 },
-  { title: "Static on the Dancefloor", artist: "Analog Neptune", durationMs: 214_000 },
-  { title: "Late Checkout Groove", artist: "The Tiny Speakers", durationMs: 196_000 }
+  { title: "Neon Side Quest", artist: "Pocket DJ", durationMs: 182_000, tempoBpm: 124 },
+  { title: "Static on the Dancefloor", artist: "Analog Neptune", durationMs: 214_000, tempoBpm: 92 },
+  { title: "Late Checkout Groove", artist: "The Tiny Speakers", durationMs: 196_000, tempoBpm: 108 }
 ];
 
 let demoStartedAt = Date.now();
@@ -43,6 +43,7 @@ export function getDemoTrack(): NormalizedTrack {
     albumArtUrl: null,
     progressMs: Math.min(progress, activeTrack.durationMs),
     durationMs: activeTrack.durationMs,
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
+    tempoBpm: activeTrack.tempoBpm
   };
 }

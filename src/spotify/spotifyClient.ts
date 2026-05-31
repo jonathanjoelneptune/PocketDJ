@@ -283,6 +283,31 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
   };
 }
 
+export async function getTrackTempoBpm(clientId: string, trackId: string): Promise<number | null> {
+  const cleanTrackId = trackId.trim();
+  if (!cleanTrackId) return null;
+
+  const token = await getUsableToken(clientId);
+  if (!token) return null;
+
+  const response = await fetch(`https://api.spotify.com/v1/audio-features/${encodeURIComponent(cleanTrackId)}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (response.status === 401) {
+    clearTokens();
+    return null;
+  }
+
+  if (response.status === 403 || response.status === 404 || response.status === 429 || !response.ok) {
+    return null;
+  }
+
+  const json = (await response.json()) as SpotifyAudioFeaturesResponse;
+  const tempo = Number(json.tempo || 0);
+  return Number.isFinite(tempo) && tempo > 0 ? tempo : null;
+}
+
 export function disconnectSpotify(): void {
   clearTokens();
 }
@@ -348,6 +373,11 @@ type SpotifyAlbumItem = {
   images?: SpotifyImage[];
   release_date?: string;
   total_tracks?: number;
+};
+
+type SpotifyAudioFeaturesResponse = {
+  id?: string;
+  tempo?: number;
 };
 
 type SpotifySearchResponse = {

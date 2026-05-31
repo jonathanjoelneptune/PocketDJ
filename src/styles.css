@@ -7818,3 +7818,44 @@ body.lyrics-marquee-unavailable .marquee::after {
 .vinyl-clock-center {
   opacity: calc(1 - (var(--vinyl-clock-room-blend) * 0.10));
 }
+
+
+/* v65M: song-tempo speaker pulse. The duration is updated from Spotify BPM when available. */
+:root {
+  --speaker-pulse-duration: 625ms;
+}
+
+.room-speaker.playing .speaker-driver {
+  animation: speakerDriverBeatPulse var(--speaker-pulse-duration) cubic-bezier(0.18, 0.86, 0.35, 1) infinite !important;
+}
+
+@keyframes speakerDriverBeatPulse {
+  0%, 100% {
+    transform: scale(0.965);
+  }
+
+  16% {
+    transform: scale(calc(1.025 + (var(--speaker-pulse) * 0.095)));
+  }
+
+  32% {
+    transform: scale(0.982);
+  }
+
+  48% {
+    transform: scale(calc(1.005 + (var(--speaker-pulse) * 0.038)));
+  }
+
+  72% {
+    transform: scale(0.972);
+  }
+}
+
+.utility-readout {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgba(255, 199, 92, 0.20);
+  border-radius: 0.55rem;
+  background: rgba(255, 199, 92, 0.06);
+  color: rgba(255, 235, 190, 0.9);
+  font-size: 0.72rem;
+}

@@ -330,9 +330,14 @@ export function renderShell(state: AppState): void {
             <label>Speaker opacity <span id="speakerOpacityValue">1.0</span>
               <input id="speakerOpacity" type="range" min="0" max="1" step="0.01" value="1.0" />
             </label>
-            <label>Speaker pulse <span id="speakerPulseValue">0.5</span>
+            <label>Speaker pulse amount <span id="speakerPulseValue">0.5</span>
               <input id="speakerPulse" type="range" min="0" max="1" step="0.01" value="0.5" />
             </label>
+            <label class="utility-checkbox">
+              <input id="speakerPulseUseTempo" type="checkbox" />
+              Pulse speakers to song BPM
+            </label>
+            <div class="utility-readout">Current pulse BPM: <span id="speakerPulseBpmValue">--</span></div>
             <label>Speaker pulse X % <span id="speakerPulseXValue">50.9</span>
               <input id="speakerPulseX" type="range" min="20" max="80" step="0.1" value="50.9" />
             </label>
