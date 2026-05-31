@@ -673,7 +673,7 @@ function normalizeSessionAlbumSlot(slot: Partial<SessionAlbumSlot>): SessionAlbu
     brY: clampSessionAlbumY(Number(slot.brY ?? 400), kind),
   };
 
-  if (normalized.kind === "partial") syncPartialAlbumHiddenCorners(normalized);
+  if (normalized.kind === "partial") normalizePartialAlbumMetadata(normalized);
   return normalized;
 }
 
@@ -694,27 +694,28 @@ function partialAlbumHiddenDepth(visibleWidth: number, overhang: number): number
   return Math.round(cleanVisibleWidth * cleanOverhang / (1 - cleanOverhang));
 }
 
+function normalizePartialAlbumMetadata(slot: SessionAlbumSlot): void {
+  if (slot.kind !== "partial") return;
+  slot.partialSide = slot.partialSide || normalizeSessionAlbumPartialSide(undefined, slot);
+  slot.partialOverhang = clampPartialAlbumOverhang(slot.partialOverhang ?? DEFAULT_PARTIAL_ALBUM_OVERHANG);
+}
+
 function syncPartialAlbumHiddenCorners(slot: SessionAlbumSlot): void {
   if (slot.kind !== "partial") return;
-  const side = slot.partialSide || normalizeSessionAlbumPartialSide(undefined, slot);
+  normalizePartialAlbumMetadata(slot);
+  const side = slot.partialSide || "left";
   const overhang = clampPartialAlbumOverhang(slot.partialOverhang ?? DEFAULT_PARTIAL_ALBUM_OVERHANG);
-  slot.partialSide = side;
-  slot.partialOverhang = overhang;
 
   if (side === "left") {
     const visibleTopWidth = Math.max(1, slot.trX);
     const visibleBottomWidth = Math.max(1, slot.brX);
     slot.tlX = clampSessionAlbumX(-partialAlbumHiddenDepth(visibleTopWidth, overhang), "partial");
     slot.blX = clampSessionAlbumX(-partialAlbumHiddenDepth(visibleBottomWidth, overhang), "partial");
-    slot.tlY = clampSessionAlbumY(slot.trY, "partial");
-    slot.blY = clampSessionAlbumY(slot.brY, "partial");
   } else {
     const visibleTopWidth = Math.max(1, ROOM_COORD_WIDTH - slot.tlX);
     const visibleBottomWidth = Math.max(1, ROOM_COORD_WIDTH - slot.blX);
     slot.trX = clampSessionAlbumX(ROOM_COORD_WIDTH + partialAlbumHiddenDepth(visibleTopWidth, overhang), "partial");
     slot.brX = clampSessionAlbumX(ROOM_COORD_WIDTH + partialAlbumHiddenDepth(visibleBottomWidth, overhang), "partial");
-    slot.trY = clampSessionAlbumY(slot.tlY, "partial");
-    slot.brY = clampSessionAlbumY(slot.blY, "partial");
   }
 }
 
@@ -1652,7 +1653,7 @@ function setSessionAlbumTarget(slotId: number, corner: SessionAlbumCornerKey): v
   const status = document.querySelector<HTMLElement>("#sessionAlbumTargetStatus");
   const slot = sessionAlbumSettings.slots.find((item) => item.id === slotId);
   if (status) {
-    const helper = slot?.kind === "partial" ? " The hidden side will be recalculated automatically." : "";
+    const helper = slot?.kind === "partial" ? " Use the visible edge for onscreen clicks, then tune the hidden perspective edge with the offscreen numeric controls." : "";
     status.textContent = slot ? `Click the room to set ${slot.label} ${corner.toUpperCase()} corner.${helper}` : "No corner target selected.";
   }
 }
@@ -1694,7 +1695,7 @@ function updateSessionAlbumSlotCorner(slotId: number, corner: SessionAlbumCorner
     yKey = "brY";
   }
 
-  if (slot.kind === "partial") syncPartialAlbumHiddenCorners(slot);
+  if (slot.kind === "partial") normalizePartialAlbumMetadata(slot);
   saveSessionAlbumSettings();
   syncSessionAlbumAllCoordinateInputs(slotId);
   renderSessionAlbumSlotGuides();
@@ -1705,27 +1706,29 @@ function setSessionAlbumCoordinate(slotId: number, key: keyof SessionAlbumSlot, 
   if (!slot) return;
   const nextValue = String(key).endsWith("X") ? clampSessionAlbumX(value, slot.kind) : clampSessionAlbumY(value, slot.kind);
   (slot as unknown as Record<string, number>)[key as string] = nextValue;
-  if (slot.kind === "partial" && isSessionAlbumVisibleEdgeKey(slot, key)) syncPartialAlbumHiddenCorners(slot);
+  if (slot.kind === "partial") normalizePartialAlbumMetadata(slot);
   saveSessionAlbumSettings();
   renderSessionAlbumSlotGuides();
   syncSessionAlbumAllCoordinateInputs(slotId);
 }
 
-function isSessionAlbumVisibleEdgeKey(slot: SessionAlbumSlot, key: keyof SessionAlbumSlot): boolean {
+function isSessionAlbumHiddenEdgeCorner(slot: SessionAlbumSlot, corner: SessionAlbumCornerKey): boolean {
   if (slot.kind !== "partial") return false;
   const side = slot.partialSide || "left";
-  const keyName = String(key);
-  return side === "left" ? keyName === "trX" || keyName === "trY" || keyName === "brX" || keyName === "brY" : keyName === "tlX" || keyName === "tlY" || keyName === "blX" || keyName === "blY";
+  return side === "left" ? corner === "tl" || corner === "bl" : corner === "tr" || corner === "br";
+}
+
+function sessionAlbumCornerRole(slot: SessionAlbumSlot, corner: SessionAlbumCornerKey): string {
+  if (slot.kind !== "partial") return "Corner";
+  return isSessionAlbumHiddenEdgeCorner(slot, corner) ? "Hidden perspective edge" : "Visible room edge";
 }
 
 function setSessionAlbumPartialOverhang(slotId: number, valuePercent: number): void {
   const slot = sessionAlbumSettings.slots.find((item) => item.id === slotId);
   if (!slot || slot.kind !== "partial") return;
   slot.partialOverhang = clampPartialAlbumOverhang(valuePercent / 100);
-  syncPartialAlbumHiddenCorners(slot);
   saveSessionAlbumSettings();
   renderSessionAlbumSlotGuides();
-  syncSessionAlbumAllCoordinateInputs(slotId);
   syncSessionAlbumPartialOverhangInputs(slotId, Math.round(slot.partialOverhang * 100));
 }
 
@@ -1791,10 +1794,7 @@ function renderSessionAlbumSlotPanel(slot: SessionAlbumSlot): string {
   ];
 
   const targetRows = slot.kind === "partial"
-    ? rows.filter(([corner]) => {
-        const side = slot.partialSide || "left";
-        return side === "left" ? corner === "tr" || corner === "br" : corner === "tl" || corner === "bl";
-      })
+    ? rows.filter(([corner]) => !isSessionAlbumHiddenEdgeCorner(slot, corner))
     : rows;
 
   const targetButtons = targetRows.map(([corner, label]) => `
@@ -1804,29 +1804,32 @@ function renderSessionAlbumSlotPanel(slot: SessionAlbumSlot): string {
   const partialOverhang = clampPartialAlbumOverhang(slot.partialOverhang ?? DEFAULT_PARTIAL_ALBUM_OVERHANG);
   const partialControls = slot.kind === "partial" ? `
     <div class="session-album-partial-helper">
-      <div class="session-album-partial-helper-title">Visible-edge helper</div>
-      <p class="session-album-partial-note">Click only the visible ${slot.partialSide === "right" ? "left" : "right"} corners. The hidden side is calculated from this offscreen crop amount.</p>
-      <label class="session-album-point-control">Offscreen crop %
+      <div class="session-album-partial-helper-title">Partial perspective helper</div>
+      <p class="session-album-partial-note">Click the visible ${slot.partialSide === "right" ? "left" : "right"} corners on the room. Then tune the hidden ${slot.partialSide === "right" ? "right" : "left"} corners below with negative/beyond-edge X values so the album keeps the wall tilt.</p>
+      <label class="session-album-point-control">Auto-fit crop %
         <input class="session-album-range" type="range" min="10" max="85" step="1" value="${Math.round(partialOverhang * 100)}" data-session-partial-overhang="${slot.id}" />
         <input class="session-album-number" type="number" min="10" max="85" step="1" value="${Math.round(partialOverhang * 100)}" data-session-partial-overhang="${slot.id}" />
       </label>
-      <button class="session-album-target-button" type="button" data-session-sync-partial="${slot.id}">Recalculate hidden side</button>
+      <button class="session-album-target-button" type="button" data-session-sync-partial="${slot.id}">Auto-place hidden edge from crop %</button>
     </div>
   ` : "";
 
-  const controls = rows.map(([, label, xKey, yKey]) => `
-    <div class="session-album-corner-row">
-      <div class="session-album-corner-title">${label}</div>
-      ${renderSessionAlbumNumberControl(slot, xKey, `${label} X`, ROOM_COORD_WIDTH)}
-      ${renderSessionAlbumNumberControl(slot, yKey, `${label} Y`, ROOM_COORD_HEIGHT)}
-    </div>
-  `).join("");
+  const controls = rows.map(([corner, label, xKey, yKey]) => {
+    const role = sessionAlbumCornerRole(slot, corner);
+    return `
+      <div class="session-album-corner-row ${slot.kind === "partial" && isSessionAlbumHiddenEdgeCorner(slot, corner) ? "session-album-hidden-edge-row" : ""}">
+        <div class="session-album-corner-title">${label}${slot.kind === "partial" ? `<span>${role}</span>` : ""}</div>
+        ${renderSessionAlbumNumberControl(slot, xKey, `${label} X`, ROOM_COORD_WIDTH)}
+        ${renderSessionAlbumNumberControl(slot, yKey, `${label} Y`, ROOM_COORD_HEIGHT)}
+      </div>
+    `;
+  }).join("");
 
   return `
     <details class="session-album-slot-panel session-album-slot-${slot.kind}">
       <summary>${slot.label}<span class="session-album-kind-pill">${slot.kind === "partial" ? "PARTIAL" : "FULL"}</span></summary>
       <div class="session-album-slot-controls">
-        ${slot.kind === "partial" ? `<p class="session-album-partial-note">Partial slots are edited from the visible edge. The hidden corners are placed offscreen automatically.</p>` : ""}
+        ${slot.kind === "partial" ? `<p class="session-album-partial-note">Partial slots keep all four corners. The offscreen edge is manual so the side albums can follow the wall perspective instead of flattening.</p>` : ""}
         ${partialControls}
         <div class="session-album-target-grid">${targetButtons}</div>
         ${controls}
