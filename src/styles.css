@@ -7514,3 +7514,51 @@ body.lyrics-marquee-unavailable .marquee::after {
   background: radial-gradient(circle at 35% 35%, #fff5d2, #d8862e 58%, #643014 100%);
   box-shadow: 0 0 0 2px rgba(31, 9, 2, 0.28), 0 0 8px rgba(255, 177, 80, 0.22);
 }
+
+/* v65I: keep the back-left vinyl clock above the wall-album canvas layer. */
+.room {
+  --vinyl-clock-x: 544px;
+  --vinyl-clock-y: 382px;
+  --vinyl-clock-size: 86px;
+  --vinyl-clock-tilt: -1deg;
+}
+
+.vinyl-clock-decor {
+  z-index: 24 !important;
+  filter:
+    drop-shadow(0 8px 13px rgba(0, 0, 0, 0.42))
+    drop-shadow(0 0 10px rgba(255, 166, 73, 0.10));
+}
+
+/* v65I: make ceiling lyrics read more like soft projected shadows than solid text. */
+.lyrics-ceiling {
+  mix-blend-mode: multiply;
+}
+
+.lyric-poster-svg {
+  opacity: 0.86 !important;
+  mix-blend-mode: multiply !important;
+  filter:
+    blur(0.22px)
+    drop-shadow(12px 16px 3px rgba(0, 0, 0, 0.16)) !important;
+}
+
+.lyric-poster-svg-row {
+  fill: rgba(8, 7, 9, 0.56) !important;
+  stroke: rgba(8, 7, 9, 0.28) !important;
+  stroke-width: calc(var(--lyric-poster-stroke) * 1.10) !important;
+  paint-order: stroke fill !important;
+  filter:
+    blur(0.34px)
+    drop-shadow(7px 8px 2px rgba(0, 0, 0, 0.12)) !important;
+}
+
+.lyric-poster-effect-drop-shadow .lyric-poster-svg-row,
+.lyric-poster-effect-emboss .lyric-poster-svg-row,
+.lyric-poster-effect-inset-emboss .lyric-poster-svg-row,
+.lyric-poster-effect-bevel .lyric-poster-svg-row,
+.lyric-poster-effect-soft-blur .lyric-poster-svg-row {
+  filter:
+    blur(0.34px)
+    drop-shadow(7px 8px 2px rgba(0, 0, 0, 0.12)) !important;
+}
