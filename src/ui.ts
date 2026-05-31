@@ -34,6 +34,7 @@ export function renderShell(state: AppState): void {
         <canvas id="sessionAlbumWarpCanvas" class="session-album-warp-canvas" width="1764" height="992" aria-hidden="true"></canvas>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
         <div id="stringLightOverlay" class="string-light-overlay" aria-hidden="true"></div>
+        <div id="ambientMusicGlow" class="ambient-music-glow" aria-hidden="true"></div>
 
         <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
           <div class="lyrics-boundary-guides" aria-hidden="true">

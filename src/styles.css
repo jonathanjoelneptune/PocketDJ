@@ -7873,19 +7873,33 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 /* v65Q temporary string light placement and glow utility */
+:root {
+  --string-light-core-rgb: 255, 221, 156;
+  --string-light-tint-rgb: 255, 179, 84;
+  --string-light-ambient-rgb: 244, 165, 92;
+  --ambient-room-glow-rgb: 126, 82, 140;
+  --ambient-room-accent-rgb: 255, 186, 108;
+  --music-room-energy: 0.3;
+}
+
 .string-light-overlay {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 180ms ease;
+  transition: opacity 240ms ease;
   --string-light-glow: 0.75;
   --string-light-pulse: 0.22;
   --string-light-flicker: 0.18;
+  --string-light-beat-ms: 625ms;
+  --string-light-breathe-ms: 1320ms;
+  --string-light-flicker-ms: 5200ms;
+  --string-light-playing-opacity: 0.84;
 }
 
-.string-light-overlay.string-lights-enabled {
+.string-light-overlay.string-lights-enabled.string-lights-playing,
+.string-light-overlay.string-lights-editing {
   opacity: 1;
 }
 
@@ -7903,12 +7917,18 @@ body.lyrics-marquee-unavailable .marquee::after {
   background: transparent;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  opacity: calc(0.62 + (var(--bulb-intensity) * 0.22));
+  opacity: var(--string-light-playing-opacity);
   mix-blend-mode: screen;
   animation:
-    stringLightBreath calc(2.4s - (var(--string-light-pulse) * 0.85s)) ease-in-out infinite,
-    stringLightFlicker calc(6.6s - (var(--string-light-flicker) * 2.4s)) steps(1, end) infinite;
+    stringLightBreath var(--string-light-breathe-ms) ease-in-out infinite,
+    stringLightFlicker var(--string-light-flicker-ms) steps(1, end) infinite;
   animation-delay: var(--bulb-phase), calc(var(--bulb-phase) * 1.7);
+  animation-play-state: paused;
+}
+
+.string-light-overlay.string-lights-playing .string-light-point,
+.string-light-overlay.string-lights-editing .string-light-point {
+  animation-play-state: running;
 }
 
 .string-light-overlay.string-lights-editing .string-light-point {
@@ -7923,12 +7943,13 @@ body.lyrics-marquee-unavailable .marquee::after {
   border-radius: 50%;
   background:
     radial-gradient(circle at 50% 50%,
-      rgba(255, 231, 158, calc(0.36 * var(--bulb-intensity))) 0%,
-      rgba(255, 176, 68, calc(0.23 * var(--bulb-intensity) * var(--string-light-glow))) 26%,
-      rgba(255, 121, 31, calc(0.08 * var(--bulb-intensity) * var(--string-light-glow))) 54%,
-      rgba(255, 121, 31, 0) 74%);
-  filter: blur(calc(var(--bulb-size) * (0.40 + var(--string-light-glow) * 0.18)));
-  transform: scale(calc(1.1 + var(--string-light-glow) * 0.40));
+      rgba(255, 242, 206, calc(0.42 * var(--bulb-intensity))) 0%,
+      rgba(var(--string-light-core-rgb), calc(0.28 * var(--bulb-intensity) * (0.72 + var(--string-light-glow) * 0.28))) 24%,
+      rgba(var(--string-light-tint-rgb), calc(0.17 * var(--bulb-intensity) * var(--string-light-glow))) 48%,
+      rgba(var(--string-light-ambient-rgb), calc(0.06 * var(--bulb-intensity) * var(--string-light-glow))) 64%,
+      rgba(var(--string-light-ambient-rgb), 0) 78%);
+  filter: blur(calc(var(--bulb-size) * (0.45 + var(--string-light-glow) * 0.25)));
+  transform: scale(calc(1.12 + var(--string-light-glow) * 0.45));
 }
 
 .string-light-core {
@@ -7941,13 +7962,15 @@ body.lyrics-marquee-unavailable .marquee::after {
   transform: translate(-50%, -50%);
   background:
     radial-gradient(circle at 38% 33%,
-      rgba(255, 255, 235, 0.98) 0 18%,
-      rgba(255, 226, 142, 0.96) 30%,
-      rgba(255, 177, 67, 0.92) calc(58% + var(--bulb-warmth) * 8%),
-      rgba(143, 65, 19, 0.56) 100%);
+      rgba(255, 255, 241, 0.99) 0 16%,
+      rgba(255, 241, 201, 0.97) 28%,
+      rgba(var(--string-light-core-rgb), 0.95) calc(58% + var(--bulb-warmth) * 7%),
+      rgba(var(--string-light-tint-rgb), 0.88) 76%,
+      rgba(106, 48, 18, 0.58) 100%);
   box-shadow:
-    0 0 calc(var(--bulb-size) * 0.6) rgba(255, 218, 145, calc(0.38 * var(--bulb-intensity))),
-    0 0 calc(var(--bulb-size) * 1.2) rgba(255, 160, 55, calc(0.28 * var(--bulb-intensity) * var(--string-light-glow))),
+    0 0 calc(var(--bulb-size) * 0.75) rgba(var(--string-light-core-rgb), calc(0.34 * var(--bulb-intensity))),
+    0 0 calc(var(--bulb-size) * 1.55) rgba(var(--string-light-tint-rgb), calc(0.24 * var(--bulb-intensity) * var(--string-light-glow))),
+    0 0 calc(var(--bulb-size) * 2.2) rgba(var(--string-light-ambient-rgb), calc(0.12 * var(--bulb-intensity) * var(--string-light-glow))),
     0 1px 2px rgba(0, 0, 0, 0.34);
 }
 
@@ -8013,14 +8036,48 @@ body.lyrics-marquee-unavailable .marquee::after {
   94% { opacity: calc(0.64 + (var(--bulb-intensity) * 0.20) - (var(--bulb-flicker) * var(--string-light-flicker) * 0.12)); }
 }
 
+.ambient-music-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  transition: opacity 280ms ease;
+  background:
+    radial-gradient(56% 38% at 50% 57%, rgba(var(--ambient-room-accent-rgb), calc(0.12 + var(--music-room-energy) * 0.04)) 0%, rgba(var(--ambient-room-accent-rgb), calc(0.06 + var(--music-room-energy) * 0.03)) 38%, rgba(var(--ambient-room-accent-rgb), 0) 74%),
+    radial-gradient(72% 52% at 50% 42%, rgba(var(--ambient-room-glow-rgb), calc(0.16 + var(--music-room-energy) * 0.05)) 0%, rgba(var(--ambient-room-glow-rgb), calc(0.08 + var(--music-room-energy) * 0.04)) 44%, rgba(var(--ambient-room-glow-rgb), 0) 78%),
+    linear-gradient(180deg, rgba(var(--ambient-room-glow-rgb), calc(0.07 + var(--music-room-energy) * 0.02)) 0%, rgba(var(--ambient-room-glow-rgb), 0.03) 48%, rgba(var(--ambient-room-accent-rgb), 0.02) 100%);
+  filter: blur(22px) saturate(1.08);
+}
+
+.music-reactive-playing .ambient-music-glow.ambient-music-glow-active {
+  opacity: 1;
+  animation:
+    ambientRoomBreathe var(--music-breathe-ms, 4800ms) ease-in-out infinite,
+    ambientRoomPulse var(--music-pulse-ms, 1800ms) ease-in-out infinite;
+}
+
+@keyframes ambientRoomBreathe {
+  0%, 100% {
+    transform: scale(0.994);
+    filter: blur(22px) saturate(1.04) brightness(0.98);
+  }
+  48% {
+    transform: scale(1.006);
+    filter: blur(24px) saturate(1.12) brightness(1.04);
+  }
+}
+
+@keyframes ambientRoomPulse {
+  0%, 100% {
+    opacity: calc(0.42 + var(--music-room-energy) * 0.10);
+  }
+  50% {
+    opacity: calc(0.60 + var(--music-room-energy) * 0.16);
+  }
+}
+
 .string-light-utility .utility-readout {
   margin-top: 8px;
-}
-
-.string-light-json {
-  max-height: 130px;
-}
-
-:root:not(.string-light-editing) .string-light-overlay {
-  pointer-events: none;
 }

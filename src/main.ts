@@ -146,6 +146,27 @@ const externalSpeakerTempoMisses = new Set<string>();
 const ALBUM_REVEAL_MAX_WAIT_MS = 500;
 const SPEAKER_PULSE_FALLBACK_BPM = 96;
 
+type RgbTriple = [number, number, number];
+type ReactiveRoomPalette = {
+  core: RgbTriple;
+  tint: RgbTriple;
+  ambient: RgbTriple;
+  roomGlow: RgbTriple;
+  roomAccent: RgbTriple;
+};
+
+const DEFAULT_REACTIVE_ROOM_PALETTE: ReactiveRoomPalette = {
+  core: [255, 221, 156],
+  tint: [255, 179, 84],
+  ambient: [244, 165, 92],
+  roomGlow: [126, 82, 140],
+  roomAccent: [255, 186, 108],
+};
+
+const reactiveRoomPaletteCache = new Map<string, ReactiveRoomPalette>();
+let reactiveRoomPaletteUrl = "";
+let reactiveRoomPalettePendingUrl = "";
+
 type SceneFilter =
   | "none"
   | "warm-club"
@@ -645,28 +666,36 @@ type StringLightSettings = {
 };
 
 const STRING_LIGHT_KEY = "pocketdj-string-light-points-v1";
+const STRING_LIGHT_PRESET_MIGRATION_KEY = "pocketdj-v65r-string-light-preset-applied";
 const DEFAULT_STRING_LIGHT_POINTS: StringLightPoint[] = [
-  { id: 1, x: 610, y: 352, size: 13, intensity: 0.95, warmth: 0.72, flicker: 0.18, phase: 0.02 },
-  { id: 2, x: 675, y: 336, size: 15, intensity: 1.05, warmth: 0.76, flicker: 0.16, phase: 0.19 },
-  { id: 3, x: 744, y: 326, size: 13, intensity: 0.90, warmth: 0.68, flicker: 0.22, phase: 0.38 },
-  { id: 4, x: 815, y: 334, size: 14, intensity: 1.02, warmth: 0.74, flicker: 0.14, phase: 0.53 },
-  { id: 5, x: 884, y: 342, size: 13, intensity: 0.88, warmth: 0.69, flicker: 0.20, phase: 0.71 },
-  { id: 6, x: 952, y: 343, size: 15, intensity: 1.10, warmth: 0.78, flicker: 0.16, phase: 0.87 },
-  { id: 7, x: 1020, y: 334, size: 13, intensity: 0.92, warmth: 0.73, flicker: 0.24, phase: 0.31 },
-  { id: 8, x: 1088, y: 325, size: 14, intensity: 1.06, warmth: 0.76, flicker: 0.17, phase: 0.62 },
-  { id: 9, x: 1152, y: 337, size: 13, intensity: 0.96, warmth: 0.70, flicker: 0.19, phase: 0.44 },
-  { id: 10, x: 1205, y: 353, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.79 },
+  { id: 1, x: 591, y: 331, size: 13, intensity: 0.95, warmth: 0.72, flicker: 0.18, phase: 0.02 },
+  { id: 2, x: 639, y: 327, size: 15, intensity: 1.05, warmth: 0.76, flicker: 0.16, phase: 0.19 },
+  { id: 3, x: 681, y: 315, size: 13, intensity: 0.90, warmth: 0.68, flicker: 0.22, phase: 0.38 },
+  { id: 4, x: 725, y: 326, size: 14, intensity: 1.02, warmth: 0.74, flicker: 0.14, phase: 0.53 },
+  { id: 5, x: 762, y: 327, size: 13, intensity: 0.88, warmth: 0.69, flicker: 0.20, phase: 0.71 },
+  { id: 6, x: 800, y: 317, size: 15, intensity: 1.10, warmth: 0.78, flicker: 0.16, phase: 0.87 },
+  { id: 7, x: 839, y: 327, size: 13, intensity: 0.92, warmth: 0.73, flicker: 0.24, phase: 0.31 },
+  { id: 8, x: 876, y: 329, size: 14, intensity: 1.06, warmth: 0.76, flicker: 0.17, phase: 0.62 },
+  { id: 9, x: 914, y: 333, size: 13, intensity: 0.96, warmth: 0.70, flicker: 0.19, phase: 0.44 },
+  { id: 10, x: 955, y: 330, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.79 },
+  { id: 11, x: 986, y: 328, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.00 },
+  { id: 12, x: 1020, y: 315, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.09090909090909091 },
+  { id: 13, x: 1056, y: 326, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.18181818181818182 },
+  { id: 14, x: 1092, y: 328, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.2727272727272727 },
+  { id: 15, x: 1126, y: 317, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.36363636363636365 },
+  { id: 16, x: 1159, y: 327, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.45454545454545453 },
+  { id: 18, x: 1197, y: 331, size: 13, intensity: 0.95, warmth: 0.72, flicker: 0.18, phase: 0.6363636363636364 },
 ];
 
 const DEFAULT_STRING_LIGHT_SETTINGS: StringLightSettings = {
   enabled: true,
   editMode: false,
   showGuides: false,
-  glow: 0.75,
-  pulse: 0.22,
-  flicker: 0.18,
-  selectedId: 1,
-  nextId: 11,
+  glow: 0.84,
+  pulse: 0.76,
+  flicker: 0.94,
+  selectedId: 18,
+  nextId: 19,
   points: DEFAULT_STRING_LIGHT_POINTS.map((point) => ({ ...point })),
 };
 
@@ -2325,7 +2354,9 @@ function bindSessionWallAlbumControls(): void {
 
 async function boot(): Promise<void> {
   if (!loadClientId()) saveClientId(STANDARD_SPOTIFY_CLIENT_ID);
+  applyStringLightPresetMigration();
   renderShell(state);
+  setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
   bindControls();
   updateSidePanelLockUi();
@@ -3918,6 +3949,170 @@ function selectedStringLightPoint(): StringLightPoint | null {
   return stringLightSettings.points.find((point) => point.id === stringLightSettings.selectedId) || null;
 }
 
+function applyStringLightPresetMigration(): void {
+  try {
+    if (window.localStorage.getItem(STRING_LIGHT_PRESET_MIGRATION_KEY) === "1") return;
+    stringLightSettings = {
+      ...DEFAULT_STRING_LIGHT_SETTINGS,
+      points: DEFAULT_STRING_LIGHT_POINTS.map((point) => ({ ...point })),
+    };
+    saveStringLightSettings();
+    window.localStorage.setItem(STRING_LIGHT_PRESET_MIGRATION_KEY, "1");
+  } catch (error) {
+    console.warn("Could not apply string light preset migration", error);
+  }
+}
+
+function mixRgb(a: RgbTriple, b: RgbTriple, amount: number): RgbTriple {
+  const t = clamp(amount, 0, 1);
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * t),
+    Math.round(a[1] + (b[1] - a[1]) * t),
+    Math.round(a[2] + (b[2] - a[2]) * t),
+  ];
+}
+
+function rgbTripleToCss(rgb: RgbTriple): string {
+  return `${Math.round(clamp(rgb[0], 0, 255))}, ${Math.round(clamp(rgb[1], 0, 255))}, ${Math.round(clamp(rgb[2], 0, 255))}`;
+}
+
+function setReactiveRoomPalette(palette: ReactiveRoomPalette): void {
+  const root = document.documentElement;
+  root.style.setProperty("--string-light-core-rgb", rgbTripleToCss(palette.core));
+  root.style.setProperty("--string-light-tint-rgb", rgbTripleToCss(palette.tint));
+  root.style.setProperty("--string-light-ambient-rgb", rgbTripleToCss(palette.ambient));
+  root.style.setProperty("--ambient-room-glow-rgb", rgbTripleToCss(palette.roomGlow));
+  root.style.setProperty("--ambient-room-accent-rgb", rgbTripleToCss(palette.roomAccent));
+}
+
+async function extractReactiveRoomPalette(imageUrl: string): Promise<ReactiveRoomPalette> {
+  const image = new Image();
+  image.crossOrigin = "anonymous";
+  image.referrerPolicy = "no-referrer";
+  const loaded = new Promise<void>((resolve, reject) => {
+    image.onload = () => resolve();
+    image.onerror = () => reject(new Error("Could not load album art for room palette extraction."));
+  });
+  image.src = imageUrl;
+  await loaded;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 24;
+  canvas.height = 24;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return DEFAULT_REACTIVE_ROOM_PALETTE;
+
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  let totalWeight = 0;
+  let weightedR = 0;
+  let weightedG = 0;
+  let weightedB = 0;
+  let vibrantScore = -1;
+  let vibrant: RgbTriple = DEFAULT_REACTIVE_ROOM_PALETTE.tint;
+
+  for (let index = 0; index < data.length; index += 4) {
+    const alpha = data[index + 3] / 255;
+    if (alpha < 0.18) continue;
+    const r = data[index];
+    const g = data[index + 1];
+    const b = data[index + 2];
+    const maxChannel = Math.max(r, g, b);
+    const minChannel = Math.min(r, g, b);
+    const saturation = maxChannel <= 0 ? 0 : (maxChannel - minChannel) / maxChannel;
+    const brightness = (r + g + b) / (3 * 255);
+    const weight = Math.max(0.12, alpha * (0.30 + saturation * 1.9 + (1 - Math.abs(brightness - 0.58)) * 0.45));
+
+    totalWeight += weight;
+    weightedR += r * weight;
+    weightedG += g * weight;
+    weightedB += b * weight;
+
+    const score = saturation * 1.2 + brightness * 0.35;
+    if (brightness > 0.16 && brightness < 0.92 && score > vibrantScore) {
+      vibrantScore = score;
+      vibrant = [r, g, b];
+    }
+  }
+
+  const average: RgbTriple = totalWeight > 0
+    ? [Math.round(weightedR / totalWeight), Math.round(weightedG / totalWeight), Math.round(weightedB / totalWeight)]
+    : DEFAULT_REACTIVE_ROOM_PALETTE.tint;
+
+  return {
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, average, 0.14),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrant, 0.22),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, average, 0.18),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, average, 0.16),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrant, 0.10),
+  };
+}
+
+function updateReactiveRoomPalette(track: AppState["playback"]): void {
+  const imageUrl = track.albumArtUrl || "";
+  if (!imageUrl) {
+    reactiveRoomPaletteUrl = "";
+    setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
+    return;
+  }
+
+  if (reactiveRoomPaletteUrl === imageUrl) return;
+
+  const cached = reactiveRoomPaletteCache.get(imageUrl);
+  if (cached) {
+    reactiveRoomPaletteUrl = imageUrl;
+    setReactiveRoomPalette(cached);
+    return;
+  }
+
+  if (reactiveRoomPalettePendingUrl === imageUrl) return;
+  reactiveRoomPalettePendingUrl = imageUrl;
+
+  void extractReactiveRoomPalette(imageUrl)
+    .then((palette) => {
+      reactiveRoomPaletteCache.set(imageUrl, palette);
+      if ((state.playback.albumArtUrl || "") !== imageUrl) return;
+      reactiveRoomPaletteUrl = imageUrl;
+      setReactiveRoomPalette(palette);
+    })
+    .catch(() => {
+      if ((state.playback.albumArtUrl || "") !== imageUrl) return;
+      reactiveRoomPaletteUrl = imageUrl;
+      setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
+    })
+    .finally(() => {
+      if (reactiveRoomPalettePendingUrl === imageUrl) reactiveRoomPalettePendingUrl = "";
+    });
+}
+
+function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
+  const root = document.documentElement;
+  const overlay = document.querySelector<HTMLElement>("#stringLightOverlay");
+  const ambientGlow = document.querySelector<HTMLElement>("#ambientMusicGlow");
+  const playing = track.isPlaying || track.source === "demo";
+  const beatMs = speakerPulseDurationMs();
+  const pulseEnergy = clamp(((speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM) - 62) / 108, 0, 1);
+
+  root.classList.toggle("music-reactive-playing", playing);
+  root.style.setProperty("--music-beat-ms", `${beatMs}ms`);
+  root.style.setProperty("--music-breathe-ms", `${Math.round(Math.max(3600, beatMs * 7.5))}ms`);
+  root.style.setProperty("--music-pulse-ms", `${Math.round(Math.max(1600, beatMs * 3.5))}ms`);
+  root.style.setProperty("--music-room-energy", pulseEnergy.toFixed(3));
+
+  if (overlay) {
+    overlay.classList.toggle("string-lights-playing", playing);
+    overlay.style.setProperty("--string-light-beat-ms", `${beatMs}ms`);
+    overlay.style.setProperty("--string-light-breathe-ms", `${Math.round(Math.max(840, beatMs * 2.1))}ms`);
+    overlay.style.setProperty("--string-light-flicker-ms", `${Math.round(Math.max(2800, beatMs * 8.5))}ms`);
+    overlay.style.setProperty("--string-light-playing-opacity", playing ? `${0.72 + pulseEnergy * 0.18}` : "0");
+  }
+
+  if (ambientGlow) {
+    ambientGlow.classList.toggle("ambient-music-glow-active", playing);
+  }
+}
+
 function setStringLightLabel(id: string, value: number): void {
   const label = document.querySelector<HTMLElement>(`#${id}`);
   if (!label) return;
@@ -3986,6 +4181,11 @@ function renderStringLights(): void {
   overlay.style.setProperty("--string-light-glow", String(stringLightSettings.glow));
   overlay.style.setProperty("--string-light-pulse", String(stringLightSettings.pulse));
   overlay.style.setProperty("--string-light-flicker", String(stringLightSettings.flicker));
+  if (!overlay.style.getPropertyValue("--string-light-beat-ms")) {
+    overlay.style.setProperty("--string-light-beat-ms", `${speakerPulseDurationMs()}ms`);
+    overlay.style.setProperty("--string-light-breathe-ms", `${Math.round(Math.max(840, speakerPulseDurationMs() * 2.1))}ms`);
+    overlay.style.setProperty("--string-light-flicker-ms", `${Math.round(Math.max(2800, speakerPulseDurationMs() * 8.5))}ms`);
+  }
 
   stringLightSettings.points.forEach((point) => {
     const light = document.createElement("button");
@@ -5021,6 +5221,8 @@ function tick(): void {
 
   updateSongChangeAlbumOverlay(state.playback);
   applySpeakerPulseTempo(state.playback);
+  updateReactiveRoomPalette(state.playback);
+  syncMusicReactiveEnvironment(state.playback);
   updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
   updatePlaybackUi(state.playback, state.debugOpen);
 
