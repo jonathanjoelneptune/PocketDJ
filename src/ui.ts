@@ -34,29 +34,6 @@ export function renderShell(state: AppState): void {
         <canvas id="sessionAlbumWarpCanvas" class="session-album-warp-canvas" width="1764" height="992" aria-hidden="true"></canvas>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
 
-        <div id="vinylClockDecor" class="vinyl-clock-decor" aria-label="Vinyl wall clock" title="Pocket DJ vinyl wall clock">
-          <div class="vinyl-clock-frame">
-            <div class="vinyl-clock-inner-shadow"></div>
-            <div class="vinyl-clock-face">
-              <div class="vinyl-clock-grooves" aria-hidden="true"></div>
-              <div class="vinyl-clock-label" aria-hidden="true">
-                <div class="vinyl-clock-label-top">POCKET DJ</div>
-                <div class="vinyl-clock-label-bottom" id="vinylClockDigitalReadout">--:--</div>
-              </div>
-              <div class="vinyl-clock-ticks" aria-hidden="true">
-                <span class="vinyl-clock-tick tick-12"></span>
-                <span class="vinyl-clock-tick tick-3"></span>
-                <span class="vinyl-clock-tick tick-6"></span>
-                <span class="vinyl-clock-tick tick-9"></span>
-              </div>
-              <div class="vinyl-clock-hand vinyl-clock-hour" id="vinylClockHourHand"></div>
-              <div class="vinyl-clock-hand vinyl-clock-minute" id="vinylClockMinuteHand"></div>
-              <div class="vinyl-clock-hand vinyl-clock-second" id="vinylClockSecondHand"></div>
-              <div class="vinyl-clock-center" aria-hidden="true"></div>
-            </div>
-          </div>
-        </div>
-
         <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
           <div class="lyrics-boundary-guides" aria-hidden="true">
             <div class="lyrics-boundary-guide lyrics-boundary-guide-video"></div>
@@ -244,35 +221,13 @@ export function renderShell(state: AppState): void {
         <details id="devToolsPanel" class="dev-tools">
           <summary>Dev tools</summary>
 
-          <div class="button-grid dev-button-grid">
-            <button id="demoButton" class="secondary" type="button">Demo Mode</button>
-            <button id="debugButton" class="secondary" type="button">Debug</button>
-          </div>
+          <p class="utility-help">Slim tools only. Demo, debug, clock, full wall-layout editing, and advanced lyric geometry are removed from the normal panel for smoother room performance.</p>
 
           <input id="clientIdInput" type="hidden" value="${escapeHtml(state.spotifyClientId || "37da51db24384ad3a07c222f71b1525e")}" />
 
           <details class="session-wall-albums-controls">
             <summary>Session Wall Albums</summary>
-            <p class="utility-help">Define 16:9 room-space album slots. These are future wall positions where played album covers will land.</p>
-            <div class="button-grid dev-button-grid">
-              <button id="sessionAlbumAddSlot" class="secondary" type="button">Add Full Album Slot</button>
-              <button id="sessionAlbumAddPartialLeft" class="secondary" type="button">Add Partial Left</button>
-              <button id="sessionAlbumAddPartialRight" class="secondary" type="button">Add Partial Right</button>
-              <button id="sessionAlbumDuplicateAToB" class="secondary" type="button">Duplicate A to B</button>
-            </div>
-            <p class="utility-help">For partial side albums, define the full album shape past the screen edge. The visible room edge will crop it naturally.</p>
-            <div class="session-album-group-move">
-              <label>Group prefix
-                <input id="sessionAlbumGroupPrefix" class="text-input" type="text" value="B" />
-              </label>
-              <label>Move X
-                <input id="sessionAlbumGroupMoveX" class="text-input" type="number" step="1" value="0" />
-              </label>
-              <label>Move Y
-                <input id="sessionAlbumGroupMoveY" class="text-input" type="number" step="1" value="0" />
-              </label>
-              <button id="sessionAlbumApplyGroupMove" class="secondary" type="button">Move Group</button>
-            </div>
+            <p class="utility-help">Runtime album-wall controls only. The 56-slot layout is locked into the app, so the heavy coordinate editor is no longer rendered during normal use.</p>
             <label class="utility-checkbox">
               <input id="sessionAlbumShowGuides" type="checkbox" />
               Show session album guides
@@ -285,18 +240,12 @@ export function renderShell(state: AppState): void {
               <input id="sessionAlbumWarpMode" type="checkbox" checked />
               Warp albums to frame corners
             </label>
-            <label class="session-album-pixel-control">Album pixel effect <span id="sessionAlbumPixelAmountValue">0.25</span>
-              <input id="sessionAlbumPixelAmount" type="range" min="0" max="1" step="0.01" value="0.25" />
+            <label class="session-album-pixel-control">Album pixel effect <span id="sessionAlbumPixelAmountValue">0.72</span>
+              <input id="sessionAlbumPixelAmount" type="range" min="0" max="1" step="0.01" value="0.72" />
             </label>
             <label class="session-album-pixel-control">Album warm blend <span id="sessionAlbumWarmBlendValue">0.54</span>
               <input id="sessionAlbumWarmBlend" type="range" min="0" max="1" step="0.01" value="0.54" />
             </label>
-            <div class="button-grid dev-button-grid">
-              <button id="sessionAlbumCopyExport" class="secondary" type="button">Copy Slot JSON</button>
-            </div>
-            <textarea id="sessionAlbumExportText" class="session-album-export-text" rows="8" readonly></textarea>
-            <div id="sessionAlbumTargetStatus" class="session-album-target-status">No corner target selected.</div>
-            <div id="sessionAlbumSlotPanels" class="session-album-slot-panels"></div>
           </details>
 
           <details class="room-utility-controls">
@@ -400,165 +349,13 @@ export function renderShell(state: AppState): void {
           </label>
           </div>
 
-          <details class="clock-utility-controls" open>
-            <summary>Vinyl clock utility</summary>
-            <p class="utility-help">Adjust the back-wall vinyl clock overlay without editing CSS. Values are in the same 1764 x 992 room coordinate space as the album slots.</p>
-            <div class="utility-grid">
-              <label class="utility-checkbox">
-                <input id="vinylClockEnabled" type="checkbox" />
-                Show vinyl clock
-              </label>
-              <label>Clock X px <span id="vinylClockXValue">544</span>
-                <input id="vinylClockX" type="range" min="0" max="1764" step="1" value="544" />
-              </label>
-              <label>Clock Y px <span id="vinylClockYValue">382</span>
-                <input id="vinylClockY" type="range" min="0" max="992" step="1" value="382" />
-              </label>
-              <label>Clock size px <span id="vinylClockSizeValue">86</span>
-                <input id="vinylClockSize" type="range" min="24" max="220" step="1" value="86" />
-              </label>
-              <label>Clock scale <span id="vinylClockScaleValue">1.00</span>
-                <input id="vinylClockScale" type="range" min="0.25" max="2.50" step="0.01" value="1" />
-              </label>
-              <label>Clock tilt deg <span id="vinylClockTiltValue">-1.0</span>
-                <input id="vinylClockTilt" type="range" min="-45" max="45" step="0.1" value="-1" />
-              </label>
-              <label>Clock opacity <span id="vinylClockOpacityValue">1.00</span>
-                <input id="vinylClockOpacity" type="range" min="0" max="1" step="0.01" value="1" />
-              </label>
-              <label>Clock glow <span id="vinylClockGlowValue">0.10</span>
-                <input id="vinylClockGlow" type="range" min="0" max="1" step="0.01" value="0.10" />
-              </label>
-              <label>Shadow X px <span id="vinylClockShadowXValue">-18</span>
-                <input id="vinylClockShadowX" type="range" min="-80" max="80" step="1" value="-18" />
-              </label>
-              <label>Shadow Y px <span id="vinylClockShadowYValue">22</span>
-                <input id="vinylClockShadowY" type="range" min="-80" max="100" step="1" value="22" />
-              </label>
-              <label>Shadow blur <span id="vinylClockShadowBlurValue">18</span>
-                <input id="vinylClockShadowBlur" type="range" min="0" max="80" step="1" value="18" />
-              </label>
-              <label>Shadow opacity <span id="vinylClockShadowOpacityValue">0.34</span>
-                <input id="vinylClockShadowOpacity" type="range" min="0" max="0.9" step="0.01" value="0.34" />
-              </label>
-              <label>Room blend <span id="vinylClockRoomBlendValue">0.42</span>
-                <input id="vinylClockRoomBlend" type="range" min="0" max="1" step="0.01" value="0.42" />
-              </label>
-              <label>Wall fade <span id="vinylClockWallFadeValue">0.18</span>
-                <input id="vinylClockWallFade" type="range" min="0" max="0.55" step="0.01" value="0.18" />
-              </label>
-            </div>
-          </details>
-
-          <div class="lyrics-boundary-utility">
-            <div class="utility-subhead">Ceiling lyric poster utility</div>
-            <p class="utility-help">Single active lyric poster system. Old karaoke, past/future, background-box, and deprecated lyric block systems have been removed.</p>
-
+          <div class="lyrics-boundary-utility lyrics-boundary-utility-slim">
+            <div class="utility-subhead">Ceiling lyric style</div>
+            <p class="utility-help">High-level lyric controls only. Advanced projection geometry remains locked to the saved defaults for performance.</p>
             <div class="lyric-utility-stack">
-              <div class="utility-minihead">Ceiling boundary</div>
-              <label>Corner guide opacity <span id="lyricPosterGuideOpacityValue">0.00</span>
-                <input id="lyricPosterGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.00" />
-              </label>
-              <label>Center guide opacity <span id="lyricPosterCenterGuideOpacityValue">0.00</span>
-                <input id="lyricPosterCenterGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.00" />
-              </label>
-              <label>2-row band guide opacity <span id="lyricPosterTwoRowBandGuideOpacityValue">0.00</span>
-                <input id="lyricPosterTwoRowBandGuideOpacity" type="range" min="0" max="1" step="0.01" value="0" />
-              </label>
-              <label>3-row band guide opacity <span id="lyricPosterThreeRowBandGuideOpacityValue">0.00</span>
-                <input id="lyricPosterThreeRowBandGuideOpacity" type="range" min="0" max="1" step="0.01" value="0" />
-              </label>
-              <label>Top left X px <span id="lyricPosterTopLeftXValue">221</span>
-                <input id="lyricPosterTopLeftX" type="range" min="0" max="1764" step="1" value="221" />
-              </label>
-              <label>Top left Y px <span id="lyricPosterTopLeftYValue">18</span>
-                <input id="lyricPosterTopLeftY" type="range" min="0" max="529" step="1" value="18" />
-              </label>
-              <label>Top right X px <span id="lyricPosterTopRightXValue">1562</span>
-                <input id="lyricPosterTopRightX" type="range" min="0" max="1764" step="1" value="1562" />
-              </label>
-              <label>Top right Y px <span id="lyricPosterTopRightYValue">3</span>
-                <input id="lyricPosterTopRightY" type="range" min="0" max="529" step="1" value="3" />
-              </label>
-              <label>Bottom left X px <span id="lyricPosterBottomLeftXValue">454</span>
-                <input id="lyricPosterBottomLeftX" type="range" min="0" max="1764" step="1" value="454" />
-              </label>
-              <label>Bottom left Y px <span id="lyricPosterBottomLeftYValue">195</span>
-                <input id="lyricPosterBottomLeftY" type="range" min="0" max="529" step="1" value="195" />
-              </label>
-              <label>Bottom right X px <span id="lyricPosterBottomRightXValue">1343</span>
-                <input id="lyricPosterBottomRightX" type="range" min="0" max="1764" step="1" value="1343" />
-              </label>
-              <label>Bottom right Y px <span id="lyricPosterBottomRightYValue">189</span>
-                <input id="lyricPosterBottomRightY" type="range" min="0" max="529" step="1" value="189" />
-              </label>
-
-              <div class="utility-minihead">Short lyric profile (&le; 6 chars)</div>
-              <p class="utility-help">Use this for tiny lyrics like "OH" so they can have their own safe area and WordArt skew.</p>
-              <label>Short guide opacity <span id="lyricPosterShortGuideOpacityValue">0.00</span>
-                <input id="lyricPosterShortGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.00" />
-              </label>
-              <label>Short top left X px <span id="lyricPosterShortTopLeftXValue">221</span>
-                <input id="lyricPosterShortTopLeftX" type="range" min="-400" max="2200" step="1" value="221" />
-              </label>
-              <label>Short top left Y px <span id="lyricPosterShortTopLeftYValue">18</span>
-                <input id="lyricPosterShortTopLeftY" type="range" min="-300" max="900" step="1" value="18" />
-              </label>
-              <label>Short top right X px <span id="lyricPosterShortTopRightXValue">1460</span>
-                <input id="lyricPosterShortTopRightX" type="range" min="-400" max="2600" step="1" value="1460" />
-              </label>
-              <label>Short top right Y px <span id="lyricPosterShortTopRightYValue">3</span>
-                <input id="lyricPosterShortTopRightY" type="range" min="-300" max="900" step="1" value="3" />
-              </label>
-              <label>Short bottom left X px <span id="lyricPosterShortBottomLeftXValue">454</span>
-                <input id="lyricPosterShortBottomLeftX" type="range" min="-400" max="2200" step="1" value="454" />
-              </label>
-              <label>Short bottom left Y px <span id="lyricPosterShortBottomLeftYValue">195</span>
-                <input id="lyricPosterShortBottomLeftY" type="range" min="-300" max="900" step="1" value="195" />
-              </label>
-              <label>Short bottom right X px <span id="lyricPosterShortBottomRightXValue">1343</span>
-                <input id="lyricPosterShortBottomRightX" type="range" min="-400" max="2600" step="1" value="1343" />
-              </label>
-              <label>Short bottom right Y px <span id="lyricPosterShortBottomRightYValue">189</span>
-                <input id="lyricPosterShortBottomRightY" type="range" min="-300" max="900" step="1" value="189" />
-              </label>
-              <label>Short vertical stretch <span id="lyricPosterShortVerticalStretchValue">0.78</span>
-                <input id="lyricPosterShortVerticalStretch" type="range" min="0.1" max="3" step="0.01" value="0.78" />
-              </label>
-              <label>Short perspective amount <span id="lyricPosterShortPerspectiveValue">1.20</span>
-                <input id="lyricPosterShortPerspective" type="range" min="-4" max="4" step="0.01" value="1.20" />
-              </label>
-              <label>Short letter tilt bias deg <span id="lyricPosterShortTiltValue">-26</span>
-                <input id="lyricPosterShortTilt" type="range" min="-85" max="85" step="1" value="-26" />
-              </label>
-              <label>Short top-left X offset px <span id="lyricPosterShortTextTopLeftXValue">-160</span>
-                <input id="lyricPosterShortTextTopLeftX" type="range" min="-900" max="900" step="1" value="-160" />
-              </label>
-              <label>Short top-left Y offset px <span id="lyricPosterShortTextTopLeftYValue">0</span>
-                <input id="lyricPosterShortTextTopLeftY" type="range" min="-500" max="500" step="1" value="0" />
-              </label>
-              <label>Short top-right X offset px <span id="lyricPosterShortTextTopRightXValue">160</span>
-                <input id="lyricPosterShortTextTopRightX" type="range" min="-900" max="900" step="1" value="160" />
-              </label>
-              <label>Short top-right Y offset px <span id="lyricPosterShortTextTopRightYValue">0</span>
-                <input id="lyricPosterShortTextTopRightY" type="range" min="-500" max="500" step="1" value="0" />
-              </label>
-              <label>Short bottom-left X offset px <span id="lyricPosterShortTextBottomLeftXValue">0</span>
-                <input id="lyricPosterShortTextBottomLeftX" type="range" min="-900" max="900" step="1" value="0" />
-              </label>
-              <label>Short bottom-left Y offset px <span id="lyricPosterShortTextBottomLeftYValue">0</span>
-                <input id="lyricPosterShortTextBottomLeftY" type="range" min="-500" max="500" step="1" value="0" />
-              </label>
-              <label>Short bottom-right X offset px <span id="lyricPosterShortTextBottomRightXValue">0</span>
-                <input id="lyricPosterShortTextBottomRightX" type="range" min="-900" max="900" step="1" value="0" />
-              </label>
-              <label>Short bottom-right Y offset px <span id="lyricPosterShortTextBottomRightYValue">0</span>
-                <input id="lyricPosterShortTextBottomRightY" type="range" min="-500" max="500" step="1" value="0" />
-              </label>
-
-              <div class="utility-minihead">Poster style and fit</div>
-              <label>Stroke px <span id="lyricPosterStrokeValue">7.6</span>
-                <input id="lyricPosterStroke" type="range" min="0.5" max="8" step="0.1" value="7.6" />
+              <div class="utility-minihead">Poster style</div>
+              <label>Stroke px <span id="lyricPosterStrokeValue">8</span>
+                <input id="lyricPosterStroke" type="range" min="0" max="20" step="0.1" value="8" />
               </label>
               <label>Stroke color
                 <input id="lyricPosterStrokeColor" type="color" value="#000000" />
@@ -569,277 +366,19 @@ export function renderShell(state: AppState): void {
               <label>Stroke opacity <span id="lyricPosterStrokeOpacityValue">0.30</span>
                 <input id="lyricPosterStrokeOpacity" type="range" min="0" max="1" step="0.01" value="0.30" />
               </label>
-              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0.35</span>
+              <label>Fill opacity <span id="lyricPosterFillOpacityValue">0.70</span>
                 <input id="lyricPosterFillOpacity" type="range" min="0" max="1" step="0.01" value="0.70" />
               </label>
-              <label>Glow strength <span id="lyricPosterGlowValue">0</span>
-                <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0" />
+              <label>Glow strength <span id="lyricPosterGlowValue">0.00</span>
+                <input id="lyricPosterGlow" type="range" min="0" max="1" step="0.01" value="0.00" />
               </label>
+
               <div class="utility-minihead">Ceiling lyric effects</div>
-              <label class="utility-checkbox">
-                <input id="lyricPosterEffectDropShadow" type="checkbox" />
-                Drop shadow
-              </label>
-              <label class="utility-checkbox">
-                <input id="lyricPosterEffectEmboss" type="checkbox" />
-                Emboss
-              </label>
-              <label class="utility-checkbox">
-                <input id="lyricPosterEffectInsetEmboss" type="checkbox" checked />
-                Inset emboss
-              </label>
-              <label class="utility-checkbox">
-                <input id="lyricPosterEffectBevel" type="checkbox" />
-                Bevel
-              </label>
-              <label class="utility-checkbox">
-                <input id="lyricPosterEffectSoftBlur" type="checkbox" />
-                Soft blur
-              </label>
-
-              <div class="utility-minihead">1-row WordArt profile</div>
-              <label>1-row vertical stretch <span id="lyricPosterOneRowVerticalStretchValue">0.86</span>
-                <input id="lyricPosterOneRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.86" />
-              </label>
-              <label>1-row row tightness <span id="lyricPosterOneRowTightnessValue">0.0</span>
-                <input id="lyricPosterOneRowTightness" type="range" min="-2.20" max="1.20" step="0.01" value="0.0" />
-              </label>
-              <label>1-row perspective amount <span id="lyricPosterOneRowPerspectiveValue">1.33</span>
-                <input id="lyricPosterOneRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.33" />
-              </label>
-              <label>1-row letter tilt bias deg <span id="lyricPosterOneRowTiltValue">-32</span>
-                <input id="lyricPosterOneRowTilt" type="range" min="-75" max="75" step="1" value="-32" />
-              </label>
-
-              <div class="utility-minihead">1-row projection corner offsets</div>
-              <p class="utility-help">These distort only the forced/auto 1-row lyric projection. Use them like draggable WordArt corners.</p>
-              <label>1-row top-left X offset px <span id="lyricPosterOneRowTextTopLeftXValue">-242</span>
-                <input id="lyricPosterOneRowTextTopLeftX" type="range" min="-450" max="450" step="1" value="-242" />
-              </label>
-              <label>1-row top-left Y offset px <span id="lyricPosterOneRowTextTopLeftYValue">0</span>
-                <input id="lyricPosterOneRowTextTopLeftY" type="range" min="-180" max="180" step="1" value="0" />
-              </label>
-              <label>1-row top-right X offset px <span id="lyricPosterOneRowTextTopRightXValue">242</span>
-                <input id="lyricPosterOneRowTextTopRightX" type="range" min="-450" max="450" step="1" value="242" />
-              </label>
-              <label>1-row top-right Y offset px <span id="lyricPosterOneRowTextTopRightYValue">0</span>
-                <input id="lyricPosterOneRowTextTopRightY" type="range" min="-180" max="180" step="1" value="0" />
-              </label>
-              <label>1-row bottom-left X offset px <span id="lyricPosterOneRowTextBottomLeftXValue">6</span>
-                <input id="lyricPosterOneRowTextBottomLeftX" type="range" min="-450" max="450" step="1" value="6" />
-              </label>
-              <label>1-row bottom-left Y offset px <span id="lyricPosterOneRowTextBottomLeftYValue">-1</span>
-                <input id="lyricPosterOneRowTextBottomLeftY" type="range" min="-180" max="180" step="1" value="-1" />
-              </label>
-              <label>1-row bottom-right X offset px <span id="lyricPosterOneRowTextBottomRightXValue">0</span>
-                <input id="lyricPosterOneRowTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>1-row bottom-right Y offset px <span id="lyricPosterOneRowTextBottomRightYValue">0</span>
-                <input id="lyricPosterOneRowTextBottomRightY" type="range" min="-180" max="180" step="1" value="0" />
-              </label>
-
-              <div class="utility-minihead">2-row WordArt profile</div>
-              <label>2-row vertical stretch <span id="lyricPosterTwoRowVerticalStretchValue">0.93</span>
-                <input id="lyricPosterTwoRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.93" />
-              </label>
-              <div class="utility-minihead">2-row band trapezoids</div>
-              <p class="utility-help">These split the full ceiling trapezoid into separate physical ceiling zones before corner warping.</p>
-              <label>2-row top band top Y px <span id="lyricPosterTwoRowTopBandTopYValue">18</span>
-                <input id="lyricPosterTwoRowTopBandTopY" type="range" min="0" max="529" step="1" value="18" />
-              </label>
-              <label>2-row top band bottom Y px <span id="lyricPosterTwoRowTopBandBottomYValue">106</span>
-                <input id="lyricPosterTwoRowTopBandBottomY" type="range" min="0" max="529" step="1" value="106" />
-              </label>
-              <label>2-row bottom band top Y px <span id="lyricPosterTwoRowBottomBandTopYValue">106</span>
-                <input id="lyricPosterTwoRowBottomBandTopY" type="range" min="0" max="529" step="1" value="106" />
-              </label>
-              <label>2-row bottom band bottom Y px <span id="lyricPosterTwoRowBottomBandBottomYValue">195</span>
-                <input id="lyricPosterTwoRowBottomBandBottomY" type="range" min="0" max="529" step="1" value="195" />
-              </label>
-              <label>2-row top row vertical placement px <span id="lyricPosterTwoRowTopYValue">0</span>
-                <input id="lyricPosterTwoRowTopY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row bottom row vertical placement px <span id="lyricPosterTwoRowBottomYValue">0</span>
-                <input id="lyricPosterTwoRowBottomY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row row tightness <span id="lyricPosterTwoRowTightnessValue">0.45</span>
-                <input id="lyricPosterTwoRowTightness" type="range" min="-2.20" max="1.20" step="0.01" value="0.45" />
-              </label>
-              <label>2-row perspective amount <span id="lyricPosterTwoRowPerspectiveValue">1.00</span>
-                <input id="lyricPosterTwoRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.00" />
-              </label>
-              <label>2-row letter tilt bias deg <span id="lyricPosterTwoRowTiltValue">-10</span>
-                <input id="lyricPosterTwoRowTilt" type="range" min="-75" max="75" step="1" value="-10" />
-              </label>
-
-              <div class="utility-minihead">3-row WordArt profile</div>
-              <label>3-row vertical stretch <span id="lyricPosterThreeRowVerticalStretchValue">0.51</span>
-                <input id="lyricPosterThreeRowVerticalStretch" type="range" min="0.40" max="3.00" step="0.01" value="0.51" />
-              </label>
-              <div class="utility-minihead">3-row band trapezoids</div>
-              <p class="utility-help">Each row gets its own mini-trapezoid band before the row corner offsets are applied.</p>
-              <label>3-row top band top Y px <span id="lyricPosterThreeRowTopBandTopYValue">18</span>
-                <input id="lyricPosterThreeRowTopBandTopY" type="range" min="0" max="529" step="1" value="18" />
-              </label>
-              <label>3-row top band bottom Y px <span id="lyricPosterThreeRowTopBandBottomYValue">76</span>
-                <input id="lyricPosterThreeRowTopBandBottomY" type="range" min="0" max="529" step="1" value="76" />
-              </label>
-              <label>3-row middle band top Y px <span id="lyricPosterThreeRowMiddleBandTopYValue">76</span>
-                <input id="lyricPosterThreeRowMiddleBandTopY" type="range" min="0" max="529" step="1" value="76" />
-              </label>
-              <label>3-row middle band bottom Y px <span id="lyricPosterThreeRowMiddleBandBottomYValue">136</span>
-                <input id="lyricPosterThreeRowMiddleBandBottomY" type="range" min="0" max="529" step="1" value="136" />
-              </label>
-              <label>3-row bottom band top Y px <span id="lyricPosterThreeRowBottomBandTopYValue">136</span>
-                <input id="lyricPosterThreeRowBottomBandTopY" type="range" min="0" max="529" step="1" value="136" />
-              </label>
-              <label>3-row bottom band bottom Y px <span id="lyricPosterThreeRowBottomBandBottomYValue">195</span>
-                <input id="lyricPosterThreeRowBottomBandBottomY" type="range" min="0" max="529" step="1" value="195" />
-              </label>
-              <label>3-row top row vertical placement px <span id="lyricPosterThreeRowTopYValue">0</span>
-                <input id="lyricPosterThreeRowTopY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row middle row vertical placement px <span id="lyricPosterThreeRowMiddleYValue">0</span>
-                <input id="lyricPosterThreeRowMiddleY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row bottom row vertical placement px <span id="lyricPosterThreeRowBottomYValue">0</span>
-                <input id="lyricPosterThreeRowBottomY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row row tightness <span id="lyricPosterThreeRowTightnessValue">0.52</span>
-                <input id="lyricPosterThreeRowTightness" type="range" min="-2.20" max="1.20" step="0.01" value="0.52" />
-              </label>
-              <label>3-row perspective amount <span id="lyricPosterThreeRowPerspectiveValue">1.00</span>
-                <input id="lyricPosterThreeRowPerspective" type="range" min="0.00" max="3.00" step="0.01" value="1.00" />
-              </label>
-              <label>3-row letter tilt bias deg <span id="lyricPosterThreeRowTiltValue">-12</span>
-                <input id="lyricPosterThreeRowTilt" type="range" min="-75" max="75" step="1" value="-12" />
-              </label>
-
-              <div class="utility-minihead">2-row top projection corner offsets</div>
-              <label>2-row top top-left X offset px <span id="lyricPosterTwoRowTopTextTopLeftXValue">0</span>
-                <input id="lyricPosterTwoRowTopTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row top top-left Y offset px <span id="lyricPosterTwoRowTopTextTopLeftYValue">0</span>
-                <input id="lyricPosterTwoRowTopTextTopLeftY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row top top-right X offset px <span id="lyricPosterTwoRowTopTextTopRightXValue">0</span>
-                <input id="lyricPosterTwoRowTopTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row top top-right Y offset px <span id="lyricPosterTwoRowTopTextTopRightYValue">0</span>
-                <input id="lyricPosterTwoRowTopTextTopRightY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row top bottom-left X offset px <span id="lyricPosterTwoRowTopTextBottomLeftXValue">0</span>
-                <input id="lyricPosterTwoRowTopTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row top bottom-left Y offset px <span id="lyricPosterTwoRowTopTextBottomLeftYValue">0</span>
-                <input id="lyricPosterTwoRowTopTextBottomLeftY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row top bottom-right X offset px <span id="lyricPosterTwoRowTopTextBottomRightXValue">0</span>
-                <input id="lyricPosterTwoRowTopTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row top bottom-right Y offset px <span id="lyricPosterTwoRowTopTextBottomRightYValue">0</span>
-                <input id="lyricPosterTwoRowTopTextBottomRightY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <div class="utility-minihead">2-row bottom projection corner offsets</div>
-              <label>2-row bottom top-left X offset px <span id="lyricPosterTwoRowBottomTextTopLeftXValue">0</span>
-                <input id="lyricPosterTwoRowBottomTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row bottom top-left Y offset px <span id="lyricPosterTwoRowBottomTextTopLeftYValue">0</span>
-                <input id="lyricPosterTwoRowBottomTextTopLeftY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row bottom top-right X offset px <span id="lyricPosterTwoRowBottomTextTopRightXValue">0</span>
-                <input id="lyricPosterTwoRowBottomTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row bottom top-right Y offset px <span id="lyricPosterTwoRowBottomTextTopRightYValue">0</span>
-                <input id="lyricPosterTwoRowBottomTextTopRightY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row bottom bottom-left X offset px <span id="lyricPosterTwoRowBottomTextBottomLeftXValue">0</span>
-                <input id="lyricPosterTwoRowBottomTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row bottom bottom-left Y offset px <span id="lyricPosterTwoRowBottomTextBottomLeftYValue">0</span>
-                <input id="lyricPosterTwoRowBottomTextBottomLeftY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row bottom bottom-right X offset px <span id="lyricPosterTwoRowBottomTextBottomRightXValue">0</span>
-                <input id="lyricPosterTwoRowBottomTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>2-row bottom bottom-right Y offset px <span id="lyricPosterTwoRowBottomTextBottomRightYValue">0</span>
-                <input id="lyricPosterTwoRowBottomTextBottomRightY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <div class="utility-minihead">3-row top projection corner offsets</div>
-              <label>3-row top top-left X offset px <span id="lyricPosterThreeRowTopTextTopLeftXValue">0</span>
-                <input id="lyricPosterThreeRowTopTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row top top-left Y offset px <span id="lyricPosterThreeRowTopTextTopLeftYValue">0</span>
-                <input id="lyricPosterThreeRowTopTextTopLeftY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row top top-right X offset px <span id="lyricPosterThreeRowTopTextTopRightXValue">0</span>
-                <input id="lyricPosterThreeRowTopTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row top top-right Y offset px <span id="lyricPosterThreeRowTopTextTopRightYValue">0</span>
-                <input id="lyricPosterThreeRowTopTextTopRightY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row top bottom-left X offset px <span id="lyricPosterThreeRowTopTextBottomLeftXValue">0</span>
-                <input id="lyricPosterThreeRowTopTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row top bottom-left Y offset px <span id="lyricPosterThreeRowTopTextBottomLeftYValue">0</span>
-                <input id="lyricPosterThreeRowTopTextBottomLeftY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row top bottom-right X offset px <span id="lyricPosterThreeRowTopTextBottomRightXValue">0</span>
-                <input id="lyricPosterThreeRowTopTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row top bottom-right Y offset px <span id="lyricPosterThreeRowTopTextBottomRightYValue">0</span>
-                <input id="lyricPosterThreeRowTopTextBottomRightY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <div class="utility-minihead">3-row middle projection corner offsets</div>
-              <label>3-row middle top-left X offset px <span id="lyricPosterThreeRowMiddleTextTopLeftXValue">0</span>
-                <input id="lyricPosterThreeRowMiddleTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row middle top-left Y offset px <span id="lyricPosterThreeRowMiddleTextTopLeftYValue">0</span>
-                <input id="lyricPosterThreeRowMiddleTextTopLeftY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row middle top-right X offset px <span id="lyricPosterThreeRowMiddleTextTopRightXValue">0</span>
-                <input id="lyricPosterThreeRowMiddleTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row middle top-right Y offset px <span id="lyricPosterThreeRowMiddleTextTopRightYValue">0</span>
-                <input id="lyricPosterThreeRowMiddleTextTopRightY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row middle bottom-left X offset px <span id="lyricPosterThreeRowMiddleTextBottomLeftXValue">0</span>
-                <input id="lyricPosterThreeRowMiddleTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row middle bottom-left Y offset px <span id="lyricPosterThreeRowMiddleTextBottomLeftYValue">0</span>
-                <input id="lyricPosterThreeRowMiddleTextBottomLeftY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row middle bottom-right X offset px <span id="lyricPosterThreeRowMiddleTextBottomRightXValue">0</span>
-                <input id="lyricPosterThreeRowMiddleTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row middle bottom-right Y offset px <span id="lyricPosterThreeRowMiddleTextBottomRightYValue">0</span>
-                <input id="lyricPosterThreeRowMiddleTextBottomRightY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <div class="utility-minihead">3-row bottom projection corner offsets</div>
-              <label>3-row bottom top-left X offset px <span id="lyricPosterThreeRowBottomTextTopLeftXValue">0</span>
-                <input id="lyricPosterThreeRowBottomTextTopLeftX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row bottom top-left Y offset px <span id="lyricPosterThreeRowBottomTextTopLeftYValue">0</span>
-                <input id="lyricPosterThreeRowBottomTextTopLeftY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row bottom top-right X offset px <span id="lyricPosterThreeRowBottomTextTopRightXValue">0</span>
-                <input id="lyricPosterThreeRowBottomTextTopRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row bottom top-right Y offset px <span id="lyricPosterThreeRowBottomTextTopRightYValue">0</span>
-                <input id="lyricPosterThreeRowBottomTextTopRightY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row bottom bottom-left X offset px <span id="lyricPosterThreeRowBottomTextBottomLeftXValue">0</span>
-                <input id="lyricPosterThreeRowBottomTextBottomLeftX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row bottom bottom-left Y offset px <span id="lyricPosterThreeRowBottomTextBottomLeftYValue">0</span>
-                <input id="lyricPosterThreeRowBottomTextBottomLeftY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row bottom bottom-right X offset px <span id="lyricPosterThreeRowBottomTextBottomRightXValue">0</span>
-                <input id="lyricPosterThreeRowBottomTextBottomRightX" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
-              <label>3-row bottom bottom-right Y offset px <span id="lyricPosterThreeRowBottomTextBottomRightYValue">0</span>
-                <input id="lyricPosterThreeRowBottomTextBottomRightY" type="range" min="-450" max="450" step="1" value="0" />
-              </label>
+              <label class="utility-checkbox"><input id="lyricPosterEffectDropShadow" type="checkbox" checked /> Drop shadow</label>
+              <label class="utility-checkbox"><input id="lyricPosterEffectEmboss" type="checkbox" /> Emboss</label>
+              <label class="utility-checkbox"><input id="lyricPosterEffectInsetEmboss" type="checkbox" /> Inset emboss</label>
+              <label class="utility-checkbox"><input id="lyricPosterEffectBevel" type="checkbox" /> Bevel</label>
+              <label class="utility-checkbox"><input id="lyricPosterEffectSoftBlur" type="checkbox" /> Soft blur</label>
 
               <div class="utility-minihead">Mode</div>
               <label>Rows
@@ -852,7 +391,6 @@ export function renderShell(state: AppState): void {
               <label>1-to-2 row breakpoint chars <span id="lyricPosterRowBreakpointValue">28</span>
                 <input id="lyricPosterRowBreakpoint" type="range" min="10" max="80" step="1" value="28" />
               </label>
-              <p class="utility-help">Auto mode uses 1 row below this character count and 2 rows at or above it, including spaces.</p>
               <label>Transition
                 <select id="lyricPosterTransition">
                   <option value="none" selected>No transition</option>

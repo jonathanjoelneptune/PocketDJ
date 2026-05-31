@@ -2279,7 +2279,6 @@ async function boot(): Promise<void> {
   bindSessionWallAlbumControls();
   applyClockDisabledDefaultMigration();
   applyRoomUtilitySettings();
-  scheduleVinylClockDecorTick();
 
   if (state.spotifyClientId) {
     try {
@@ -2543,18 +2542,6 @@ function bindControls(): void {
     qs<HTMLElement>("#connectDropdown").classList.remove("connect-dropdown-open");
   });
 
-  qs<HTMLButtonElement>("#demoButton").addEventListener("click", () => {
-    useDemo = toggleDemo();
-    if (useDemo && pollTimer) window.clearTimeout(pollTimer);
-    state.playback = getDemoTrack();
-    panelAutoHiddenAfterConnect = false;
-    updatePlaybackUi(state.playback, state.debugOpen);
-  });
-
-  qs<HTMLButtonElement>("#debugButton").addEventListener("click", () => {
-    state.debugOpen = !state.debugOpen;
-    updatePlaybackUi(lastPollError ? { ...state.playback, artist: `${state.playback.artist} | ${lastPollError}` } : state.playback, state.debugOpen);
-  });
 
   qs<HTMLInputElement>("#spotifyVolume").addEventListener("input", (event) => {
     const input = event.target as HTMLInputElement;
@@ -3823,67 +3810,67 @@ function bindSpotifyBrowserControls(): void {
 }
 
 function bindRoomUtilityControls(): void {
-  const sceneFilter = qs<HTMLSelectElement>("#sceneFilterSelect");
-  const lyricPosterMaxRows = qs<HTMLSelectElement>("#lyricPosterMaxRows");
-  const lyricPosterTransition = qs<HTMLSelectElement>("#lyricPosterTransition");
-  const lyricPosterStrokeColor = qs<HTMLInputElement>("#lyricPosterStrokeColor");
-  const lyricPosterFillColor = qs<HTMLInputElement>("#lyricPosterFillColor");
-  const lyricPosterEffectDropShadow = qs<HTMLInputElement>("#lyricPosterEffectDropShadow");
-  const lyricPosterEffectEmboss = qs<HTMLInputElement>("#lyricPosterEffectEmboss");
-  const lyricPosterEffectInsetEmboss = qs<HTMLInputElement>("#lyricPosterEffectInsetEmboss");
-  const lyricPosterEffectBevel = qs<HTMLInputElement>("#lyricPosterEffectBevel");
-  const lyricPosterEffectSoftBlur = qs<HTMLInputElement>("#lyricPosterEffectSoftBlur");
-  const panelHeightAdjustEnabled = qs<HTMLInputElement>("#panelHeightAdjustEnabled");
-  const roomFillStretchMode = qs<HTMLInputElement>("#roomFillStretchMode");
-  const utilityPanelLeftSide = qs<HTMLInputElement>("#utilityPanelLeftSide");
-  const songChangeMode = qs<HTMLInputElement>("#songChangeMode");
-  const vinylClockEnabled = qs<HTMLInputElement>("#vinylClockEnabled");
-  const speakerPulseUseTempo = qs<HTMLInputElement>("#speakerPulseUseTempo");
+  const sceneFilter = document.querySelector<HTMLSelectElement>("#sceneFilterSelect");
+  const lyricPosterMaxRows = document.querySelector<HTMLSelectElement>("#lyricPosterMaxRows");
+  const lyricPosterTransition = document.querySelector<HTMLSelectElement>("#lyricPosterTransition");
+  const lyricPosterStrokeColor = document.querySelector<HTMLInputElement>("#lyricPosterStrokeColor");
+  const lyricPosterFillColor = document.querySelector<HTMLInputElement>("#lyricPosterFillColor");
+  const lyricPosterEffectDropShadow = document.querySelector<HTMLInputElement>("#lyricPosterEffectDropShadow");
+  const lyricPosterEffectEmboss = document.querySelector<HTMLInputElement>("#lyricPosterEffectEmboss");
+  const lyricPosterEffectInsetEmboss = document.querySelector<HTMLInputElement>("#lyricPosterEffectInsetEmboss");
+  const lyricPosterEffectBevel = document.querySelector<HTMLInputElement>("#lyricPosterEffectBevel");
+  const lyricPosterEffectSoftBlur = document.querySelector<HTMLInputElement>("#lyricPosterEffectSoftBlur");
+  const panelHeightAdjustEnabled = document.querySelector<HTMLInputElement>("#panelHeightAdjustEnabled");
+  const roomFillStretchMode = document.querySelector<HTMLInputElement>("#roomFillStretchMode");
+  const utilityPanelLeftSide = document.querySelector<HTMLInputElement>("#utilityPanelLeftSide");
+  const songChangeMode = document.querySelector<HTMLInputElement>("#songChangeMode");
+  const vinylClockEnabled = document.querySelector<HTMLInputElement>("#vinylClockEnabled");
+  const speakerPulseUseTempo = document.querySelector<HTMLInputElement>("#speakerPulseUseTempo");
 
-  sceneFilter.value = roomUtility.sceneFilter;
-  lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
-  lyricPosterTransition.value = roomUtility.lyricPosterTransition;
-  lyricPosterStrokeColor.value = roomUtility.lyricPosterStrokeColor;
-  lyricPosterFillColor.value = roomUtility.lyricPosterFillColor;
-  lyricPosterEffectDropShadow.checked = roomUtility.lyricPosterEffectDropShadow;
-  lyricPosterEffectEmboss.checked = roomUtility.lyricPosterEffectEmboss;
-  lyricPosterEffectInsetEmboss.checked = roomUtility.lyricPosterEffectInsetEmboss;
-  lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
-  lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
-  panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
-  roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
-  utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
-  songChangeMode.checked = roomUtility.songChangeMode;
-  vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
-  speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
+  if (sceneFilter) sceneFilter.value = roomUtility.sceneFilter;
+  if (lyricPosterMaxRows) lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
+  if (lyricPosterTransition) lyricPosterTransition.value = roomUtility.lyricPosterTransition;
+  if (lyricPosterStrokeColor) lyricPosterStrokeColor.value = roomUtility.lyricPosterStrokeColor;
+  if (lyricPosterFillColor) lyricPosterFillColor.value = roomUtility.lyricPosterFillColor;
+  if (lyricPosterEffectDropShadow) lyricPosterEffectDropShadow.checked = roomUtility.lyricPosterEffectDropShadow;
+  if (lyricPosterEffectEmboss) lyricPosterEffectEmboss.checked = roomUtility.lyricPosterEffectEmboss;
+  if (lyricPosterEffectInsetEmboss) lyricPosterEffectInsetEmboss.checked = roomUtility.lyricPosterEffectInsetEmboss;
+  if (lyricPosterEffectBevel) lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
+  if (lyricPosterEffectSoftBlur) lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
+  if (panelHeightAdjustEnabled) panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
+  if (roomFillStretchMode) roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
+  if (utilityPanelLeftSide) utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
+  if (songChangeMode) songChangeMode.checked = roomUtility.songChangeMode;
+  if (vinylClockEnabled) vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
+  if (speakerPulseUseTempo) speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
 
-  panelHeightAdjustEnabled.addEventListener("change", () => {
+  panelHeightAdjustEnabled?.addEventListener("change", () => {
     setPanelHeightAdjustEnabled(panelHeightAdjustEnabled.checked, false);
   });
 
-  roomFillStretchMode.addEventListener("change", () => {
+  roomFillStretchMode?.addEventListener("change", () => {
     setRoomFillStretchMode(roomFillStretchMode.checked);
   });
 
-  utilityPanelLeftSide.addEventListener("change", () => {
+  utilityPanelLeftSide?.addEventListener("change", () => {
     roomUtility = { ...roomUtility, utilityPanelLeftSide: utilityPanelLeftSide.checked };
     applyRoomUtilitySettings();
     saveRoomUtilitySettings();
   });
 
-  songChangeMode.addEventListener("change", () => {
+  songChangeMode?.addEventListener("change", () => {
     roomUtility = { ...roomUtility, songChangeMode: songChangeMode.checked };
     applyRoomUtilitySettings();
     saveRoomUtilitySettings();
   });
 
-  vinylClockEnabled.addEventListener("change", () => {
+  vinylClockEnabled?.addEventListener("change", () => {
     roomUtility = { ...roomUtility, vinylClockEnabled: vinylClockEnabled.checked };
     applyRoomUtilitySettings();
     saveRoomUtilitySettings();
   });
 
-  speakerPulseUseTempo.addEventListener("change", () => {
+  speakerPulseUseTempo?.addEventListener("change", () => {
     roomUtility = { ...roomUtility, speakerPulseUseTempo: speakerPulseUseTempo.checked };
     applyRoomUtilitySettings();
     saveRoomUtilitySettings();
@@ -4037,7 +4024,8 @@ function bindRoomUtilityControls(): void {
   ] as const;
 
   controls.forEach(([inputId, labelId]) => {
-    const input = qs<HTMLInputElement>(`#${inputId}`);
+    const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+    if (!input) return;
     const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter" | "lyricPosterMaxRows" | "lyricPosterTransition">;
     input.value = String(roomUtility[key]);
     setUtilityLabel(labelId, Number(input.value));
@@ -4050,30 +4038,30 @@ function bindRoomUtilityControls(): void {
     });
   });
 
-  sceneFilter.addEventListener("change", () => {
+  sceneFilter?.addEventListener("change", () => {
     roomUtility = { ...roomUtility, sceneFilter: sceneFilter.value as SceneFilter };
     applyRoomUtilitySettings();
     saveRoomUtilitySettings();
   });
 
-  lyricPosterMaxRows.addEventListener("change", () => {
+  lyricPosterMaxRows?.addEventListener("change", () => {
     lyricAnimationRevision += 1;
     roomUtility = { ...roomUtility, lyricPosterMaxRows: lyricPosterMaxRows.value as RoomUtilitySettings["lyricPosterMaxRows"] };
     applyRoomUtilitySettings();
   });
 
-  lyricPosterTransition.addEventListener("change", () => {
+  lyricPosterTransition?.addEventListener("change", () => {
     lyricAnimationRevision += 1;
     roomUtility = { ...roomUtility, lyricPosterTransition: lyricPosterTransition.value as RoomUtilitySettings["lyricPosterTransition"] };
     applyRoomUtilitySettings();
   });
 
-  lyricPosterStrokeColor.addEventListener("input", () => {
+  lyricPosterStrokeColor?.addEventListener("input", () => {
     roomUtility = { ...roomUtility, lyricPosterStrokeColor: lyricPosterStrokeColor.value };
     applyRoomUtilitySettings();
   });
 
-  lyricPosterFillColor.addEventListener("input", () => {
+  lyricPosterFillColor?.addEventListener("input", () => {
     roomUtility = { ...roomUtility, lyricPosterFillColor: lyricPosterFillColor.value };
     applyRoomUtilitySettings();
   });
@@ -4085,6 +4073,7 @@ function bindRoomUtilityControls(): void {
     [lyricPosterEffectBevel, "lyricPosterEffectBevel"],
     [lyricPosterEffectSoftBlur, "lyricPosterEffectSoftBlur"],
   ].forEach(([checkbox, key]) => {
+    if (!checkbox) return;
     (checkbox as HTMLInputElement).addEventListener("change", () => {
       roomUtility = { ...roomUtility, [key as keyof RoomUtilitySettings]: (checkbox as HTMLInputElement).checked };
       applyRoomUtilitySettings();
@@ -4098,25 +4087,26 @@ function bindRoomUtilityControls(): void {
 
   qs<HTMLButtonElement>("#resetRoomUtility").addEventListener("click", () => {
     roomUtility = { ...DEFAULT_ROOM_UTILITY };
-    sceneFilter.value = roomUtility.sceneFilter;
-    lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
-    lyricPosterTransition.value = roomUtility.lyricPosterTransition;
-    lyricPosterStrokeColor.value = roomUtility.lyricPosterStrokeColor;
-    lyricPosterFillColor.value = roomUtility.lyricPosterFillColor;
-    lyricPosterEffectDropShadow.checked = roomUtility.lyricPosterEffectDropShadow;
-    lyricPosterEffectEmboss.checked = roomUtility.lyricPosterEffectEmboss;
-    lyricPosterEffectInsetEmboss.checked = roomUtility.lyricPosterEffectInsetEmboss;
-    lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
-    lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
-    panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
-    roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
-    utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
-    songChangeMode.checked = roomUtility.songChangeMode;
-    vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
-    speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
+    if (sceneFilter) sceneFilter.value = roomUtility.sceneFilter;
+    if (lyricPosterMaxRows) lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
+    if (lyricPosterTransition) lyricPosterTransition.value = roomUtility.lyricPosterTransition;
+    if (lyricPosterStrokeColor) lyricPosterStrokeColor.value = roomUtility.lyricPosterStrokeColor;
+    if (lyricPosterFillColor) lyricPosterFillColor.value = roomUtility.lyricPosterFillColor;
+    if (lyricPosterEffectDropShadow) lyricPosterEffectDropShadow.checked = roomUtility.lyricPosterEffectDropShadow;
+    if (lyricPosterEffectEmboss) lyricPosterEffectEmboss.checked = roomUtility.lyricPosterEffectEmboss;
+    if (lyricPosterEffectInsetEmboss) lyricPosterEffectInsetEmboss.checked = roomUtility.lyricPosterEffectInsetEmboss;
+    if (lyricPosterEffectBevel) lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
+    if (lyricPosterEffectSoftBlur) lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
+    if (panelHeightAdjustEnabled) panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
+    if (roomFillStretchMode) roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
+    if (utilityPanelLeftSide) utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
+    if (songChangeMode) songChangeMode.checked = roomUtility.songChangeMode;
+    if (vinylClockEnabled) vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
+    if (speakerPulseUseTempo) speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
 
     controls.forEach(([inputId, labelId]) => {
-      const input = qs<HTMLInputElement>(`#${inputId}`);
+      const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+      if (!input) return;
       const key = inputId as keyof Omit<RoomUtilitySettings, "sceneFilter" | "lyricPosterMaxRows" | "lyricPosterTransition">;
       input.value = String(roomUtility[key]);
       setUtilityLabel(labelId, Number(input.value));
