@@ -7871,3 +7871,156 @@ body.lyrics-marquee-unavailable .marquee::after {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* v65Q temporary string light placement and glow utility */
+.string-light-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  --string-light-glow: 0.75;
+  --string-light-pulse: 0.22;
+  --string-light-flicker: 0.18;
+}
+
+.string-light-overlay.string-lights-enabled {
+  opacity: 1;
+}
+
+.string-light-overlay.string-lights-editing {
+  pointer-events: auto;
+}
+
+.string-light-point {
+  position: absolute;
+  width: calc(var(--bulb-size) * 3.4);
+  height: calc(var(--bulb-size) * 3.4);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: calc(0.62 + (var(--bulb-intensity) * 0.22));
+  mix-blend-mode: screen;
+  animation:
+    stringLightBreath calc(2.4s - (var(--string-light-pulse) * 0.85s)) ease-in-out infinite,
+    stringLightFlicker calc(6.6s - (var(--string-light-flicker) * 2.4s)) steps(1, end) infinite;
+  animation-delay: var(--bulb-phase), calc(var(--bulb-phase) * 1.7);
+}
+
+.string-light-overlay.string-lights-editing .string-light-point {
+  pointer-events: auto;
+  cursor: crosshair;
+  mix-blend-mode: normal;
+}
+
+.string-light-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255, 231, 158, calc(0.36 * var(--bulb-intensity))) 0%,
+      rgba(255, 176, 68, calc(0.23 * var(--bulb-intensity) * var(--string-light-glow))) 26%,
+      rgba(255, 121, 31, calc(0.08 * var(--bulb-intensity) * var(--string-light-glow))) 54%,
+      rgba(255, 121, 31, 0) 74%);
+  filter: blur(calc(var(--bulb-size) * (0.40 + var(--string-light-glow) * 0.18)));
+  transform: scale(calc(1.1 + var(--string-light-glow) * 0.40));
+}
+
+.string-light-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--bulb-size);
+  height: var(--bulb-size);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background:
+    radial-gradient(circle at 38% 33%,
+      rgba(255, 255, 235, 0.98) 0 18%,
+      rgba(255, 226, 142, 0.96) 30%,
+      rgba(255, 177, 67, 0.92) calc(58% + var(--bulb-warmth) * 8%),
+      rgba(143, 65, 19, 0.56) 100%);
+  box-shadow:
+    0 0 calc(var(--bulb-size) * 0.6) rgba(255, 218, 145, calc(0.38 * var(--bulb-intensity))),
+    0 0 calc(var(--bulb-size) * 1.2) rgba(255, 160, 55, calc(0.28 * var(--bulb-intensity) * var(--string-light-glow))),
+    0 1px 2px rgba(0, 0, 0, 0.34);
+}
+
+.string-light-label {
+  position: absolute;
+  left: 50%;
+  top: -5px;
+  transform: translate(-50%, -100%);
+  min-width: 18px;
+  padding: 3px 4px;
+  border-radius: 7px;
+  background: rgba(8, 12, 20, 0.74);
+  border: 1px solid rgba(255, 210, 121, 0.5);
+  color: rgba(255, 237, 185, 0.96);
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  line-height: 1;
+  opacity: 0;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+}
+
+.string-light-overlay.string-lights-show-guides .string-light-label,
+.string-light-overlay.string-lights-editing .string-light-label {
+  opacity: 1;
+}
+
+.string-light-overlay.string-lights-editing .string-light-point::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--bulb-size) * 2.1);
+  height: calc(var(--bulb-size) * 2.1);
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 233, 161, 0.56);
+  transform: translate(-50%, -50%);
+}
+
+.string-light-point.string-light-selected::after {
+  border-color: rgba(96, 255, 180, 0.86) !important;
+  box-shadow: 0 0 14px rgba(96, 255, 180, 0.22);
+}
+
+@keyframes stringLightBreath {
+  0%, 100% {
+    filter: brightness(0.92) saturate(0.95);
+    transform: translate(-50%, -50%) scale(0.982);
+  }
+  45% {
+    filter: brightness(calc(1.02 + var(--string-light-pulse) * 0.35)) saturate(1.08);
+    transform: translate(-50%, -50%) scale(calc(1 + var(--string-light-pulse) * 0.045));
+  }
+  62% {
+    filter: brightness(calc(0.98 + var(--string-light-pulse) * 0.18)) saturate(1.02);
+  }
+}
+
+@keyframes stringLightFlicker {
+  0%, 88%, 100% { opacity: calc(0.64 + (var(--bulb-intensity) * 0.20)); }
+  90% { opacity: calc(0.64 + (var(--bulb-intensity) * 0.20) - (var(--bulb-flicker) * var(--string-light-flicker) * 0.22)); }
+  91% { opacity: calc(0.64 + (var(--bulb-intensity) * 0.20) + (var(--bulb-flicker) * var(--string-light-flicker) * 0.12)); }
+  94% { opacity: calc(0.64 + (var(--bulb-intensity) * 0.20) - (var(--bulb-flicker) * var(--string-light-flicker) * 0.12)); }
+}
+
+.string-light-utility .utility-readout {
+  margin-top: 8px;
+}
+
+.string-light-json {
+  max-height: 130px;
+}
+
+:root:not(.string-light-editing) .string-light-overlay {
+  pointer-events: none;
+}

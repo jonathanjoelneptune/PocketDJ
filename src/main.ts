@@ -621,6 +621,57 @@ const DEFAULT_PARTIAL_ALBUM_OVERHANG = 0.55;
 const MIN_PARTIAL_ALBUM_OVERHANG = 0.1;
 const MAX_PARTIAL_ALBUM_OVERHANG = 0.85;
 
+type StringLightPoint = {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  intensity: number;
+  warmth: number;
+  flicker: number;
+  phase: number;
+};
+
+type StringLightSettings = {
+  enabled: boolean;
+  editMode: boolean;
+  showGuides: boolean;
+  glow: number;
+  pulse: number;
+  flicker: number;
+  selectedId: number | null;
+  nextId: number;
+  points: StringLightPoint[];
+};
+
+const STRING_LIGHT_KEY = "pocketdj-string-light-points-v1";
+const DEFAULT_STRING_LIGHT_POINTS: StringLightPoint[] = [
+  { id: 1, x: 610, y: 352, size: 13, intensity: 0.95, warmth: 0.72, flicker: 0.18, phase: 0.02 },
+  { id: 2, x: 675, y: 336, size: 15, intensity: 1.05, warmth: 0.76, flicker: 0.16, phase: 0.19 },
+  { id: 3, x: 744, y: 326, size: 13, intensity: 0.90, warmth: 0.68, flicker: 0.22, phase: 0.38 },
+  { id: 4, x: 815, y: 334, size: 14, intensity: 1.02, warmth: 0.74, flicker: 0.14, phase: 0.53 },
+  { id: 5, x: 884, y: 342, size: 13, intensity: 0.88, warmth: 0.69, flicker: 0.20, phase: 0.71 },
+  { id: 6, x: 952, y: 343, size: 15, intensity: 1.10, warmth: 0.78, flicker: 0.16, phase: 0.87 },
+  { id: 7, x: 1020, y: 334, size: 13, intensity: 0.92, warmth: 0.73, flicker: 0.24, phase: 0.31 },
+  { id: 8, x: 1088, y: 325, size: 14, intensity: 1.06, warmth: 0.76, flicker: 0.17, phase: 0.62 },
+  { id: 9, x: 1152, y: 337, size: 13, intensity: 0.96, warmth: 0.70, flicker: 0.19, phase: 0.44 },
+  { id: 10, x: 1205, y: 353, size: 12, intensity: 0.82, warmth: 0.66, flicker: 0.25, phase: 0.79 },
+];
+
+const DEFAULT_STRING_LIGHT_SETTINGS: StringLightSettings = {
+  enabled: true,
+  editMode: false,
+  showGuides: false,
+  glow: 0.75,
+  pulse: 0.22,
+  flicker: 0.18,
+  selectedId: 1,
+  nextId: 11,
+  points: DEFAULT_STRING_LIGHT_POINTS.map((point) => ({ ...point })),
+};
+
+let stringLightSettings = loadStringLightSettings();
+
 const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
   placeAlbumsInFrames: true,
@@ -2281,6 +2332,7 @@ async function boot(): Promise<void> {
   updateLyricsToggleUi(lyricsState.status, lyricsEnabled);
   scheduleSidePanelAutoHide();
   bindRoomUtilityControls();
+  bindStringLightControls();
   bindSessionWallAlbumControls();
   applyClockDisabledDefaultMigration();
   applyRoomUtilitySettings();
@@ -3812,6 +3864,317 @@ function bindSpotifyBrowserControls(): void {
 
   setSpotifyBrowserTab("home");
   renderVibes();
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function loadStringLightSettings(): StringLightSettings {
+  try {
+    const raw = window.localStorage.getItem(STRING_LIGHT_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<StringLightSettings>;
+      const points = Array.isArray(parsed.points) && parsed.points.length
+        ? parsed.points.map((point, index) => ({
+            id: Number(point.id) || index + 1,
+            x: clamp(Number(point.x) || 0, -240, ROOM_COORD_WIDTH + 240),
+            y: clamp(Number(point.y) || 0, -160, ROOM_COORD_HEIGHT + 160),
+            size: clamp(Number(point.size) || 14, 4, 42),
+            intensity: clamp(Number(point.intensity) || 1, 0, 2),
+            warmth: clamp(Number(point.warmth) || 0.7, 0, 1),
+            flicker: clamp(Number(point.flicker) || 0.2, 0, 1),
+            phase: Number.isFinite(Number(point.phase)) ? Number(point.phase) : index / 10,
+          }))
+        : DEFAULT_STRING_LIGHT_POINTS.map((point) => ({ ...point }));
+
+      const selectedId = points.some((point) => point.id === parsed.selectedId)
+        ? Number(parsed.selectedId)
+        : points[0]?.id ?? null;
+
+      return {
+        ...DEFAULT_STRING_LIGHT_SETTINGS,
+        ...parsed,
+        selectedId,
+        nextId: Math.max(Number(parsed.nextId) || 1, ...points.map((point) => point.id + 1), 1),
+        points,
+      };
+    }
+  } catch (error) {
+    console.warn("Could not load string light settings", error);
+  }
+
+  return {
+    ...DEFAULT_STRING_LIGHT_SETTINGS,
+    points: DEFAULT_STRING_LIGHT_POINTS.map((point) => ({ ...point })),
+  };
+}
+
+function saveStringLightSettings(): void {
+  window.localStorage.setItem(STRING_LIGHT_KEY, JSON.stringify(stringLightSettings));
+}
+
+function selectedStringLightPoint(): StringLightPoint | null {
+  return stringLightSettings.points.find((point) => point.id === stringLightSettings.selectedId) || null;
+}
+
+function setStringLightLabel(id: string, value: number): void {
+  const label = document.querySelector<HTMLElement>(`#${id}`);
+  if (!label) return;
+  const decimals = id.includes("Intensity") || id.includes("Warmth") || id.includes("Glow") || id.includes("Pulse") || id.includes("Flicker")
+    ? 2
+    : 0;
+  label.textContent = value.toFixed(decimals);
+}
+
+function syncStringLightControls(): void {
+  const enabled = document.querySelector<HTMLInputElement>("#stringLightsEnabled");
+  const editMode = document.querySelector<HTMLInputElement>("#stringLightsEditMode");
+  const showGuides = document.querySelector<HTMLInputElement>("#stringLightsShowGuides");
+  const json = document.querySelector<HTMLTextAreaElement>("#stringLightJson");
+  const selectedLabel = document.querySelector<HTMLElement>("#stringLightSelectedLabel");
+
+  if (enabled) enabled.checked = stringLightSettings.enabled;
+  if (editMode) editMode.checked = stringLightSettings.editMode;
+  if (showGuides) showGuides.checked = stringLightSettings.showGuides;
+
+  setStringLightLabel("stringLightGlowValue", stringLightSettings.glow);
+  setStringLightLabel("stringLightPulseValue", stringLightSettings.pulse);
+  setStringLightLabel("stringLightFlickerValue", stringLightSettings.flicker);
+  const glowInput = document.querySelector<HTMLInputElement>("#stringLightGlow");
+  const pulseInput = document.querySelector<HTMLInputElement>("#stringLightPulse");
+  const flickerInput = document.querySelector<HTMLInputElement>("#stringLightFlicker");
+  if (glowInput) glowInput.value = String(stringLightSettings.glow);
+  if (pulseInput) pulseInput.value = String(stringLightSettings.pulse);
+  if (flickerInput) flickerInput.value = String(stringLightSettings.flicker);
+
+  const selected = selectedStringLightPoint();
+  if (selectedLabel) selectedLabel.textContent = selected ? `#${selected.id}` : "none";
+
+  const selectedControls: Array<[string, string, keyof StringLightPoint]> = [
+    ["stringLightX", "stringLightXValue", "x"],
+    ["stringLightY", "stringLightYValue", "y"],
+    ["stringLightSize", "stringLightSizeValue", "size"],
+    ["stringLightIntensity", "stringLightIntensityValue", "intensity"],
+    ["stringLightWarmth", "stringLightWarmthValue", "warmth"],
+    ["stringLightPointFlicker", "stringLightPointFlickerValue", "flicker"],
+  ];
+
+  selectedControls.forEach(([inputId, labelId, key]) => {
+    const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+    const value = selected ? Number(selected[key]) : 0;
+    if (input) {
+      input.value = String(value);
+      input.disabled = !selected;
+    }
+    setStringLightLabel(labelId, value);
+  });
+
+  if (json) json.value = JSON.stringify(stringLightSettings, null, 2);
+}
+
+function renderStringLights(): void {
+  const overlay = document.querySelector<HTMLElement>("#stringLightOverlay");
+  if (!overlay) return;
+
+  overlay.innerHTML = "";
+  overlay.classList.toggle("string-lights-enabled", stringLightSettings.enabled);
+  overlay.classList.toggle("string-lights-editing", stringLightSettings.editMode);
+  overlay.classList.toggle("string-lights-show-guides", stringLightSettings.showGuides);
+  document.documentElement.classList.toggle("string-light-editing", stringLightSettings.editMode);
+
+  overlay.style.setProperty("--string-light-glow", String(stringLightSettings.glow));
+  overlay.style.setProperty("--string-light-pulse", String(stringLightSettings.pulse));
+  overlay.style.setProperty("--string-light-flicker", String(stringLightSettings.flicker));
+
+  stringLightSettings.points.forEach((point) => {
+    const light = document.createElement("button");
+    light.type = "button";
+    light.className = "string-light-point";
+    light.dataset.lightId = String(point.id);
+    light.classList.toggle("string-light-selected", point.id === stringLightSettings.selectedId);
+    light.style.left = `${(point.x / ROOM_COORD_WIDTH) * 100}%`;
+    light.style.top = `${(point.y / ROOM_COORD_HEIGHT) * 100}%`;
+    light.style.setProperty("--bulb-size", `${point.size}px`);
+    light.style.setProperty("--bulb-intensity", String(point.intensity));
+    light.style.setProperty("--bulb-warmth", String(point.warmth));
+    light.style.setProperty("--bulb-phase", `${point.phase * -2.7}s`);
+    light.style.setProperty("--bulb-flicker", String(point.flicker));
+    light.setAttribute("aria-label", `String light point ${point.id}`);
+    light.title = `Light #${point.id}`;
+    light.innerHTML = `<span class="string-light-glow"></span><span class="string-light-core"></span><span class="string-light-label">${point.id}</span>`;
+    light.addEventListener("click", (event) => {
+      event.stopPropagation();
+      stringLightSettings = { ...stringLightSettings, selectedId: point.id };
+      saveStringLightSettings();
+      renderStringLights();
+      syncStringLightControls();
+    });
+    overlay.appendChild(light);
+  });
+}
+
+function setStringLightSelectedByOffset(offset: number): void {
+  if (!stringLightSettings.points.length) return;
+  const currentIndex = Math.max(0, stringLightSettings.points.findIndex((point) => point.id === stringLightSettings.selectedId));
+  const nextIndex = (currentIndex + offset + stringLightSettings.points.length) % stringLightSettings.points.length;
+  stringLightSettings = { ...stringLightSettings, selectedId: stringLightSettings.points[nextIndex].id };
+  saveStringLightSettings();
+  renderStringLights();
+  syncStringLightControls();
+}
+
+function updateSelectedStringLightPoint(partial: Partial<StringLightPoint>): void {
+  const selectedId = stringLightSettings.selectedId;
+  if (selectedId == null) return;
+  stringLightSettings = {
+    ...stringLightSettings,
+    points: stringLightSettings.points.map((point) => point.id === selectedId ? { ...point, ...partial } : point),
+  };
+  saveStringLightSettings();
+  renderStringLights();
+  syncStringLightControls();
+}
+
+function addStringLightPoint(): void {
+  const last = selectedStringLightPoint();
+  const id = stringLightSettings.nextId;
+  const point: StringLightPoint = {
+    id,
+    x: clamp((last?.x ?? 880) + 32, 0, ROOM_COORD_WIDTH),
+    y: clamp(last?.y ?? 336, 0, ROOM_COORD_HEIGHT),
+    size: last?.size ?? 14,
+    intensity: last?.intensity ?? 1,
+    warmth: last?.warmth ?? 0.72,
+    flicker: last?.flicker ?? 0.2,
+    phase: (id % 11) / 11,
+  };
+  stringLightSettings = {
+    ...stringLightSettings,
+    editMode: true,
+    selectedId: id,
+    nextId: id + 1,
+    points: [...stringLightSettings.points, point],
+  };
+  saveStringLightSettings();
+  renderStringLights();
+  syncStringLightControls();
+}
+
+function deleteSelectedStringLightPoint(): void {
+  const selectedId = stringLightSettings.selectedId;
+  if (selectedId == null) return;
+  const points = stringLightSettings.points.filter((point) => point.id !== selectedId);
+  stringLightSettings = {
+    ...stringLightSettings,
+    points,
+    selectedId: points[0]?.id ?? null,
+  };
+  saveStringLightSettings();
+  renderStringLights();
+  syncStringLightControls();
+}
+
+function resetStringLightPoints(): void {
+  stringLightSettings = {
+    ...DEFAULT_STRING_LIGHT_SETTINGS,
+    points: DEFAULT_STRING_LIGHT_POINTS.map((point) => ({ ...point })),
+  };
+  saveStringLightSettings();
+  renderStringLights();
+  syncStringLightControls();
+}
+
+function bindStringLightControls(): void {
+  const room = document.querySelector<HTMLElement>(".room");
+  const enabled = document.querySelector<HTMLInputElement>("#stringLightsEnabled");
+  const editMode = document.querySelector<HTMLInputElement>("#stringLightsEditMode");
+  const showGuides = document.querySelector<HTMLInputElement>("#stringLightsShowGuides");
+  const addButton = document.querySelector<HTMLButtonElement>("#stringLightAdd");
+  const prevButton = document.querySelector<HTMLButtonElement>("#stringLightPrev");
+  const nextButton = document.querySelector<HTMLButtonElement>("#stringLightNext");
+  const deleteButton = document.querySelector<HTMLButtonElement>("#stringLightDelete");
+  const resetButton = document.querySelector<HTMLButtonElement>("#stringLightReset");
+  const copyButton = document.querySelector<HTMLButtonElement>("#stringLightCopyJson");
+
+  enabled?.addEventListener("change", () => {
+    stringLightSettings = { ...stringLightSettings, enabled: enabled.checked };
+    saveStringLightSettings();
+    renderStringLights();
+    syncStringLightControls();
+  });
+
+  editMode?.addEventListener("change", () => {
+    stringLightSettings = { ...stringLightSettings, editMode: editMode.checked };
+    saveStringLightSettings();
+    renderStringLights();
+    syncStringLightControls();
+  });
+
+  showGuides?.addEventListener("change", () => {
+    stringLightSettings = { ...stringLightSettings, showGuides: showGuides.checked };
+    saveStringLightSettings();
+    renderStringLights();
+    syncStringLightControls();
+  });
+
+  [
+    ["stringLightGlow", "glow"],
+    ["stringLightPulse", "pulse"],
+    ["stringLightFlicker", "flicker"],
+  ].forEach(([inputId, key]) => {
+    const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+    input?.addEventListener("input", () => {
+      stringLightSettings = { ...stringLightSettings, [key]: Number(input.value) };
+      saveStringLightSettings();
+      renderStringLights();
+      syncStringLightControls();
+    });
+  });
+
+  [
+    ["stringLightX", "x", 0, ROOM_COORD_WIDTH],
+    ["stringLightY", "y", 0, ROOM_COORD_HEIGHT],
+    ["stringLightSize", "size", 4, 42],
+    ["stringLightIntensity", "intensity", 0, 2],
+    ["stringLightWarmth", "warmth", 0, 1],
+    ["stringLightPointFlicker", "flicker", 0, 1],
+  ].forEach(([inputId, key, min, max]) => {
+    const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+    input?.addEventListener("input", () => {
+      updateSelectedStringLightPoint({ [key as keyof StringLightPoint]: clamp(Number(input.value), Number(min), Number(max)) } as Partial<StringLightPoint>);
+    });
+  });
+
+  addButton?.addEventListener("click", addStringLightPoint);
+  prevButton?.addEventListener("click", () => setStringLightSelectedByOffset(-1));
+  nextButton?.addEventListener("click", () => setStringLightSelectedByOffset(1));
+  deleteButton?.addEventListener("click", deleteSelectedStringLightPoint);
+  resetButton?.addEventListener("click", resetStringLightPoints);
+  copyButton?.addEventListener("click", () => {
+    const payload = JSON.stringify(stringLightSettings, null, 2);
+    void navigator.clipboard?.writeText(payload);
+    const json = document.querySelector<HTMLTextAreaElement>("#stringLightJson");
+    if (json) {
+      json.focus();
+      json.select();
+    }
+  });
+
+  room?.addEventListener("click", (event) => {
+    if (!stringLightSettings.editMode) return;
+    if ((event.target as HTMLElement).closest(".string-light-point")) return;
+    const rect = room.getBoundingClientRect();
+    const x = clamp(((event.clientX - rect.left) / rect.width) * ROOM_COORD_WIDTH, 0, ROOM_COORD_WIDTH);
+    const y = clamp(((event.clientY - rect.top) / rect.height) * ROOM_COORD_HEIGHT, 0, ROOM_COORD_HEIGHT);
+    if (stringLightSettings.selectedId == null) {
+      addStringLightPoint();
+    }
+    updateSelectedStringLightPoint({ x, y });
+  });
+
+  renderStringLights();
+  syncStringLightControls();
 }
 
 function bindRoomUtilityControls(): void {

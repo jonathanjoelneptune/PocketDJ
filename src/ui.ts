@@ -33,6 +33,7 @@ export function renderShell(state: AppState): void {
         <div id="sessionAlbumFrameOverlay" class="session-album-frame-overlay" aria-hidden="true"></div>
         <canvas id="sessionAlbumWarpCanvas" class="session-album-warp-canvas" width="1764" height="992" aria-hidden="true"></canvas>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div id="stringLightOverlay" class="string-light-overlay" aria-hidden="true"></div>
 
         <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
           <div class="lyrics-boundary-guides" aria-hidden="true">
@@ -246,6 +247,55 @@ export function renderShell(state: AppState): void {
             <label class="session-album-pixel-control">Album warm blend <span id="sessionAlbumWarmBlendValue">0.54</span>
               <input id="sessionAlbumWarmBlend" type="range" min="0" max="1" step="0.01" value="0.54" />
             </label>
+          </details>
+
+          <details class="string-light-utility">
+            <summary>String light utility</summary>
+            <p class="utility-help">Temporary bulb placement tool. Turn on edit mode, select a light, then click the room to move it. Points use the same 1764 x 992 room coordinates as the album wall.</p>
+            <div class="utility-grid">
+              <label class="utility-checkbox"><input id="stringLightsEnabled" type="checkbox" checked /> Enable string light glow</label>
+              <label class="utility-checkbox"><input id="stringLightsEditMode" type="checkbox" /> Edit light points</label>
+              <label class="utility-checkbox"><input id="stringLightsShowGuides" type="checkbox" /> Show point labels</label>
+              <label>Global glow <span id="stringLightGlowValue">0.75</span>
+                <input id="stringLightGlow" type="range" min="0" max="1.5" step="0.01" value="0.75" />
+              </label>
+              <label>Global pulse <span id="stringLightPulseValue">0.22</span>
+                <input id="stringLightPulse" type="range" min="0" max="1" step="0.01" value="0.22" />
+              </label>
+              <label>Global flicker <span id="stringLightFlickerValue">0.18</span>
+                <input id="stringLightFlicker" type="range" min="0" max="1" step="0.01" value="0.18" />
+              </label>
+            </div>
+            <div class="button-grid utility-buttons">
+              <button id="stringLightAdd" class="secondary" type="button">Add Light Point</button>
+              <button id="stringLightPrev" class="secondary" type="button">Previous</button>
+              <button id="stringLightNext" class="secondary" type="button">Next</button>
+              <button id="stringLightDelete" class="secondary" type="button">Delete Selected</button>
+              <button id="stringLightReset" class="secondary" type="button">Reset Defaults</button>
+              <button id="stringLightCopyJson" class="secondary" type="button">Copy Light JSON</button>
+            </div>
+            <div class="utility-readout">Selected light: <span id="stringLightSelectedLabel">none</span></div>
+            <div class="utility-grid">
+              <label>Light X px <span id="stringLightXValue">0</span>
+                <input id="stringLightX" type="range" min="0" max="1764" step="1" value="0" />
+              </label>
+              <label>Light Y px <span id="stringLightYValue">0</span>
+                <input id="stringLightY" type="range" min="0" max="992" step="1" value="0" />
+              </label>
+              <label>Light size px <span id="stringLightSizeValue">14</span>
+                <input id="stringLightSize" type="range" min="4" max="42" step="1" value="14" />
+              </label>
+              <label>Light intensity <span id="stringLightIntensityValue">1.00</span>
+                <input id="stringLightIntensity" type="range" min="0" max="2" step="0.01" value="1" />
+              </label>
+              <label>Light warmth <span id="stringLightWarmthValue">0.70</span>
+                <input id="stringLightWarmth" type="range" min="0" max="1" step="0.01" value="0.70" />
+              </label>
+              <label>Light flicker <span id="stringLightPointFlickerValue">0.22</span>
+                <input id="stringLightPointFlicker" type="range" min="0" max="1" step="0.01" value="0.22" />
+              </label>
+            </div>
+            <textarea id="stringLightJson" class="session-album-export-text string-light-json" readonly spellcheck="false"></textarea>
           </details>
 
           <details class="room-utility-controls">
