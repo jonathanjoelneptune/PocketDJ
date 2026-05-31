@@ -181,6 +181,12 @@ type RoomUtilitySettings = {
   vinylClockTilt: number;
   vinylClockOpacity: number;
   vinylClockGlow: number;
+  vinylClockShadowX: number;
+  vinylClockShadowY: number;
+  vinylClockShadowBlur: number;
+  vinylClockShadowOpacity: number;
+  vinylClockRoomBlend: number;
+  vinylClockWallFade: number;
   lyricPosterTopLeftX: number;
   lyricPosterTopLeftY: number;
   lyricPosterTopRightX: number;
@@ -337,6 +343,12 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   vinylClockTilt: -1,
   vinylClockOpacity: 1,
   vinylClockGlow: 0.10,
+  vinylClockShadowX: -18,
+  vinylClockShadowY: 22,
+  vinylClockShadowBlur: 18,
+  vinylClockShadowOpacity: 0.34,
+  vinylClockRoomBlend: 0.42,
+  vinylClockWallFade: 0.18,
   lyricPosterTopLeftX: 221,
   lyricPosterTopLeftY: 18,
   lyricPosterTopRightX: 1562,
@@ -3802,6 +3814,12 @@ function bindRoomUtilityControls(): void {
     ["vinylClockTilt", "vinylClockTiltValue"],
     ["vinylClockOpacity", "vinylClockOpacityValue"],
     ["vinylClockGlow", "vinylClockGlowValue"],
+    ["vinylClockShadowX", "vinylClockShadowXValue"],
+    ["vinylClockShadowY", "vinylClockShadowYValue"],
+    ["vinylClockShadowBlur", "vinylClockShadowBlurValue"],
+    ["vinylClockShadowOpacity", "vinylClockShadowOpacityValue"],
+    ["vinylClockRoomBlend", "vinylClockRoomBlendValue"],
+    ["vinylClockWallFade", "vinylClockWallFadeValue"],
     ["lyricPosterGuideOpacity", "lyricPosterGuideOpacityValue"],
     ["lyricPosterCenterGuideOpacity", "lyricPosterCenterGuideOpacityValue"],
     ["lyricPosterShortGuideOpacity", "lyricPosterShortGuideOpacityValue"],
@@ -4067,6 +4085,17 @@ function applyRoomUtilitySettings(): void {
     ["--vinyl-clock-tilt", `${roomUtility.vinylClockTilt}deg`],
     ["--vinyl-clock-opacity", String(roomUtility.vinylClockOpacity)],
     ["--vinyl-clock-glow", String(roomUtility.vinylClockGlow)],
+    ["--vinyl-clock-shadow-x", `${roomUtility.vinylClockShadowX}px`],
+    ["--vinyl-clock-shadow-y", `${roomUtility.vinylClockShadowY}px`],
+    ["--vinyl-clock-shadow-blur", `${roomUtility.vinylClockShadowBlur}px`],
+    ["--vinyl-clock-shadow-opacity", String(roomUtility.vinylClockShadowOpacity)],
+    ["--vinyl-clock-room-blend", String(roomUtility.vinylClockRoomBlend)],
+    ["--vinyl-clock-wall-fade", String(roomUtility.vinylClockWallFade)],
+    ["--vinyl-clock-blend-brightness", String(1 - roomUtility.vinylClockRoomBlend * 0.20)],
+    ["--vinyl-clock-blend-saturation", String(1 - roomUtility.vinylClockRoomBlend * 0.28)],
+    ["--vinyl-clock-blend-contrast", String(1 - roomUtility.vinylClockRoomBlend * 0.10)],
+    ["--vinyl-clock-blend-sepia", String(roomUtility.vinylClockRoomBlend * 0.18)],
+    ["--vinyl-clock-warm-wash-opacity", String(roomUtility.vinylClockRoomBlend * 0.22)],
   ];
   const roomElement = document.querySelector<HTMLElement>(".room");
   vinylClockVars.forEach(([name, value]) => {

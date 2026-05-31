@@ -7716,3 +7716,105 @@ body.lyrics-marquee-unavailable .marquee::after {
   height: 32px;
   background: linear-gradient(180deg, rgba(255, 142, 78, 0.98), rgba(209, 65, 21, 0.98));
 }
+
+
+/* v65L: depth and room-blend tuning for the diamond record clock */
+.room {
+  --vinyl-clock-shadow-x: -18px;
+  --vinyl-clock-shadow-y: 22px;
+  --vinyl-clock-shadow-blur: 18px;
+  --vinyl-clock-shadow-opacity: 0.34;
+  --vinyl-clock-room-blend: 0.42;
+  --vinyl-clock-wall-fade: 0.18;
+  --vinyl-clock-blend-brightness: 0.916;
+  --vinyl-clock-blend-saturation: 0.8824;
+  --vinyl-clock-blend-contrast: 0.958;
+  --vinyl-clock-blend-sepia: 0.0756;
+  --vinyl-clock-warm-wash-opacity: 0.0924;
+}
+
+.vinyl-clock-decor {
+  isolation: isolate;
+  filter:
+    brightness(var(--vinyl-clock-blend-brightness))
+    saturate(var(--vinyl-clock-blend-saturation))
+    contrast(var(--vinyl-clock-blend-contrast))
+    sepia(var(--vinyl-clock-blend-sepia))
+    drop-shadow(var(--vinyl-clock-shadow-x) var(--vinyl-clock-shadow-y) var(--vinyl-clock-shadow-blur) rgba(0, 0, 0, var(--vinyl-clock-shadow-opacity)))
+    drop-shadow(0 0 calc(18px * var(--vinyl-clock-glow)) rgba(255, 190, 92, 0.28)) !important;
+}
+
+.vinyl-clock-decor::before {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  z-index: -1;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  transform: translate(var(--vinyl-clock-shadow-x), var(--vinyl-clock-shadow-y)) scale(1.03);
+  background: rgba(0, 0, 0, var(--vinyl-clock-shadow-opacity));
+  filter: blur(var(--vinyl-clock-shadow-blur));
+  opacity: 0.9;
+}
+
+.vinyl-clock-decor::after {
+  content: "";
+  position: absolute;
+  inset: -2%;
+  z-index: 8;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  background:
+    linear-gradient(140deg,
+      rgba(18, 28, 58, calc(var(--vinyl-clock-wall-fade) * 0.55)),
+      rgba(82, 46, 58, var(--vinyl-clock-warm-wash-opacity)) 52%,
+      rgba(16, 12, 20, calc(var(--vinyl-clock-wall-fade) * 0.42)));
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.vinyl-clock-frame {
+  background:
+    linear-gradient(135deg,
+      rgba(229, 181, 96, 0.80) 0%,
+      rgba(143, 86, 31, 0.84) 24%,
+      rgba(215, 154, 65, 0.88) 47%,
+      rgba(65, 38, 20, 0.90) 53%,
+      rgba(190, 123, 47, 0.84) 76%,
+      rgba(232, 194, 129, 0.70) 100%) !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 231, 180, 0.28),
+    inset 0 0 18px rgba(32, 18, 8, 0.50),
+    inset -8px 10px 12px rgba(0, 0, 0, 0.20) !important;
+}
+
+.vinyl-clock-frame::before {
+  background:
+    linear-gradient(135deg,
+      rgba(28, 19, 16, 0.54),
+      rgba(255, 202, 116, 0.12) 42%,
+      rgba(18, 16, 22, 0.48)) !important;
+}
+
+.vinyl-clock-frame::after {
+  background:
+    linear-gradient(135deg,
+      rgba(255, 229, 170, 0.10),
+      rgba(255, 183, 77, 0.02) 45%,
+      rgba(0, 0, 0, 0.26)) !important;
+}
+
+.vinyl-clock-face {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 0 18px rgba(0, 0, 0, 0.72),
+    0 1px 5px rgba(0, 0, 0, 0.50) !important;
+}
+
+.vinyl-clock-label {
+  opacity: calc(1 - (var(--vinyl-clock-room-blend) * 0.12));
+}
+
+.vinyl-clock-hand,
+.vinyl-clock-tick,
+.vinyl-clock-center {
+  opacity: calc(1 - (var(--vinyl-clock-room-blend) * 0.10));
+}

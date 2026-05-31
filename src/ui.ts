@@ -424,6 +424,24 @@ export function renderShell(state: AppState): void {
               <label>Clock glow <span id="vinylClockGlowValue">0.10</span>
                 <input id="vinylClockGlow" type="range" min="0" max="1" step="0.01" value="0.10" />
               </label>
+              <label>Shadow X px <span id="vinylClockShadowXValue">-18</span>
+                <input id="vinylClockShadowX" type="range" min="-80" max="80" step="1" value="-18" />
+              </label>
+              <label>Shadow Y px <span id="vinylClockShadowYValue">22</span>
+                <input id="vinylClockShadowY" type="range" min="-80" max="100" step="1" value="22" />
+              </label>
+              <label>Shadow blur <span id="vinylClockShadowBlurValue">18</span>
+                <input id="vinylClockShadowBlur" type="range" min="0" max="80" step="1" value="18" />
+              </label>
+              <label>Shadow opacity <span id="vinylClockShadowOpacityValue">0.34</span>
+                <input id="vinylClockShadowOpacity" type="range" min="0" max="0.9" step="0.01" value="0.34" />
+              </label>
+              <label>Room blend <span id="vinylClockRoomBlendValue">0.42</span>
+                <input id="vinylClockRoomBlend" type="range" min="0" max="1" step="0.01" value="0.42" />
+              </label>
+              <label>Wall fade <span id="vinylClockWallFadeValue">0.18</span>
+                <input id="vinylClockWallFade" type="range" min="0" max="0.55" step="0.01" value="0.18" />
+              </label>
             </div>
           </details>
 
