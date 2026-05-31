@@ -338,6 +338,15 @@ export function renderShell(state: AppState): void {
               Pulse speakers to song BPM
             </label>
             <div class="utility-readout">Current pulse BPM: <span id="speakerPulseBpmValue">--</span></div>
+            <div class="utility-api-key-row">
+              <label class="field-label" for="getSongBpmApiKey">GetSongBPM API key</label>
+              <input id="getSongBpmApiKey" class="text-input" type="password" placeholder="Paste API key for external BPM lookup" autocomplete="off" />
+              <div class="button-grid dev-button-grid">
+                <button id="saveGetSongBpmApiKey" class="secondary" type="button">Save BPM Key</button>
+                <button id="clearGetSongBpmApiKey" class="secondary" type="button">Clear BPM Key</button>
+              </div>
+              <div id="getSongBpmApiKeyStatus" class="utility-readout">No GetSongBPM key saved.</div>
+            </div>
             <label>Speaker pulse X % <span id="speakerPulseXValue">50.9</span>
               <input id="speakerPulseX" type="range" min="20" max="80" step="0.1" value="50.9" />
             </label>

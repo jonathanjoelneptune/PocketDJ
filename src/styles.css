@@ -7859,3 +7859,21 @@ body.lyrics-marquee-unavailable .marquee::after {
   color: rgba(255, 235, 190, 0.9);
   font-size: 0.72rem;
 }
+
+.utility-api-key-row {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 224, 178, 0.12);
+  border-radius: 10px;
+  background: rgba(11, 9, 16, 0.22);
+}
+
+.utility-api-key-row .button-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.utility-api-key-row .text-input {
+  width: 100%;
+}
