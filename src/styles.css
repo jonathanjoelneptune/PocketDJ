@@ -7859,3 +7859,15 @@ body.lyrics-marquee-unavailable .marquee::after {
   color: rgba(255, 235, 190, 0.9);
   font-size: 0.72rem;
 }
+
+.tempo-credit {
+  font-size: 0.68rem;
+  opacity: 0.72;
+  margin-top: -0.15rem;
+}
+
+.tempo-credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

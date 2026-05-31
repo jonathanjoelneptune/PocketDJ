@@ -3,7 +3,7 @@ import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlb
 import { DjController } from "./dj/djController";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getTrackTempoBpm, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
+import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getExternalTrackTempoBpm, getTrackTempoBpm, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import {
   emptyLyrics,
@@ -19,6 +19,7 @@ const STANDARD_SPOTIFY_CLIENT_ID = "37da51db24384ad3a07c222f71b1525e";
 const SPOTIFY_WEB_PLAYBACK_SDK_URL = "https://sdk.scdn.co/spotify-player.js";
 const POCKET_DJ_DEVICE_NAME = "Pocket DJ";
 const PREFERRED_SPOTIFY_SOURCE_KEY = "pocketdj-preferred-spotify-source-v1";
+const GETSONGBPM_BROWSER_API_KEY = "adb657bcac29228727d5af3455947f33";
 
 type SpotifyWebPlaybackPlayer = {
   addListener: (event: string, callback: (payload: any) => void) => boolean;
@@ -138,8 +139,10 @@ let vinylClockTimer: number | null = null;
 let speakerTempoTrackKey = "";
 let speakerTempoFetchKey = "";
 let speakerTempoBpm: number | null = null;
-let speakerTempoSource: "spotify" | "demo" | "estimate" | "fallback" = "fallback";
+let speakerTempoSource: "getsongbpm" | "spotify" | "demo" | "estimate" | "fallback" | "lookup" | "nomatch" = "fallback";
 const speakerTempoCache = new Map<string, number>();
+const externalSpeakerTempoCache = new Map<string, number>();
+const externalSpeakerTempoMisses = new Set<string>();
 const ALBUM_REVEAL_MAX_WAIT_MS = 500;
 const SPEAKER_PULSE_FALLBACK_BPM = 96;
 
@@ -166,6 +169,7 @@ type RoomUtilitySettings = {
   speakerPulseSize: number;
   speakerWarpOpacity: number;
   speakerPulseUseTempo: boolean;
+  speakerPulseUseExternalTempo: boolean;
   sceneFilter: SceneFilter;
   filterStrength: number;
   vignetteStrength: number;
@@ -329,6 +333,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   speakerPulseSize: 55,
   speakerWarpOpacity: 1.00,
   speakerPulseUseTempo: true,
+  speakerPulseUseExternalTempo: true,
   sceneFilter: "neon-purple",
   filterStrength: 0.20,
   vignetteStrength: 0.20,
@@ -3826,6 +3831,7 @@ function bindRoomUtilityControls(): void {
   const songChangeMode = document.querySelector<HTMLInputElement>("#songChangeMode");
   const vinylClockEnabled = document.querySelector<HTMLInputElement>("#vinylClockEnabled");
   const speakerPulseUseTempo = document.querySelector<HTMLInputElement>("#speakerPulseUseTempo");
+  const speakerPulseUseExternalTempo = document.querySelector<HTMLInputElement>("#speakerPulseUseExternalTempo");
 
   if (sceneFilter) sceneFilter.value = roomUtility.sceneFilter;
   if (lyricPosterMaxRows) lyricPosterMaxRows.value = roomUtility.lyricPosterMaxRows;
@@ -3843,6 +3849,7 @@ function bindRoomUtilityControls(): void {
   if (songChangeMode) songChangeMode.checked = roomUtility.songChangeMode;
   if (vinylClockEnabled) vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
   if (speakerPulseUseTempo) speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
+  if (speakerPulseUseExternalTempo) speakerPulseUseExternalTempo.checked = roomUtility.speakerPulseUseExternalTempo;
 
   panelHeightAdjustEnabled?.addEventListener("change", () => {
     setPanelHeightAdjustEnabled(panelHeightAdjustEnabled.checked, false);
@@ -3872,6 +3879,14 @@ function bindRoomUtilityControls(): void {
 
   speakerPulseUseTempo?.addEventListener("change", () => {
     roomUtility = { ...roomUtility, speakerPulseUseTempo: speakerPulseUseTempo.checked };
+    applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
+  });
+
+  speakerPulseUseExternalTempo?.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, speakerPulseUseExternalTempo: speakerPulseUseExternalTempo.checked };
+    speakerTempoFetchKey = "";
+    applySpeakerPulseTempo(state.playback);
     applyRoomUtilitySettings();
     saveRoomUtilitySettings();
   });
@@ -4103,6 +4118,7 @@ function bindRoomUtilityControls(): void {
     if (songChangeMode) songChangeMode.checked = roomUtility.songChangeMode;
     if (vinylClockEnabled) vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
     if (speakerPulseUseTempo) speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
+  if (speakerPulseUseExternalTempo) speakerPulseUseExternalTempo.checked = roomUtility.speakerPulseUseExternalTempo;
 
     controls.forEach(([inputId, labelId]) => {
       const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
@@ -4450,12 +4466,31 @@ function setSpeakerPulseBpmLabel(): void {
   const label = document.querySelector<HTMLElement>("#speakerPulseBpmValue");
   if (!label) return;
   const bpm = speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM;
-  const sourceLabel = speakerTempoSource === "spotify" ? "Spotify" : speakerTempoSource === "demo" ? "demo" : speakerTempoSource === "estimate" ? "estimated" : "fallback";
+  const sourceLabel =
+    speakerTempoSource === "getsongbpm"
+      ? "GetSongBPM"
+      : speakerTempoSource === "spotify"
+        ? "Spotify"
+        : speakerTempoSource === "demo"
+          ? "demo"
+          : speakerTempoSource === "estimate"
+            ? "estimated"
+            : speakerTempoSource === "lookup"
+              ? "looking up..."
+              : speakerTempoSource === "nomatch"
+                ? "estimated (no match)"
+                : "fallback";
   label.textContent = `${Math.round(bpm)} ${sourceLabel}`;
+}
+
+function speakerTempoExternalKey(track: AppState["playback"]): string {
+  return `${track.artist.trim().toLowerCase()}::${track.title.trim().toLowerCase()}`;
 }
 
 function applySpeakerPulseTempo(track: AppState["playback"]): void {
   const trackKey = track.trackId || `${track.source}:${track.title}:${track.artist}:${track.durationMs}`;
+  const externalKey = speakerTempoExternalKey(track);
+
   if (!roomUtility.speakerPulseUseTempo) {
     speakerTempoTrackKey = trackKey;
     setSpeakerTempo(SPEAKER_PULSE_FALLBACK_BPM, "fallback");
@@ -4479,6 +4514,13 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
     return;
   }
 
+  const externalCached = externalSpeakerTempoCache.get(externalKey);
+  if (externalCached) {
+    speakerTempoTrackKey = trackKey;
+    setSpeakerTempo(externalCached, "getsongbpm");
+    return;
+  }
+
   const cached = speakerTempoCache.get(track.trackId);
   if (cached) {
     speakerTempoTrackKey = track.trackId;
@@ -4486,22 +4528,53 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
     return;
   }
 
-  if (speakerTempoTrackKey !== track.trackId) {
-    speakerTempoTrackKey = track.trackId;
+  if (speakerTempoTrackKey !== trackKey) {
+    speakerTempoTrackKey = trackKey;
     setSpeakerTempo(estimateTrackTempoBpm(track), "estimate");
+  }
+
+  if (
+    roomUtility.speakerPulseUseExternalTempo &&
+    GETSONGBPM_BROWSER_API_KEY &&
+    !externalSpeakerTempoMisses.has(externalKey) &&
+    speakerTempoFetchKey !== `getsongbpm:${externalKey}`
+  ) {
+    speakerTempoFetchKey = `getsongbpm:${externalKey}`;
+    setSpeakerTempo(speakerTempoBpm || estimateTrackTempoBpm(track), "lookup");
+
+    void getExternalTrackTempoBpm(GETSONGBPM_BROWSER_API_KEY, track.title, track.artist)
+      .then((tempo) => {
+        if (speakerTempoTrackKey !== trackKey) return;
+
+        if (tempo && Number.isFinite(tempo) && tempo > 0) {
+          externalSpeakerTempoCache.set(externalKey, tempo);
+          setSpeakerTempo(tempo, "getsongbpm");
+          return;
+        }
+
+        externalSpeakerTempoMisses.add(externalKey);
+        setSpeakerTempo(estimateTrackTempoBpm(track), "nomatch");
+      })
+      .catch(() => {
+        if (speakerTempoTrackKey !== trackKey) return;
+        externalSpeakerTempoMisses.add(externalKey);
+        setSpeakerTempo(estimateTrackTempoBpm(track), "nomatch");
+      });
+
+    return;
   }
 
   if (speakerTempoFetchKey === track.trackId) return;
   speakerTempoFetchKey = track.trackId;
   void getTrackTempoBpm(state.spotifyClientId, track.trackId)
     .then((tempo) => {
-      if (!tempo || speakerTempoTrackKey !== track.trackId) return;
+      if (!tempo || speakerTempoTrackKey !== trackKey) return;
       speakerTempoCache.set(track.trackId || "", tempo);
       setSpeakerTempo(tempo, "spotify");
     })
     .catch(() => {
       // Keep the local estimate if Spotify tempo/audio-analysis data is unavailable.
-      if (speakerTempoTrackKey === track.trackId && speakerTempoSource !== "spotify") {
+      if (speakerTempoTrackKey === trackKey && speakerTempoSource !== "spotify" && speakerTempoSource !== "getsongbpm") {
         setSpeakerPulseBpmLabel();
       }
     });

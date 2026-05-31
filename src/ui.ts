@@ -286,7 +286,14 @@ export function renderShell(state: AppState): void {
               <input id="speakerPulseUseTempo" type="checkbox" />
               Pulse speakers to song BPM
             </label>
+            <label class="utility-checkbox">
+              <input id="speakerPulseUseExternalTempo" type="checkbox" />
+              Use GetSongBPM tempo lookup
+            </label>
             <div class="utility-readout">Current pulse BPM: <span id="speakerPulseBpmValue">--</span></div>
+            <div class="utility-readout tempo-credit">
+              Tempo lookup by <a href="https://getsongbpm.com/" target="_blank" rel="noreferrer">GetSongBPM</a>
+            </div>
             <label>Speaker pulse X % <span id="speakerPulseXValue">50.9</span>
               <input id="speakerPulseX" type="range" min="20" max="80" step="0.1" value="50.9" />
             </label>
