@@ -19,6 +19,7 @@ const STANDARD_SPOTIFY_CLIENT_ID = "37da51db24384ad3a07c222f71b1525e";
 const SPOTIFY_WEB_PLAYBACK_SDK_URL = "https://sdk.scdn.co/spotify-player.js";
 const POCKET_DJ_DEVICE_NAME = "Pocket DJ";
 const PREFERRED_SPOTIFY_SOURCE_KEY = "pocketdj-preferred-spotify-source-v1";
+const FLOOR_CONTROLS_LOCK_KEY = "pocketdj-floor-controls-locked-v1";
 const GETSONGBPM_BROWSER_API_KEY = "adb657bcac29228727d5af3455947f33";
 
 type SpotifyWebPlaybackPlayer = {
@@ -74,7 +75,7 @@ let aspectPocketClickTimer: number | null = null;
 let sidePanelLocked = false;
 let sidePanelHideTimer: number | null = null;
 let floorControlsOpen = false;
-let floorControlsLocked = false;
+let floorControlsLocked = window.localStorage.getItem(FLOOR_CONTROLS_LOCK_KEY) === "1";
 let floorControlsHideTimer: number | null = null;
 let phase2ShuffleEnabled = false;
 let phase2RepeatMode: "off" | "context" | "track" = "off";
@@ -166,6 +167,7 @@ const DEFAULT_REACTIVE_ROOM_PALETTE: ReactiveRoomPalette = {
 const reactiveRoomPaletteCache = new Map<string, ReactiveRoomPalette>();
 let reactiveRoomPaletteUrl = "";
 let reactiveRoomPalettePendingUrl = "";
+let stringLightResizeTimer: number | null = null;
 
 type SceneFilter =
   | "none"
@@ -2359,6 +2361,8 @@ async function boot(): Promise<void> {
   setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
   bindControls();
+  bindFloorControlsLock();
+  updateFloorControlsLockUi();
   updateSidePanelLockUi();
   updateLyricsToggleUi(lyricsState.status, lyricsEnabled);
   scheduleSidePanelAutoHide();
@@ -2960,26 +2964,60 @@ function bindSeekSurface(surface: HTMLElement): void {
   });
 }
 
+function updateFloorControlsLockUi(): void {
+  const floor = document.querySelector<HTMLElement>("#floorPlayer");
+  const lockButton = document.querySelector<HTMLButtonElement>("#floorControlsLock");
+  floor?.classList.toggle("floor-player-locked", floorControlsLocked);
+  floor?.classList.toggle("floor-player-idle", !floorControlsLocked && floor?.classList.contains("floor-player-idle"));
+  if (lockButton) {
+    lockButton.classList.toggle("floor-controls-lock-active", floorControlsLocked);
+    lockButton.setAttribute("aria-pressed", String(floorControlsLocked));
+    lockButton.title = floorControlsLocked ? "Floor controls locked open" : "Lock floor controls open";
+  }
+}
+
+function bindFloorControlsLock(): void {
+  const lockButton = document.querySelector<HTMLButtonElement>("#floorControlsLock");
+  lockButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    floorControlsLocked = !floorControlsLocked;
+    window.localStorage.setItem(FLOOR_CONTROLS_LOCK_KEY, floorControlsLocked ? "1" : "0");
+    setFloorControlsOpen(true, !floorControlsLocked);
+    updateFloorControlsLockUi();
+  });
+}
+
 function setFloorControlsOpen(open: boolean, autoHide = true): void {
   floorControlsOpen = true;
   const floor = qs<HTMLElement>("#floorPlayer");
 
   floor.classList.remove("floor-player-hidden");
   floor.classList.add("floor-player-visible");
-  floor.classList.toggle("floor-player-idle", !open);
+  floor.classList.toggle("floor-player-idle", !open && !floorControlsLocked);
 
-  if (autoHide) scheduleFloorControlsAutoHide();
+  if (floorControlsLocked) {
+    if (floorControlsHideTimer) window.clearTimeout(floorControlsHideTimer);
+    floorControlsHideTimer = null;
+    floor.classList.remove("floor-player-idle");
+  } else if (autoHide) {
+    scheduleFloorControlsAutoHide();
+  }
+
+  updateFloorControlsLockUi();
 }
 
-function setFloorControlsLocked(_locked: boolean): void {
-  // Deprecated. Floor controls are now always visible and dim automatically.
-  floorControlsLocked = false;
-  setFloorControlsOpen(true);
+function setFloorControlsLocked(locked: boolean): void {
+  floorControlsLocked = locked;
+  window.localStorage.setItem(FLOOR_CONTROLS_LOCK_KEY, floorControlsLocked ? "1" : "0");
+  setFloorControlsOpen(true, !floorControlsLocked);
+  updateFloorControlsLockUi();
 }
 
 function scheduleFloorControlsAutoHide(): void {
+  if (floorControlsLocked) return;
   if (floorControlsHideTimer) window.clearTimeout(floorControlsHideTimer);
   floorControlsHideTimer = window.setTimeout(() => {
+    if (floorControlsLocked) return;
     const floor = qs<HTMLElement>("#floorPlayer");
     floor.classList.add("floor-player-idle");
   }, 1_500);
@@ -3985,6 +4023,33 @@ function setReactiveRoomPalette(palette: ReactiveRoomPalette): void {
   root.style.setProperty("--ambient-room-accent-rgb", rgbTripleToCss(palette.roomAccent));
 }
 
+function paletteFromTrackText(track: AppState["playback"]): ReactiveRoomPalette {
+  const seed = `${track.title}|${track.artist}|${track.album}|${track.durationMs}`;
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) hash = (hash * 33 + seed.charCodeAt(index)) >>> 0;
+  const hue = hash % 360;
+  const chroma = 0.56;
+  const x = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (hue < 60) [r, g, b] = [chroma, x, 0];
+  else if (hue < 120) [r, g, b] = [x, chroma, 0];
+  else if (hue < 180) [r, g, b] = [0, chroma, x];
+  else if (hue < 240) [r, g, b] = [0, x, chroma];
+  else if (hue < 300) [r, g, b] = [x, 0, chroma];
+  else [r, g, b] = [chroma, 0, x];
+  const m = 0.28;
+  const color: RgbTriple = [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+  return {
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, color, 0.16),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, color, 0.30),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, color, 0.22),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, color, 0.18),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, color, 0.16),
+  };
+}
+
 async function extractReactiveRoomPalette(imageUrl: string): Promise<ReactiveRoomPalette> {
   const image = new Image();
   image.crossOrigin = "anonymous";
@@ -4041,11 +4106,11 @@ async function extractReactiveRoomPalette(imageUrl: string): Promise<ReactiveRoo
     : DEFAULT_REACTIVE_ROOM_PALETTE.tint;
 
   return {
-    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, average, 0.14),
-    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrant, 0.22),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, average, 0.18),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, average, 0.16),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrant, 0.10),
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, average, 0.18),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrant, 0.34),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, average, 0.26),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, average, 0.22),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrant, 0.18),
   };
 }
 
@@ -4053,7 +4118,7 @@ function updateReactiveRoomPalette(track: AppState["playback"]): void {
   const imageUrl = track.albumArtUrl || "";
   if (!imageUrl) {
     reactiveRoomPaletteUrl = "";
-    setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
+    setReactiveRoomPalette(paletteFromTrackText(track));
     return;
   }
 
@@ -4079,7 +4144,7 @@ function updateReactiveRoomPalette(track: AppState["playback"]): void {
     .catch(() => {
       if ((state.playback.albumArtUrl || "") !== imageUrl) return;
       reactiveRoomPaletteUrl = imageUrl;
-      setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
+      setReactiveRoomPalette(paletteFromTrackText(track));
     })
     .finally(() => {
       if (reactiveRoomPalettePendingUrl === imageUrl) reactiveRoomPalettePendingUrl = "";
@@ -4096,8 +4161,8 @@ function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
 
   root.classList.toggle("music-reactive-playing", playing);
   root.style.setProperty("--music-beat-ms", `${beatMs}ms`);
-  root.style.setProperty("--music-breathe-ms", `${Math.round(Math.max(3600, beatMs * 7.5))}ms`);
-  root.style.setProperty("--music-pulse-ms", `${Math.round(Math.max(1600, beatMs * 3.5))}ms`);
+  root.style.setProperty("--music-breathe-ms", `${Math.round(Math.max(7200, beatMs * 14))}ms`);
+  root.style.setProperty("--music-pulse-ms", `${Math.round(Math.max(2200, beatMs * 4.5))}ms`);
   root.style.setProperty("--music-room-energy", pulseEnergy.toFixed(3));
 
   if (overlay) {
@@ -4187,6 +4252,9 @@ function renderStringLights(): void {
     overlay.style.setProperty("--string-light-flicker-ms", `${Math.round(Math.max(2800, speakerPulseDurationMs() * 8.5))}ms`);
   }
 
+  const roomWidth = overlay.getBoundingClientRect().width || ROOM_COORD_WIDTH;
+  const roomScale = roomWidth / ROOM_COORD_WIDTH;
+
   stringLightSettings.points.forEach((point) => {
     const light = document.createElement("button");
     light.type = "button";
@@ -4196,6 +4264,7 @@ function renderStringLights(): void {
     light.style.left = `${(point.x / ROOM_COORD_WIDTH) * 100}%`;
     light.style.top = `${(point.y / ROOM_COORD_HEIGHT) * 100}%`;
     light.style.setProperty("--bulb-size", `${point.size}px`);
+    light.style.setProperty("--bulb-render-size", `${Math.max(2, point.size * roomScale)}px`);
     light.style.setProperty("--bulb-intensity", String(point.intensity));
     light.style.setProperty("--bulb-warmth", String(point.warmth));
     light.style.setProperty("--bulb-phase", `${point.phase * -2.7}s`);
@@ -4371,6 +4440,11 @@ function bindStringLightControls(): void {
       addStringLightPoint();
     }
     updateSelectedStringLightPoint({ x, y });
+  });
+
+  window.addEventListener("resize", () => {
+    if (stringLightResizeTimer) window.clearTimeout(stringLightResizeTimer);
+    stringLightResizeTimer = window.setTimeout(() => renderStringLights(), 120);
   });
 
   renderStringLights();

@@ -7880,6 +7880,7 @@ body.lyrics-marquee-unavailable .marquee::after {
   --ambient-room-glow-rgb: 126, 82, 140;
   --ambient-room-accent-rgb: 255, 186, 108;
   --music-room-energy: 0.3;
+  --room-unit: calc(var(--room-w) / 1764);
 }
 
 .string-light-overlay {
@@ -7898,6 +7899,10 @@ body.lyrics-marquee-unavailable .marquee::after {
   --string-light-playing-opacity: 0.84;
 }
 
+.string-light-overlay.string-lights-enabled {
+  opacity: 1;
+}
+
 .string-light-overlay.string-lights-enabled.string-lights-playing,
 .string-light-overlay.string-lights-editing {
   opacity: 1;
@@ -7909,8 +7914,8 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 .string-light-point {
   position: absolute;
-  width: calc(var(--bulb-size) * 3.4);
-  height: calc(var(--bulb-size) * 3.4);
+  width: calc(var(--bulb-render-size) * 3.4);
+  height: calc(var(--bulb-render-size) * 3.4);
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -7948,16 +7953,23 @@ body.lyrics-marquee-unavailable .marquee::after {
       rgba(var(--string-light-tint-rgb), calc(0.17 * var(--bulb-intensity) * var(--string-light-glow))) 48%,
       rgba(var(--string-light-ambient-rgb), calc(0.06 * var(--bulb-intensity) * var(--string-light-glow))) 64%,
       rgba(var(--string-light-ambient-rgb), 0) 78%);
-  filter: blur(calc(var(--bulb-size) * (0.45 + var(--string-light-glow) * 0.25)));
+  opacity: 0;
+  filter: blur(calc(var(--bulb-render-size) * (0.45 + var(--string-light-glow) * 0.25)));
   transform: scale(calc(1.12 + var(--string-light-glow) * 0.45));
+  transition: opacity 1.8s ease;
+}
+
+.string-light-overlay.string-lights-playing .string-light-glow,
+.string-light-overlay.string-lights-editing .string-light-glow {
+  opacity: 1;
 }
 
 .string-light-core {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: var(--bulb-size);
-  height: var(--bulb-size);
+  width: var(--bulb-render-size);
+  height: var(--bulb-render-size);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   background:
@@ -7968,9 +7980,9 @@ body.lyrics-marquee-unavailable .marquee::after {
       rgba(var(--string-light-tint-rgb), 0.88) 76%,
       rgba(106, 48, 18, 0.58) 100%);
   box-shadow:
-    0 0 calc(var(--bulb-size) * 0.75) rgba(var(--string-light-core-rgb), calc(0.34 * var(--bulb-intensity))),
-    0 0 calc(var(--bulb-size) * 1.55) rgba(var(--string-light-tint-rgb), calc(0.24 * var(--bulb-intensity) * var(--string-light-glow))),
-    0 0 calc(var(--bulb-size) * 2.2) rgba(var(--string-light-ambient-rgb), calc(0.12 * var(--bulb-intensity) * var(--string-light-glow))),
+    0 0 calc(var(--bulb-render-size) * 0.75) rgba(var(--string-light-core-rgb), calc(0.34 * var(--bulb-intensity))),
+    0 0 calc(var(--bulb-render-size) * 1.55) rgba(var(--string-light-tint-rgb), calc(0.24 * var(--bulb-intensity) * var(--string-light-glow))),
+    0 0 calc(var(--bulb-render-size) * 2.2) rgba(var(--string-light-ambient-rgb), calc(0.12 * var(--bulb-intensity) * var(--string-light-glow))),
     0 1px 2px rgba(0, 0, 0, 0.34);
 }
 
@@ -8003,8 +8015,8 @@ body.lyrics-marquee-unavailable .marquee::after {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: calc(var(--bulb-size) * 2.1);
-  height: calc(var(--bulb-size) * 2.1);
+  width: calc(var(--bulb-render-size) * 2.1);
+  height: calc(var(--bulb-render-size) * 2.1);
   border-radius: 50%;
   border: 1px dashed rgba(255, 233, 161, 0.56);
   transform: translate(-50%, -50%);
@@ -8043,12 +8055,13 @@ body.lyrics-marquee-unavailable .marquee::after {
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: screen;
-  transition: opacity 280ms ease;
+  transition: opacity 2.8s ease;
   background:
     radial-gradient(56% 38% at 50% 57%, rgba(var(--ambient-room-accent-rgb), calc(0.12 + var(--music-room-energy) * 0.04)) 0%, rgba(var(--ambient-room-accent-rgb), calc(0.06 + var(--music-room-energy) * 0.03)) 38%, rgba(var(--ambient-room-accent-rgb), 0) 74%),
     radial-gradient(72% 52% at 50% 42%, rgba(var(--ambient-room-glow-rgb), calc(0.16 + var(--music-room-energy) * 0.05)) 0%, rgba(var(--ambient-room-glow-rgb), calc(0.08 + var(--music-room-energy) * 0.04)) 44%, rgba(var(--ambient-room-glow-rgb), 0) 78%),
     linear-gradient(180deg, rgba(var(--ambient-room-glow-rgb), calc(0.07 + var(--music-room-energy) * 0.02)) 0%, rgba(var(--ambient-room-glow-rgb), 0.03) 48%, rgba(var(--ambient-room-accent-rgb), 0.02) 100%);
   filter: blur(22px) saturate(1.08);
+  will-change: opacity, transform, filter;
 }
 
 .music-reactive-playing .ambient-music-glow.ambient-music-glow-active {
@@ -8080,4 +8093,64 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 .string-light-utility .utility-readout {
   margin-top: 8px;
+}
+
+
+/* v65S: centered lock for floor playback controls */
+.floor-player {
+  overflow: visible;
+}
+
+.floor-controls-lock {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--room-h) * -0.018);
+  width: clamp(18px, calc(var(--room-w) * 0.016), 30px);
+  height: clamp(18px, calc(var(--room-w) * 0.016), 30px);
+  transform: translateX(-50%);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 184, 71, 0.22);
+  background: rgba(8, 5, 3, 0.20);
+  box-shadow: 0 5px 14px rgba(0,0,0,0.18), inset 0 0 9px rgba(255, 184, 71, 0.035);
+  opacity: 0.34;
+  cursor: pointer;
+  z-index: 4;
+  transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.floor-controls-lock::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34%;
+  height: 30%;
+  transform: translate(-50%, -28%);
+  border-radius: 2px;
+  background: rgba(255, 214, 136, 0.72);
+}
+
+.floor-controls-lock::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 34%;
+  height: 30%;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255, 214, 136, 0.72);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+}
+
+.floor-controls-lock:hover,
+.floor-controls-lock-active {
+  opacity: 0.92;
+  transform: translateX(-50%) scale(1.08);
+  border-color: rgba(255, 196, 88, 0.56);
+  box-shadow: 0 7px 20px rgba(0,0,0,0.22), 0 0 14px rgba(255, 184, 71, 0.18), inset 0 0 12px rgba(255, 184, 71, 0.07);
+}
+
+.floor-player-locked.floor-player-idle {
+  opacity: 1 !important;
 }

@@ -107,6 +107,7 @@ export function renderShell(state: AppState): void {
           <div id="floorSeekBar" class="floor-progress seek-surface" role="slider" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <div class="floor-progress-fill" id="floorProgressFill"></div>
           </div>
+          <button id="floorControlsLock" class="floor-controls-lock" type="button" aria-label="Lock floor controls open" aria-pressed="false" title="Lock floor controls open"></button>
         </div>
       </section>
 
