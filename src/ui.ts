@@ -232,9 +232,12 @@ export function renderShell(state: AppState): void {
             <summary>Session Wall Albums</summary>
             <p class="utility-help">Define 16:9 room-space album slots. These are future wall positions where played album covers will land.</p>
             <div class="button-grid dev-button-grid">
-              <button id="sessionAlbumAddSlot" class="secondary" type="button">Add Session Album Slot</button>
+              <button id="sessionAlbumAddSlot" class="secondary" type="button">Add Full Album Slot</button>
+              <button id="sessionAlbumAddPartialLeft" class="secondary" type="button">Add Partial Left</button>
+              <button id="sessionAlbumAddPartialRight" class="secondary" type="button">Add Partial Right</button>
               <button id="sessionAlbumDuplicateAToB" class="secondary" type="button">Duplicate A to B</button>
             </div>
+            <p class="utility-help">For partial side albums, define the full album shape past the screen edge. The visible room edge will crop it naturally.</p>
             <div class="session-album-group-move">
               <label>Group prefix
                 <input id="sessionAlbumGroupPrefix" class="text-input" type="text" value="B" />

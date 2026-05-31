@@ -7260,3 +7260,43 @@ body.lyrics-marquee-unavailable .marquee::after {
 /* v65A: Warp mode is now the default wall-album renderer.
    Canvas draws a direct fallback sleeve per slot if an external album image is not loaded yet,
    so wall frames should not appear empty while artwork is resolving. */
+
+
+/* v65B: Partial edge album slots.
+   Partial slots can extend beyond the 16:9 room bounds so the viewport crops them naturally. */
+.session-album-slot-panel summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.session-album-kind-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 210, 135, 0.32);
+  border-radius: 999px;
+  color: rgba(255, 220, 154, 0.88);
+  background: rgba(26, 13, 8, 0.72);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.session-album-slot-partial {
+  border-color: rgba(255, 184, 92, 0.34);
+  background: rgba(64, 32, 14, 0.22);
+}
+
+.session-album-partial-note {
+  margin: 4px 0 8px;
+  color: rgba(255, 220, 170, 0.74);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.session-album-guide-partial {
+  stroke: rgba(255, 184, 92, 0.96);
+  stroke-dasharray: 10 6;
+}

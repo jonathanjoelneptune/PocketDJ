@@ -447,10 +447,12 @@ let roomUtility = loadRoomUtilitySettings();
 
 
 type SessionAlbumCornerKey = "tl" | "tr" | "bl" | "br";
+type SessionAlbumSlotKind = "full" | "partial";
 
 type SessionAlbumSlot = {
   id: number;
   label: string;
+  kind: SessionAlbumSlotKind;
   tlX: number;
   tlY: number;
   trX: number;
@@ -481,6 +483,8 @@ type SessionAlbumCornerTarget = {
 const SESSION_ALBUM_KEY = "pocketdj-session-wall-albums-v1";
 const ROOM_COORD_WIDTH = 1764;
 const ROOM_COORD_HEIGHT = 992;
+const PARTIAL_ALBUM_X_MARGIN = 320;
+const PARTIAL_ALBUM_Y_MARGIN = 160;
 
 const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
@@ -492,52 +496,52 @@ const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   v65aWarpDefault: true,
   nextId: 53,
   slots: [
-    { id: 1, label: "A-1", tlX: 77, tlY: 15, trX: 177, trY: 73, blX: 78, blY: 144, brX: 173, brY: 185 },
-    { id: 2, label: "A-2", tlX: 187, tlY: 77, trX: 258, trY: 118, blX: 182, blY: 186, brX: 260, brY: 218 },
-    { id: 3, label: "A-3", tlX: 266, tlY: 125, trX: 329, trY: 161, blX: 271, blY: 224, brX: 329, brY: 251 },
-    { id: 4, label: "A-4", tlX: 336, tlY: 164, trX: 384, trY: 195, blX: 337, blY: 255, brX: 386, brY: 273 },
-    { id: 5, label: "A-5", tlX: 391, tlY: 200, trX: 436, trY: 227, blX: 392, blY: 277, brX: 432, brY: 297 },
-    { id: 11, label: "B-1", tlX: 81, tlY: 177, trX: 174, trY: 213, blX: 81, blY: 300, brX: 173, brY: 324 },
-    { id: 12, label: "B-2", tlX: 183, tlY: 215, trX: 260, trY: 249, blX: 186, blY: 326, brX: 262, brY: 343 },
-    { id: 13, label: "B-3", tlX: 269, tlY: 250, trX: 327, trY: 275, blX: 271, blY: 346, brX: 327, brY: 359 },
-    { id: 14, label: "B-4", tlX: 337, tlY: 277, trX: 386, trY: 297, blX: 336, blY: 362, brX: 386, brY: 373 },
-    { id: 15, label: "B-5", tlX: 392, tlY: 300, trX: 435, trY: 320, blX: 392, blY: 375, brX: 437, brY: 385 },
-    { id: 17, label: "A-17", tlX: 81, tlY: 330, trX: 173, trY: 349, blX: 79, blY: 448, brX: 174, brY: 453 },
-    { id: 18, label: "A-18", tlX: 187, tlY: 352, trX: 258, trY: 369, blX: 185, blY: 458, brX: 260, brY: 464 },
-    { id: 19, label: "A-19", tlX: 269, tlY: 369, trX: 326, trY: 382, blX: 268, blY: 463, brX: 324, brY: 466 },
-    { id: 20, label: "A-20", tlX: 335, tlY: 383, trX: 386, trY: 392, blX: 336, blY: 466, brX: 385, brY: 470 },
-    { id: 21, label: "A-21", tlX: 392, tlY: 395, trX: 437, trY: 405, blX: 389, blY: 471, brX: 435, brY: 475 },
-    { id: 22, label: "A-22", tlX: 78, tlY: 478, trX: 174, trY: 483, blX: 81, blY: 593, brX: 174, brY: 589 },
-    { id: 23, label: "A-23", tlX: 186, tlY: 483, trX: 258, trY: 484, blX: 185, blY: 587, brX: 260, brY: 580 },
-    { id: 24, label: "A-24", tlX: 269, tlY: 487, trX: 329, trY: 489, blX: 268, blY: 578, brX: 328, brY: 571 },
-    { id: 25, label: "A-25", tlX: 335, tlY: 487, trX: 386, trY: 492, blX: 336, blY: 572, brX: 384, brY: 566 },
-    { id: 26, label: "A-26", tlX: 392, tlY: 492, trX: 439, trY: 493, blX: 390, blY: 564, brX: 439, brY: 561 },
-    { id: 27, label: "A-27", tlX: 81, tlY: 621, trX: 175, trY: 608, blX: 81, blY: 721, brX: 174, brY: 693 },
-    { id: 28, label: "A-28", tlX: 184, tlY: 610, trX: 258, trY: 603, blX: 187, blY: 696, brX: 260, brY: 676 },
-    { id: 29, label: "A-29", tlX: 269, tlY: 601, trX: 331, trY: 592, blX: 271, blY: 674, brX: 330, brY: 658 },
-    { id: 30, label: "A-30", tlX: 1608, tlY: 72, trX: 1701, trY: 16, blX: 1606, blY: 188, brX: 1701, brY: 145 },
-    { id: 31, label: "A-31", tlX: 1523, tlY: 123, trX: 1598, trY: 75, blX: 1521, blY: 221, brX: 1598, brY: 188 },
-    { id: 32, label: "A-32", tlX: 1448, tlY: 167, trX: 1514, trY: 126, blX: 1445, blY: 256, brX: 1513, brY: 224 },
-    { id: 33, label: "A-33", tlX: 1394, tlY: 202, trX: 1441, trY: 169, blX: 1391, blY: 280, brX: 1439, brY: 257 },
-    { id: 34, label: "A-34", tlX: 1344, tlY: 231, trX: 1386, trY: 203, blX: 1345, blY: 299, brX: 1385, brY: 280 },
-    { id: 35, label: "A-35", tlX: 1610, tlY: 212, trX: 1699, trY: 175, blX: 1608, blY: 323, brX: 1699, brY: 298 },
-    { id: 36, label: "A-36", tlX: 1524, tlY: 247, trX: 1602, trY: 215, blX: 1523, blY: 344, brX: 1602, brY: 325 },
-    { id: 37, label: "A-37", tlX: 1447, tlY: 278, trX: 1517, trY: 250, blX: 1447, blY: 362, brX: 1517, brY: 345 },
-    { id: 38, label: "A-38", tlX: 1392, tlY: 303, trX: 1441, trY: 280, blX: 1392, blY: 375, brX: 1441, brY: 362 },
-    { id: 39, label: "A-39", tlX: 1345, tlY: 322, trX: 1385, trY: 303, blX: 1340, blY: 387, brX: 1385, brY: 377 },
-    { id: 40, label: "A-40", tlX: 1609, tlY: 352, trX: 1701, trY: 332, blX: 1607, blY: 462, brX: 1699, brY: 457 },
-    { id: 41, label: "A-41", tlX: 1521, tlY: 369, trX: 1600, trY: 351, blX: 1521, blY: 465, brX: 1600, brY: 460 },
-    { id: 42, label: "A-42", tlX: 1448, tlY: 384, trX: 1513, trY: 370, blX: 1447, blY: 469, brX: 1514, brY: 464 },
-    { id: 43, label: "A-43", tlX: 1395, tlY: 395, trX: 1442, trY: 383, blX: 1392, blY: 473, brX: 1441, brY: 468 },
-    { id: 44, label: "A-44", tlX: 1347, tlY: 407, trX: 1388, trY: 397, blX: 1342, blY: 476, brX: 1384, brY: 474 },
-    { id: 45, label: "A-45", tlX: 1610, tlY: 486, trX: 1700, trY: 481, blX: 1609, blY: 590, brX: 1703, brY: 600 },
-    { id: 46, label: "A-46", tlX: 1522, tlY: 488, trX: 1597, trY: 485, blX: 1523, blY: 582, brX: 1600, brY: 588 },
-    { id: 47, label: "A-47", tlX: 1448, tlY: 491, trX: 1515, trY: 488, blX: 1450, blY: 575, brX: 1516, brY: 581 },
-    { id: 48, label: "A-48", tlX: 1393, tlY: 494, trX: 1441, trY: 490, blX: 1391, blY: 567, brX: 1444, brY: 574 },
-    { id: 49, label: "A-49", tlX: 1342, tlY: 494, trX: 1386, trY: 492, blX: 1343, blY: 560, brX: 1385, brY: 568 },
-    { id: 50, label: "A-50", tlX: 1610, tlY: 616, trX: 1701, trY: 625, blX: 1611, blY: 711, brX: 1703, brY: 728 },
-    { id: 51, label: "A-51", tlX: 1521, tlY: 606, trX: 1600, trY: 609, blX: 1522, blY: 686, brX: 1603, brY: 702 },
-    { id: 52, label: "A-52", tlX: 1448, tlY: 596, trX: 1514, trY: 600, blX: 1446, blY: 664, brX: 1514, brY: 676 },
+    { id: 1, label: "A-1", kind: "full", tlX: 77, tlY: 15, trX: 177, trY: 73, blX: 78, blY: 144, brX: 173, brY: 185 },
+    { id: 2, label: "A-2", kind: "full", tlX: 187, tlY: 77, trX: 258, trY: 118, blX: 182, blY: 186, brX: 260, brY: 218 },
+    { id: 3, label: "A-3", kind: "full", tlX: 266, tlY: 125, trX: 329, trY: 161, blX: 271, blY: 224, brX: 329, brY: 251 },
+    { id: 4, label: "A-4", kind: "full", tlX: 336, tlY: 164, trX: 384, trY: 195, blX: 337, blY: 255, brX: 386, brY: 273 },
+    { id: 5, label: "A-5", kind: "full", tlX: 391, tlY: 200, trX: 436, trY: 227, blX: 392, blY: 277, brX: 432, brY: 297 },
+    { id: 11, label: "B-1", kind: "full", tlX: 81, tlY: 177, trX: 174, trY: 213, blX: 81, blY: 300, brX: 173, brY: 324 },
+    { id: 12, label: "B-2", kind: "full", tlX: 183, tlY: 215, trX: 260, trY: 249, blX: 186, blY: 326, brX: 262, brY: 343 },
+    { id: 13, label: "B-3", kind: "full", tlX: 269, tlY: 250, trX: 327, trY: 275, blX: 271, blY: 346, brX: 327, brY: 359 },
+    { id: 14, label: "B-4", kind: "full", tlX: 337, tlY: 277, trX: 386, trY: 297, blX: 336, blY: 362, brX: 386, brY: 373 },
+    { id: 15, label: "B-5", kind: "full", tlX: 392, tlY: 300, trX: 435, trY: 320, blX: 392, blY: 375, brX: 437, brY: 385 },
+    { id: 17, label: "A-17", kind: "full", tlX: 81, tlY: 330, trX: 173, trY: 349, blX: 79, blY: 448, brX: 174, brY: 453 },
+    { id: 18, label: "A-18", kind: "full", tlX: 187, tlY: 352, trX: 258, trY: 369, blX: 185, blY: 458, brX: 260, brY: 464 },
+    { id: 19, label: "A-19", kind: "full", tlX: 269, tlY: 369, trX: 326, trY: 382, blX: 268, blY: 463, brX: 324, brY: 466 },
+    { id: 20, label: "A-20", kind: "full", tlX: 335, tlY: 383, trX: 386, trY: 392, blX: 336, blY: 466, brX: 385, brY: 470 },
+    { id: 21, label: "A-21", kind: "full", tlX: 392, tlY: 395, trX: 437, trY: 405, blX: 389, blY: 471, brX: 435, brY: 475 },
+    { id: 22, label: "A-22", kind: "full", tlX: 78, tlY: 478, trX: 174, trY: 483, blX: 81, blY: 593, brX: 174, brY: 589 },
+    { id: 23, label: "A-23", kind: "full", tlX: 186, tlY: 483, trX: 258, trY: 484, blX: 185, blY: 587, brX: 260, brY: 580 },
+    { id: 24, label: "A-24", kind: "full", tlX: 269, tlY: 487, trX: 329, trY: 489, blX: 268, blY: 578, brX: 328, brY: 571 },
+    { id: 25, label: "A-25", kind: "full", tlX: 335, tlY: 487, trX: 386, trY: 492, blX: 336, blY: 572, brX: 384, brY: 566 },
+    { id: 26, label: "A-26", kind: "full", tlX: 392, tlY: 492, trX: 439, trY: 493, blX: 390, blY: 564, brX: 439, brY: 561 },
+    { id: 27, label: "A-27", kind: "full", tlX: 81, tlY: 621, trX: 175, trY: 608, blX: 81, blY: 721, brX: 174, brY: 693 },
+    { id: 28, label: "A-28", kind: "full", tlX: 184, tlY: 610, trX: 258, trY: 603, blX: 187, blY: 696, brX: 260, brY: 676 },
+    { id: 29, label: "A-29", kind: "full", tlX: 269, tlY: 601, trX: 331, trY: 592, blX: 271, blY: 674, brX: 330, brY: 658 },
+    { id: 30, label: "A-30", kind: "full", tlX: 1608, tlY: 72, trX: 1701, trY: 16, blX: 1606, blY: 188, brX: 1701, brY: 145 },
+    { id: 31, label: "A-31", kind: "full", tlX: 1523, tlY: 123, trX: 1598, trY: 75, blX: 1521, blY: 221, brX: 1598, brY: 188 },
+    { id: 32, label: "A-32", kind: "full", tlX: 1448, tlY: 167, trX: 1514, trY: 126, blX: 1445, blY: 256, brX: 1513, brY: 224 },
+    { id: 33, label: "A-33", kind: "full", tlX: 1394, tlY: 202, trX: 1441, trY: 169, blX: 1391, blY: 280, brX: 1439, brY: 257 },
+    { id: 34, label: "A-34", kind: "full", tlX: 1344, tlY: 231, trX: 1386, trY: 203, blX: 1345, blY: 299, brX: 1385, brY: 280 },
+    { id: 35, label: "A-35", kind: "full", tlX: 1610, tlY: 212, trX: 1699, trY: 175, blX: 1608, blY: 323, brX: 1699, brY: 298 },
+    { id: 36, label: "A-36", kind: "full", tlX: 1524, tlY: 247, trX: 1602, trY: 215, blX: 1523, blY: 344, brX: 1602, brY: 325 },
+    { id: 37, label: "A-37", kind: "full", tlX: 1447, tlY: 278, trX: 1517, trY: 250, blX: 1447, blY: 362, brX: 1517, brY: 345 },
+    { id: 38, label: "A-38", kind: "full", tlX: 1392, tlY: 303, trX: 1441, trY: 280, blX: 1392, blY: 375, brX: 1441, brY: 362 },
+    { id: 39, label: "A-39", kind: "full", tlX: 1345, tlY: 322, trX: 1385, trY: 303, blX: 1340, blY: 387, brX: 1385, brY: 377 },
+    { id: 40, label: "A-40", kind: "full", tlX: 1609, tlY: 352, trX: 1701, trY: 332, blX: 1607, blY: 462, brX: 1699, brY: 457 },
+    { id: 41, label: "A-41", kind: "full", tlX: 1521, tlY: 369, trX: 1600, trY: 351, blX: 1521, blY: 465, brX: 1600, brY: 460 },
+    { id: 42, label: "A-42", kind: "full", tlX: 1448, tlY: 384, trX: 1513, trY: 370, blX: 1447, blY: 469, brX: 1514, brY: 464 },
+    { id: 43, label: "A-43", kind: "full", tlX: 1395, tlY: 395, trX: 1442, trY: 383, blX: 1392, blY: 473, brX: 1441, brY: 468 },
+    { id: 44, label: "A-44", kind: "full", tlX: 1347, tlY: 407, trX: 1388, trY: 397, blX: 1342, blY: 476, brX: 1384, brY: 474 },
+    { id: 45, label: "A-45", kind: "full", tlX: 1610, tlY: 486, trX: 1700, trY: 481, blX: 1609, blY: 590, brX: 1703, brY: 600 },
+    { id: 46, label: "A-46", kind: "full", tlX: 1522, tlY: 488, trX: 1597, trY: 485, blX: 1523, blY: 582, brX: 1600, brY: 588 },
+    { id: 47, label: "A-47", kind: "full", tlX: 1448, tlY: 491, trX: 1515, trY: 488, blX: 1450, blY: 575, brX: 1516, brY: 581 },
+    { id: 48, label: "A-48", kind: "full", tlX: 1393, tlY: 494, trX: 1441, trY: 490, blX: 1391, blY: 567, brX: 1444, brY: 574 },
+    { id: 49, label: "A-49", kind: "full", tlX: 1342, tlY: 494, trX: 1386, trY: 492, blX: 1343, blY: 560, brX: 1385, brY: 568 },
+    { id: 50, label: "A-50", kind: "full", tlX: 1610, tlY: 616, trX: 1701, trY: 625, blX: 1611, blY: 711, brX: 1703, brY: 728 },
+    { id: 51, label: "A-51", kind: "full", tlX: 1521, tlY: 606, trX: 1600, trY: 609, blX: 1522, blY: 686, brX: 1603, brY: 702 },
+    { id: 52, label: "A-52", kind: "full", tlX: 1448, tlY: 596, trX: 1514, trY: 600, blX: 1446, blY: 664, brX: 1514, brY: 676 },
   ],
 };
 
@@ -646,17 +650,19 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
 function normalizeSessionAlbumSlot(slot: Partial<SessionAlbumSlot>): SessionAlbumSlot | null {
   const id = Number(slot.id);
   if (!Number.isFinite(id) || id < 1) return null;
+  const kind: SessionAlbumSlotKind = slot.kind === "partial" ? "partial" : "full";
   return {
     id,
-    label: slot.label || `A-${id}`,
-    tlX: clampRoomX(Number(slot.tlX ?? 720)),
-    tlY: clampRoomY(Number(slot.tlY ?? 260)),
-    trX: clampRoomX(Number(slot.trX ?? 860)),
-    trY: clampRoomY(Number(slot.trY ?? 260)),
-    blX: clampRoomX(Number(slot.blX ?? 720)),
-    blY: clampRoomY(Number(slot.blY ?? 400)),
-    brX: clampRoomX(Number(slot.brX ?? 860)),
-    brY: clampRoomY(Number(slot.brY ?? 400)),
+    label: slot.label || `${kind === "partial" ? "P" : "A"}-${id}`,
+    kind,
+    tlX: clampSessionAlbumX(Number(slot.tlX ?? 720), kind),
+    tlY: clampSessionAlbumY(Number(slot.tlY ?? 260), kind),
+    trX: clampSessionAlbumX(Number(slot.trX ?? 860), kind),
+    trY: clampSessionAlbumY(Number(slot.trY ?? 260), kind),
+    blX: clampSessionAlbumX(Number(slot.blX ?? 720), kind),
+    blY: clampSessionAlbumY(Number(slot.blY ?? 400), kind),
+    brX: clampSessionAlbumX(Number(slot.brX ?? 860), kind),
+    brY: clampSessionAlbumY(Number(slot.brY ?? 400), kind),
   };
 }
 
@@ -664,12 +670,24 @@ function saveSessionAlbumSettings(): void {
   localStorage.setItem(SESSION_ALBUM_KEY, JSON.stringify(sessionAlbumSettings));
 }
 
+function clampSessionAlbumX(value: number, kind: SessionAlbumSlotKind = "full"): number {
+  const min = kind === "partial" ? -PARTIAL_ALBUM_X_MARGIN : 0;
+  const max = kind === "partial" ? ROOM_COORD_WIDTH + PARTIAL_ALBUM_X_MARGIN : ROOM_COORD_WIDTH;
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function clampSessionAlbumY(value: number, kind: SessionAlbumSlotKind = "full"): number {
+  const min = kind === "partial" ? -PARTIAL_ALBUM_Y_MARGIN : 0;
+  const max = kind === "partial" ? ROOM_COORD_HEIGHT + PARTIAL_ALBUM_Y_MARGIN : ROOM_COORD_HEIGHT;
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
 function clampRoomX(value: number): number {
-  return Math.max(0, Math.min(ROOM_COORD_WIDTH, Math.round(value)));
+  return clampSessionAlbumX(value, "full");
 }
 
 function clampRoomY(value: number): number {
-  return Math.max(0, Math.min(ROOM_COORD_HEIGHT, Math.round(value)));
+  return clampSessionAlbumY(value, "full");
 }
 
 function clamp01(value: number): number {
@@ -685,14 +703,52 @@ function createSessionAlbumSlot(): SessionAlbumSlot {
   return {
     id,
     label: `A-${id}`,
-    tlX: clampRoomX(baseX),
-    tlY: clampRoomY(baseY),
-    trX: clampRoomX(baseX + 150),
-    trY: clampRoomY(baseY + 8),
-    blX: clampRoomX(baseX + 8),
-    blY: clampRoomY(baseY + 150),
-    brX: clampRoomX(baseX + 158),
-    brY: clampRoomY(baseY + 158),
+    kind: "full",
+    tlX: clampSessionAlbumX(baseX, "full"),
+    tlY: clampSessionAlbumY(baseY, "full"),
+    trX: clampSessionAlbumX(baseX + 150, "full"),
+    trY: clampSessionAlbumY(baseY + 8, "full"),
+    blX: clampSessionAlbumX(baseX + 8, "full"),
+    blY: clampSessionAlbumY(baseY + 150, "full"),
+    brX: clampSessionAlbumX(baseX + 158, "full"),
+    brY: clampSessionAlbumY(baseY + 158, "full"),
+  };
+}
+
+function createPartialSessionAlbumSlot(side: "left" | "right"): SessionAlbumSlot {
+  const id = sessionAlbumSettings.nextId;
+  const partialIndex = sessionAlbumSettings.slots.filter((slot) => slot.kind === "partial").length;
+  const yOffset = (partialIndex % 5) * 118;
+  const baseY = 74 + yOffset;
+
+  if (side === "left") {
+    return {
+      id,
+      label: `P-${id}`,
+      kind: "partial",
+      tlX: -88,
+      tlY: clampSessionAlbumY(baseY, "partial"),
+      trX: 38,
+      trY: clampSessionAlbumY(baseY + 10, "partial"),
+      blX: -88,
+      blY: clampSessionAlbumY(baseY + 124, "partial"),
+      brX: 40,
+      brY: clampSessionAlbumY(baseY + 132, "partial"),
+    };
+  }
+
+  return {
+    id,
+    label: `P-${id}`,
+    kind: "partial",
+    tlX: ROOM_COORD_WIDTH - 38,
+    tlY: clampSessionAlbumY(baseY + 10, "partial"),
+    trX: ROOM_COORD_WIDTH + 88,
+    trY: clampSessionAlbumY(baseY, "partial"),
+    blX: ROOM_COORD_WIDTH - 40,
+    blY: clampSessionAlbumY(baseY + 132, "partial"),
+    brX: ROOM_COORD_WIDTH + 88,
+    brY: clampSessionAlbumY(baseY + 124, "partial"),
   };
 }
 
@@ -1521,7 +1577,7 @@ function renderSessionAlbumSlotGuides(): void {
     if (sessionAlbumSettings.showGuides) {
       const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       polygon.setAttribute("points", sessionAlbumPoints(slot));
-      polygon.setAttribute("class", "session-album-guide-polygon");
+      polygon.setAttribute("class", `session-album-guide-polygon ${slot.kind === "partial" ? "session-album-guide-partial" : ""}`.trim());
       overlay.appendChild(polygon);
 
       const center = getSessionAlbumSlotCenter(slot);
@@ -1552,8 +1608,8 @@ function updateSessionAlbumSlotCorner(slotId: number, corner: SessionAlbumCorner
   const slot = sessionAlbumSettings.slots.find((item) => item.id === slotId);
   if (!slot) return;
 
-  const cleanX = clampRoomX(x);
-  const cleanY = clampRoomY(y);
+  const cleanX = clampSessionAlbumX(x, slot.kind);
+  const cleanY = clampSessionAlbumY(y, slot.kind);
   let xKey: keyof SessionAlbumSlot;
   let yKey: keyof SessionAlbumSlot;
 
@@ -1588,7 +1644,7 @@ function updateSessionAlbumSlotCorner(slotId: number, corner: SessionAlbumCorner
 function setSessionAlbumCoordinate(slotId: number, key: keyof SessionAlbumSlot, value: number): void {
   const slot = sessionAlbumSettings.slots.find((item) => item.id === slotId);
   if (!slot) return;
-  const nextValue = String(key).endsWith("X") ? clampRoomX(value) : clampRoomY(value);
+  const nextValue = String(key).endsWith("X") ? clampSessionAlbumX(value, slot.kind) : clampSessionAlbumY(value, slot.kind);
   (slot as unknown as Record<string, number>)[key as string] = nextValue;
   saveSessionAlbumSettings();
   renderSessionAlbumSlotGuides();
@@ -1655,9 +1711,10 @@ function renderSessionAlbumSlotPanel(slot: SessionAlbumSlot): string {
   `).join("");
 
   return `
-    <details class="session-album-slot-panel">
-      <summary>${slot.label}</summary>
+    <details class="session-album-slot-panel session-album-slot-${slot.kind}">
+      <summary>${slot.label}<span class="session-album-kind-pill">${slot.kind === "partial" ? "PARTIAL" : "FULL"}</span></summary>
       <div class="session-album-slot-controls">
+        ${slot.kind === "partial" ? `<p class="session-album-partial-note">Partial slots may extend outside the room bounds. Put the hidden corners past the screen edge so the album is naturally cut off.</p>` : ""}
         <div class="session-album-target-grid">${targetButtons}</div>
         ${controls}
         <button class="session-album-delete-button" type="button" data-session-delete-slot="${slot.id}">Delete ${slot.label}</button>
@@ -1668,10 +1725,13 @@ function renderSessionAlbumSlotPanel(slot: SessionAlbumSlot): string {
 
 function renderSessionAlbumNumberControl(slot: SessionAlbumSlot, key: keyof SessionAlbumSlot, label: string, max: number): string {
   const value = slot[key] as number;
+  const isX = String(key).endsWith("X");
+  const min = slot.kind === "partial" ? (isX ? -PARTIAL_ALBUM_X_MARGIN : -PARTIAL_ALBUM_Y_MARGIN) : 0;
+  const adjustedMax = slot.kind === "partial" ? max + (isX ? PARTIAL_ALBUM_X_MARGIN : PARTIAL_ALBUM_Y_MARGIN) : max;
   return `
     <label class="session-album-point-control">${label}
-      <input class="session-album-range" type="range" min="0" max="${max}" step="1" value="${value}" data-session-slot-id="${slot.id}" data-session-key="${String(key)}" />
-      <input class="session-album-number" type="number" min="0" max="${max}" step="1" value="${value}" data-session-slot-id="${slot.id}" data-session-key="${String(key)}" />
+      <input class="session-album-range" type="range" min="${min}" max="${adjustedMax}" step="1" value="${value}" data-session-slot-id="${slot.id}" data-session-key="${String(key)}" />
+      <input class="session-album-number" type="number" min="${min}" max="${adjustedMax}" step="1" value="${value}" data-session-slot-id="${slot.id}" data-session-key="${String(key)}" />
     </label>
   `;
 }
@@ -1738,14 +1798,14 @@ function duplicateSessionAlbumPrefix(sourcePrefix: string, targetPrefix: string,
       ...slot,
       id: nextId++,
       label,
-      tlX: clampRoomX(slot.tlX + offsetX),
-      tlY: clampRoomY(slot.tlY + offsetY),
-      trX: clampRoomX(slot.trX + offsetX),
-      trY: clampRoomY(slot.trY + offsetY),
-      blX: clampRoomX(slot.blX + offsetX),
-      blY: clampRoomY(slot.blY + offsetY),
-      brX: clampRoomX(slot.brX + offsetX),
-      brY: clampRoomY(slot.brY + offsetY),
+      tlX: clampSessionAlbumX(slot.tlX + offsetX, slot.kind),
+      tlY: clampSessionAlbumY(slot.tlY + offsetY, slot.kind),
+      trX: clampSessionAlbumX(slot.trX + offsetX, slot.kind),
+      trY: clampSessionAlbumY(slot.trY + offsetY, slot.kind),
+      blX: clampSessionAlbumX(slot.blX + offsetX, slot.kind),
+      blY: clampSessionAlbumY(slot.blY + offsetY, slot.kind),
+      brX: clampSessionAlbumX(slot.brX + offsetX, slot.kind),
+      brY: clampSessionAlbumY(slot.brY + offsetY, slot.kind),
     };
   }).filter((slot): slot is SessionAlbumSlot => Boolean(slot));
 
@@ -1767,14 +1827,14 @@ function moveSessionAlbumPrefix(prefix: string, dx: number, dy: number): void {
 
   sessionAlbumSettings.slots.forEach((slot) => {
     if (getSessionAlbumPrefix(slot) !== cleanPrefix) return;
-    slot.tlX = clampRoomX(slot.tlX + dx);
-    slot.tlY = clampRoomY(slot.tlY + dy);
-    slot.trX = clampRoomX(slot.trX + dx);
-    slot.trY = clampRoomY(slot.trY + dy);
-    slot.blX = clampRoomX(slot.blX + dx);
-    slot.blY = clampRoomY(slot.blY + dy);
-    slot.brX = clampRoomX(slot.brX + dx);
-    slot.brY = clampRoomY(slot.brY + dy);
+    slot.tlX = clampSessionAlbumX(slot.tlX + dx, slot.kind);
+    slot.tlY = clampSessionAlbumY(slot.tlY + dy, slot.kind);
+    slot.trX = clampSessionAlbumX(slot.trX + dx, slot.kind);
+    slot.trY = clampSessionAlbumY(slot.trY + dy, slot.kind);
+    slot.blX = clampSessionAlbumX(slot.blX + dx, slot.kind);
+    slot.blY = clampSessionAlbumY(slot.blY + dy, slot.kind);
+    slot.brX = clampSessionAlbumX(slot.brX + dx, slot.kind);
+    slot.brY = clampSessionAlbumY(slot.brY + dy, slot.kind);
   });
 
   saveSessionAlbumSettings();
@@ -1793,6 +1853,8 @@ function bindSessionWallAlbumControls(): void {
   const albumWarmBlendValue = document.querySelector<HTMLElement>("#sessionAlbumWarmBlendValue");
   const copyExport = document.querySelector<HTMLButtonElement>("#sessionAlbumCopyExport");
   const addSlot = document.querySelector<HTMLButtonElement>("#sessionAlbumAddSlot");
+  const addPartialLeft = document.querySelector<HTMLButtonElement>("#sessionAlbumAddPartialLeft");
+  const addPartialRight = document.querySelector<HTMLButtonElement>("#sessionAlbumAddPartialRight");
   const duplicateAToB = document.querySelector<HTMLButtonElement>("#sessionAlbumDuplicateAToB");
   const groupPrefix = document.querySelector<HTMLInputElement>("#sessionAlbumGroupPrefix");
   const groupMoveX = document.querySelector<HTMLInputElement>("#sessionAlbumGroupMoveX");
@@ -1857,8 +1919,7 @@ function bindSessionWallAlbumControls(): void {
     moveSessionAlbumPrefix(groupPrefix?.value || "B", Number(groupMoveX?.value || 0), Number(groupMoveY?.value || 0));
   });
 
-  addSlot?.addEventListener("click", () => {
-    const slot = createSessionAlbumSlot();
+  function addSessionAlbumSlotToSettings(slot: SessionAlbumSlot): void {
     sessionAlbumSettings = {
       ...sessionAlbumSettings,
       nextId: slot.id + 1,
@@ -1869,6 +1930,18 @@ function bindSessionWallAlbumControls(): void {
     renderSessionAlbumSlotPanels();
     renderSessionAlbumSlotGuides();
     if (sessionAlbumSettings.placeAlbumsInFrames) void loadSessionAlbumPlaceholderAlbums();
+  }
+
+  addSlot?.addEventListener("click", () => {
+    addSessionAlbumSlotToSettings(createSessionAlbumSlot());
+  });
+
+  addPartialLeft?.addEventListener("click", () => {
+    addSessionAlbumSlotToSettings(createPartialSessionAlbumSlot("left"));
+  });
+
+  addPartialRight?.addEventListener("click", () => {
+    addSessionAlbumSlotToSettings(createPartialSessionAlbumSlot("right"));
   });
 
   assignWallAlbumsForRefresh();
