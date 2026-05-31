@@ -475,6 +475,7 @@ type SessionAlbumSettings = {
   v64wQuintessentialDefault?: boolean;
   v65aWarpDefault?: boolean;
   v65ePartialWallDefault?: boolean;
+  v65fPartialPositionDefault?: boolean;
   nextId: number;
   slots: SessionAlbumSlot[];
 };
@@ -502,6 +503,7 @@ const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   v64wQuintessentialDefault: true,
   v65aWarpDefault: true,
   v65ePartialWallDefault: true,
+  v65fPartialPositionDefault: true,
   nextId: 64,
   slots: [
     { id: 1, label: "A-1", kind: "full", tlX: 77, tlY: 12, trX: 177, trY: 70, blX: 78, blY: 141, brX: 173, brY: 182 },
@@ -558,8 +560,8 @@ const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
     { id: 59, label: "P-59", kind: "partial", partialSide: "right", partialOverhang: 0.55, tlX: 1716, tlY: 2, trX: 1852, trY: -50, blX: 1719, blY: 133, brX: 1852, brY: 80 },
     { id: 60, label: "P-60", kind: "partial", partialSide: "right", partialOverhang: 0.55, tlX: 1715, tlY: 168, trX: 1852, trY: 112, blX: 1716, blY: 294, brX: 1852, brY: 261 },
     { id: 61, label: "P-61", kind: "partial", partialSide: "right", partialOverhang: 0.55, tlX: 1715, tlY: 326, trX: 1872, trY: 287, blX: 1714, blY: 453, brX: 1852, brY: 442 },
-    { id: 62, label: "P-62", kind: "partial", partialSide: "right", partialOverhang: 0.55, tlX: 1715, tlY: 481, trX: 1852, trY: 474, blX: 1716, blY: 602, brX: 1852, brY: 604 },
-    { id: 63, label: "P-63", kind: "partial", partialSide: "right", partialOverhang: 0.55, tlX: 1715, tlY: 631, trX: 1852, trY: 651, blX: 1715, blY: 740, brX: 1852, brY: 772 },
+    { id: 62, label: "P-62", kind: "partial", partialSide: "right", partialOverhang: 0.55, tlX: 1715, tlY: 481, trX: 1852, trY: 474, blX: 1716, blY: 602, brX: 1852, brY: 617 },
+    { id: 63, label: "P-63", kind: "partial", partialSide: "right", partialOverhang: 0.55, tlX: 1715, tlY: 631, trX: 1852, trY: 651, blX: 1715, blY: 740, brX: 1852, brY: 785 },
   ],
 };
 
@@ -648,7 +650,8 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
     const hasV64WDefault = Boolean((parsed as { v64wQuintessentialDefault?: boolean }).v64wQuintessentialDefault);
     const hasV65AWarpDefault = Boolean((parsed as { v65aWarpDefault?: boolean }).v65aWarpDefault);
     const hasV65EPartialWallDefault = Boolean((parsed as { v65ePartialWallDefault?: boolean }).v65ePartialWallDefault);
-    const activeSlots = hasV65EPartialWallDefault && slots.length
+    const hasV65FPartialPositionDefault = Boolean((parsed as { v65fPartialPositionDefault?: boolean }).v65fPartialPositionDefault);
+    const activeSlots = hasV65EPartialWallDefault && hasV65FPartialPositionDefault && slots.length
       ? slots
       : DEFAULT_SESSION_ALBUM_SETTINGS.slots.map((slot) => ({ ...slot }));
     const maxId = activeSlots.reduce((max, slot) => Math.max(max, slot.id), 0);
@@ -661,6 +664,7 @@ function loadSessionAlbumSettings(): SessionAlbumSettings {
       v64wQuintessentialDefault: true,
       v65aWarpDefault: true,
       v65ePartialWallDefault: true,
+      v65fPartialPositionDefault: true,
       nextId: Math.max(Number(parsed.nextId || DEFAULT_SESSION_ALBUM_SETTINGS.nextId), maxId + 1, DEFAULT_SESSION_ALBUM_SETTINGS.nextId),
       slots: applySessionAlbumSlotMigrations(activeSlots),
     };
