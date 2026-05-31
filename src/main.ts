@@ -1313,6 +1313,22 @@ function sessionAlbumQuadPoint(slot: SessionAlbumSlot, u: number, v: number): { 
   };
 }
 
+function bleedTrianglePoint(
+  point: { x: number; y: number },
+  center: { x: number; y: number },
+  amount: number,
+): { x: number; y: number } {
+  const dx = point.x - center.x;
+  const dy = point.y - center.y;
+  const length = Math.hypot(dx, dy);
+  if (length < 0.00001) return point;
+
+  return {
+    x: point.x + (dx / length) * amount,
+    y: point.y + (dy / length) * amount,
+  };
+}
+
 function drawAffineImageTriangle(
   ctx: CanvasRenderingContext2D,
   image: HTMLImageElement,
@@ -1333,11 +1349,23 @@ function drawAffineImageTriangle(
   const e = (d0.x * (s1.x * s2.y - s2.x * s1.y) + d1.x * (s2.x * s0.y - s0.x * s2.y) + d2.x * (s0.x * s1.y - s1.x * s0.y)) / denom;
   const f = (d0.y * (s1.x * s2.y - s2.x * s1.y) + d1.y * (s2.x * s0.y - s0.x * s2.y) + d2.y * (s0.x * s1.y - s1.x * s0.y)) / denom;
 
+  // Canvas anti-aliasing can leave faint diagonal/vertical seams where the warp mesh triangles meet.
+  // Slightly expanding only the clip path lets neighboring triangles overlap by about a pixel while
+  // keeping the actual image transform unchanged, which hides the construction lines in playback.
+  const bleed = 1.15;
+  const center = {
+    x: (d0.x + d1.x + d2.x) / 3,
+    y: (d0.y + d1.y + d2.y) / 3,
+  };
+  const c0 = bleedTrianglePoint(d0, center, bleed);
+  const c1 = bleedTrianglePoint(d1, center, bleed);
+  const c2 = bleedTrianglePoint(d2, center, bleed);
+
   ctx.save();
   ctx.beginPath();
-  ctx.moveTo(d0.x, d0.y);
-  ctx.lineTo(d1.x, d1.y);
-  ctx.lineTo(d2.x, d2.y);
+  ctx.moveTo(c0.x, c0.y);
+  ctx.lineTo(c1.x, c1.y);
+  ctx.lineTo(c2.x, c2.y);
   ctx.closePath();
   ctx.clip();
   ctx.transform(a, b, c, d, e, f);
