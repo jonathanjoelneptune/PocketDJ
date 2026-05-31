@@ -290,22 +290,40 @@ export async function getTrackTempoBpm(clientId: string, trackId: string): Promi
   const token = await getUsableToken(clientId);
   if (!token) return null;
 
-  const response = await fetch(`https://api.spotify.com/v1/audio-features/${encodeURIComponent(cleanTrackId)}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const headers = { Authorization: `Bearer ${token}` };
+  const encodedTrackId = encodeURIComponent(cleanTrackId);
 
-  if (response.status === 401) {
+  const readTempo = (value: unknown): number | null => {
+    const tempo = Number(value || 0);
+    return Number.isFinite(tempo) && tempo > 0 ? tempo : null;
+  };
+
+  const featuresResponse = await fetch(`https://api.spotify.com/v1/audio-features/${encodedTrackId}`, { headers });
+
+  if (featuresResponse.status === 401) {
     clearTokens();
     return null;
   }
 
-  if (response.status === 403 || response.status === 404 || response.status === 429 || !response.ok) {
+  if (featuresResponse.ok) {
+    const json = (await featuresResponse.json()) as SpotifyAudioFeaturesResponse;
+    const tempo = readTempo(json.tempo);
+    if (tempo) return tempo;
+  }
+
+  // Some Spotify apps/accounts no longer receive audio-features data reliably.
+  // Try audio-analysis as a second source before letting the UI use its local estimate.
+  const analysisResponse = await fetch(`https://api.spotify.com/v1/audio-analysis/${encodedTrackId}`, { headers });
+
+  if (analysisResponse.status === 401) {
+    clearTokens();
     return null;
   }
 
-  const json = (await response.json()) as SpotifyAudioFeaturesResponse;
-  const tempo = Number(json.tempo || 0);
-  return Number.isFinite(tempo) && tempo > 0 ? tempo : null;
+  if (!analysisResponse.ok) return null;
+
+  const analysisJson = (await analysisResponse.json()) as SpotifyAudioAnalysisResponse;
+  return readTempo(analysisJson.track?.tempo);
 }
 
 export function disconnectSpotify(): void {
@@ -378,6 +396,12 @@ type SpotifyAlbumItem = {
 type SpotifyAudioFeaturesResponse = {
   id?: string;
   tempo?: number;
+};
+
+type SpotifyAudioAnalysisResponse = {
+  track?: {
+    tempo?: number;
+  };
 };
 
 type SpotifySearchResponse = {

@@ -138,6 +138,7 @@ let vinylClockTimer: number | null = null;
 let speakerTempoTrackKey = "";
 let speakerTempoFetchKey = "";
 let speakerTempoBpm: number | null = null;
+let speakerTempoSource: "spotify" | "demo" | "estimate" | "fallback" = "fallback";
 const speakerTempoCache = new Map<string, number>();
 const ALBUM_REVEAL_MAX_WAIT_MS = 500;
 const SPEAKER_PULSE_FALLBACK_BPM = 96;
@@ -481,6 +482,90 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v65a";
 const CLOCK_DISABLED_MIGRATION_KEY = "pocketdj-v65m-clock-disabled-default-applied";
 let roomUtility = loadRoomUtilitySettings();
+
+function setUtilityLabel(id: string, value: number): void {
+  const decimals =
+    id.includes("Opacity") ||
+    id.includes("Scale") ||
+    id.includes("Strength") ||
+    id.includes("Stretch") ||
+    id.includes("Blend") ||
+    id.includes("Fade") ||
+    id.includes("Glow")
+      ? 2
+      : id.includes("Tilt")
+        ? 1
+        : 0;
+  const label = document.querySelector<HTMLElement>(`#${id}`);
+  if (label) label.textContent = value.toFixed(decimals);
+}
+
+function loadRoomUtilitySettings(): RoomUtilitySettings {
+  try {
+    const raw = window.localStorage.getItem(ROOM_UTILITY_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<RoomUtilitySettings>;
+      return { ...DEFAULT_ROOM_UTILITY, ...parsed };
+    }
+  } catch (error) {
+    console.warn("Could not load Pocket DJ room utility settings", error);
+  }
+
+  return { ...DEFAULT_ROOM_UTILITY };
+}
+
+function saveRoomUtilitySettings(): void {
+  window.localStorage.setItem(ROOM_UTILITY_KEY, JSON.stringify(roomUtility));
+}
+
+function applyClockDisabledDefaultMigration(): void {
+  try {
+    if (window.localStorage.getItem(CLOCK_DISABLED_MIGRATION_KEY)) return;
+    roomUtility = { ...roomUtility, vinylClockEnabled: false };
+    saveRoomUtilitySettings();
+    window.localStorage.setItem(CLOCK_DISABLED_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply vinyl clock disabled migration", error);
+  }
+}
+
+function updateVinylClockDecor(): void {
+  const hourHand = document.querySelector<HTMLElement>("#vinylClockHourHand");
+  const minuteHand = document.querySelector<HTMLElement>("#vinylClockMinuteHand");
+  const secondHand = document.querySelector<HTMLElement>("#vinylClockSecondHand");
+  const digitalReadout = document.querySelector<HTMLElement>("#vinylClockDigitalReadout");
+  if (!hourHand || !minuteHand || !secondHand || !digitalReadout) return;
+
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+
+  hourHand.style.transform = `translateX(-50%) rotate(${((hours % 12) + minutes / 60 + seconds / 3600) * 30}deg)`;
+  minuteHand.style.transform = `translateX(-50%) rotate(${(minutes + seconds / 60) * 6}deg)`;
+  secondHand.style.transform = `translateX(-50%) rotate(${seconds * 6}deg)`;
+
+  const formattedHours = String(hours % 12 || 12);
+  const formattedMinutes = String(minutes).padStart(2, "0");
+  digitalReadout.textContent = `${formattedHours}:${formattedMinutes} ${hours >= 12 ? "PM" : "AM"}`;
+}
+
+function scheduleVinylClockDecorTick(): void {
+  if (vinylClockTimer) window.clearTimeout(vinylClockTimer);
+  const loop = () => {
+    updateVinylClockDecor();
+    const now = new Date();
+    vinylClockTimer = window.setTimeout(loop, Math.max(120, 1000 - now.getMilliseconds()));
+  };
+  loop();
+}
+
+function updateSpeakerPulse(isPlaying: boolean): void {
+  const left = qs<HTMLElement>("#leftSpeaker");
+  const right = qs<HTMLElement>("#rightSpeaker");
+  left.classList.toggle("playing", isPlaying);
+  right.classList.toggle("playing", isPlaying);
+}
 
 
 type SessionAlbumCornerKey = "tl" | "tr" | "bl" | "br";
@@ -4340,19 +4425,50 @@ function speakerPulseDurationMs(): number {
   return Math.round(60_000 / bpm);
 }
 
+function estimateTrackTempoBpm(track: AppState["playback"]): number {
+  const text = `${track.title} ${track.artist} ${track.album}`.toLowerCase();
+  const durationMinutes = track.durationMs > 0 ? track.durationMs / 60_000 : 3.5;
+
+  let estimate = 98;
+  if (/remix|club|dance|party|jump|hype|work|run|fast|shake|bounce|pump|uptempo/.test(text)) estimate += 22;
+  if (/intro|interlude|outro|acoustic|piano|ballad|slow|wait|heaven|love|blue|dream|night|rain|cry|sad/.test(text)) estimate -= 16;
+  if (/hip.?hop|rap|trap|wayne|jay|missy|beastie|chance|tribe|roots|madvillain|kendrick|nas|pac|biggie/.test(text)) estimate += 7;
+  if (/r.?&.?b|soul|janet|sza|usher|marvin|stevie|michael jackson/.test(text)) estimate -= 3;
+  if (/rock|punk|blink|nirvana|beatles/.test(text)) estimate += 15;
+  if (/jazz|miles|pink floyd/.test(text)) estimate -= 10;
+  if (durationMinutes > 5.5) estimate -= 8;
+  if (durationMinutes < 2.6) estimate += 6;
+
+  let hash = 0;
+  const seed = `${track.title}|${track.artist}|${track.album}|${track.durationMs}`;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+
+  estimate += (hash % 25) - 12;
+  return Math.max(62, Math.min(168, Math.round(estimate)));
+}
+
+function setSpeakerTempo(nextBpm: number | null, source: typeof speakerTempoSource): void {
+  speakerTempoBpm = nextBpm && Number.isFinite(nextBpm) && nextBpm > 0 ? nextBpm : SPEAKER_PULSE_FALLBACK_BPM;
+  speakerTempoSource = source;
+  document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
+  setSpeakerPulseBpmLabel();
+}
+
 function setSpeakerPulseBpmLabel(): void {
   const label = document.querySelector<HTMLElement>("#speakerPulseBpmValue");
   if (!label) return;
   const bpm = speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM;
-  label.textContent = `${Math.round(bpm)}${speakerTempoBpm ? "" : " fallback"}`;
+  const sourceLabel = speakerTempoSource === "spotify" ? "Spotify" : speakerTempoSource === "demo" ? "demo" : speakerTempoSource === "estimate" ? "estimated" : "fallback";
+  label.textContent = `${Math.round(bpm)} ${sourceLabel}`;
 }
 
 function applySpeakerPulseTempo(track: AppState["playback"]): void {
-  const trackKey = track.trackId || `${track.source}:${track.title}:${track.artist}`;
+  const trackKey = track.trackId || `${track.source}:${track.title}:${track.artist}:${track.durationMs}`;
   if (!roomUtility.speakerPulseUseTempo) {
-    speakerTempoBpm = SPEAKER_PULSE_FALLBACK_BPM;
-    document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
-    setSpeakerPulseBpmLabel();
+    speakerTempoTrackKey = trackKey;
+    setSpeakerTempo(SPEAKER_PULSE_FALLBACK_BPM, "fallback");
     return;
   }
 
@@ -4363,34 +4479,26 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
 
   if (typeof track.tempoBpm === "number" && Number.isFinite(track.tempoBpm) && track.tempoBpm > 0) {
     speakerTempoTrackKey = trackKey;
-    speakerTempoBpm = track.tempoBpm;
-    document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
-    setSpeakerPulseBpmLabel();
+    setSpeakerTempo(track.tempoBpm, track.source === "demo" ? "demo" : "spotify");
     return;
   }
 
   if (!track.trackId || track.source !== "spotify") {
     speakerTempoTrackKey = trackKey;
-    speakerTempoBpm = SPEAKER_PULSE_FALLBACK_BPM;
-    document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
-    setSpeakerPulseBpmLabel();
+    setSpeakerTempo(estimateTrackTempoBpm(track), "estimate");
     return;
   }
 
   const cached = speakerTempoCache.get(track.trackId);
   if (cached) {
     speakerTempoTrackKey = track.trackId;
-    speakerTempoBpm = cached;
-    document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
-    setSpeakerPulseBpmLabel();
+    setSpeakerTempo(cached, "spotify");
     return;
   }
 
   if (speakerTempoTrackKey !== track.trackId) {
     speakerTempoTrackKey = track.trackId;
-    speakerTempoBpm = SPEAKER_PULSE_FALLBACK_BPM;
-    document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
-    setSpeakerPulseBpmLabel();
+    setSpeakerTempo(estimateTrackTempoBpm(track), "estimate");
   }
 
   if (speakerTempoFetchKey === track.trackId) return;
@@ -4399,108 +4507,15 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
     .then((tempo) => {
       if (!tempo || speakerTempoTrackKey !== track.trackId) return;
       speakerTempoCache.set(track.trackId || "", tempo);
-      speakerTempoBpm = tempo;
-      document.documentElement.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
-      setSpeakerPulseBpmLabel();
+      setSpeakerTempo(tempo, "spotify");
     })
     .catch(() => {
-      // Keep the fallback pulse if Spotify audio features are unavailable for this track.
+      // Keep the local estimate if Spotify tempo/audio-analysis data is unavailable.
+      if (speakerTempoTrackKey === track.trackId && speakerTempoSource !== "spotify") {
+        setSpeakerPulseBpmLabel();
+      }
     });
 }
-
-function updateSpeakerPulse(isPlaying: boolean): void {
-  const left = qs<HTMLElement>("#leftSpeaker");
-  const right = qs<HTMLElement>("#rightSpeaker");
-  left.classList.toggle("playing", isPlaying);
-  right.classList.toggle("playing", isPlaying);
-}
-
-function updateVinylClockDecor(): void {
-  const hourHand = document.querySelector<HTMLElement>("#vinylClockHourHand");
-  const minuteHand = document.querySelector<HTMLElement>("#vinylClockMinuteHand");
-  const secondHand = document.querySelector<HTMLElement>("#vinylClockSecondHand");
-  const digitalReadout = document.querySelector<HTMLElement>("#vinylClockDigitalReadout");
-  if (!hourHand || !minuteHand || !secondHand || !digitalReadout) return;
-
-  const now = new Date();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
-
-  const hourRotation = ((hours % 12) + minutes / 60 + seconds / 3600) * 30;
-  const minuteRotation = (minutes + seconds / 60) * 6;
-  const secondRotation = seconds * 6;
-
-  hourHand.style.transform = `translateX(-50%) rotate(${hourRotation}deg)`;
-  minuteHand.style.transform = `translateX(-50%) rotate(${minuteRotation}deg)`;
-  secondHand.style.transform = `translateX(-50%) rotate(${secondRotation}deg)`;
-
-  const formattedHours = String(hours % 12 || 12);
-  const formattedMinutes = String(minutes).padStart(2, "0");
-  const suffix = hours >= 12 ? "PM" : "AM";
-  digitalReadout.textContent = `${formattedHours}:${formattedMinutes} ${suffix}`;
-  digitalReadout.setAttribute("aria-label", `Current time ${formattedHours}:${formattedMinutes} ${suffix}`);
-}
-
-function scheduleVinylClockDecorTick(): void {
-  if (vinylClockTimer) window.clearTimeout(vinylClockTimer);
-  const loop = () => {
-    updateVinylClockDecor();
-    const now = new Date();
-    const delayMs = Math.max(120, 1000 - now.getMilliseconds());
-    vinylClockTimer = window.setTimeout(loop, delayMs);
-  };
-
-  loop();
-}
-
-function setUtilityLabel(id: string, value: number): void {
-  const decimals =
-    id.includes("Opacity") ||
-    id.includes("Scale") ||
-    id.includes("Tightness") ||
-    id.includes("Strength") ||
-    id.includes("Stretch") ||
-    id.includes("Perspective") ||
-    id.includes("Glow")
-      ? 2
-      : id.includes("Tilt")
-        ? 1
-      : id.includes("Stroke")
-        ? 1
-        : 0;
-  qs(`#${id}`).textContent = value.toFixed(decimals);
-}
-
-function applyClockDisabledDefaultMigration(): void {
-  try {
-    if (window.localStorage.getItem(CLOCK_DISABLED_MIGRATION_KEY) === "1") return;
-    roomUtility = { ...roomUtility, vinylClockEnabled: false };
-    window.localStorage.setItem(CLOCK_DISABLED_MIGRATION_KEY, "1");
-    saveRoomUtilitySettings();
-  } catch (error) {
-    console.warn("Could not apply Pocket DJ clock disabled migration", error);
-  }
-}
-
-function loadRoomUtilitySettings(): RoomUtilitySettings {
-  try {
-    const raw = window.localStorage.getItem(ROOM_UTILITY_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<RoomUtilitySettings>;
-      return { ...DEFAULT_ROOM_UTILITY, ...parsed };
-    }
-  } catch (error) {
-    console.warn("Could not load Pocket DJ room utility settings", error);
-  }
-
-  return { ...DEFAULT_ROOM_UTILITY };
-}
-
-function saveRoomUtilitySettings(): void {
-  window.localStorage.setItem(ROOM_UTILITY_KEY, JSON.stringify(roomUtility));
-}
-
 
 async function refreshLyricsForCurrentTrack(): Promise<void> {
   const track = state.playback;
