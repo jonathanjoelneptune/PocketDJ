@@ -350,14 +350,14 @@ export function renderShell(state: AppState): void {
             <div class="utility-readout tempo-credit">
               Tempo lookup by <a href="https://getsongbpm.com/" target="_blank" rel="noreferrer">GetSongBPM</a>
             </div>
-            <label>Tempo LED X % <span id="mixerTempoLedXValue">50.2</span>
-              <input id="mixerTempoLedX" type="range" min="30" max="70" step="0.1" value="50.2" />
+            <label>Tempo LED X % <span id="mixerTempoLedXValue">45</span>
+              <input id="mixerTempoLedX" type="range" min="30" max="70" step="0.1" value="45" />
             </label>
-            <label>Tempo LED Y % <span id="mixerTempoLedYValue">63.2</span>
-              <input id="mixerTempoLedY" type="range" min="45" max="78" step="0.1" value="63.2" />
+            <label>Tempo LED Y % <span id="mixerTempoLedYValue">63</span>
+              <input id="mixerTempoLedY" type="range" min="45" max="78" step="0.1" value="63" />
             </label>
-            <label>Tempo LED size % <span id="mixerTempoLedSizeValue">1.65</span>
-              <input id="mixerTempoLedSize" type="range" min="0.5" max="4" step="0.05" value="1.65" />
+            <label>Tempo LED size % <span id="mixerTempoLedSizeValue">2</span>
+              <input id="mixerTempoLedSize" type="range" min="0.5" max="4" step="0.05" value="2" />
             </label>
             <label>Speaker pulse X % <span id="speakerPulseXValue">50.9</span>
               <input id="speakerPulseX" type="range" min="20" max="80" step="0.1" value="50.9" />

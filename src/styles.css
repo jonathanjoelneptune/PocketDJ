@@ -8171,27 +8171,58 @@ body.lyrics-marquee-unavailable .marquee::after {
   border-width: 3px;
 }
 
-/* v65U: subtle mixer tempo-source LED. This keeps BPM state in-world instead of adding more UI. */
+/* v65U/v65W: subtle mixer tempo-source LED. This keeps BPM state in-world instead of adding more UI. */
 .mixer-tempo-led {
   position: absolute;
-  left: var(--mixer-tempo-led-x, 50.2%);
-  top: var(--mixer-tempo-led-y, 63.2%);
-  width: var(--mixer-tempo-led-size, 1.65%);
+  left: var(--mixer-tempo-led-x, 45%);
+  top: var(--mixer-tempo-led-y, 63%);
+  width: var(--mixer-tempo-led-size, 2%);
   aspect-ratio: 1 / 1;
   transform: translate(-50%, -50%);
   z-index: 8;
   pointer-events: none;
   opacity: 0.50;
-  mix-blend-mode: screen;
-  --tempo-led-rgb: 196, 76, 38;
-  --tempo-led-core-rgb: 255, 129, 75;
-  --tempo-led-opacity: 0.46;
-  --tempo-led-glow: 0.22;
+  mix-blend-mode: normal;
+  --tempo-led-rgb: 196, 46, 28;
+  --tempo-led-core-rgb: 255, 118, 74;
+  --tempo-led-opacity: 0.50;
+  --tempo-led-glow: 0.24;
+  --tempo-led-deck-shadow: 0.46;
+  filter: saturate(1.04) brightness(0.98);
   transition: opacity 900ms ease, filter 900ms ease;
 }
 
 .music-reactive-playing .mixer-tempo-led {
   opacity: var(--tempo-led-opacity);
+}
+
+.mixer-tempo-led::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+  transform: translate(-50%, -44%);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, calc(var(--tempo-led-deck-shadow) * 0.72)) 0%, rgba(0, 0, 0, calc(var(--tempo-led-deck-shadow) * 0.36)) 42%, rgba(0, 0, 0, 0) 76%);
+  filter: blur(2px);
+}
+
+.mixer-tempo-led::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 62%;
+  height: 62%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 42% 36%, rgba(255, 255, 255, 0.18) 0 10%, rgba(31, 24, 18, 0.36) 48%, rgba(0, 0, 0, 0.56) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 224, 166, 0.16),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.48);
 }
 
 .mixer-tempo-led-glow,
@@ -8204,63 +8235,69 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 .mixer-tempo-led-glow {
-  width: 320%;
-  height: 320%;
-  background: radial-gradient(circle, rgba(var(--tempo-led-rgb), calc(var(--tempo-led-glow) * 0.62)) 0%, rgba(var(--tempo-led-rgb), calc(var(--tempo-led-glow) * 0.32)) 28%, rgba(var(--tempo-led-rgb), 0) 70%);
+  width: 260%;
+  height: 260%;
+  background: radial-gradient(circle, rgba(var(--tempo-led-rgb), calc(var(--tempo-led-glow) * 0.78)) 0%, rgba(var(--tempo-led-rgb), calc(var(--tempo-led-glow) * 0.30)) 28%, rgba(var(--tempo-led-rgb), 0) 68%);
   filter: blur(3px);
+  z-index: 1;
+  mix-blend-mode: screen;
 }
 
 .mixer-tempo-led-core {
-  width: 46%;
-  height: 46%;
-  background: radial-gradient(circle at 35% 28%, rgba(255,255,235,0.92) 0 13%, rgba(var(--tempo-led-core-rgb), 0.96) 36%, rgba(var(--tempo-led-rgb), 0.82) 78%, rgba(28, 14, 8, 0.55) 100%);
+  width: 38%;
+  height: 38%;
+  z-index: 2;
+  background: radial-gradient(circle at 35% 28%, rgba(255,255,235,0.96) 0 12%, rgba(var(--tempo-led-core-rgb), 0.98) 33%, rgba(var(--tempo-led-rgb), 0.92) 72%, rgba(18, 10, 6, 0.75) 100%);
   box-shadow:
-    0 0 4px rgba(var(--tempo-led-rgb), calc(var(--tempo-led-glow) * 0.7)),
-    0 1px 1px rgba(0,0,0,0.55);
+    0 0 2px rgba(255, 255, 230, 0.36),
+    0 0 5px rgba(var(--tempo-led-rgb), calc(var(--tempo-led-glow) * 0.86)),
+    0 0 11px rgba(var(--tempo-led-rgb), calc(var(--tempo-led-glow) * 0.52)),
+    0 1px 1px rgba(0,0,0,0.62),
+    inset 0 -1px 2px rgba(0,0,0,0.35);
 }
 
 :root.tempo-status-locked .mixer-tempo-led {
-  --tempo-led-rgb: 91, 205, 113;
-  --tempo-led-core-rgb: 178, 255, 170;
-  --tempo-led-opacity: 0.58;
-  --tempo-led-glow: 0.34;
+  --tempo-led-rgb: 35, 222, 90;
+  --tempo-led-core-rgb: 145, 255, 165;
+  --tempo-led-opacity: 0.66;
+  --tempo-led-glow: 0.38;
 }
 
 :root.tempo-status-estimated .mixer-tempo-led,
 :root.tempo-status-nomatch .mixer-tempo-led {
-  --tempo-led-rgb: 224, 166, 63;
-  --tempo-led-core-rgb: 255, 220, 124;
-  --tempo-led-opacity: 0.52;
-  --tempo-led-glow: 0.28;
+  --tempo-led-rgb: 255, 164, 30;
+  --tempo-led-core-rgb: 255, 214, 82;
+  --tempo-led-opacity: 0.58;
+  --tempo-led-glow: 0.30;
 }
 
 :root.tempo-status-fallback .mixer-tempo-led {
-  --tempo-led-rgb: 184, 68, 38;
-  --tempo-led-core-rgb: 255, 126, 70;
-  --tempo-led-opacity: 0.46;
-  --tempo-led-glow: 0.22;
+  --tempo-led-rgb: 235, 46, 31;
+  --tempo-led-core-rgb: 255, 100, 72;
+  --tempo-led-opacity: 0.54;
+  --tempo-led-glow: 0.30;
 }
 
 :root.tempo-status-lookup .mixer-tempo-led {
-  --tempo-led-rgb: 240, 202, 118;
-  --tempo-led-core-rgb: 255, 237, 172;
-  --tempo-led-opacity: 0.60;
-  --tempo-led-glow: 0.34;
+  --tempo-led-rgb: 130, 190, 255;
+  --tempo-led-core-rgb: 210, 236, 255;
+  --tempo-led-opacity: 0.68;
+  --tempo-led-glow: 0.36;
   animation: mixerTempoLookupBlink 1100ms ease-in-out infinite;
 }
 
 :root:not(.music-reactive-playing) .mixer-tempo-led {
-  opacity: 0.32;
-  filter: saturate(0.82) brightness(0.82);
+  opacity: 0.34;
+  filter: saturate(0.82) brightness(0.78);
 }
 
 @keyframes mixerTempoLookupBlink {
   0%, 100% {
-    opacity: 0.35;
-    filter: brightness(0.9);
+    opacity: 0.40;
+    filter: brightness(0.88) saturate(0.9);
   }
   50% {
-    opacity: 0.72;
-    filter: brightness(1.18);
+    opacity: 0.76;
+    filter: brightness(1.18) saturate(1.1);
   }
 }
