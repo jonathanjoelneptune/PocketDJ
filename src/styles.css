@@ -7914,6 +7914,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 .string-light-point {
   position: absolute;
+  --bulb-render-size: calc(var(--bulb-size) * var(--room-unit));
   width: calc(var(--bulb-render-size) * 3.4);
   height: calc(var(--bulb-render-size) * 3.4);
   padding: 0;
@@ -8055,20 +8056,18 @@ body.lyrics-marquee-unavailable .marquee::after {
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: screen;
-  transition: opacity 2.8s ease;
+  transition: opacity 6.2s cubic-bezier(0.22, 0.72, 0.18, 1);
   background:
-    radial-gradient(56% 38% at 50% 57%, rgba(var(--ambient-room-accent-rgb), calc(0.12 + var(--music-room-energy) * 0.04)) 0%, rgba(var(--ambient-room-accent-rgb), calc(0.06 + var(--music-room-energy) * 0.03)) 38%, rgba(var(--ambient-room-accent-rgb), 0) 74%),
-    radial-gradient(72% 52% at 50% 42%, rgba(var(--ambient-room-glow-rgb), calc(0.16 + var(--music-room-energy) * 0.05)) 0%, rgba(var(--ambient-room-glow-rgb), calc(0.08 + var(--music-room-energy) * 0.04)) 44%, rgba(var(--ambient-room-glow-rgb), 0) 78%),
-    linear-gradient(180deg, rgba(var(--ambient-room-glow-rgb), calc(0.07 + var(--music-room-energy) * 0.02)) 0%, rgba(var(--ambient-room-glow-rgb), 0.03) 48%, rgba(var(--ambient-room-accent-rgb), 0.02) 100%);
-  filter: blur(22px) saturate(1.08);
+    radial-gradient(62% 18% at 50% 34%, rgba(var(--string-light-core-rgb), calc(0.28 + var(--music-room-energy) * 0.06)) 0%, rgba(var(--string-light-tint-rgb), calc(0.16 + var(--music-room-energy) * 0.04)) 38%, rgba(var(--string-light-ambient-rgb), 0) 74%),
+    radial-gradient(70% 42% at 50% 43%, rgba(var(--ambient-room-glow-rgb), calc(0.18 + var(--music-room-energy) * 0.05)) 0%, rgba(var(--ambient-room-glow-rgb), calc(0.08 + var(--music-room-energy) * 0.03)) 52%, rgba(var(--ambient-room-glow-rgb), 0) 80%),
+    radial-gradient(56% 36% at 50% 60%, rgba(var(--ambient-room-accent-rgb), calc(0.10 + var(--music-room-energy) * 0.04)) 0%, rgba(var(--ambient-room-accent-rgb), calc(0.05 + var(--music-room-energy) * 0.03)) 42%, rgba(var(--ambient-room-accent-rgb), 0) 76%);
+  filter: blur(26px) saturate(1.02) brightness(1.02);
   will-change: opacity, transform, filter;
 }
 
-.music-reactive-playing .ambient-music-glow.ambient-music-glow-active {
-  opacity: 1;
-  animation:
-    ambientRoomBreathe var(--music-breathe-ms, 4800ms) ease-in-out infinite,
-    ambientRoomPulse var(--music-pulse-ms, 1800ms) ease-in-out infinite;
+.ambient-music-glow.ambient-music-glow-active {
+  opacity: calc(0.44 + var(--music-room-energy) * 0.14);
+  animation: ambientRoomBreathe var(--music-breathe-ms, 7600ms) ease-in-out infinite;
 }
 
 @keyframes ambientRoomBreathe {
@@ -8083,12 +8082,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 @keyframes ambientRoomPulse {
-  0%, 100% {
-    opacity: calc(0.42 + var(--music-room-energy) * 0.10);
-  }
-  50% {
-    opacity: calc(0.60 + var(--music-room-energy) * 0.16);
-  }
+  0%, 100% { transform: scale(1); }
 }
 
 .string-light-utility .utility-readout {
@@ -8104,9 +8098,9 @@ body.lyrics-marquee-unavailable .marquee::after {
 .floor-controls-lock {
   position: absolute;
   left: 50%;
-  bottom: calc(var(--room-h) * -0.018);
-  width: clamp(18px, calc(var(--room-w) * 0.016), 30px);
-  height: clamp(18px, calc(var(--room-w) * 0.016), 30px);
+  bottom: calc(var(--room-h) * -0.062);
+  width: clamp(32px, calc(var(--room-w) * 0.030), 56px);
+  height: clamp(32px, calc(var(--room-w) * 0.030), 56px);
   transform: translateX(-50%);
   border-radius: 999px;
   border: 1px solid rgba(255, 184, 71, 0.22);
@@ -8153,4 +8147,26 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 .floor-player-locked.floor-player-idle {
   opacity: 1 !important;
+}
+
+/* v65T: cozy lift and smoother room-reactive lighting */
+.room-bg {
+  filter: brightness(1.075) contrast(1.035);
+}
+
+.room-bg::after {
+  background:
+    radial-gradient(circle at center, rgba(255,255,255,0.026), transparent 46%),
+    linear-gradient(180deg, rgba(255, 220, 170, 0.018), rgba(0,0,0,0.07));
+}
+
+.floor-controls-lock::before {
+  width: 36%;
+  height: 31%;
+}
+
+.floor-controls-lock::after {
+  width: 37%;
+  height: 32%;
+  border-width: 3px;
 }

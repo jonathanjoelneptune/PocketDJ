@@ -4042,11 +4042,11 @@ function paletteFromTrackText(track: AppState["playback"]): ReactiveRoomPalette 
   const m = 0.28;
   const color: RgbTriple = [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
   return {
-    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, color, 0.16),
-    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, color, 0.30),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, color, 0.22),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, color, 0.18),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, color, 0.16),
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, color, 0.24),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, color, 0.48),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, color, 0.34),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, color, 0.26),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, color, 0.28),
   };
 }
 
@@ -4106,11 +4106,11 @@ async function extractReactiveRoomPalette(imageUrl: string): Promise<ReactiveRoo
     : DEFAULT_REACTIVE_ROOM_PALETTE.tint;
 
   return {
-    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, average, 0.18),
-    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrant, 0.34),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, average, 0.26),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, average, 0.22),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrant, 0.18),
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, average, 0.24),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrant, 0.50),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, average, 0.36),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, average, 0.30),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrant, 0.30),
   };
 }
 
@@ -4170,7 +4170,7 @@ function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
     overlay.style.setProperty("--string-light-beat-ms", `${beatMs}ms`);
     overlay.style.setProperty("--string-light-breathe-ms", `${Math.round(Math.max(840, beatMs * 2.1))}ms`);
     overlay.style.setProperty("--string-light-flicker-ms", `${Math.round(Math.max(2800, beatMs * 8.5))}ms`);
-    overlay.style.setProperty("--string-light-playing-opacity", playing ? `${0.72 + pulseEnergy * 0.18}` : "0");
+    overlay.style.setProperty("--string-light-playing-opacity", playing ? `${0.74 + pulseEnergy * 0.16}` : "0.72");
   }
 
   if (ambientGlow) {
@@ -4252,9 +4252,6 @@ function renderStringLights(): void {
     overlay.style.setProperty("--string-light-flicker-ms", `${Math.round(Math.max(2800, speakerPulseDurationMs() * 8.5))}ms`);
   }
 
-  const roomWidth = overlay.getBoundingClientRect().width || ROOM_COORD_WIDTH;
-  const roomScale = roomWidth / ROOM_COORD_WIDTH;
-
   stringLightSettings.points.forEach((point) => {
     const light = document.createElement("button");
     light.type = "button";
@@ -4263,8 +4260,7 @@ function renderStringLights(): void {
     light.classList.toggle("string-light-selected", point.id === stringLightSettings.selectedId);
     light.style.left = `${(point.x / ROOM_COORD_WIDTH) * 100}%`;
     light.style.top = `${(point.y / ROOM_COORD_HEIGHT) * 100}%`;
-    light.style.setProperty("--bulb-size", `${point.size}px`);
-    light.style.setProperty("--bulb-render-size", `${Math.max(2, point.size * roomScale)}px`);
+    light.style.setProperty("--bulb-size", String(point.size));
     light.style.setProperty("--bulb-intensity", String(point.intensity));
     light.style.setProperty("--bulb-warmth", String(point.warmth));
     light.style.setProperty("--bulb-phase", `${point.phase * -2.7}s`);
