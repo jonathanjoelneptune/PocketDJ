@@ -8501,15 +8501,18 @@ body.lyrics-marquee-unavailable .marquee::after {
   }
 }
 
-/* Dynamic ceiling reveal, fixed-bottom crop
-   The tuned 16:9 room remains the source of truth. The .room box never becomes taller,
-   so the current 16:9 bottom/floor crop does not move and no additional floor is shown.
-   Extra browser height only reveals the background and lyric projection above the base room. */
+/* Dynamic ceiling reveal, locked 16:9 bottom
+   The tuned 16:9 room remains the source of truth. The .room box and its normal
+   background never become taller, so the current floor/bottom crop and all absolute
+   room coordinates stay locked. Only a cloned background strip above the room shows
+   the extra ceiling area, and only the lyric projection uses that extra height. */
 :root {
   --dynamic-ceiling-reveal-px: 0px;
   --dynamic-ceiling-reveal-coord: 0;
   --dynamic-ceiling-max-px: 220px;
   --room-base-h: var(--room-h);
+  --room-bg-img-h: calc(var(--room-w) * var(--room-bg-scale) * 0.666015625);
+  --room-bg-base-offset-y: calc((var(--room-base-h) - var(--room-bg-img-h)) * 0.431);
   --lyric-ceiling-view-h: calc(529px + var(--dynamic-ceiling-reveal-coord) * 1px);
 }
 
@@ -8535,10 +8538,27 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 .room-bg {
-  top: calc(var(--dynamic-ceiling-reveal-px) * -1);
-  bottom: auto;
-  height: calc(var(--room-base-h) + var(--dynamic-ceiling-reveal-px));
-  background-position: var(--room-bg-x) calc(var(--room-bg-y) + var(--dynamic-ceiling-reveal-px));
+  inset: 0 !important;
+  height: auto !important;
+  overflow: visible;
+  background-position: var(--room-bg-x) var(--room-bg-y) !important;
+  background-size: calc(var(--room-bg-scale) * 100%) auto !important;
+  z-index: 0;
+}
+
+.room-bg::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  width: 100%;
+  height: var(--dynamic-ceiling-reveal-px);
+  pointer-events: none;
+  background-image: inherit;
+  background-repeat: no-repeat;
+  background-size: calc(var(--room-bg-scale) * 100%) auto;
+  background-position-x: var(--room-bg-x);
+  background-position-y: calc(var(--room-bg-base-offset-y) + var(--dynamic-ceiling-reveal-px));
 }
 
 .room-filter-overlay,
@@ -8549,6 +8569,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 .room-base-layer > .lyrics-ceiling {
   top: calc(var(--dynamic-ceiling-reveal-px) * -1);
   height: calc(var(--room-base-h) + var(--dynamic-ceiling-reveal-px));
+  pointer-events: none;
 }
 
 .active-lyrics-block,
@@ -8557,15 +8578,9 @@ body.lyrics-marquee-unavailable .marquee::after {
   height: var(--lyric-ceiling-view-h) !important;
 }
 
-:root.room-fill-stretch .room-base-layer {
-  height: var(--room-base-h);
-}
-
-:root.room-fill-stretch .room-bg {
-  top: 0 !important;
-  height: var(--room-base-h) !important;
-  background-size: calc(var(--room-bg-scale) * 100%) auto !important;
-  background-position: var(--room-bg-x) var(--room-bg-y) !important;
+:root.room-fill-stretch {
+  --dynamic-ceiling-reveal-px: 0px;
+  --dynamic-ceiling-reveal-coord: 0;
 }
 
 :root.room-fill-stretch .room {
@@ -8573,7 +8588,10 @@ body.lyrics-marquee-unavailable .marquee::after {
   overflow: hidden !important;
 }
 
-:root.room-fill-stretch {
-  --dynamic-ceiling-reveal-px: 0px;
-  --dynamic-ceiling-reveal-coord: 0;
+:root.room-fill-stretch .room-base-layer {
+  height: var(--room-base-h);
+}
+
+:root.room-fill-stretch .room-bg::before {
+  display: none !important;
 }
