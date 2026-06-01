@@ -2380,79 +2380,102 @@ function buildCeilingPosterLayout(
   const perspectiveTilt = autoCeilingTilt * clamp(profile.perspective / 2.25, 0.10, 2.80);
 
   const rows = rowTexts.map((rowText, index) => {
+    const legacyBand = rowBands[index] ?? rowBands[rowBands.length - 1] ?? trapezoid;
+
+    if (!tallModeActive) {
+      // Keep the normal 16:9 lyric behavior identical to the locked v65A baseline.
+      // Tall-window keyframes only begin after revealRatio rises above zero.
+      const band = legacyBand;
+      const bandTopY = Math.min(band.topLeftY, band.topRightY);
+      const bandBottomY = Math.max(band.bottomLeftY, band.bottomRightY);
+      const bandHeight = Math.max(12, bandBottomY - bandTopY);
+      const bandCenterY = (bandTopY + bandBottomY) / 2;
+      const bandCenterX = (band.topLeftX + band.topRightX + band.bottomLeftX + band.bottomRightX) / 4;
+
+      const scaleYForRow = clamp(profile.verticalStretch, 0.28, 4.00);
+      const visualHalfHeight = Math.max(4, bandHeight * 0.50 * scaleYForRow);
+      const rowTilt = clamp(perspectiveTilt + profile.tilt, -76, 76);
+      const skewPad = Math.abs(Math.tan((rowTilt * Math.PI) / 180)) * visualHalfHeight;
+      const strokePad = Math.max(6, bandHeight * 0.035) + skewPad * 0.18;
+      const top = clamp(bandCenterY - bandHeight * 0.50, bandTopY, bandBottomY);
+      const bottom = clamp(bandCenterY + bandHeight * 0.50, bandTopY, bandBottomY);
+      const topBounds = trapezoidHorizontalBoundsAtY(band, top);
+      const bottomBounds = trapezoidHorizontalBoundsAtY(band, bottom);
+      const safeLeft = Math.max(topBounds.left, bottomBounds.left) + strokePad;
+      const safeRight = Math.min(topBounds.right, bottomBounds.right) - strokePad;
+      const halfWidth = Math.max(24, Math.min(bandCenterX - safeLeft, safeRight - bandCenterX));
+      const left = bandCenterX - halfWidth;
+      const right = bandCenterX + halfWidth;
+      const padY = Math.max(2, bandHeight * 0.018);
+
+      let topLeft = { x: left, y: top + padY };
+      let topRight = { x: right, y: top + padY };
+      let bottomLeft = { x: left, y: bottom - padY };
+      let bottomRight = { x: right, y: bottom - padY };
+
+      const cornerOffsets = getRowProjectionOffsets(n, index, controls);
+      topLeft = addPoint(topLeft, cornerOffsets.topLeftX, cornerOffsets.topLeftY);
+      topRight = addPoint(topRight, cornerOffsets.topRightX, cornerOffsets.topRightY);
+      bottomLeft = addPoint(bottomLeft, cornerOffsets.bottomLeftX, cornerOffsets.bottomLeftY);
+      bottomRight = addPoint(bottomRight, cornerOffsets.bottomRightX, cornerOffsets.bottomRightY);
+
+      const legacyQuad = centerAndFitQuadInsideTrapezoid(
+        [topLeft, topRight, bottomRight, bottomLeft],
+        band,
+      );
+      const destination = legacyQuad.map((point) => ({
+        x: point.x * scaleX,
+        y: point.y * Math.max(0.001, ceilingHeight / 529),
+      }));
+
+      const sourceWidth = 1200;
+      const sourceHeight = 180;
+      const sourceFontSize = sourceHeight * clamp(profile.verticalStretch, 0.40, 3.00);
+      const sourceTextLength = sourceWidth * 0.965;
+      const sourceTextY = sourceHeight / 2;
+      const matrix3d = quadToCssMatrix3d(sourceWidth, sourceHeight, destination[0], destination[1], destination[2], destination[3]);
+
+      return {
+        text: rowText,
+        sourceWidth,
+        sourceHeight,
+        sourceFontSize,
+        sourceTextLength,
+        sourceTextY,
+        matrix3d,
+        guideQuad: legacyQuad,
+        actualQuad: legacyQuad,
+      };
+    }
+
     const directTallQuad = directTallQuadForRow(lyricMode, index, activeControls);
     const band = directTallQuad
       ? posterQuadToTrapezoid(directTallQuad)
-      : rowBands[index] ?? rowBands[rowBands.length - 1] ?? trapezoid;
-    const bandTopY = Math.min(band.topLeftY, band.topRightY);
-    const bandBottomY = Math.max(band.bottomLeftY, band.bottomRightY);
-    const bandHeight = Math.max(12, bandBottomY - bandTopY);
-    const bandCenterY = (bandTopY + bandBottomY) / 2;
-    const bandCenterX = (band.topLeftX + band.topRightX + band.bottomLeftX + band.bottomRightX) / 4;
-
-    const scaleYForRow = clamp(profile.verticalStretch, 0.28, 4.00);
-    const visualHalfHeight = Math.max(4, bandHeight * 0.50 * scaleYForRow);
-    const rowTilt = clamp(perspectiveTilt + profile.tilt, -76, 76);
-    const skewPad = Math.abs(Math.tan((rowTilt * Math.PI) / 180)) * visualHalfHeight;
-    const strokePad = Math.max(6, bandHeight * 0.035) + skewPad * 0.18;
-    const top = clamp(bandCenterY - bandHeight * 0.50, bandTopY, bandBottomY);
-    const bottom = clamp(bandCenterY + bandHeight * 0.50, bandTopY, bandBottomY);
-    const topBounds = trapezoidHorizontalBoundsAtY(band, top);
-    const bottomBounds = trapezoidHorizontalBoundsAtY(band, bottom);
-    const safeLeft = Math.max(topBounds.left, bottomBounds.left) + strokePad;
-    const safeRight = Math.min(topBounds.right, bottomBounds.right) - strokePad;
-    const halfWidth = Math.max(24, Math.min(bandCenterX - safeLeft, safeRight - bandCenterX));
-    const left = bandCenterX - halfWidth;
-    const right = bandCenterX + halfWidth;
-    const padY = Math.max(2, bandHeight * 0.018);
-
-    let topLeft = { x: left, y: top + padY };
-    let topRight = { x: right, y: top + padY };
-    let bottomLeft = { x: left, y: bottom - padY };
-    let bottomRight = { x: right, y: bottom - padY };
-
+      : legacyBand;
     const cornerOffsets = getRowProjectionOffsets(n, index, activeControls);
-    topLeft = addPoint(topLeft, cornerOffsets.topLeftX, cornerOffsets.topLeftY);
-    topRight = addPoint(topRight, cornerOffsets.topRightX, cornerOffsets.topRightY);
-    bottomLeft = addPoint(bottomLeft, cornerOffsets.bottomLeftX, cornerOffsets.bottomLeftY);
-    bottomRight = addPoint(bottomRight, cornerOffsets.bottomRightX, cornerOffsets.bottomRightY);
-
-    const legacyFit = centerAndFitQuadInsideTrapezoid(
-      [topLeft, topRight, bottomRight, bottomLeft],
-      band,
-    );
-    const tallTarget: PosterQuad = [
+    const tallTarget: PosterQuad = directTallQuad ?? [
       addPoint({ x: band.topLeftX, y: band.topLeftY }, cornerOffsets.topLeftX, cornerOffsets.topLeftY),
       addPoint({ x: band.topRightX, y: band.topRightY }, cornerOffsets.topRightX, cornerOffsets.topRightY),
       addPoint({ x: band.bottomRightX, y: band.bottomRightY }, cornerOffsets.bottomRightX, cornerOffsets.bottomRightY),
       addPoint({ x: band.bottomLeftX, y: band.bottomLeftY }, cornerOffsets.bottomLeftX, cornerOffsets.bottomLeftY),
     ];
 
-    // Once any ceiling reveal exists, stop blending with the 16:9 legacy placement.
-    // Tall mode now uses the same active guide quad as the target for the text.
-    // This prevents the old normal-window placement from pulling the lyrics down
-    // while the tall guide is already in the expanded ceiling area.
-    const guideQuad: PosterQuad = directTallQuad ? directTallQuad : (tallModeActive ? tallTarget : legacyFit);
-    const baseActualQuad = correctQuadToGuideFrame(directTallQuad ? directTallQuad : (tallModeActive ? tallTarget : legacyFit), guideQuad);
+    const guideQuad: PosterQuad = tallTarget;
+    const baseActualQuad = correctQuadToGuideFrame(tallTarget, guideQuad);
     const finalVisualOffsets = finalTallVisualOffsetsForRow(lyricMode, index, activeControls);
-    const actualQuad = tallModeActive ? addQuadOffsets(baseActualQuad, finalVisualOffsets) : baseActualQuad;
-    [topLeft, topRight, bottomRight, bottomLeft] = actualQuad;
+    const actualQuad = addQuadOffsets(baseActualQuad, finalVisualOffsets);
 
-    const directTallScreenSpace = Boolean(directTallQuad && tallModeActive);
+    const directTallScreenSpace = Boolean(directTallQuad);
     const destination = actualQuad.map((point) => ({
       x: point.x * scaleX,
       y: (point.y + (directTallScreenSpace ? 0 : ceilingRevealCoord)) * scaleY,
     }));
 
-    // The projected quad is now the source of truth. Keep the text safely inside
-    // the unwarped source box before mapping that box onto the calibrated guide
-    // frame. Earlier versions let glyphs overflow the source SVG, which made the
-    // text appear outside the guide even when the quad itself was correct.
     const sourceWidth = 1400;
     const sourceHeight = 220;
-    const sourceFontSize = sourceHeight * (controls.tallRevealRatio > 0.05 ? 0.66 : clamp(profile.verticalStretch, 0.40, 2.60));
-    const sourceTextLength = sourceWidth * (controls.tallRevealRatio > 0.05 ? 0.90 : 0.965);
-    const sourceTextY = sourceHeight * (controls.tallRevealRatio > 0.05 ? 0.53 : 0.50);
+    const sourceFontSize = sourceHeight * 0.66;
+    const sourceTextLength = sourceWidth * 0.90;
+    const sourceTextY = sourceHeight * 0.53;
     const matrix3d = quadToCssMatrix3d(sourceWidth, sourceHeight, destination[0], destination[1], destination[2], destination[3]);
 
     return {
