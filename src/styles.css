@@ -8515,11 +8515,13 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 .stage {
-  place-items: end center;
+  place-items: center;
 }
 
 .room {
   height: var(--room-viewport-h);
+  transform: translateY(calc(var(--dynamic-ceiling-reveal-px) * -0.5));
+  transform-origin: center bottom;
 }
 
 .room-base-layer {
@@ -8561,6 +8563,10 @@ body.lyrics-marquee-unavailable .marquee::after {
 :root.room-fill-stretch .room-bg {
   background-size: calc(var(--room-bg-scale) * 100%) auto !important;
   background-position: var(--room-bg-x) var(--room-bg-y) !important;
+}
+
+:root.room-fill-stretch .room {
+  transform: none !important;
 }
 
 :root.room-fill-stretch {
