@@ -8595,3 +8595,31 @@ body.lyrics-marquee-unavailable .marquee::after {
 :root.room-fill-stretch .room-bg::before {
   display: none !important;
 }
+
+/* Tall-window lyric calibration utility */
+.lyric-tall-calibration {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 210, 121, 0.16);
+}
+
+.lyric-tall-calibration > summary,
+.lyric-tall-calibration-group > summary {
+  cursor: pointer;
+  color: rgba(255, 220, 150, 0.95);
+}
+
+.lyric-tall-calibration-group {
+  margin-top: 8px;
+  padding: 6px 0;
+}
+
+.lyric-tall-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 10px;
+}
+
+.lyric-tall-grid label {
+  min-width: 0;
+}

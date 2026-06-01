@@ -345,6 +345,50 @@ type RoomUtilitySettings = {
   lyricPosterThreeRowBottomTextBottomLeftY: number;
   lyricPosterThreeRowBottomTextBottomRightX: number;
   lyricPosterThreeRowBottomTextBottomRightY: number;
+  lyricPosterTallTopLeftX: number;
+  lyricPosterTallTopLeftY: number;
+  lyricPosterTallTopRightX: number;
+  lyricPosterTallTopRightY: number;
+  lyricPosterTallBottomLeftX: number;
+  lyricPosterTallBottomLeftY: number;
+  lyricPosterTallBottomRightX: number;
+  lyricPosterTallBottomRightY: number;
+  lyricPosterTallShortTopLeftX: number;
+  lyricPosterTallShortTopLeftY: number;
+  lyricPosterTallShortTopRightX: number;
+  lyricPosterTallShortTopRightY: number;
+  lyricPosterTallShortBottomLeftX: number;
+  lyricPosterTallShortBottomLeftY: number;
+  lyricPosterTallShortBottomRightX: number;
+  lyricPosterTallShortBottomRightY: number;
+  lyricPosterTallOneRowTextTopLeftX: number;
+  lyricPosterTallOneRowTextTopLeftY: number;
+  lyricPosterTallOneRowTextTopRightX: number;
+  lyricPosterTallOneRowTextTopRightY: number;
+  lyricPosterTallOneRowTextBottomLeftX: number;
+  lyricPosterTallOneRowTextBottomLeftY: number;
+  lyricPosterTallOneRowTextBottomRightX: number;
+  lyricPosterTallOneRowTextBottomRightY: number;
+  lyricPosterTallTwoRowTopBandTopY: number;
+  lyricPosterTallTwoRowTopBandBottomY: number;
+  lyricPosterTallTwoRowBottomBandTopY: number;
+  lyricPosterTallTwoRowBottomBandBottomY: number;
+  lyricPosterTallTwoRowTopTextTopLeftX: number;
+  lyricPosterTallTwoRowTopTextTopLeftY: number;
+  lyricPosterTallTwoRowTopTextTopRightX: number;
+  lyricPosterTallTwoRowTopTextTopRightY: number;
+  lyricPosterTallTwoRowTopTextBottomLeftX: number;
+  lyricPosterTallTwoRowTopTextBottomLeftY: number;
+  lyricPosterTallTwoRowTopTextBottomRightX: number;
+  lyricPosterTallTwoRowTopTextBottomRightY: number;
+  lyricPosterTallTwoRowBottomTextTopLeftX: number;
+  lyricPosterTallTwoRowBottomTextTopLeftY: number;
+  lyricPosterTallTwoRowBottomTextTopRightX: number;
+  lyricPosterTallTwoRowBottomTextTopRightY: number;
+  lyricPosterTallTwoRowBottomTextBottomLeftX: number;
+  lyricPosterTallTwoRowBottomTextBottomLeftY: number;
+  lyricPosterTallTwoRowBottomTextBottomRightX: number;
+  lyricPosterTallTwoRowBottomTextBottomRightY: number;
   lyricPosterMaxRows: "auto" | "1" | "2" | "3";
   lyricPosterRowBreakpoint: number;
   lyricPosterTransition: "none" | "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift" | "back-push";
@@ -515,6 +559,50 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterThreeRowBottomTextBottomLeftY: 0,
   lyricPosterThreeRowBottomTextBottomRightX: 0,
   lyricPosterThreeRowBottomTextBottomRightY: 0,
+  lyricPosterTallTopLeftX: 150,
+  lyricPosterTallTopLeftY: -150,
+  lyricPosterTallTopRightX: 1615,
+  lyricPosterTallTopRightY: -160,
+  lyricPosterTallBottomLeftX: 454,
+  lyricPosterTallBottomLeftY: 195,
+  lyricPosterTallBottomRightX: 1343,
+  lyricPosterTallBottomRightY: 189,
+  lyricPosterTallShortTopLeftX: 170,
+  lyricPosterTallShortTopLeftY: -145,
+  lyricPosterTallShortTopRightX: 1510,
+  lyricPosterTallShortTopRightY: -160,
+  lyricPosterTallShortBottomLeftX: 454,
+  lyricPosterTallShortBottomLeftY: 195,
+  lyricPosterTallShortBottomRightX: 1343,
+  lyricPosterTallShortBottomRightY: 189,
+  lyricPosterTallOneRowTextTopLeftX: -300,
+  lyricPosterTallOneRowTextTopLeftY: 8,
+  lyricPosterTallOneRowTextTopRightX: 300,
+  lyricPosterTallOneRowTextTopRightY: 8,
+  lyricPosterTallOneRowTextBottomLeftX: 8,
+  lyricPosterTallOneRowTextBottomLeftY: 0,
+  lyricPosterTallOneRowTextBottomRightX: 0,
+  lyricPosterTallOneRowTextBottomRightY: 0,
+  lyricPosterTallTwoRowTopBandTopY: -150,
+  lyricPosterTallTwoRowTopBandBottomY: 20,
+  lyricPosterTallTwoRowBottomBandTopY: 20,
+  lyricPosterTallTwoRowBottomBandBottomY: 195,
+  lyricPosterTallTwoRowTopTextTopLeftX: -240,
+  lyricPosterTallTwoRowTopTextTopLeftY: 0,
+  lyricPosterTallTwoRowTopTextTopRightX: 240,
+  lyricPosterTallTwoRowTopTextTopRightY: 0,
+  lyricPosterTallTwoRowTopTextBottomLeftX: 0,
+  lyricPosterTallTwoRowTopTextBottomLeftY: 0,
+  lyricPosterTallTwoRowTopTextBottomRightX: 0,
+  lyricPosterTallTwoRowTopTextBottomRightY: 0,
+  lyricPosterTallTwoRowBottomTextTopLeftX: -210,
+  lyricPosterTallTwoRowBottomTextTopLeftY: 0,
+  lyricPosterTallTwoRowBottomTextTopRightX: 210,
+  lyricPosterTallTwoRowBottomTextTopRightY: 0,
+  lyricPosterTallTwoRowBottomTextBottomLeftX: 0,
+  lyricPosterTallTwoRowBottomTextBottomLeftY: 0,
+  lyricPosterTallTwoRowBottomTextBottomRightX: 0,
+  lyricPosterTallTwoRowBottomTextBottomRightY: 0,
   lyricPosterMaxRows: "auto",
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
@@ -4022,10 +4110,12 @@ function updateDynamicCeilingReveal(): void {
   const revealPx = Math.round(clamp(availableExtra, 0, maxRevealPx));
   const coordScale = baseRoomWidth > 0 ? ROOM_COORD_WIDTH / baseRoomWidth : 1;
   const revealCoord = Math.round(revealPx * coordScale);
+  const revealRatio = maxRevealPx > 0 ? clamp(revealPx / maxRevealPx, 0, 1) : 0;
 
   const root = document.documentElement;
   root.style.setProperty("--dynamic-ceiling-reveal-px", `${revealPx}px`);
   root.style.setProperty("--dynamic-ceiling-reveal-coord", String(revealCoord));
+  root.style.setProperty("--dynamic-ceiling-reveal-ratio", revealRatio.toFixed(4));
   root.classList.toggle("dynamic-ceiling-reveal-active", revealPx > 2);
 }
 
@@ -4765,6 +4855,50 @@ function bindRoomUtilityControls(): void {
     ["lyricPosterThreeRowBottomTextBottomLeftY", "lyricPosterThreeRowBottomTextBottomLeftYValue"],
     ["lyricPosterThreeRowBottomTextBottomRightX", "lyricPosterThreeRowBottomTextBottomRightXValue"],
     ["lyricPosterThreeRowBottomTextBottomRightY", "lyricPosterThreeRowBottomTextBottomRightYValue"],
+    ["lyricPosterTallTopLeftX", "lyricPosterTallTopLeftXValue"],
+    ["lyricPosterTallTopLeftY", "lyricPosterTallTopLeftYValue"],
+    ["lyricPosterTallTopRightX", "lyricPosterTallTopRightXValue"],
+    ["lyricPosterTallTopRightY", "lyricPosterTallTopRightYValue"],
+    ["lyricPosterTallBottomLeftX", "lyricPosterTallBottomLeftXValue"],
+    ["lyricPosterTallBottomLeftY", "lyricPosterTallBottomLeftYValue"],
+    ["lyricPosterTallBottomRightX", "lyricPosterTallBottomRightXValue"],
+    ["lyricPosterTallBottomRightY", "lyricPosterTallBottomRightYValue"],
+    ["lyricPosterTallShortTopLeftX", "lyricPosterTallShortTopLeftXValue"],
+    ["lyricPosterTallShortTopLeftY", "lyricPosterTallShortTopLeftYValue"],
+    ["lyricPosterTallShortTopRightX", "lyricPosterTallShortTopRightXValue"],
+    ["lyricPosterTallShortTopRightY", "lyricPosterTallShortTopRightYValue"],
+    ["lyricPosterTallShortBottomLeftX", "lyricPosterTallShortBottomLeftXValue"],
+    ["lyricPosterTallShortBottomLeftY", "lyricPosterTallShortBottomLeftYValue"],
+    ["lyricPosterTallShortBottomRightX", "lyricPosterTallShortBottomRightXValue"],
+    ["lyricPosterTallShortBottomRightY", "lyricPosterTallShortBottomRightYValue"],
+    ["lyricPosterTallOneRowTextTopLeftX", "lyricPosterTallOneRowTextTopLeftXValue"],
+    ["lyricPosterTallOneRowTextTopLeftY", "lyricPosterTallOneRowTextTopLeftYValue"],
+    ["lyricPosterTallOneRowTextTopRightX", "lyricPosterTallOneRowTextTopRightXValue"],
+    ["lyricPosterTallOneRowTextTopRightY", "lyricPosterTallOneRowTextTopRightYValue"],
+    ["lyricPosterTallOneRowTextBottomLeftX", "lyricPosterTallOneRowTextBottomLeftXValue"],
+    ["lyricPosterTallOneRowTextBottomLeftY", "lyricPosterTallOneRowTextBottomLeftYValue"],
+    ["lyricPosterTallOneRowTextBottomRightX", "lyricPosterTallOneRowTextBottomRightXValue"],
+    ["lyricPosterTallOneRowTextBottomRightY", "lyricPosterTallOneRowTextBottomRightYValue"],
+    ["lyricPosterTallTwoRowTopBandTopY", "lyricPosterTallTwoRowTopBandTopYValue"],
+    ["lyricPosterTallTwoRowTopBandBottomY", "lyricPosterTallTwoRowTopBandBottomYValue"],
+    ["lyricPosterTallTwoRowBottomBandTopY", "lyricPosterTallTwoRowBottomBandTopYValue"],
+    ["lyricPosterTallTwoRowBottomBandBottomY", "lyricPosterTallTwoRowBottomBandBottomYValue"],
+    ["lyricPosterTallTwoRowTopTextTopLeftX", "lyricPosterTallTwoRowTopTextTopLeftXValue"],
+    ["lyricPosterTallTwoRowTopTextTopLeftY", "lyricPosterTallTwoRowTopTextTopLeftYValue"],
+    ["lyricPosterTallTwoRowTopTextTopRightX", "lyricPosterTallTwoRowTopTextTopRightXValue"],
+    ["lyricPosterTallTwoRowTopTextTopRightY", "lyricPosterTallTwoRowTopTextTopRightYValue"],
+    ["lyricPosterTallTwoRowTopTextBottomLeftX", "lyricPosterTallTwoRowTopTextBottomLeftXValue"],
+    ["lyricPosterTallTwoRowTopTextBottomLeftY", "lyricPosterTallTwoRowTopTextBottomLeftYValue"],
+    ["lyricPosterTallTwoRowTopTextBottomRightX", "lyricPosterTallTwoRowTopTextBottomRightXValue"],
+    ["lyricPosterTallTwoRowTopTextBottomRightY", "lyricPosterTallTwoRowTopTextBottomRightYValue"],
+    ["lyricPosterTallTwoRowBottomTextTopLeftX", "lyricPosterTallTwoRowBottomTextTopLeftXValue"],
+    ["lyricPosterTallTwoRowBottomTextTopLeftY", "lyricPosterTallTwoRowBottomTextTopLeftYValue"],
+    ["lyricPosterTallTwoRowBottomTextTopRightX", "lyricPosterTallTwoRowBottomTextTopRightXValue"],
+    ["lyricPosterTallTwoRowBottomTextTopRightY", "lyricPosterTallTwoRowBottomTextTopRightYValue"],
+    ["lyricPosterTallTwoRowBottomTextBottomLeftX", "lyricPosterTallTwoRowBottomTextBottomLeftXValue"],
+    ["lyricPosterTallTwoRowBottomTextBottomLeftY", "lyricPosterTallTwoRowBottomTextBottomLeftYValue"],
+    ["lyricPosterTallTwoRowBottomTextBottomRightX", "lyricPosterTallTwoRowBottomTextBottomRightXValue"],
+    ["lyricPosterTallTwoRowBottomTextBottomRightY", "lyricPosterTallTwoRowBottomTextBottomRightYValue"],
   ] as const;
 
   controls.forEach(([inputId, labelId]) => {
@@ -4989,6 +5123,50 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-bottom-left-y", `${roomUtility.lyricPosterBottomLeftY}px`);
   root.style.setProperty("--lyric-poster-bottom-right-x", `${roomUtility.lyricPosterBottomRightX}px`);
   root.style.setProperty("--lyric-poster-bottom-right-y", `${roomUtility.lyricPosterBottomRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-top-left-x", `${roomUtility.lyricPosterTallTopLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-top-left-y", `${roomUtility.lyricPosterTallTopLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-top-right-x", `${roomUtility.lyricPosterTallTopRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-top-right-y", `${roomUtility.lyricPosterTallTopRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-bottom-left-x", `${roomUtility.lyricPosterTallBottomLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-bottom-left-y", `${roomUtility.lyricPosterTallBottomLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-bottom-right-x", `${roomUtility.lyricPosterTallBottomRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-bottom-right-y", `${roomUtility.lyricPosterTallBottomRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-short-top-left-x", `${roomUtility.lyricPosterTallShortTopLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-short-top-left-y", `${roomUtility.lyricPosterTallShortTopLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-short-top-right-x", `${roomUtility.lyricPosterTallShortTopRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-short-top-right-y", `${roomUtility.lyricPosterTallShortTopRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-short-bottom-left-x", `${roomUtility.lyricPosterTallShortBottomLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-short-bottom-left-y", `${roomUtility.lyricPosterTallShortBottomLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-short-bottom-right-x", `${roomUtility.lyricPosterTallShortBottomRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-short-bottom-right-y", `${roomUtility.lyricPosterTallShortBottomRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-one-row-text-top-left-x", `${roomUtility.lyricPosterTallOneRowTextTopLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-one-row-text-top-left-y", `${roomUtility.lyricPosterTallOneRowTextTopLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-one-row-text-top-right-x", `${roomUtility.lyricPosterTallOneRowTextTopRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-one-row-text-top-right-y", `${roomUtility.lyricPosterTallOneRowTextTopRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-one-row-text-bottom-left-x", `${roomUtility.lyricPosterTallOneRowTextBottomLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-one-row-text-bottom-left-y", `${roomUtility.lyricPosterTallOneRowTextBottomLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-one-row-text-bottom-right-x", `${roomUtility.lyricPosterTallOneRowTextBottomRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-one-row-text-bottom-right-y", `${roomUtility.lyricPosterTallOneRowTextBottomRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-top-band-top-y", `${roomUtility.lyricPosterTallTwoRowTopBandTopY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-top-band-bottom-y", `${roomUtility.lyricPosterTallTwoRowTopBandBottomY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-bottom-band-top-y", `${roomUtility.lyricPosterTallTwoRowBottomBandTopY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-bottom-band-bottom-y", `${roomUtility.lyricPosterTallTwoRowBottomBandBottomY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-top-text-top-left-x", `${roomUtility.lyricPosterTallTwoRowTopTextTopLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-top-text-top-left-y", `${roomUtility.lyricPosterTallTwoRowTopTextTopLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-top-text-top-right-x", `${roomUtility.lyricPosterTallTwoRowTopTextTopRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-top-text-top-right-y", `${roomUtility.lyricPosterTallTwoRowTopTextTopRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-top-text-bottom-left-x", `${roomUtility.lyricPosterTallTwoRowTopTextBottomLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-top-text-bottom-left-y", `${roomUtility.lyricPosterTallTwoRowTopTextBottomLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-top-text-bottom-right-x", `${roomUtility.lyricPosterTallTwoRowTopTextBottomRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-top-text-bottom-right-y", `${roomUtility.lyricPosterTallTwoRowTopTextBottomRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-top-left-x", `${roomUtility.lyricPosterTallTwoRowBottomTextTopLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-top-left-y", `${roomUtility.lyricPosterTallTwoRowBottomTextTopLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-top-right-x", `${roomUtility.lyricPosterTallTwoRowBottomTextTopRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-top-right-y", `${roomUtility.lyricPosterTallTwoRowBottomTextTopRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-bottom-left-x", `${roomUtility.lyricPosterTallTwoRowBottomTextBottomLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-bottom-left-y", `${roomUtility.lyricPosterTallTwoRowBottomTextBottomLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-bottom-right-x", `${roomUtility.lyricPosterTallTwoRowBottomTextBottomRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-bottom-right-y", `${roomUtility.lyricPosterTallTwoRowBottomTextBottomRightY}px`);
   root.style.setProperty("--lyric-poster-stroke", `${roomUtility.lyricPosterStroke}px`);
   root.style.setProperty("--lyric-poster-stroke-color", roomUtility.lyricPosterStrokeColor);
   root.style.setProperty("--lyric-poster-fill-color", roomUtility.lyricPosterFillColor);
