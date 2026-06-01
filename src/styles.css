@@ -8503,22 +8503,23 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 /* v65Z: dynamic ceiling reveal
    The active room remains a 16:9 base layer anchored to the bottom.
-   Extra vertical browser space reveals more ceiling above the old crop instead of stretching the DJ/table/walls. */
+   Extra vertical browser space reveals more ceiling above the old crop instead of stretching the DJ/table/walls.
+   Keep --room-h as the fixed 16:9 base height so all tuned objects keep their old positions. */
 :root {
   --dynamic-ceiling-reveal-px: 0px;
   --dynamic-ceiling-reveal-coord: 0;
   --dynamic-ceiling-max-px: 220px;
-  --room-base-h: calc(var(--room-w) * 9 / 16);
-  --room-h: calc(var(--room-base-h) + var(--dynamic-ceiling-reveal-px));
+  --room-base-h: var(--room-h);
+  --room-viewport-h: calc(var(--room-base-h) + var(--dynamic-ceiling-reveal-px));
   --lyric-ceiling-view-h: calc(529px + var(--dynamic-ceiling-reveal-coord) * 1px);
 }
 
 .stage {
-  place-items: center;
+  place-items: end center;
 }
 
 .room {
-  height: var(--room-h);
+  height: var(--room-viewport-h);
 }
 
 .room-base-layer {
@@ -8534,7 +8535,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 .room-bg {
   top: auto;
   bottom: 0;
-  height: var(--room-h);
+  height: var(--room-viewport-h);
 }
 
 .room-filter-overlay,
@@ -8560,4 +8561,10 @@ body.lyrics-marquee-unavailable .marquee::after {
 :root.room-fill-stretch .room-bg {
   background-size: calc(var(--room-bg-scale) * 100%) auto !important;
   background-position: var(--room-bg-x) var(--room-bg-y) !important;
+}
+
+:root.room-fill-stretch {
+  --dynamic-ceiling-reveal-px: 0px;
+  --dynamic-ceiling-reveal-coord: 0;
+  --room-viewport-h: var(--room-h);
 }
