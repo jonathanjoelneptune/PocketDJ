@@ -8741,3 +8741,15 @@ body.lyrics-marquee-unavailable .marquee::after {
   font-size: 10px;
   line-height: 1.45;
 }
+
+/* Tall lyric glyph-fit correction
+   The row projection quad can be correct while font glyphs spill outside the
+   source SVG before projection. Clip each source row before it is warped so the
+   visible words cannot escape the guide frame. */
+.lyric-poster-html-row {
+  overflow: hidden !important;
+}
+
+.lyric-poster-row-svg {
+  overflow: hidden !important;
+}

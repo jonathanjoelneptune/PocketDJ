@@ -1188,7 +1188,6 @@ export function updateLyricsCeiling(
 
   const ceilingRect = ceiling.getBoundingClientRect();
   const layout = buildCeilingPosterLayout(activeLine.text, trapezoid, controls, ceilingRect.width, ceilingRect.height);
-  updateLyricGeometryMonitor(layout, trapezoid, controls);
   const shouldUseBackPushTrack =
     controls.transition === "back-push" &&
     lyricTextChanged &&
@@ -1202,11 +1201,13 @@ export function updateLyricsCeiling(
         (row) => `
             <div
               class="lyric-poster-html-row"
+              data-lyric-row-index="${posterLayout.rows.indexOf(row)}"
               style="width:${row.sourceWidth}px; height:${row.sourceHeight}px; transform:${row.matrix3d};"
             >
               <svg class="lyric-poster-row-svg" viewBox="0 0 ${row.sourceWidth} ${row.sourceHeight}" preserveAspectRatio="none" aria-hidden="true">
                 <text
                   class="lyric-poster-row-text"
+                  data-lyric-row-index="${posterLayout.rows.indexOf(row)}"
                   x="${row.sourceWidth / 2}"
                   y="${row.sourceTextY}"
                   font-size="${row.sourceFontSize}"
@@ -1263,6 +1264,11 @@ export function updateLyricsCeiling(
       }
     </div>
   `;
+
+  window.requestAnimationFrame(() => {
+    fitRenderedLyricGlyphsToSourceBoxes(layout, controls);
+    updateLyricGeometryMonitor(layout, trapezoid, controls);
+  });
 
   void playbackMs;
 }
@@ -2052,6 +2058,95 @@ function formatQuad(quad: PosterQuad): string {
   ].join(" | ");
 }
 
+function fitRenderedLyricGlyphsToSourceBoxes(layout: CeilingPosterLayout, controls: CeilingPosterControls): void {
+  const activeBlock = document.querySelector<HTMLElement>("#activeLyricsBlock");
+  if (!activeBlock) return;
+
+  const tallModeActive = controls.tallRevealRatio > 0.001;
+  const textNodes = Array.from(activeBlock.querySelectorAll<SVGTextElement>(".lyric-poster-row-text"));
+  textNodes.forEach((textNode) => {
+    const rowIndex = Number(textNode.dataset.lyricRowIndex || 0);
+    const row = layout.rows[rowIndex];
+    if (!row) return;
+
+    const targetHeightRatio = tallModeActive ? 0.68 : 0.78;
+    const targetWidthRatio = tallModeActive ? 0.88 : 0.94;
+    const targetCenterY = row.sourceHeight * (tallModeActive ? 0.47 : 0.50);
+    let fontSize = row.sourceFontSize;
+    let textY = row.sourceTextY;
+    let textLength = row.sourceTextLength;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      textNode.setAttribute("font-size", String(fontSize));
+      textNode.setAttribute("y", String(textY));
+      textNode.setAttribute("textLength", String(textLength));
+
+      let box: DOMRect | SVGRect;
+      try {
+        box = textNode.getBBox();
+      } catch {
+        return;
+      }
+
+      const maxHeight = row.sourceHeight * targetHeightRatio;
+      const maxWidth = row.sourceWidth * targetWidthRatio;
+      if (box.height > maxHeight && box.height > 1) {
+        fontSize *= Math.max(0.56, Math.min(0.98, maxHeight / box.height));
+      }
+      if (box.width > maxWidth && box.width > 1) {
+        textLength *= Math.max(0.66, Math.min(0.98, maxWidth / box.width));
+      }
+
+      const glyphCenterY = box.y + box.height / 2;
+      textY += targetCenterY - glyphCenterY;
+      textY = clamp(textY, row.sourceHeight * 0.24, row.sourceHeight * 0.68);
+    }
+
+    textNode.setAttribute("font-size", fontSize.toFixed(2));
+    textNode.setAttribute("y", textY.toFixed(2));
+    textNode.setAttribute("textLength", textLength.toFixed(2));
+    textNode.dataset.fittedFontSize = fontSize.toFixed(2);
+    textNode.dataset.fittedY = textY.toFixed(2);
+    textNode.dataset.fittedTextLength = textLength.toFixed(2);
+  });
+}
+
+function getLyricGlyphMonitorLines(layout: CeilingPosterLayout): string[] {
+  const activeBlock = document.querySelector<HTMLElement>("#activeLyricsBlock");
+  if (!activeBlock) return [];
+
+  const textNodes = Array.from(activeBlock.querySelectorAll<SVGTextElement>(".lyric-poster-row-text"));
+  if (!textNodes.length) return [];
+
+  const lines = ["", "Glyph/source fit monitor:"];
+  textNodes.forEach((textNode, nodeIndex) => {
+    const rowIndex = Number(textNode.dataset.lyricRowIndex || nodeIndex);
+    const row = layout.rows[rowIndex];
+    if (!row) return;
+
+    try {
+      const box = textNode.getBBox();
+      const overflowTop = Math.max(0, -box.y);
+      const overflowBottom = Math.max(0, box.y + box.height - row.sourceHeight);
+      const overflowLeft = Math.max(0, -box.x);
+      const overflowRight = Math.max(0, box.x + box.width - row.sourceWidth);
+      lines.push(
+        `Row ${rowIndex + 1} glyph bbox: x ${box.x.toFixed(1)}, y ${box.y.toFixed(1)}, w ${box.width.toFixed(1)}, h ${box.height.toFixed(1)} | source ${row.sourceWidth}x${row.sourceHeight}`,
+      );
+      lines.push(
+        `Row ${rowIndex + 1} fitted: font ${textNode.dataset.fittedFontSize || textNode.getAttribute("font-size")}, y ${textNode.dataset.fittedY || textNode.getAttribute("y")}, length ${textNode.dataset.fittedTextLength || textNode.getAttribute("textLength")}`,
+      );
+      lines.push(
+        `Row ${rowIndex + 1} source overflow: T ${overflowTop.toFixed(1)} | R ${overflowRight.toFixed(1)} | B ${overflowBottom.toFixed(1)} | L ${overflowLeft.toFixed(1)}`,
+      );
+    } catch {
+      lines.push(`Row ${rowIndex + 1} glyph bbox: unavailable`);
+    }
+  });
+
+  return lines;
+}
+
 function updateLyricGeometryMonitor(
   layout: CeilingPosterLayout | null,
   trapezoid: LyricPosterTrapezoid | null,
@@ -2089,6 +2184,7 @@ function updateLyricGeometryMonitor(
     lines.push(`Delta:  ${formatQuad(deltas)} | max ${maxDelta.toFixed(2)}`);
   });
 
+  lines.push(...getLyricGlyphMonitorLines(layout));
   monitor.textContent = lines.join("\n");
 }
 
