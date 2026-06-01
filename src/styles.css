@@ -8326,10 +8326,10 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 .mixer-lyrics-led {
-  left: var(--mixer-lyrics-led-x, 55%);
+  left: var(--mixer-lyrics-led-x, 57%);
   top: var(--mixer-lyrics-led-y, 63%);
-  width: var(--mixer-lyrics-led-size, 1.6%);
-  opacity: 0.44;
+  width: var(--mixer-lyrics-led-size, 2%);
+  opacity: var(--status-led-opacity);
 }
 
 .music-reactive-playing .mixer-status-led {
@@ -8377,7 +8377,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 .mixer-status-led-glow {
   width: 260%;
   height: 260%;
-  background: radial-gradient(circle, rgba(var(--status-led-rgb), calc(var(--status-led-glow) * 0.72)) 0%, rgba(var(--status-led-rgb), calc(var(--status-led-glow) * 0.26)) 28%, rgba(var(--status-led-rgb), 0) 68%);
+  background: radial-gradient(circle, rgba(var(--status-led-rgb), calc(var(--status-led-glow) * 0.82)) 0%, rgba(var(--status-led-rgb), calc(var(--status-led-glow) * 0.34)) 28%, rgba(var(--status-led-rgb), 0) 70%);
   filter: blur(3px);
   z-index: 1;
   mix-blend-mode: screen;
@@ -8442,30 +8442,30 @@ body.lyrics-marquee-unavailable .marquee::after {
 :root.lyrics-status-found .mixer-lyrics-led {
   --status-led-rgb: 28, 210, 94;
   --status-led-core-rgb: 142, 255, 176;
-  --status-led-opacity: 0.52;
-  --status-led-glow: 0.24;
+  --status-led-opacity: 0.66;
+  --status-led-glow: 0.36;
 }
 
 :root.lyrics-status-searching .mixer-lyrics-led {
   --status-led-rgb: 122, 186, 255;
   --status-led-core-rgb: 210, 236, 255;
-  --status-led-opacity: 0.52;
-  --status-led-glow: 0.26;
+  --status-led-opacity: 0.68;
+  --status-led-glow: 0.36;
   animation: mixerLyricsSearchingBlink 1450ms ease-in-out infinite;
 }
 
 :root.lyrics-status-missing .mixer-lyrics-led {
   --status-led-rgb: 211, 64, 36;
   --status-led-core-rgb: 255, 115, 82;
-  --status-led-opacity: 0.42;
-  --status-led-glow: 0.18;
+  --status-led-opacity: 0.54;
+  --status-led-glow: 0.30;
 }
 
 :root.lyrics-status-idle .mixer-lyrics-led {
   --status-led-rgb: 142, 98, 50;
   --status-led-core-rgb: 198, 142, 76;
-  --status-led-opacity: 0.26;
-  --status-led-glow: 0.10;
+  --status-led-opacity: 0.34;
+  --status-led-glow: 0.16;
 }
 
 @keyframes mixerTempoHardwarePulse {

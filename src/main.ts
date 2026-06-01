@@ -364,9 +364,9 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   mixerTempoLedX: 45,
   mixerTempoLedY: 63,
   mixerTempoLedSize: 2,
-  mixerLyricsLedX: 55,
+  mixerLyricsLedX: 57,
   mixerLyricsLedY: 63,
-  mixerLyricsLedSize: 1.6,
+  mixerLyricsLedSize: 2,
   speakerPulseUseTempo: true,
   speakerPulseUseExternalTempo: true,
   sceneFilter: "neon-purple",
@@ -521,6 +521,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
 
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v65a";
 const CLOCK_DISABLED_MIGRATION_KEY = "pocketdj-v65m-clock-disabled-default-applied";
+const MIXER_LED_TUNING_MIGRATION_KEY = "pocketdj-v65y-mixer-led-tuning-applied";
 let roomUtility = loadRoomUtilitySettings();
 
 function setUtilityLabel(id: string, value: number): void {
@@ -568,6 +569,25 @@ function applyClockDisabledDefaultMigration(): void {
     window.localStorage.setItem(CLOCK_DISABLED_MIGRATION_KEY, "true");
   } catch (error) {
     console.warn("Could not apply vinyl clock disabled migration", error);
+  }
+}
+
+function applyMixerLedTuningMigration(): void {
+  try {
+    if (window.localStorage.getItem(MIXER_LED_TUNING_MIGRATION_KEY)) return;
+    roomUtility = {
+      ...roomUtility,
+      mixerTempoLedX: 45,
+      mixerTempoLedY: 63,
+      mixerTempoLedSize: 2,
+      mixerLyricsLedX: 57,
+      mixerLyricsLedY: 63,
+      mixerLyricsLedSize: 2,
+    };
+    saveRoomUtilitySettings();
+    window.localStorage.setItem(MIXER_LED_TUNING_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply mixer LED tuning migration", error);
   }
 }
 
@@ -2384,6 +2404,7 @@ async function boot(): Promise<void> {
   bindStringLightControls();
   bindSessionWallAlbumControls();
   applyClockDisabledDefaultMigration();
+  applyMixerLedTuningMigration();
   applyRoomUtilitySettings();
 
   if (state.spotifyClientId) {
