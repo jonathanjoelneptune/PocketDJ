@@ -2572,13 +2572,62 @@ function buildCeilingPosterLayout(
     // Tall mode now uses the same active guide quad as the target for the text.
     // This prevents the old normal-window placement from pulling the lyrics down
     // while the tall guide is already in the expanded ceiling area.
-    const guideQuad: PosterQuad = directTallQuad ? directTallQuad : (tallModeActive ? tallTarget : legacyFit);
-    const baseActualQuad = correctQuadToGuideFrame(directTallQuad ? directTallQuad : (tallModeActive ? tallTarget : legacyFit), guideQuad);
-    const finalVisualOffsets = finalTallVisualOffsetsForRow(lyricMode, index, activeControls);
-    const actualQuad = addQuadOffsets(baseActualQuad, finalVisualOffsets);
+    const legacyGuideQuad: PosterQuad = legacyFit;
+    const directTallBaseQuad: PosterQuad = directTallQuad ? directTallQuad : tallTarget;
+    const tallGuideQuad: PosterQuad = directTallBaseQuad;
+
+    const baseVisualQuad = addQuadOffsets(
+      correctQuadToGuideFrame(legacyGuideQuad, legacyGuideQuad),
+      readFinalOffsetQuad("Base", lyricMode, index, activeControls),
+    );
+    const midVisualQuad = addQuadOffsets(
+      correctQuadToGuideFrame(directTallBaseQuad, tallGuideQuad),
+      readFinalOffsetQuad("Mid", lyricMode, index, activeControls),
+    );
+    const fullVisualQuad = addQuadOffsets(
+      correctQuadToGuideFrame(directTallBaseQuad, tallGuideQuad),
+      readFinalOffsetQuad("Final", lyricMode, index, activeControls),
+    );
+
+    // Visual keyframes are now absolute row targets, not offsets applied after
+    // the underlying row target has already switched to tall mode. This prevents
+    // the reveal-ratio 0.01 jump where the renderer switched from the 16:9 base
+    // box to the tall direct box before interpolation had meaningfully started.
+    // We hold the true 16:9 visual keyframe for a tiny reveal deadband, then
+    // interpolate from that exact starting position into the mid-tall keyframe.
+    const revealStart = 0.035;
+    const midpoint = 0.5;
+    let guideQuad: PosterQuad;
+    let actualQuad: PosterQuad;
+    let finalVisualOffsets: PosterQuad;
+    if (!tallModeActive) {
+      guideQuad = legacyGuideQuad;
+      actualQuad = baseVisualQuad;
+      finalVisualOffsets = readFinalOffsetQuad("Base", lyricMode, index, activeControls);
+    } else if (controls.tallRevealRatio <= revealStart) {
+      guideQuad = baseVisualQuad;
+      actualQuad = baseVisualQuad;
+      finalVisualOffsets = makeFinalTallOffsetQuad(0, 0, 0, 0, 0, 0, 0, 0);
+    } else if (controls.tallRevealRatio <= midpoint) {
+      const blend = (controls.tallRevealRatio - revealStart) / (midpoint - revealStart);
+      actualQuad = lerpOffsetQuad(baseVisualQuad, midVisualQuad, blend);
+      guideQuad = actualQuad;
+      finalVisualOffsets = actualQuad.map((point, cornerIndex) => ({
+        x: point.x - baseVisualQuad[cornerIndex].x,
+        y: point.y - baseVisualQuad[cornerIndex].y,
+      })) as PosterQuad;
+    } else {
+      const blend = (controls.tallRevealRatio - midpoint) / (1 - midpoint);
+      actualQuad = lerpOffsetQuad(midVisualQuad, fullVisualQuad, blend);
+      guideQuad = actualQuad;
+      finalVisualOffsets = actualQuad.map((point, cornerIndex) => ({
+        x: point.x - midVisualQuad[cornerIndex].x,
+        y: point.y - midVisualQuad[cornerIndex].y,
+      })) as PosterQuad;
+    }
     [topLeft, topRight, bottomRight, bottomLeft] = actualQuad;
 
-    const directTallScreenSpace = Boolean(directTallQuad && tallModeActive);
+    const directTallScreenSpace = tallModeActive;
     const destination = actualQuad.map((point) => ({
       x: point.x * scaleX,
       y: (point.y + (directTallScreenSpace ? 0 : ceilingRevealCoord)) * scaleY,
