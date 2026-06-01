@@ -8625,22 +8625,29 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 
-/* Tall-window lyric guide overlay */
+/* Tall-window lyric guide overlay
+   This is intentionally outside .lyrics-ceiling so normal lyric hidden/visible state
+   and the original guide opacity controls cannot hide the tall calibration guides. */
 .tall-lyric-guide-overlay {
   position: absolute;
   left: 0;
-  top: 0;
+  top: calc(var(--dynamic-ceiling-reveal-px) * -1);
   width: 100%;
   height: var(--lyric-ceiling-view-h);
-  z-index: 12;
+  z-index: 80;
   pointer-events: none;
   overflow: visible;
   opacity: 0;
   transition: opacity 160ms ease;
+  mix-blend-mode: normal;
 }
 
 .tall-lyric-guides-enabled .tall-lyric-guide-overlay {
   opacity: var(--lyric-poster-tall-guide-opacity, 0.6);
+}
+
+.tall-guide-readout {
+  color: rgba(255, 231, 174, 0.82);
 }
 
 .tall-guide-polygon {

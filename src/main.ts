@@ -4121,6 +4121,10 @@ function updateDynamicCeilingReveal(): void {
   root.style.setProperty("--dynamic-ceiling-reveal-coord", String(revealCoord));
   root.style.setProperty("--dynamic-ceiling-reveal-ratio", revealRatio.toFixed(4));
   root.classList.toggle("dynamic-ceiling-reveal-active", revealPx > 2);
+
+  // The tall-window guide overlay is independent from normal lyric visibility,
+  // so keep it synced whenever the reveal ratio changes on resize.
+  renderTallLyricGuideOverlay();
 }
 
 function loadStringLightSettings(): StringLightSettings {
@@ -4410,17 +4414,29 @@ function makeTallGuideBandPoints(
   ];
 }
 
+function updateTallLyricGuideReadout(enabled: boolean, revealRatio: number, message?: string): void {
+  const status = document.querySelector<HTMLElement>("#lyricPosterTallGuideStatus");
+  const ratio = document.querySelector<HTMLElement>("#lyricPosterTallGuideRevealRatio");
+  if (status) status.textContent = message || (enabled ? "visible" : "hidden");
+  if (ratio) ratio.textContent = revealRatio.toFixed(2);
+}
+
 function renderTallLyricGuideOverlay(): void {
   const overlay = document.querySelector<SVGSVGElement>("#tallLyricGuideOverlay");
   if (!overlay) return;
 
   const rootStyles = getComputedStyle(document.documentElement);
   const revealCoord = getDynamicCeilingRevealCoordFromRoot(rootStyles);
+  const revealRatioValue = Number.parseFloat(rootStyles.getPropertyValue("--dynamic-ceiling-reveal-ratio"));
+  const revealRatio = Number.isFinite(revealRatioValue) ? clamp(revealRatioValue, 0, 1) : 0;
   const viewHeight = 529 + revealCoord;
   overlay.setAttribute("viewBox", `0 0 ${ROOM_COORD_WIDTH} ${viewHeight}`);
   overlay.style.setProperty("--tall-guide-opacity", String(roomUtility.lyricPosterTallGuideOpacity));
 
-  if (!roomUtility.lyricPosterTallGuideEnabled || roomUtility.lyricPosterTallGuideOpacity <= 0) {
+  const enabled = roomUtility.lyricPosterTallGuideEnabled && roomUtility.lyricPosterTallGuideOpacity > 0;
+  updateTallLyricGuideReadout(enabled, revealRatio, enabled ? "visible" : "hidden");
+
+  if (!enabled) {
     overlay.innerHTML = "";
     return;
   }

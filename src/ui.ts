@@ -42,8 +42,8 @@ export function renderShell(state: AppState): void {
             <div class="lyrics-boundary-guide lyrics-boundary-guide-video"></div>
           </div>
           <div id="activeLyricsBlock" class="active-lyrics-block lyric-poster-line" aria-hidden="true"></div>
-          <svg id="tallLyricGuideOverlay" class="tall-lyric-guide-overlay" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true"></svg>
         </div>
+        <svg id="tallLyricGuideOverlay" class="tall-lyric-guide-overlay" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true"></svg>
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
           <img class="speaker-image" src="./assets/Speaker.png" alt="" draggable="false" />
@@ -499,6 +499,9 @@ export function renderShell(state: AppState): void {
                 <label>Tall guide opacity <span id="lyricPosterTallGuideOpacityValue">0.60</span>
                   <input id="lyricPosterTallGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.60" />
                 </label>
+                <div class="utility-readout tall-guide-readout">
+                  Tall guide status: <span id="lyricPosterTallGuideStatus">hidden</span> | Reveal ratio: <span id="lyricPosterTallGuideRevealRatio">0.00</span>
+                </div>
                               <details class="lyric-tall-calibration-group">
                 <summary>Main ceiling boundary target</summary>
                 <div class="lyric-utility-stack lyric-tall-grid">
