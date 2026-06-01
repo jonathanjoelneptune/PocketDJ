@@ -395,6 +395,30 @@ type RoomUtilitySettings = {
   lyricPosterTallTwoRowBottomTextBottomLeftY: number;
   lyricPosterTallTwoRowBottomTextBottomRightX: number;
   lyricPosterTallTwoRowBottomTextBottomRightY: number;
+  lyricPosterTallDirectOneRowTLX: number;
+  lyricPosterTallDirectOneRowTLY: number;
+  lyricPosterTallDirectOneRowTRX: number;
+  lyricPosterTallDirectOneRowTRY: number;
+  lyricPosterTallDirectOneRowBRX: number;
+  lyricPosterTallDirectOneRowBRY: number;
+  lyricPosterTallDirectOneRowBLX: number;
+  lyricPosterTallDirectOneRowBLY: number;
+  lyricPosterTallDirectTwoTopTLX: number;
+  lyricPosterTallDirectTwoTopTLY: number;
+  lyricPosterTallDirectTwoTopTRX: number;
+  lyricPosterTallDirectTwoTopTRY: number;
+  lyricPosterTallDirectTwoTopBRX: number;
+  lyricPosterTallDirectTwoTopBRY: number;
+  lyricPosterTallDirectTwoTopBLX: number;
+  lyricPosterTallDirectTwoTopBLY: number;
+  lyricPosterTallDirectTwoBottomTLX: number;
+  lyricPosterTallDirectTwoBottomTLY: number;
+  lyricPosterTallDirectTwoBottomTRX: number;
+  lyricPosterTallDirectTwoBottomTRY: number;
+  lyricPosterTallDirectTwoBottomBRX: number;
+  lyricPosterTallDirectTwoBottomBRY: number;
+  lyricPosterTallDirectTwoBottomBLX: number;
+  lyricPosterTallDirectTwoBottomBLY: number;
   lyricPosterMaxRows: "auto" | "1" | "2" | "3";
   lyricPosterRowBreakpoint: number;
   lyricPosterTransition: "none" | "push-slide" | "fade-slide" | "shadow-slide" | "ceiling-stamp" | "soft-dissolve" | "ghost-drift" | "back-push";
@@ -615,6 +639,30 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTallTwoRowBottomTextBottomLeftY: -11,
   lyricPosterTallTwoRowBottomTextBottomRightX: -132,
   lyricPosterTallTwoRowBottomTextBottomRightY: -11,
+  lyricPosterTallDirectOneRowTLX: -44,
+  lyricPosterTallDirectOneRowTLY: -24,
+  lyricPosterTallDirectOneRowTRX: 1827,
+  lyricPosterTallDirectOneRowTRY: -24,
+  lyricPosterTallDirectOneRowBRX: 1342,
+  lyricPosterTallDirectOneRowBRY: 186,
+  lyricPosterTallDirectOneRowBLX: 460,
+  lyricPosterTallDirectOneRowBLY: 189,
+  lyricPosterTallDirectTwoTopTLX: 83,
+  lyricPosterTallDirectTwoTopTLY: -81,
+  lyricPosterTallDirectTwoTopTRX: 1676,
+  lyricPosterTallDirectTwoTopTRY: -83,
+  lyricPosterTallDirectTwoTopBRX: 1419,
+  lyricPosterTallDirectTwoTopBRY: 78,
+  lyricPosterTallDirectTwoTopBLX: 362,
+  lyricPosterTallDirectTwoTopBLY: 84,
+  lyricPosterTallDirectTwoBottomTLX: 372,
+  lyricPosterTallDirectTwoBottomTLY: 95,
+  lyricPosterTallDirectTwoBottomTRX: 1409,
+  lyricPosterTallDirectTwoBottomTRY: 95,
+  lyricPosterTallDirectTwoBottomBRX: 1200,
+  lyricPosterTallDirectTwoBottomBRY: 180,
+  lyricPosterTallDirectTwoBottomBLX: 499,
+  lyricPosterTallDirectTwoBottomBLY: 180,
   lyricPosterMaxRows: "auto",
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
@@ -4595,6 +4643,31 @@ function updateTallLyricGuideReadout(enabled: boolean, revealRatio: number, mess
   if (ratio) ratio.textContent = revealRatio.toFixed(2);
 }
 
+function directTallGuidePoints(prefix: "one" | "twoTop" | "twoBottom", revealCoord: number): Array<[number, number]> {
+  if (prefix === "one") {
+    return [
+      [roomUtility.lyricPosterTallDirectOneRowTLX, tallGuideY(roomUtility.lyricPosterTallDirectOneRowTLY, revealCoord)],
+      [roomUtility.lyricPosterTallDirectOneRowTRX, tallGuideY(roomUtility.lyricPosterTallDirectOneRowTRY, revealCoord)],
+      [roomUtility.lyricPosterTallDirectOneRowBRX, tallGuideY(roomUtility.lyricPosterTallDirectOneRowBRY, revealCoord)],
+      [roomUtility.lyricPosterTallDirectOneRowBLX, tallGuideY(roomUtility.lyricPosterTallDirectOneRowBLY, revealCoord)],
+    ];
+  }
+  if (prefix === "twoTop") {
+    return [
+      [roomUtility.lyricPosterTallDirectTwoTopTLX, tallGuideY(roomUtility.lyricPosterTallDirectTwoTopTLY, revealCoord)],
+      [roomUtility.lyricPosterTallDirectTwoTopTRX, tallGuideY(roomUtility.lyricPosterTallDirectTwoTopTRY, revealCoord)],
+      [roomUtility.lyricPosterTallDirectTwoTopBRX, tallGuideY(roomUtility.lyricPosterTallDirectTwoTopBRY, revealCoord)],
+      [roomUtility.lyricPosterTallDirectTwoTopBLX, tallGuideY(roomUtility.lyricPosterTallDirectTwoTopBLY, revealCoord)],
+    ];
+  }
+  return [
+    [roomUtility.lyricPosterTallDirectTwoBottomTLX, tallGuideY(roomUtility.lyricPosterTallDirectTwoBottomTLY, revealCoord)],
+    [roomUtility.lyricPosterTallDirectTwoBottomTRX, tallGuideY(roomUtility.lyricPosterTallDirectTwoBottomTRY, revealCoord)],
+    [roomUtility.lyricPosterTallDirectTwoBottomBRX, tallGuideY(roomUtility.lyricPosterTallDirectTwoBottomBRY, revealCoord)],
+    [roomUtility.lyricPosterTallDirectTwoBottomBLX, tallGuideY(roomUtility.lyricPosterTallDirectTwoBottomBLY, revealCoord)],
+  ];
+}
+
 function renderTallLyricGuideOverlay(): void {
   const overlay = document.querySelector<SVGSVGElement>("#tallLyricGuideOverlay");
   if (!overlay) return;
@@ -4673,17 +4746,21 @@ function renderTallLyricGuideOverlay(): void {
     revealCoord,
   );
 
+  const directOneRowPoints = directTallGuidePoints("one", revealCoord);
+  const directTwoTopPoints = directTallGuidePoints("twoTop", revealCoord);
+  const directTwoBottomPoints = directTallGuidePoints("twoBottom", revealCoord);
+
   overlay.innerHTML = `
     <polygon class="tall-guide-polygon tall-guide-main" points="${guidePointString(mainPoints)}" />
     <polygon class="tall-guide-polygon tall-guide-short" points="${guidePointString(shortPoints)}" />
-    <polygon class="tall-guide-polygon tall-guide-one" points="${guidePointString(oneRowPoints)}" />
-    <polygon class="tall-guide-polygon tall-guide-two-top" points="${guidePointString(twoTopPoints)}" />
-    <polygon class="tall-guide-polygon tall-guide-two-bottom" points="${guidePointString(twoBottomPoints)}" />
+    <polygon class="tall-guide-polygon tall-guide-one" points="${guidePointString(directOneRowPoints)}" />
+    <polygon class="tall-guide-polygon tall-guide-two-top" points="${guidePointString(directTwoTopPoints)}" />
+    <polygon class="tall-guide-polygon tall-guide-two-bottom" points="${guidePointString(directTwoBottomPoints)}" />
     <text class="tall-guide-label tall-guide-main-label" x="${mainPoints[0][0] + 8}" y="${mainPoints[0][1] + 18}">MAIN</text>
     <text class="tall-guide-label tall-guide-short-label" x="${shortPoints[0][0] + 8}" y="${shortPoints[0][1] + 18}">SHORT</text>
-    <text class="tall-guide-label tall-guide-one-label" x="${oneRowPoints[0][0] + 8}" y="${oneRowPoints[0][1] + 18}">1 ROW</text>
-    <text class="tall-guide-label tall-guide-two-top-label" x="${twoTopPoints[0][0] + 8}" y="${twoTopPoints[0][1] + 18}">2 TOP</text>
-    <text class="tall-guide-label tall-guide-two-bottom-label" x="${twoBottomPoints[0][0] + 8}" y="${twoBottomPoints[0][1] + 18}">2 BOT</text>
+    <text class="tall-guide-label tall-guide-one-label" x="${directOneRowPoints[0][0] + 8}" y="${directOneRowPoints[0][1] + 18}">1 ROW</text>
+    <text class="tall-guide-label tall-guide-two-top-label" x="${directTwoTopPoints[0][0] + 8}" y="${directTwoTopPoints[0][1] + 18}">2 TOP</text>
+    <text class="tall-guide-label tall-guide-two-bottom-label" x="${directTwoBottomPoints[0][0] + 8}" y="${directTwoBottomPoints[0][1] + 18}">2 BOT</text>
   `;
 }
 
@@ -5231,6 +5308,30 @@ function bindRoomUtilityControls(): void {
     ["lyricPosterTallTwoRowBottomTextBottomLeftY", "lyricPosterTallTwoRowBottomTextBottomLeftYValue"],
     ["lyricPosterTallTwoRowBottomTextBottomRightX", "lyricPosterTallTwoRowBottomTextBottomRightXValue"],
     ["lyricPosterTallTwoRowBottomTextBottomRightY", "lyricPosterTallTwoRowBottomTextBottomRightYValue"],
+    ["lyricPosterTallDirectOneRowTLX", "lyricPosterTallDirectOneRowTLXValue"],
+    ["lyricPosterTallDirectOneRowTLY", "lyricPosterTallDirectOneRowTLYValue"],
+    ["lyricPosterTallDirectOneRowTRX", "lyricPosterTallDirectOneRowTRXValue"],
+    ["lyricPosterTallDirectOneRowTRY", "lyricPosterTallDirectOneRowTRYValue"],
+    ["lyricPosterTallDirectOneRowBRX", "lyricPosterTallDirectOneRowBRXValue"],
+    ["lyricPosterTallDirectOneRowBRY", "lyricPosterTallDirectOneRowBRYValue"],
+    ["lyricPosterTallDirectOneRowBLX", "lyricPosterTallDirectOneRowBLXValue"],
+    ["lyricPosterTallDirectOneRowBLY", "lyricPosterTallDirectOneRowBLYValue"],
+    ["lyricPosterTallDirectTwoTopTLX", "lyricPosterTallDirectTwoTopTLXValue"],
+    ["lyricPosterTallDirectTwoTopTLY", "lyricPosterTallDirectTwoTopTLYValue"],
+    ["lyricPosterTallDirectTwoTopTRX", "lyricPosterTallDirectTwoTopTRXValue"],
+    ["lyricPosterTallDirectTwoTopTRY", "lyricPosterTallDirectTwoTopTRYValue"],
+    ["lyricPosterTallDirectTwoTopBRX", "lyricPosterTallDirectTwoTopBRXValue"],
+    ["lyricPosterTallDirectTwoTopBRY", "lyricPosterTallDirectTwoTopBRYValue"],
+    ["lyricPosterTallDirectTwoTopBLX", "lyricPosterTallDirectTwoTopBLXValue"],
+    ["lyricPosterTallDirectTwoTopBLY", "lyricPosterTallDirectTwoTopBLYValue"],
+    ["lyricPosterTallDirectTwoBottomTLX", "lyricPosterTallDirectTwoBottomTLXValue"],
+    ["lyricPosterTallDirectTwoBottomTLY", "lyricPosterTallDirectTwoBottomTLYValue"],
+    ["lyricPosterTallDirectTwoBottomTRX", "lyricPosterTallDirectTwoBottomTRXValue"],
+    ["lyricPosterTallDirectTwoBottomTRY", "lyricPosterTallDirectTwoBottomTRYValue"],
+    ["lyricPosterTallDirectTwoBottomBRX", "lyricPosterTallDirectTwoBottomBRXValue"],
+    ["lyricPosterTallDirectTwoBottomBRY", "lyricPosterTallDirectTwoBottomBRYValue"],
+    ["lyricPosterTallDirectTwoBottomBLX", "lyricPosterTallDirectTwoBottomBLXValue"],
+    ["lyricPosterTallDirectTwoBottomBLY", "lyricPosterTallDirectTwoBottomBLYValue"],
   ] as const;
 
   controls.forEach(([inputId, labelId]) => {
@@ -5512,6 +5613,30 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-bottom-left-y", `${roomUtility.lyricPosterTallTwoRowBottomTextBottomLeftY}px`);
   root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-bottom-right-x", `${roomUtility.lyricPosterTallTwoRowBottomTextBottomRightX}px`);
   root.style.setProperty("--lyric-poster-tall-two-row-bottom-text-bottom-right-y", `${roomUtility.lyricPosterTallTwoRowBottomTextBottomRightY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-one-row-tl-x", `${roomUtility.lyricPosterTallDirectOneRowTLX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-one-row-tl-y", `${roomUtility.lyricPosterTallDirectOneRowTLY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-one-row-tr-x", `${roomUtility.lyricPosterTallDirectOneRowTRX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-one-row-tr-y", `${roomUtility.lyricPosterTallDirectOneRowTRY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-one-row-br-x", `${roomUtility.lyricPosterTallDirectOneRowBRX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-one-row-br-y", `${roomUtility.lyricPosterTallDirectOneRowBRY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-one-row-bl-x", `${roomUtility.lyricPosterTallDirectOneRowBLX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-one-row-bl-y", `${roomUtility.lyricPosterTallDirectOneRowBLY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-top-tl-x", `${roomUtility.lyricPosterTallDirectTwoTopTLX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-top-tl-y", `${roomUtility.lyricPosterTallDirectTwoTopTLY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-top-tr-x", `${roomUtility.lyricPosterTallDirectTwoTopTRX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-top-tr-y", `${roomUtility.lyricPosterTallDirectTwoTopTRY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-top-br-x", `${roomUtility.lyricPosterTallDirectTwoTopBRX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-top-br-y", `${roomUtility.lyricPosterTallDirectTwoTopBRY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-top-bl-x", `${roomUtility.lyricPosterTallDirectTwoTopBLX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-top-bl-y", `${roomUtility.lyricPosterTallDirectTwoTopBLY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-bottom-tl-x", `${roomUtility.lyricPosterTallDirectTwoBottomTLX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-bottom-tl-y", `${roomUtility.lyricPosterTallDirectTwoBottomTLY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-bottom-tr-x", `${roomUtility.lyricPosterTallDirectTwoBottomTRX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-bottom-tr-y", `${roomUtility.lyricPosterTallDirectTwoBottomTRY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-bottom-br-x", `${roomUtility.lyricPosterTallDirectTwoBottomBRX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-bottom-br-y", `${roomUtility.lyricPosterTallDirectTwoBottomBRY}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-bottom-bl-x", `${roomUtility.lyricPosterTallDirectTwoBottomBLX}px`);
+  root.style.setProperty("--lyric-poster-tall-direct-two-bottom-bl-y", `${roomUtility.lyricPosterTallDirectTwoBottomBLY}px`);
   root.style.setProperty("--lyric-poster-stroke", `${roomUtility.lyricPosterStroke}px`);
   root.style.setProperty("--lyric-poster-stroke-color", roomUtility.lyricPosterStrokeColor);
   root.style.setProperty("--lyric-poster-fill-color", roomUtility.lyricPosterFillColor);
