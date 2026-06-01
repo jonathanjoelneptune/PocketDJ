@@ -419,6 +419,38 @@ type RoomUtilitySettings = {
   lyricPosterTallDirectTwoBottomBRY: number;
   lyricPosterTallDirectTwoBottomBLX: number;
   lyricPosterTallDirectTwoBottomBLY: number;
+  lyricPosterTallMidShortTLX: number;
+  lyricPosterTallMidShortTLY: number;
+  lyricPosterTallMidShortTRX: number;
+  lyricPosterTallMidShortTRY: number;
+  lyricPosterTallMidShortBRX: number;
+  lyricPosterTallMidShortBRY: number;
+  lyricPosterTallMidShortBLX: number;
+  lyricPosterTallMidShortBLY: number;
+  lyricPosterTallMidOneRowTLX: number;
+  lyricPosterTallMidOneRowTLY: number;
+  lyricPosterTallMidOneRowTRX: number;
+  lyricPosterTallMidOneRowTRY: number;
+  lyricPosterTallMidOneRowBRX: number;
+  lyricPosterTallMidOneRowBRY: number;
+  lyricPosterTallMidOneRowBLX: number;
+  lyricPosterTallMidOneRowBLY: number;
+  lyricPosterTallMidTwoTopTLX: number;
+  lyricPosterTallMidTwoTopTLY: number;
+  lyricPosterTallMidTwoTopTRX: number;
+  lyricPosterTallMidTwoTopTRY: number;
+  lyricPosterTallMidTwoTopBRX: number;
+  lyricPosterTallMidTwoTopBRY: number;
+  lyricPosterTallMidTwoTopBLX: number;
+  lyricPosterTallMidTwoTopBLY: number;
+  lyricPosterTallMidTwoBottomTLX: number;
+  lyricPosterTallMidTwoBottomTLY: number;
+  lyricPosterTallMidTwoBottomTRX: number;
+  lyricPosterTallMidTwoBottomTRY: number;
+  lyricPosterTallMidTwoBottomBRX: number;
+  lyricPosterTallMidTwoBottomBRY: number;
+  lyricPosterTallMidTwoBottomBLX: number;
+  lyricPosterTallMidTwoBottomBLY: number;
   lyricPosterTallFinalShortTLX: number;
   lyricPosterTallFinalShortTLY: number;
   lyricPosterTallFinalShortTRX: number;
@@ -695,38 +727,70 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTallDirectTwoBottomBRY: 322,
   lyricPosterTallDirectTwoBottomBLX: 499,
   lyricPosterTallDirectTwoBottomBLY: 322,
-  lyricPosterTallFinalShortTLX: 0,
-  lyricPosterTallFinalShortTLY: 0,
+  lyricPosterTallMidShortTLX: -144,
+  lyricPosterTallMidShortTLY: -315,
+  lyricPosterTallMidShortTRX: 0,
+  lyricPosterTallMidShortTRY: -332,
+  lyricPosterTallMidShortBRX: -29,
+  lyricPosterTallMidShortBRY: 12,
+  lyricPosterTallMidShortBLX: 0,
+  lyricPosterTallMidShortBLY: 12,
+  lyricPosterTallMidOneRowTLX: -495,
+  lyricPosterTallMidOneRowTLY: -695,
+  lyricPosterTallMidOneRowTRX: 490,
+  lyricPosterTallMidOneRowTRY: -695,
+  lyricPosterTallMidOneRowBRX: -42,
+  lyricPosterTallMidOneRowBRY: 36,
+  lyricPosterTallMidOneRowBLX: 44,
+  lyricPosterTallMidOneRowBLY: 36,
+  lyricPosterTallMidTwoTopTLX: -180,
+  lyricPosterTallMidTwoTopTLY: -238,
+  lyricPosterTallMidTwoTopTRX: 180,
+  lyricPosterTallMidTwoTopTRY: -238,
+  lyricPosterTallMidTwoTopBRX: -8,
+  lyricPosterTallMidTwoTopBRY: 0,
+  lyricPosterTallMidTwoTopBLX: 0,
+  lyricPosterTallMidTwoTopBLY: 0,
+  lyricPosterTallMidTwoBottomTLX: -184,
+  lyricPosterTallMidTwoBottomTLY: -172,
+  lyricPosterTallMidTwoBottomTRX: 146,
+  lyricPosterTallMidTwoBottomTRY: -172,
+  lyricPosterTallMidTwoBottomBRX: 55,
+  lyricPosterTallMidTwoBottomBRY: 24,
+  lyricPosterTallMidTwoBottomBLX: 0,
+  lyricPosterTallMidTwoBottomBLY: 24,
+  lyricPosterTallFinalShortTLX: -287,
+  lyricPosterTallFinalShortTLY: -630,
   lyricPosterTallFinalShortTRX: 0,
-  lyricPosterTallFinalShortTRY: 0,
-  lyricPosterTallFinalShortBRX: 0,
-  lyricPosterTallFinalShortBRY: 0,
+  lyricPosterTallFinalShortTRY: -663,
+  lyricPosterTallFinalShortBRX: -58,
+  lyricPosterTallFinalShortBRY: 23,
   lyricPosterTallFinalShortBLX: 0,
-  lyricPosterTallFinalShortBLY: 0,
-  lyricPosterTallFinalOneRowTLX: 0,
-  lyricPosterTallFinalOneRowTLY: 0,
-  lyricPosterTallFinalOneRowTRX: 0,
-  lyricPosterTallFinalOneRowTRY: 0,
-  lyricPosterTallFinalOneRowBRX: 0,
-  lyricPosterTallFinalOneRowBRY: 0,
-  lyricPosterTallFinalOneRowBLX: 0,
-  lyricPosterTallFinalOneRowBLY: 0,
-  lyricPosterTallFinalTwoTopTLX: 0,
-  lyricPosterTallFinalTwoTopTLY: 0,
-  lyricPosterTallFinalTwoTopTRX: 0,
-  lyricPosterTallFinalTwoTopTRY: 0,
-  lyricPosterTallFinalTwoTopBRX: 0,
+  lyricPosterTallFinalShortBLY: 23,
+  lyricPosterTallFinalOneRowTLX: -990,
+  lyricPosterTallFinalOneRowTLY: -1390,
+  lyricPosterTallFinalOneRowTRX: 980,
+  lyricPosterTallFinalOneRowTRY: -1390,
+  lyricPosterTallFinalOneRowBRX: -83,
+  lyricPosterTallFinalOneRowBRY: 73,
+  lyricPosterTallFinalOneRowBLX: 89,
+  lyricPosterTallFinalOneRowBLY: 73,
+  lyricPosterTallFinalTwoTopTLX: -361,
+  lyricPosterTallFinalTwoTopTLY: -475,
+  lyricPosterTallFinalTwoTopTRX: 359,
+  lyricPosterTallFinalTwoTopTRY: -475,
+  lyricPosterTallFinalTwoTopBRX: -17,
   lyricPosterTallFinalTwoTopBRY: 0,
   lyricPosterTallFinalTwoTopBLX: 0,
   lyricPosterTallFinalTwoTopBLY: 0,
-  lyricPosterTallFinalTwoBottomTLX: 0,
-  lyricPosterTallFinalTwoBottomTLY: 0,
-  lyricPosterTallFinalTwoBottomTRX: 0,
-  lyricPosterTallFinalTwoBottomTRY: 0,
-  lyricPosterTallFinalTwoBottomBRX: 0,
-  lyricPosterTallFinalTwoBottomBRY: 0,
+  lyricPosterTallFinalTwoBottomTLX: -369,
+  lyricPosterTallFinalTwoBottomTLY: -344,
+  lyricPosterTallFinalTwoBottomTRX: 293,
+  lyricPosterTallFinalTwoBottomTRY: -344,
+  lyricPosterTallFinalTwoBottomBRX: 110,
+  lyricPosterTallFinalTwoBottomBRY: 48,
   lyricPosterTallFinalTwoBottomBLX: 0,
-  lyricPosterTallFinalTwoBottomBLY: 0,
+  lyricPosterTallFinalTwoBottomBLY: 48,
   lyricPosterMaxRows: "auto",
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
@@ -734,7 +798,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v65a";
 const CLOCK_DISABLED_MIGRATION_KEY = "pocketdj-v65m-clock-disabled-default-applied";
 const MIXER_LED_TUNING_MIGRATION_KEY = "pocketdj-v65y-mixer-led-tuning-applied";
-const TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-direct-screen-lyric-targets-2026-06-01";
+const TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-tall-lyric-visual-keyframes-2026-06-01";
 let roomUtility = loadRoomUtilitySettings();
 
 function setUtilityLabel(id: string, value: number): void {
@@ -858,7 +922,71 @@ function applyTallLyricCalibrationMigration(): void {
       lyricPosterTallTwoRowBottomTextBottomLeftY: -11,
       lyricPosterTallTwoRowBottomTextBottomRightX: -132,
       lyricPosterTallTwoRowBottomTextBottomRightY: -11,
-    };
+
+  lyricPosterTallMidShortTLX: -144,
+  lyricPosterTallMidShortTLY: -315,
+  lyricPosterTallMidShortTRX: 0,
+  lyricPosterTallMidShortTRY: -332,
+  lyricPosterTallMidShortBRX: -29,
+  lyricPosterTallMidShortBRY: 12,
+  lyricPosterTallMidShortBLX: 0,
+  lyricPosterTallMidShortBLY: 12,
+  lyricPosterTallMidOneRowTLX: -495,
+  lyricPosterTallMidOneRowTLY: -695,
+  lyricPosterTallMidOneRowTRX: 490,
+  lyricPosterTallMidOneRowTRY: -695,
+  lyricPosterTallMidOneRowBRX: -42,
+  lyricPosterTallMidOneRowBRY: 36,
+  lyricPosterTallMidOneRowBLX: 44,
+  lyricPosterTallMidOneRowBLY: 36,
+  lyricPosterTallMidTwoTopTLX: -180,
+  lyricPosterTallMidTwoTopTLY: -238,
+  lyricPosterTallMidTwoTopTRX: 180,
+  lyricPosterTallMidTwoTopTRY: -238,
+  lyricPosterTallMidTwoTopBRX: -8,
+  lyricPosterTallMidTwoTopBRY: 0,
+  lyricPosterTallMidTwoTopBLX: 0,
+  lyricPosterTallMidTwoTopBLY: 0,
+  lyricPosterTallMidTwoBottomTLX: -184,
+  lyricPosterTallMidTwoBottomTLY: -172,
+  lyricPosterTallMidTwoBottomTRX: 146,
+  lyricPosterTallMidTwoBottomTRY: -172,
+  lyricPosterTallMidTwoBottomBRX: 55,
+  lyricPosterTallMidTwoBottomBRY: 24,
+  lyricPosterTallMidTwoBottomBLX: 0,
+  lyricPosterTallMidTwoBottomBLY: 24,
+  lyricPosterTallFinalShortTLX: -287,
+  lyricPosterTallFinalShortTLY: -630,
+  lyricPosterTallFinalShortTRX: 0,
+  lyricPosterTallFinalShortTRY: -663,
+  lyricPosterTallFinalShortBRX: -58,
+  lyricPosterTallFinalShortBRY: 23,
+  lyricPosterTallFinalShortBLX: 0,
+  lyricPosterTallFinalShortBLY: 23,
+  lyricPosterTallFinalOneRowTLX: -990,
+  lyricPosterTallFinalOneRowTLY: -1390,
+  lyricPosterTallFinalOneRowTRX: 980,
+  lyricPosterTallFinalOneRowTRY: -1390,
+  lyricPosterTallFinalOneRowBRX: -83,
+  lyricPosterTallFinalOneRowBRY: 73,
+  lyricPosterTallFinalOneRowBLX: 89,
+  lyricPosterTallFinalOneRowBLY: 73,
+  lyricPosterTallFinalTwoTopTLX: -361,
+  lyricPosterTallFinalTwoTopTLY: -475,
+  lyricPosterTallFinalTwoTopTRX: 359,
+  lyricPosterTallFinalTwoTopTRY: -475,
+  lyricPosterTallFinalTwoTopBRX: -17,
+  lyricPosterTallFinalTwoTopBRY: 0,
+  lyricPosterTallFinalTwoTopBLX: 0,
+  lyricPosterTallFinalTwoTopBLY: 0,
+  lyricPosterTallFinalTwoBottomTLX: -369,
+  lyricPosterTallFinalTwoBottomTLY: -344,
+  lyricPosterTallFinalTwoBottomTRX: 293,
+  lyricPosterTallFinalTwoBottomTRY: -344,
+  lyricPosterTallFinalTwoBottomBRX: 110,
+  lyricPosterTallFinalTwoBottomBRY: 48,
+  lyricPosterTallFinalTwoBottomBLX: 0,
+  lyricPosterTallFinalTwoBottomBLY: 48,    };
     saveRoomUtilitySettings();
     window.localStorage.setItem(TALL_LYRIC_CALIBRATION_MIGRATION_KEY, "true");
   } catch (error) {
@@ -5404,6 +5532,38 @@ function bindRoomUtilityControls(): void {
     ["lyricPosterTallDirectTwoBottomBRY", "lyricPosterTallDirectTwoBottomBRYValue"],
     ["lyricPosterTallDirectTwoBottomBLX", "lyricPosterTallDirectTwoBottomBLXValue"],
     ["lyricPosterTallDirectTwoBottomBLY", "lyricPosterTallDirectTwoBottomBLYValue"],
+    ["lyricPosterTallMidShortTLX", "lyricPosterTallMidShortTLXValue"],
+    ["lyricPosterTallMidShortTLY", "lyricPosterTallMidShortTLYValue"],
+    ["lyricPosterTallMidShortTRX", "lyricPosterTallMidShortTRXValue"],
+    ["lyricPosterTallMidShortTRY", "lyricPosterTallMidShortTRYValue"],
+    ["lyricPosterTallMidShortBRX", "lyricPosterTallMidShortBRXValue"],
+    ["lyricPosterTallMidShortBRY", "lyricPosterTallMidShortBRYValue"],
+    ["lyricPosterTallMidShortBLX", "lyricPosterTallMidShortBLXValue"],
+    ["lyricPosterTallMidShortBLY", "lyricPosterTallMidShortBLYValue"],
+    ["lyricPosterTallMidOneRowTLX", "lyricPosterTallMidOneRowTLXValue"],
+    ["lyricPosterTallMidOneRowTLY", "lyricPosterTallMidOneRowTLYValue"],
+    ["lyricPosterTallMidOneRowTRX", "lyricPosterTallMidOneRowTRXValue"],
+    ["lyricPosterTallMidOneRowTRY", "lyricPosterTallMidOneRowTRYValue"],
+    ["lyricPosterTallMidOneRowBRX", "lyricPosterTallMidOneRowBRXValue"],
+    ["lyricPosterTallMidOneRowBRY", "lyricPosterTallMidOneRowBRYValue"],
+    ["lyricPosterTallMidOneRowBLX", "lyricPosterTallMidOneRowBLXValue"],
+    ["lyricPosterTallMidOneRowBLY", "lyricPosterTallMidOneRowBLYValue"],
+    ["lyricPosterTallMidTwoTopTLX", "lyricPosterTallMidTwoTopTLXValue"],
+    ["lyricPosterTallMidTwoTopTLY", "lyricPosterTallMidTwoTopTLYValue"],
+    ["lyricPosterTallMidTwoTopTRX", "lyricPosterTallMidTwoTopTRXValue"],
+    ["lyricPosterTallMidTwoTopTRY", "lyricPosterTallMidTwoTopTRYValue"],
+    ["lyricPosterTallMidTwoTopBRX", "lyricPosterTallMidTwoTopBRXValue"],
+    ["lyricPosterTallMidTwoTopBRY", "lyricPosterTallMidTwoTopBRYValue"],
+    ["lyricPosterTallMidTwoTopBLX", "lyricPosterTallMidTwoTopBLXValue"],
+    ["lyricPosterTallMidTwoTopBLY", "lyricPosterTallMidTwoTopBLYValue"],
+    ["lyricPosterTallMidTwoBottomTLX", "lyricPosterTallMidTwoBottomTLXValue"],
+    ["lyricPosterTallMidTwoBottomTLY", "lyricPosterTallMidTwoBottomTLYValue"],
+    ["lyricPosterTallMidTwoBottomTRX", "lyricPosterTallMidTwoBottomTRXValue"],
+    ["lyricPosterTallMidTwoBottomTRY", "lyricPosterTallMidTwoBottomTRYValue"],
+    ["lyricPosterTallMidTwoBottomBRX", "lyricPosterTallMidTwoBottomBRXValue"],
+    ["lyricPosterTallMidTwoBottomBRY", "lyricPosterTallMidTwoBottomBRYValue"],
+    ["lyricPosterTallMidTwoBottomBLX", "lyricPosterTallMidTwoBottomBLXValue"],
+    ["lyricPosterTallMidTwoBottomBLY", "lyricPosterTallMidTwoBottomBLYValue"],
     ["lyricPosterTallFinalShortTLX", "lyricPosterTallFinalShortTLXValue"],
     ["lyricPosterTallFinalShortTLY", "lyricPosterTallFinalShortTLYValue"],
     ["lyricPosterTallFinalShortTRX", "lyricPosterTallFinalShortTRXValue"],
@@ -5741,6 +5901,38 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-tall-direct-two-bottom-br-y", `${roomUtility.lyricPosterTallDirectTwoBottomBRY}px`);
   root.style.setProperty("--lyric-poster-tall-direct-two-bottom-bl-x", `${roomUtility.lyricPosterTallDirectTwoBottomBLX}px`);
   root.style.setProperty("--lyric-poster-tall-direct-two-bottom-bl-y", `${roomUtility.lyricPosterTallDirectTwoBottomBLY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-short-tl-x", `${roomUtility.lyricPosterTallMidShortTLX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-short-tl-y", `${roomUtility.lyricPosterTallMidShortTLY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-short-tr-x", `${roomUtility.lyricPosterTallMidShortTRX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-short-tr-y", `${roomUtility.lyricPosterTallMidShortTRY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-short-br-x", `${roomUtility.lyricPosterTallMidShortBRX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-short-br-y", `${roomUtility.lyricPosterTallMidShortBRY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-short-bl-x", `${roomUtility.lyricPosterTallMidShortBLX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-short-bl-y", `${roomUtility.lyricPosterTallMidShortBLY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-one-row-tl-x", `${roomUtility.lyricPosterTallMidOneRowTLX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-one-row-tl-y", `${roomUtility.lyricPosterTallMidOneRowTLY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-one-row-tr-x", `${roomUtility.lyricPosterTallMidOneRowTRX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-one-row-tr-y", `${roomUtility.lyricPosterTallMidOneRowTRY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-one-row-br-x", `${roomUtility.lyricPosterTallMidOneRowBRX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-one-row-br-y", `${roomUtility.lyricPosterTallMidOneRowBRY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-one-row-bl-x", `${roomUtility.lyricPosterTallMidOneRowBLX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-one-row-bl-y", `${roomUtility.lyricPosterTallMidOneRowBLY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-top-tl-x", `${roomUtility.lyricPosterTallMidTwoTopTLX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-top-tl-y", `${roomUtility.lyricPosterTallMidTwoTopTLY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-top-tr-x", `${roomUtility.lyricPosterTallMidTwoTopTRX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-top-tr-y", `${roomUtility.lyricPosterTallMidTwoTopTRY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-top-br-x", `${roomUtility.lyricPosterTallMidTwoTopBRX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-top-br-y", `${roomUtility.lyricPosterTallMidTwoTopBRY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-top-bl-x", `${roomUtility.lyricPosterTallMidTwoTopBLX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-top-bl-y", `${roomUtility.lyricPosterTallMidTwoTopBLY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-bottom-tl-x", `${roomUtility.lyricPosterTallMidTwoBottomTLX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-bottom-tl-y", `${roomUtility.lyricPosterTallMidTwoBottomTLY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-bottom-tr-x", `${roomUtility.lyricPosterTallMidTwoBottomTRX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-bottom-tr-y", `${roomUtility.lyricPosterTallMidTwoBottomTRY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-bottom-br-x", `${roomUtility.lyricPosterTallMidTwoBottomBRX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-bottom-br-y", `${roomUtility.lyricPosterTallMidTwoBottomBRY}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-bottom-bl-x", `${roomUtility.lyricPosterTallMidTwoBottomBLX}px`);
+  root.style.setProperty("--lyric-poster-tall-mid-two-bottom-bl-y", `${roomUtility.lyricPosterTallMidTwoBottomBLY}px`);
   root.style.setProperty("--lyric-poster-tall-final-short-tl-x", `${roomUtility.lyricPosterTallFinalShortTLX}px`);
   root.style.setProperty("--lyric-poster-tall-final-short-tl-y", `${roomUtility.lyricPosterTallFinalShortTLY}px`);
   root.style.setProperty("--lyric-poster-tall-final-short-tr-x", `${roomUtility.lyricPosterTallFinalShortTRX}px`);

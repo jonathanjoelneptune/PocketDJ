@@ -525,7 +525,7 @@ export function renderShell(state: AppState): void {
                 </details>
                 <details class="lyric-tall-calibration-group lyric-geometry-monitor-group" open>
                   <summary>Lyric geometry monitor</summary>
-                  <p class="utility-help">Shows the active lyric type and compares the actual text projection corners against the guide corners. Deltas should be near 0 when the tall layout is behaving correctly.</p>
+                  <p class="utility-help">Shows the active lyric type and compares the actual text projection corners against the guide corners. Large applied-correction values are expected when the art-directed visual keyframes are active.</p>
                   <div class="lyric-monitor-actions">
                     <button id="lyricGeometryMonitorCopy" type="button">Copy monitor</button>
                     <span id="lyricGeometryMonitorCopyStatus" class="lyric-monitor-copy-status" aria-live="polite"></span>
@@ -557,9 +557,9 @@ export function renderShell(state: AppState): void {
               </label>
                 </div>
               </details>
-              <details class="lyric-tall-calibration-group" open>
-                <summary>Direct tall lyric row targets</summary>
-                <p class="utility-help">Clean tall-mode placement: these are final visible screen-space trapezoids inside the expanded ceiling overlay. Moving a corner moves only that row target, with no hidden reveal offset.</p>
+              <details class="lyric-tall-calibration-group">
+                <summary>Advanced/base row targets</summary>
+                <p class="utility-help">Advanced/debug row target boxes before the art-directed visual keyframe correction is applied. Day-to-day tuning should use Tall lyric visual placement keyframes below.</p>
                 <div class="lyric-utility-stack lyric-tall-grid">
                   <div class="lyric-direct-target-heading">1-row</div>
               <label>1-row TL X <span id="lyricPosterTallDirectOneRowTLXValue">0</span>
@@ -637,115 +637,225 @@ export function renderShell(state: AppState): void {
                 <input id="lyricPosterTallDirectTwoBottomBLY" type="range" min="0" max="700" step="1" value="0" />
               </label>
                 </div>
+              </details>              <details class="lyric-tall-calibration-group" open>
+                <summary>Tall lyric visual placement keyframes</summary>
+                <p class="utility-help">Art-direct the final rendered lyric rows after projection. Pocket DJ blends from normal 16:9 placement to the mid-tall keyframe, then from the mid-tall keyframe to the full-tall keyframe.</p>
+                <div class="utility-readout tall-guide-readout">Keyframe blend: 16:9 → mid-tall → full-tall. Tune the mid-tall values at a medium-height browser size, then send me those values to lock in.</div>
+                <details class="lyric-tall-calibration-group" open>
+                  <summary>Mid-tall visual keyframe</summary>
+                  <p class="utility-help">Halfway/taller-than-16:9 offsets. These control the interpolation path between the normal layout and the full-height layout.</p>
+                  <div class="lyric-utility-stack lyric-tall-grid">
+                  <div class="lyric-direct-target-heading">Short lyric mid-tall corner offsets</div>
+                  <label>Short lyric TL X offset <span id="lyricPosterTallMidShortTLXValue">-144</span>
+                    <input id="lyricPosterTallMidShortTLX" type="range" min="-2500" max="2500" step="1" value="-144" />
+                  </label>
+                  <label>Short lyric TL Y offset <span id="lyricPosterTallMidShortTLYValue">-315</span>
+                    <input id="lyricPosterTallMidShortTLY" type="range" min="-2500" max="2500" step="1" value="-315" />
+                  </label>
+                  <label>Short lyric TR X offset <span id="lyricPosterTallMidShortTRXValue">0</span>
+                    <input id="lyricPosterTallMidShortTRX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <label>Short lyric TR Y offset <span id="lyricPosterTallMidShortTRYValue">-332</span>
+                    <input id="lyricPosterTallMidShortTRY" type="range" min="-2500" max="2500" step="1" value="-332" />
+                  </label>
+                  <label>Short lyric BR X offset <span id="lyricPosterTallMidShortBRXValue">-29</span>
+                    <input id="lyricPosterTallMidShortBRX" type="range" min="-2500" max="2500" step="1" value="-29" />
+                  </label>
+                  <label>Short lyric BR Y offset <span id="lyricPosterTallMidShortBRYValue">12</span>
+                    <input id="lyricPosterTallMidShortBRY" type="range" min="-2500" max="2500" step="1" value="12" />
+                  </label>
+                  <label>Short lyric BL X offset <span id="lyricPosterTallMidShortBLXValue">0</span>
+                    <input id="lyricPosterTallMidShortBLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <label>Short lyric BL Y offset <span id="lyricPosterTallMidShortBLYValue">12</span>
+                    <input id="lyricPosterTallMidShortBLY" type="range" min="-2500" max="2500" step="1" value="12" />
+                  </label>
+                  <div class="lyric-direct-target-heading">1-row mid-tall corner offsets</div>
+                  <label>1-row TL X offset <span id="lyricPosterTallMidOneRowTLXValue">-495</span>
+                    <input id="lyricPosterTallMidOneRowTLX" type="range" min="-2500" max="2500" step="1" value="-495" />
+                  </label>
+                  <label>1-row TL Y offset <span id="lyricPosterTallMidOneRowTLYValue">-695</span>
+                    <input id="lyricPosterTallMidOneRowTLY" type="range" min="-2500" max="2500" step="1" value="-695" />
+                  </label>
+                  <label>1-row TR X offset <span id="lyricPosterTallMidOneRowTRXValue">490</span>
+                    <input id="lyricPosterTallMidOneRowTRX" type="range" min="-2500" max="2500" step="1" value="490" />
+                  </label>
+                  <label>1-row TR Y offset <span id="lyricPosterTallMidOneRowTRYValue">-695</span>
+                    <input id="lyricPosterTallMidOneRowTRY" type="range" min="-2500" max="2500" step="1" value="-695" />
+                  </label>
+                  <label>1-row BR X offset <span id="lyricPosterTallMidOneRowBRXValue">-42</span>
+                    <input id="lyricPosterTallMidOneRowBRX" type="range" min="-2500" max="2500" step="1" value="-42" />
+                  </label>
+                  <label>1-row BR Y offset <span id="lyricPosterTallMidOneRowBRYValue">36</span>
+                    <input id="lyricPosterTallMidOneRowBRY" type="range" min="-2500" max="2500" step="1" value="36" />
+                  </label>
+                  <label>1-row BL X offset <span id="lyricPosterTallMidOneRowBLXValue">44</span>
+                    <input id="lyricPosterTallMidOneRowBLX" type="range" min="-2500" max="2500" step="1" value="44" />
+                  </label>
+                  <label>1-row BL Y offset <span id="lyricPosterTallMidOneRowBLYValue">36</span>
+                    <input id="lyricPosterTallMidOneRowBLY" type="range" min="-2500" max="2500" step="1" value="36" />
+                  </label>
+                  <div class="lyric-direct-target-heading">2-row top mid-tall corner offsets</div>
+                  <label>2-row top TL X offset <span id="lyricPosterTallMidTwoTopTLXValue">-180</span>
+                    <input id="lyricPosterTallMidTwoTopTLX" type="range" min="-2500" max="2500" step="1" value="-180" />
+                  </label>
+                  <label>2-row top TL Y offset <span id="lyricPosterTallMidTwoTopTLYValue">-238</span>
+                    <input id="lyricPosterTallMidTwoTopTLY" type="range" min="-2500" max="2500" step="1" value="-238" />
+                  </label>
+                  <label>2-row top TR X offset <span id="lyricPosterTallMidTwoTopTRXValue">180</span>
+                    <input id="lyricPosterTallMidTwoTopTRX" type="range" min="-2500" max="2500" step="1" value="180" />
+                  </label>
+                  <label>2-row top TR Y offset <span id="lyricPosterTallMidTwoTopTRYValue">-238</span>
+                    <input id="lyricPosterTallMidTwoTopTRY" type="range" min="-2500" max="2500" step="1" value="-238" />
+                  </label>
+                  <label>2-row top BR X offset <span id="lyricPosterTallMidTwoTopBRXValue">-8</span>
+                    <input id="lyricPosterTallMidTwoTopBRX" type="range" min="-2500" max="2500" step="1" value="-8" />
+                  </label>
+                  <label>2-row top BR Y offset <span id="lyricPosterTallMidTwoTopBRYValue">0</span>
+                    <input id="lyricPosterTallMidTwoTopBRY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <label>2-row top BL X offset <span id="lyricPosterTallMidTwoTopBLXValue">0</span>
+                    <input id="lyricPosterTallMidTwoTopBLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <label>2-row top BL Y offset <span id="lyricPosterTallMidTwoTopBLYValue">0</span>
+                    <input id="lyricPosterTallMidTwoTopBLY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <div class="lyric-direct-target-heading">2-row bottom mid-tall corner offsets</div>
+                  <label>2-row bottom TL X offset <span id="lyricPosterTallMidTwoBottomTLXValue">-184</span>
+                    <input id="lyricPosterTallMidTwoBottomTLX" type="range" min="-2500" max="2500" step="1" value="-184" />
+                  </label>
+                  <label>2-row bottom TL Y offset <span id="lyricPosterTallMidTwoBottomTLYValue">-172</span>
+                    <input id="lyricPosterTallMidTwoBottomTLY" type="range" min="-2500" max="2500" step="1" value="-172" />
+                  </label>
+                  <label>2-row bottom TR X offset <span id="lyricPosterTallMidTwoBottomTRXValue">146</span>
+                    <input id="lyricPosterTallMidTwoBottomTRX" type="range" min="-2500" max="2500" step="1" value="146" />
+                  </label>
+                  <label>2-row bottom TR Y offset <span id="lyricPosterTallMidTwoBottomTRYValue">-172</span>
+                    <input id="lyricPosterTallMidTwoBottomTRY" type="range" min="-2500" max="2500" step="1" value="-172" />
+                  </label>
+                  <label>2-row bottom BR X offset <span id="lyricPosterTallMidTwoBottomBRXValue">55</span>
+                    <input id="lyricPosterTallMidTwoBottomBRX" type="range" min="-2500" max="2500" step="1" value="55" />
+                  </label>
+                  <label>2-row bottom BR Y offset <span id="lyricPosterTallMidTwoBottomBRYValue">24</span>
+                    <input id="lyricPosterTallMidTwoBottomBRY" type="range" min="-2500" max="2500" step="1" value="24" />
+                  </label>
+                  <label>2-row bottom BL X offset <span id="lyricPosterTallMidTwoBottomBLXValue">0</span>
+                    <input id="lyricPosterTallMidTwoBottomBLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <label>2-row bottom BL Y offset <span id="lyricPosterTallMidTwoBottomBLYValue">24</span>
+                    <input id="lyricPosterTallMidTwoBottomBLY" type="range" min="-2500" max="2500" step="1" value="24" />
+                  </label>
+                  </div>
+                </details>
+                <details class="lyric-tall-calibration-group" open>
+                  <summary>Full-tall visual keyframe</summary>
+                  <p class="utility-help">Your current full-height tuned offsets. These are locked in as the full-tall target and can still be adjusted here.</p>
+                  <div class="lyric-utility-stack lyric-tall-grid">
+                  <div class="lyric-direct-target-heading">Short lyric full-tall corner offsets</div>
+                  <label>Short lyric TL X offset <span id="lyricPosterTallFinalShortTLXValue">-287</span>
+                    <input id="lyricPosterTallFinalShortTLX" type="range" min="-2500" max="2500" step="1" value="-287" />
+                  </label>
+                  <label>Short lyric TL Y offset <span id="lyricPosterTallFinalShortTLYValue">-630</span>
+                    <input id="lyricPosterTallFinalShortTLY" type="range" min="-2500" max="2500" step="1" value="-630" />
+                  </label>
+                  <label>Short lyric TR X offset <span id="lyricPosterTallFinalShortTRXValue">0</span>
+                    <input id="lyricPosterTallFinalShortTRX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <label>Short lyric TR Y offset <span id="lyricPosterTallFinalShortTRYValue">-663</span>
+                    <input id="lyricPosterTallFinalShortTRY" type="range" min="-2500" max="2500" step="1" value="-663" />
+                  </label>
+                  <label>Short lyric BR X offset <span id="lyricPosterTallFinalShortBRXValue">-58</span>
+                    <input id="lyricPosterTallFinalShortBRX" type="range" min="-2500" max="2500" step="1" value="-58" />
+                  </label>
+                  <label>Short lyric BR Y offset <span id="lyricPosterTallFinalShortBRYValue">23</span>
+                    <input id="lyricPosterTallFinalShortBRY" type="range" min="-2500" max="2500" step="1" value="23" />
+                  </label>
+                  <label>Short lyric BL X offset <span id="lyricPosterTallFinalShortBLXValue">0</span>
+                    <input id="lyricPosterTallFinalShortBLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <label>Short lyric BL Y offset <span id="lyricPosterTallFinalShortBLYValue">23</span>
+                    <input id="lyricPosterTallFinalShortBLY" type="range" min="-2500" max="2500" step="1" value="23" />
+                  </label>
+                  <div class="lyric-direct-target-heading">1-row full-tall corner offsets</div>
+                  <label>1-row TL X offset <span id="lyricPosterTallFinalOneRowTLXValue">-990</span>
+                    <input id="lyricPosterTallFinalOneRowTLX" type="range" min="-2500" max="2500" step="1" value="-990" />
+                  </label>
+                  <label>1-row TL Y offset <span id="lyricPosterTallFinalOneRowTLYValue">-1390</span>
+                    <input id="lyricPosterTallFinalOneRowTLY" type="range" min="-2500" max="2500" step="1" value="-1390" />
+                  </label>
+                  <label>1-row TR X offset <span id="lyricPosterTallFinalOneRowTRXValue">980</span>
+                    <input id="lyricPosterTallFinalOneRowTRX" type="range" min="-2500" max="2500" step="1" value="980" />
+                  </label>
+                  <label>1-row TR Y offset <span id="lyricPosterTallFinalOneRowTRYValue">-1390</span>
+                    <input id="lyricPosterTallFinalOneRowTRY" type="range" min="-2500" max="2500" step="1" value="-1390" />
+                  </label>
+                  <label>1-row BR X offset <span id="lyricPosterTallFinalOneRowBRXValue">-83</span>
+                    <input id="lyricPosterTallFinalOneRowBRX" type="range" min="-2500" max="2500" step="1" value="-83" />
+                  </label>
+                  <label>1-row BR Y offset <span id="lyricPosterTallFinalOneRowBRYValue">73</span>
+                    <input id="lyricPosterTallFinalOneRowBRY" type="range" min="-2500" max="2500" step="1" value="73" />
+                  </label>
+                  <label>1-row BL X offset <span id="lyricPosterTallFinalOneRowBLXValue">89</span>
+                    <input id="lyricPosterTallFinalOneRowBLX" type="range" min="-2500" max="2500" step="1" value="89" />
+                  </label>
+                  <label>1-row BL Y offset <span id="lyricPosterTallFinalOneRowBLYValue">73</span>
+                    <input id="lyricPosterTallFinalOneRowBLY" type="range" min="-2500" max="2500" step="1" value="73" />
+                  </label>
+                  <div class="lyric-direct-target-heading">2-row top full-tall corner offsets</div>
+                  <label>2-row top TL X offset <span id="lyricPosterTallFinalTwoTopTLXValue">-361</span>
+                    <input id="lyricPosterTallFinalTwoTopTLX" type="range" min="-2500" max="2500" step="1" value="-361" />
+                  </label>
+                  <label>2-row top TL Y offset <span id="lyricPosterTallFinalTwoTopTLYValue">-475</span>
+                    <input id="lyricPosterTallFinalTwoTopTLY" type="range" min="-2500" max="2500" step="1" value="-475" />
+                  </label>
+                  <label>2-row top TR X offset <span id="lyricPosterTallFinalTwoTopTRXValue">359</span>
+                    <input id="lyricPosterTallFinalTwoTopTRX" type="range" min="-2500" max="2500" step="1" value="359" />
+                  </label>
+                  <label>2-row top TR Y offset <span id="lyricPosterTallFinalTwoTopTRYValue">-475</span>
+                    <input id="lyricPosterTallFinalTwoTopTRY" type="range" min="-2500" max="2500" step="1" value="-475" />
+                  </label>
+                  <label>2-row top BR X offset <span id="lyricPosterTallFinalTwoTopBRXValue">-17</span>
+                    <input id="lyricPosterTallFinalTwoTopBRX" type="range" min="-2500" max="2500" step="1" value="-17" />
+                  </label>
+                  <label>2-row top BR Y offset <span id="lyricPosterTallFinalTwoTopBRYValue">0</span>
+                    <input id="lyricPosterTallFinalTwoTopBRY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <label>2-row top BL X offset <span id="lyricPosterTallFinalTwoTopBLXValue">0</span>
+                    <input id="lyricPosterTallFinalTwoTopBLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <label>2-row top BL Y offset <span id="lyricPosterTallFinalTwoTopBLYValue">0</span>
+                    <input id="lyricPosterTallFinalTwoTopBLY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <div class="lyric-direct-target-heading">2-row bottom full-tall corner offsets</div>
+                  <label>2-row bottom TL X offset <span id="lyricPosterTallFinalTwoBottomTLXValue">-369</span>
+                    <input id="lyricPosterTallFinalTwoBottomTLX" type="range" min="-2500" max="2500" step="1" value="-369" />
+                  </label>
+                  <label>2-row bottom TL Y offset <span id="lyricPosterTallFinalTwoBottomTLYValue">-344</span>
+                    <input id="lyricPosterTallFinalTwoBottomTLY" type="range" min="-2500" max="2500" step="1" value="-344" />
+                  </label>
+                  <label>2-row bottom TR X offset <span id="lyricPosterTallFinalTwoBottomTRXValue">293</span>
+                    <input id="lyricPosterTallFinalTwoBottomTRX" type="range" min="-2500" max="2500" step="1" value="293" />
+                  </label>
+                  <label>2-row bottom TR Y offset <span id="lyricPosterTallFinalTwoBottomTRYValue">-344</span>
+                    <input id="lyricPosterTallFinalTwoBottomTRY" type="range" min="-2500" max="2500" step="1" value="-344" />
+                  </label>
+                  <label>2-row bottom BR X offset <span id="lyricPosterTallFinalTwoBottomBRXValue">110</span>
+                    <input id="lyricPosterTallFinalTwoBottomBRX" type="range" min="-2500" max="2500" step="1" value="110" />
+                  </label>
+                  <label>2-row bottom BR Y offset <span id="lyricPosterTallFinalTwoBottomBRYValue">48</span>
+                    <input id="lyricPosterTallFinalTwoBottomBRY" type="range" min="-2500" max="2500" step="1" value="48" />
+                  </label>
+                  <label>2-row bottom BL X offset <span id="lyricPosterTallFinalTwoBottomBLXValue">0</span>
+                    <input id="lyricPosterTallFinalTwoBottomBLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  </label>
+                  <label>2-row bottom BL Y offset <span id="lyricPosterTallFinalTwoBottomBLYValue">48</span>
+                    <input id="lyricPosterTallFinalTwoBottomBLY" type="range" min="-2500" max="2500" step="1" value="48" />
+                  </label>
+                  </div>
+                </details>
               </details>
-              <details class="lyric-tall-calibration-group" open>
-                <summary>Final tall lyric visual correction</summary>
-                <p class="utility-help">Art-direct the final rendered lyric row after the projection is created. These offsets move the visible row boxes/text without changing the main ceiling trapezoid or direct target guides.</p>
-                <div class="lyric-utility-stack lyric-tall-grid">
-                  <div class="lyric-direct-target-heading">Short lyric final corner offsets</div>
-              <label>Short lyric TL X offset <span id="lyricPosterTallFinalShortTLXValue">0</span>
-                <input id="lyricPosterTallFinalShortTLX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>Short lyric TL Y offset <span id="lyricPosterTallFinalShortTLYValue">0</span>
-                <input id="lyricPosterTallFinalShortTLY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>Short lyric TR X offset <span id="lyricPosterTallFinalShortTRXValue">0</span>
-                <input id="lyricPosterTallFinalShortTRX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>Short lyric TR Y offset <span id="lyricPosterTallFinalShortTRYValue">0</span>
-                <input id="lyricPosterTallFinalShortTRY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>Short lyric BR X offset <span id="lyricPosterTallFinalShortBRXValue">0</span>
-                <input id="lyricPosterTallFinalShortBRX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>Short lyric BR Y offset <span id="lyricPosterTallFinalShortBRYValue">0</span>
-                <input id="lyricPosterTallFinalShortBRY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>Short lyric BL X offset <span id="lyricPosterTallFinalShortBLXValue">0</span>
-                <input id="lyricPosterTallFinalShortBLX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>Short lyric BL Y offset <span id="lyricPosterTallFinalShortBLYValue">0</span>
-                <input id="lyricPosterTallFinalShortBLY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-                  <div class="lyric-direct-target-heading">1-row final corner offsets</div>
-              <label>1-row TL X offset <span id="lyricPosterTallFinalOneRowTLXValue">0</span>
-                <input id="lyricPosterTallFinalOneRowTLX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>1-row TL Y offset <span id="lyricPosterTallFinalOneRowTLYValue">0</span>
-                <input id="lyricPosterTallFinalOneRowTLY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>1-row TR X offset <span id="lyricPosterTallFinalOneRowTRXValue">0</span>
-                <input id="lyricPosterTallFinalOneRowTRX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>1-row TR Y offset <span id="lyricPosterTallFinalOneRowTRYValue">0</span>
-                <input id="lyricPosterTallFinalOneRowTRY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>1-row BR X offset <span id="lyricPosterTallFinalOneRowBRXValue">0</span>
-                <input id="lyricPosterTallFinalOneRowBRX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>1-row BR Y offset <span id="lyricPosterTallFinalOneRowBRYValue">0</span>
-                <input id="lyricPosterTallFinalOneRowBRY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>1-row BL X offset <span id="lyricPosterTallFinalOneRowBLXValue">0</span>
-                <input id="lyricPosterTallFinalOneRowBLX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>1-row BL Y offset <span id="lyricPosterTallFinalOneRowBLYValue">0</span>
-                <input id="lyricPosterTallFinalOneRowBLY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-                  <div class="lyric-direct-target-heading">2-row top final corner offsets</div>
-              <label>2-row top TL X offset <span id="lyricPosterTallFinalTwoTopTLXValue">0</span>
-                <input id="lyricPosterTallFinalTwoTopTLX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row top TL Y offset <span id="lyricPosterTallFinalTwoTopTLYValue">0</span>
-                <input id="lyricPosterTallFinalTwoTopTLY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row top TR X offset <span id="lyricPosterTallFinalTwoTopTRXValue">0</span>
-                <input id="lyricPosterTallFinalTwoTopTRX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row top TR Y offset <span id="lyricPosterTallFinalTwoTopTRYValue">0</span>
-                <input id="lyricPosterTallFinalTwoTopTRY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row top BR X offset <span id="lyricPosterTallFinalTwoTopBRXValue">0</span>
-                <input id="lyricPosterTallFinalTwoTopBRX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row top BR Y offset <span id="lyricPosterTallFinalTwoTopBRYValue">0</span>
-                <input id="lyricPosterTallFinalTwoTopBRY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row top BL X offset <span id="lyricPosterTallFinalTwoTopBLXValue">0</span>
-                <input id="lyricPosterTallFinalTwoTopBLX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row top BL Y offset <span id="lyricPosterTallFinalTwoTopBLYValue">0</span>
-                <input id="lyricPosterTallFinalTwoTopBLY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-                  <div class="lyric-direct-target-heading">2-row bottom final corner offsets</div>
-              <label>2-row bottom TL X offset <span id="lyricPosterTallFinalTwoBottomTLXValue">0</span>
-                <input id="lyricPosterTallFinalTwoBottomTLX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row bottom TL Y offset <span id="lyricPosterTallFinalTwoBottomTLYValue">0</span>
-                <input id="lyricPosterTallFinalTwoBottomTLY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row bottom TR X offset <span id="lyricPosterTallFinalTwoBottomTRXValue">0</span>
-                <input id="lyricPosterTallFinalTwoBottomTRX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row bottom TR Y offset <span id="lyricPosterTallFinalTwoBottomTRYValue">0</span>
-                <input id="lyricPosterTallFinalTwoBottomTRY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row bottom BR X offset <span id="lyricPosterTallFinalTwoBottomBRXValue">0</span>
-                <input id="lyricPosterTallFinalTwoBottomBRX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row bottom BR Y offset <span id="lyricPosterTallFinalTwoBottomBRYValue">0</span>
-                <input id="lyricPosterTallFinalTwoBottomBRY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row bottom BL X offset <span id="lyricPosterTallFinalTwoBottomBLXValue">0</span>
-                <input id="lyricPosterTallFinalTwoBottomBLX" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-              <label>2-row bottom BL Y offset <span id="lyricPosterTallFinalTwoBottomBLYValue">0</span>
-                <input id="lyricPosterTallFinalTwoBottomBLY" type="range" min="-2000" max="2000" step="1" value="0" />
-              </label>
-                </div>
-              </details>
-                              <details class="lyric-tall-calibration-group">
-                <summary>Main ceiling boundary target</summary>
+              <details class="lyric-tall-calibration-group">
+                <summary>Advanced/base ceiling geometry</summary>
                 <div class="lyric-utility-stack lyric-tall-grid">
               <label>Main TL X <span id="lyricPosterTallTopLeftXValue">0</span>
                 <input id="lyricPosterTallTopLeftX" type="range" min="-400" max="2200" step="1" value="0" />
@@ -1900,38 +2010,70 @@ function readCeilingPosterControls(
     lyricPosterTallDirectTwoBottomBRY: readNumber("--lyric-poster-tall-direct-two-bottom-br-y", 322),
     lyricPosterTallDirectTwoBottomBLX: readNumber("--lyric-poster-tall-direct-two-bottom-bl-x", 499),
     lyricPosterTallDirectTwoBottomBLY: readNumber("--lyric-poster-tall-direct-two-bottom-bl-y", 322),
-    lyricPosterTallFinalShortTLX: readNumber("--lyric-poster-tall-final-short-tl-x", 0),
-    lyricPosterTallFinalShortTLY: readNumber("--lyric-poster-tall-final-short-tl-y", 0),
+    lyricPosterTallMidShortTLX: readNumber("--lyric-poster-tall-mid-short-tl-x", -144),
+    lyricPosterTallMidShortTLY: readNumber("--lyric-poster-tall-mid-short-tl-y", -315),
+    lyricPosterTallMidShortTRX: readNumber("--lyric-poster-tall-mid-short-tr-x", 0),
+    lyricPosterTallMidShortTRY: readNumber("--lyric-poster-tall-mid-short-tr-y", -332),
+    lyricPosterTallMidShortBRX: readNumber("--lyric-poster-tall-mid-short-br-x", -29),
+    lyricPosterTallMidShortBRY: readNumber("--lyric-poster-tall-mid-short-br-y", 12),
+    lyricPosterTallMidShortBLX: readNumber("--lyric-poster-tall-mid-short-bl-x", 0),
+    lyricPosterTallMidShortBLY: readNumber("--lyric-poster-tall-mid-short-bl-y", 12),
+    lyricPosterTallMidOneRowTLX: readNumber("--lyric-poster-tall-mid-one-row-tl-x", -495),
+    lyricPosterTallMidOneRowTLY: readNumber("--lyric-poster-tall-mid-one-row-tl-y", -695),
+    lyricPosterTallMidOneRowTRX: readNumber("--lyric-poster-tall-mid-one-row-tr-x", 490),
+    lyricPosterTallMidOneRowTRY: readNumber("--lyric-poster-tall-mid-one-row-tr-y", -695),
+    lyricPosterTallMidOneRowBRX: readNumber("--lyric-poster-tall-mid-one-row-br-x", -42),
+    lyricPosterTallMidOneRowBRY: readNumber("--lyric-poster-tall-mid-one-row-br-y", 36),
+    lyricPosterTallMidOneRowBLX: readNumber("--lyric-poster-tall-mid-one-row-bl-x", 44),
+    lyricPosterTallMidOneRowBLY: readNumber("--lyric-poster-tall-mid-one-row-bl-y", 36),
+    lyricPosterTallMidTwoTopTLX: readNumber("--lyric-poster-tall-mid-two-top-tl-x", -180),
+    lyricPosterTallMidTwoTopTLY: readNumber("--lyric-poster-tall-mid-two-top-tl-y", -238),
+    lyricPosterTallMidTwoTopTRX: readNumber("--lyric-poster-tall-mid-two-top-tr-x", 180),
+    lyricPosterTallMidTwoTopTRY: readNumber("--lyric-poster-tall-mid-two-top-tr-y", -238),
+    lyricPosterTallMidTwoTopBRX: readNumber("--lyric-poster-tall-mid-two-top-br-x", -8),
+    lyricPosterTallMidTwoTopBRY: readNumber("--lyric-poster-tall-mid-two-top-br-y", 0),
+    lyricPosterTallMidTwoTopBLX: readNumber("--lyric-poster-tall-mid-two-top-bl-x", 0),
+    lyricPosterTallMidTwoTopBLY: readNumber("--lyric-poster-tall-mid-two-top-bl-y", 0),
+    lyricPosterTallMidTwoBottomTLX: readNumber("--lyric-poster-tall-mid-two-bottom-tl-x", -184),
+    lyricPosterTallMidTwoBottomTLY: readNumber("--lyric-poster-tall-mid-two-bottom-tl-y", -172),
+    lyricPosterTallMidTwoBottomTRX: readNumber("--lyric-poster-tall-mid-two-bottom-tr-x", 146),
+    lyricPosterTallMidTwoBottomTRY: readNumber("--lyric-poster-tall-mid-two-bottom-tr-y", -172),
+    lyricPosterTallMidTwoBottomBRX: readNumber("--lyric-poster-tall-mid-two-bottom-br-x", 55),
+    lyricPosterTallMidTwoBottomBRY: readNumber("--lyric-poster-tall-mid-two-bottom-br-y", 24),
+    lyricPosterTallMidTwoBottomBLX: readNumber("--lyric-poster-tall-mid-two-bottom-bl-x", 0),
+    lyricPosterTallMidTwoBottomBLY: readNumber("--lyric-poster-tall-mid-two-bottom-bl-y", 24),
+    lyricPosterTallFinalShortTLX: readNumber("--lyric-poster-tall-final-short-tl-x", -287),
+    lyricPosterTallFinalShortTLY: readNumber("--lyric-poster-tall-final-short-tl-y", -630),
     lyricPosterTallFinalShortTRX: readNumber("--lyric-poster-tall-final-short-tr-x", 0),
-    lyricPosterTallFinalShortTRY: readNumber("--lyric-poster-tall-final-short-tr-y", 0),
-    lyricPosterTallFinalShortBRX: readNumber("--lyric-poster-tall-final-short-br-x", 0),
-    lyricPosterTallFinalShortBRY: readNumber("--lyric-poster-tall-final-short-br-y", 0),
+    lyricPosterTallFinalShortTRY: readNumber("--lyric-poster-tall-final-short-tr-y", -663),
+    lyricPosterTallFinalShortBRX: readNumber("--lyric-poster-tall-final-short-br-x", -58),
+    lyricPosterTallFinalShortBRY: readNumber("--lyric-poster-tall-final-short-br-y", 23),
     lyricPosterTallFinalShortBLX: readNumber("--lyric-poster-tall-final-short-bl-x", 0),
-    lyricPosterTallFinalShortBLY: readNumber("--lyric-poster-tall-final-short-bl-y", 0),
-    lyricPosterTallFinalOneRowTLX: readNumber("--lyric-poster-tall-final-one-row-tl-x", 0),
-    lyricPosterTallFinalOneRowTLY: readNumber("--lyric-poster-tall-final-one-row-tl-y", 0),
-    lyricPosterTallFinalOneRowTRX: readNumber("--lyric-poster-tall-final-one-row-tr-x", 0),
-    lyricPosterTallFinalOneRowTRY: readNumber("--lyric-poster-tall-final-one-row-tr-y", 0),
-    lyricPosterTallFinalOneRowBRX: readNumber("--lyric-poster-tall-final-one-row-br-x", 0),
-    lyricPosterTallFinalOneRowBRY: readNumber("--lyric-poster-tall-final-one-row-br-y", 0),
-    lyricPosterTallFinalOneRowBLX: readNumber("--lyric-poster-tall-final-one-row-bl-x", 0),
-    lyricPosterTallFinalOneRowBLY: readNumber("--lyric-poster-tall-final-one-row-bl-y", 0),
-    lyricPosterTallFinalTwoTopTLX: readNumber("--lyric-poster-tall-final-two-top-tl-x", 0),
-    lyricPosterTallFinalTwoTopTLY: readNumber("--lyric-poster-tall-final-two-top-tl-y", 0),
-    lyricPosterTallFinalTwoTopTRX: readNumber("--lyric-poster-tall-final-two-top-tr-x", 0),
-    lyricPosterTallFinalTwoTopTRY: readNumber("--lyric-poster-tall-final-two-top-tr-y", 0),
-    lyricPosterTallFinalTwoTopBRX: readNumber("--lyric-poster-tall-final-two-top-br-x", 0),
+    lyricPosterTallFinalShortBLY: readNumber("--lyric-poster-tall-final-short-bl-y", 23),
+    lyricPosterTallFinalOneRowTLX: readNumber("--lyric-poster-tall-final-one-row-tl-x", -990),
+    lyricPosterTallFinalOneRowTLY: readNumber("--lyric-poster-tall-final-one-row-tl-y", -1390),
+    lyricPosterTallFinalOneRowTRX: readNumber("--lyric-poster-tall-final-one-row-tr-x", 980),
+    lyricPosterTallFinalOneRowTRY: readNumber("--lyric-poster-tall-final-one-row-tr-y", -1390),
+    lyricPosterTallFinalOneRowBRX: readNumber("--lyric-poster-tall-final-one-row-br-x", -83),
+    lyricPosterTallFinalOneRowBRY: readNumber("--lyric-poster-tall-final-one-row-br-y", 73),
+    lyricPosterTallFinalOneRowBLX: readNumber("--lyric-poster-tall-final-one-row-bl-x", 89),
+    lyricPosterTallFinalOneRowBLY: readNumber("--lyric-poster-tall-final-one-row-bl-y", 73),
+    lyricPosterTallFinalTwoTopTLX: readNumber("--lyric-poster-tall-final-two-top-tl-x", -361),
+    lyricPosterTallFinalTwoTopTLY: readNumber("--lyric-poster-tall-final-two-top-tl-y", -475),
+    lyricPosterTallFinalTwoTopTRX: readNumber("--lyric-poster-tall-final-two-top-tr-x", 359),
+    lyricPosterTallFinalTwoTopTRY: readNumber("--lyric-poster-tall-final-two-top-tr-y", -475),
+    lyricPosterTallFinalTwoTopBRX: readNumber("--lyric-poster-tall-final-two-top-br-x", -17),
     lyricPosterTallFinalTwoTopBRY: readNumber("--lyric-poster-tall-final-two-top-br-y", 0),
     lyricPosterTallFinalTwoTopBLX: readNumber("--lyric-poster-tall-final-two-top-bl-x", 0),
     lyricPosterTallFinalTwoTopBLY: readNumber("--lyric-poster-tall-final-two-top-bl-y", 0),
-    lyricPosterTallFinalTwoBottomTLX: readNumber("--lyric-poster-tall-final-two-bottom-tl-x", 0),
-    lyricPosterTallFinalTwoBottomTLY: readNumber("--lyric-poster-tall-final-two-bottom-tl-y", 0),
-    lyricPosterTallFinalTwoBottomTRX: readNumber("--lyric-poster-tall-final-two-bottom-tr-x", 0),
-    lyricPosterTallFinalTwoBottomTRY: readNumber("--lyric-poster-tall-final-two-bottom-tr-y", 0),
-    lyricPosterTallFinalTwoBottomBRX: readNumber("--lyric-poster-tall-final-two-bottom-br-x", 0),
-    lyricPosterTallFinalTwoBottomBRY: readNumber("--lyric-poster-tall-final-two-bottom-br-y", 0),
+    lyricPosterTallFinalTwoBottomTLX: readNumber("--lyric-poster-tall-final-two-bottom-tl-x", -369),
+    lyricPosterTallFinalTwoBottomTLY: readNumber("--lyric-poster-tall-final-two-bottom-tl-y", -344),
+    lyricPosterTallFinalTwoBottomTRX: readNumber("--lyric-poster-tall-final-two-bottom-tr-x", 293),
+    lyricPosterTallFinalTwoBottomTRY: readNumber("--lyric-poster-tall-final-two-bottom-tr-y", -344),
+    lyricPosterTallFinalTwoBottomBRX: readNumber("--lyric-poster-tall-final-two-bottom-br-x", 110),
+    lyricPosterTallFinalTwoBottomBRY: readNumber("--lyric-poster-tall-final-two-bottom-br-y", 48),
     lyricPosterTallFinalTwoBottomBLX: readNumber("--lyric-poster-tall-final-two-bottom-bl-x", 0),
-    lyricPosterTallFinalTwoBottomBLY: readNumber("--lyric-poster-tall-final-two-bottom-bl-y", 0),
+    lyricPosterTallFinalTwoBottomBLY: readNumber("--lyric-poster-tall-final-two-bottom-bl-y", 48),
     rowBreakpoint: readNumber("--lyric-poster-row-breakpoint", 28),
     twoRowBandGuideOpacity: readNumber("--lyric-poster-two-row-band-guide-opacity", 0),
     threeRowBandGuideOpacity: readNumber("--lyric-poster-three-row-band-guide-opacity", 0),
@@ -2080,59 +2222,84 @@ function makeFinalTallOffsetQuad(
   ];
 }
 
-function finalTallVisualOffsetsForRow(lyricMode: "short" | "1-row" | "2-row", rowIndex: number, controls: CeilingPosterControls): PosterQuad {
-  if (controls.tallRevealRatio <= 0.001) {
-    return makeFinalTallOffsetQuad(0, 0, 0, 0, 0, 0, 0, 0);
-  }
+function readFinalOffsetQuad(
+  prefix: "Mid" | "Final",
+  lyricMode: "short" | "1-row" | "2-row",
+  rowIndex: number,
+  controls: CeilingPosterControls,
+): PosterQuad {
+  const p = prefix;
   if (lyricMode === "short") {
     return makeFinalTallOffsetQuad(
-      controls.lyricPosterTallFinalShortTLX,
-      controls.lyricPosterTallFinalShortTLY,
-      controls.lyricPosterTallFinalShortTRX,
-      controls.lyricPosterTallFinalShortTRY,
-      controls.lyricPosterTallFinalShortBRX,
-      controls.lyricPosterTallFinalShortBRY,
-      controls.lyricPosterTallFinalShortBLX,
-      controls.lyricPosterTallFinalShortBLY,
+      controls[`lyricPosterTall${p}ShortTLX`],
+      controls[`lyricPosterTall${p}ShortTLY`],
+      controls[`lyricPosterTall${p}ShortTRX`],
+      controls[`lyricPosterTall${p}ShortTRY`],
+      controls[`lyricPosterTall${p}ShortBRX`],
+      controls[`lyricPosterTall${p}ShortBRY`],
+      controls[`lyricPosterTall${p}ShortBLX`],
+      controls[`lyricPosterTall${p}ShortBLY`],
     );
   }
   if (lyricMode === "1-row") {
     return makeFinalTallOffsetQuad(
-      controls.lyricPosterTallFinalOneRowTLX,
-      controls.lyricPosterTallFinalOneRowTLY,
-      controls.lyricPosterTallFinalOneRowTRX,
-      controls.lyricPosterTallFinalOneRowTRY,
-      controls.lyricPosterTallFinalOneRowBRX,
-      controls.lyricPosterTallFinalOneRowBRY,
-      controls.lyricPosterTallFinalOneRowBLX,
-      controls.lyricPosterTallFinalOneRowBLY,
+      controls[`lyricPosterTall${p}OneRowTLX`],
+      controls[`lyricPosterTall${p}OneRowTLY`],
+      controls[`lyricPosterTall${p}OneRowTRX`],
+      controls[`lyricPosterTall${p}OneRowTRY`],
+      controls[`lyricPosterTall${p}OneRowBRX`],
+      controls[`lyricPosterTall${p}OneRowBRY`],
+      controls[`lyricPosterTall${p}OneRowBLX`],
+      controls[`lyricPosterTall${p}OneRowBLY`],
     );
   }
   if (lyricMode === "2-row" && rowIndex === 0) {
     return makeFinalTallOffsetQuad(
-      controls.lyricPosterTallFinalTwoTopTLX,
-      controls.lyricPosterTallFinalTwoTopTLY,
-      controls.lyricPosterTallFinalTwoTopTRX,
-      controls.lyricPosterTallFinalTwoTopTRY,
-      controls.lyricPosterTallFinalTwoTopBRX,
-      controls.lyricPosterTallFinalTwoTopBRY,
-      controls.lyricPosterTallFinalTwoTopBLX,
-      controls.lyricPosterTallFinalTwoTopBLY,
+      controls[`lyricPosterTall${p}TwoTopTLX`],
+      controls[`lyricPosterTall${p}TwoTopTLY`],
+      controls[`lyricPosterTall${p}TwoTopTRX`],
+      controls[`lyricPosterTall${p}TwoTopTRY`],
+      controls[`lyricPosterTall${p}TwoTopBRX`],
+      controls[`lyricPosterTall${p}TwoTopBRY`],
+      controls[`lyricPosterTall${p}TwoTopBLX`],
+      controls[`lyricPosterTall${p}TwoTopBLY`],
     );
   }
   if (lyricMode === "2-row" && rowIndex === 1) {
     return makeFinalTallOffsetQuad(
-      controls.lyricPosterTallFinalTwoBottomTLX,
-      controls.lyricPosterTallFinalTwoBottomTLY,
-      controls.lyricPosterTallFinalTwoBottomTRX,
-      controls.lyricPosterTallFinalTwoBottomTRY,
-      controls.lyricPosterTallFinalTwoBottomBRX,
-      controls.lyricPosterTallFinalTwoBottomBRY,
-      controls.lyricPosterTallFinalTwoBottomBLX,
-      controls.lyricPosterTallFinalTwoBottomBLY,
+      controls[`lyricPosterTall${p}TwoBottomTLX`],
+      controls[`lyricPosterTall${p}TwoBottomTLY`],
+      controls[`lyricPosterTall${p}TwoBottomTRX`],
+      controls[`lyricPosterTall${p}TwoBottomTRY`],
+      controls[`lyricPosterTall${p}TwoBottomBRX`],
+      controls[`lyricPosterTall${p}TwoBottomBRY`],
+      controls[`lyricPosterTall${p}TwoBottomBLX`],
+      controls[`lyricPosterTall${p}TwoBottomBLY`],
     );
   }
   return makeFinalTallOffsetQuad(0, 0, 0, 0, 0, 0, 0, 0);
+}
+
+function lerpOffsetQuad(a: PosterQuad, b: PosterQuad, amount: number): PosterQuad {
+  const t = clamp(amount, 0, 1);
+  return a.map((point, index) => ({
+    x: lerpNumber(point.x, b[index].x, t),
+    y: lerpNumber(point.y, b[index].y, t),
+  })) as PosterQuad;
+}
+
+function finalTallVisualOffsetsForRow(lyricMode: "short" | "1-row" | "2-row", rowIndex: number, controls: CeilingPosterControls): PosterQuad {
+  if (controls.tallRevealRatio <= 0.001) {
+    return makeFinalTallOffsetQuad(0, 0, 0, 0, 0, 0, 0, 0);
+  }
+  const zero = makeFinalTallOffsetQuad(0, 0, 0, 0, 0, 0, 0, 0);
+  const mid = readFinalOffsetQuad("Mid", lyricMode, rowIndex, controls);
+  const full = readFinalOffsetQuad("Final", lyricMode, rowIndex, controls);
+  const midpoint = 0.5;
+  if (controls.tallRevealRatio <= midpoint) {
+    return lerpOffsetQuad(zero, mid, controls.tallRevealRatio / midpoint);
+  }
+  return lerpOffsetQuad(mid, full, (controls.tallRevealRatio - midpoint) / (1 - midpoint));
 }
 
 function addQuadOffsets(quad: PosterQuad, offsets: PosterQuad): PosterQuad {
@@ -2737,7 +2904,7 @@ function updateLyricGeometryMonitor(
     `Lyric mode: ${layout.lyricMode}`,
     `Placement engine: ${layout.geometryMode}`,
     `Reveal ratio: ${controls.tallRevealRatio.toFixed(4)}`,
-    `Main guide: ${formatQuad(mainQuad)}`,
+    `Base ceiling target: ${formatQuad(mainQuad)}`,
     `Diagnostics: static=${diagnostics.staticMode ? "on" : "off"} | noEffects=${diagnostics.noEffects ? "on" : "off"} | projectionBoxes=${diagnostics.showProjectionBoxes ? "on" : "off"} | domBounds=${diagnostics.showDomBounds ? "on" : "off"}`,
   ];
 
@@ -2746,9 +2913,9 @@ function updateLyricGeometryMonitor(
     const maxDelta = Math.max(...deltas.map((point) => Math.max(Math.abs(point.x), Math.abs(point.y))));
     lines.push("");
     lines.push(`Row ${index + 1}: ${row.text}`);
-    lines.push(`Guide:  ${formatQuad(row.guideQuad)}`);
-    lines.push(`Actual: ${formatQuad(row.actualQuad)}`);
-    lines.push(`Delta:  ${formatQuad(deltas)} | max ${maxDelta.toFixed(2)}`);
+    lines.push(`Base target:       ${formatQuad(row.guideQuad)}`);
+    lines.push(`Final corrected:  ${formatQuad(row.actualQuad)}`);
+    lines.push(`Applied correction: ${formatQuad(deltas)} | max ${maxDelta.toFixed(2)}`);
   });
 
   lines.push(...getLyricGlyphMonitorLines(layout));
@@ -3098,6 +3265,38 @@ type CeilingPosterControls = {
   lyricPosterTallDirectTwoBottomBRY: number;
   lyricPosterTallDirectTwoBottomBLX: number;
   lyricPosterTallDirectTwoBottomBLY: number;
+  lyricPosterTallMidShortTLX: number;
+  lyricPosterTallMidShortTLY: number;
+  lyricPosterTallMidShortTRX: number;
+  lyricPosterTallMidShortTRY: number;
+  lyricPosterTallMidShortBRX: number;
+  lyricPosterTallMidShortBRY: number;
+  lyricPosterTallMidShortBLX: number;
+  lyricPosterTallMidShortBLY: number;
+  lyricPosterTallMidOneRowTLX: number;
+  lyricPosterTallMidOneRowTLY: number;
+  lyricPosterTallMidOneRowTRX: number;
+  lyricPosterTallMidOneRowTRY: number;
+  lyricPosterTallMidOneRowBRX: number;
+  lyricPosterTallMidOneRowBRY: number;
+  lyricPosterTallMidOneRowBLX: number;
+  lyricPosterTallMidOneRowBLY: number;
+  lyricPosterTallMidTwoTopTLX: number;
+  lyricPosterTallMidTwoTopTLY: number;
+  lyricPosterTallMidTwoTopTRX: number;
+  lyricPosterTallMidTwoTopTRY: number;
+  lyricPosterTallMidTwoTopBRX: number;
+  lyricPosterTallMidTwoTopBRY: number;
+  lyricPosterTallMidTwoTopBLX: number;
+  lyricPosterTallMidTwoTopBLY: number;
+  lyricPosterTallMidTwoBottomTLX: number;
+  lyricPosterTallMidTwoBottomTLY: number;
+  lyricPosterTallMidTwoBottomTRX: number;
+  lyricPosterTallMidTwoBottomTRY: number;
+  lyricPosterTallMidTwoBottomBRX: number;
+  lyricPosterTallMidTwoBottomBRY: number;
+  lyricPosterTallMidTwoBottomBLX: number;
+  lyricPosterTallMidTwoBottomBLY: number;
   lyricPosterTallFinalShortTLX: number;
   lyricPosterTallFinalShortTLY: number;
   lyricPosterTallFinalShortTRX: number;
