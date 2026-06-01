@@ -8695,3 +8695,20 @@ body.lyrics-marquee-unavailable .marquee::after {
   pointer-events: none;
 }
 
+
+
+/* Tall-window lyric fit correction: the calibrated guide quad is the frame.
+   Keep glyphs inside the source SVG before the perspective projection so the
+   visible text lands inside the guide polygons instead of spilling past them. */
+.lyric-poster-row-svg {
+  overflow: hidden !important;
+}
+
+.lyric-poster-row-text {
+  dominant-baseline: central;
+}
+
+:root:not(.room-fill-stretch) .music-reactive-playing .lyric-poster-row-text,
+:root:not(.room-fill-stretch) .lyric-poster-row-text {
+  text-rendering: geometricPrecision;
+}

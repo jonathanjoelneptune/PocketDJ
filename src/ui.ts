@@ -1183,7 +1183,7 @@ export function updateLyricsCeiling(
                 <text
                   class="lyric-poster-row-text"
                   x="${row.sourceWidth / 2}"
-                  y="${row.sourceHeight / 2}"
+                  y="${row.sourceTextY}"
                   font-size="${row.sourceFontSize}"
                   textLength="${row.sourceTextLength}"
                   lengthAdjust="spacingAndGlyphs"
@@ -1565,10 +1565,15 @@ function buildCeilingPosterLayout(
       y: (point.y + ceilingRevealCoord) * scaleY,
     }));
 
-    const sourceWidth = 1200;
-    const sourceHeight = 180;
-    const sourceFontSize = sourceHeight * clamp(profile.verticalStretch, 0.40, 3.00);
-    const sourceTextLength = sourceWidth * 0.965;
+    // The projected quad is now the source of truth. Keep the text safely inside
+    // the unwarped source box before mapping that box onto the calibrated guide
+    // frame. Earlier versions let glyphs overflow the source SVG, which made the
+    // text appear outside the guide even when the quad itself was correct.
+    const sourceWidth = 1400;
+    const sourceHeight = 220;
+    const sourceFontSize = sourceHeight * (controls.tallRevealRatio > 0.05 ? 0.66 : clamp(profile.verticalStretch, 0.40, 2.60));
+    const sourceTextLength = sourceWidth * (controls.tallRevealRatio > 0.05 ? 0.90 : 0.965);
+    const sourceTextY = sourceHeight * (controls.tallRevealRatio > 0.05 ? 0.53 : 0.50);
     const matrix3d = quadToCssMatrix3d(sourceWidth, sourceHeight, destination[0], destination[1], destination[2], destination[3]);
 
     return {
@@ -1577,6 +1582,7 @@ function buildCeilingPosterLayout(
       sourceHeight,
       sourceFontSize,
       sourceTextLength,
+      sourceTextY,
       matrix3d,
     };
   });
@@ -2172,6 +2178,7 @@ type LyricPosterSvgRowLayout = {
   sourceHeight: number;
   sourceFontSize: number;
   sourceTextLength: number;
+  sourceTextY: number;
   matrix3d: string;
 };
 
