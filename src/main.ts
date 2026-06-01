@@ -639,30 +639,30 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTallTwoRowBottomTextBottomLeftY: -11,
   lyricPosterTallTwoRowBottomTextBottomRightX: -132,
   lyricPosterTallTwoRowBottomTextBottomRightY: -11,
-  lyricPosterTallDirectOneRowTLX: -44,
-  lyricPosterTallDirectOneRowTLY: -24,
-  lyricPosterTallDirectOneRowTRX: 1827,
-  lyricPosterTallDirectOneRowTRY: -24,
+  lyricPosterTallDirectOneRowTLX: 70,
+  lyricPosterTallDirectOneRowTLY: 84,
+  lyricPosterTallDirectOneRowTRX: 1694,
+  lyricPosterTallDirectOneRowTRY: 84,
   lyricPosterTallDirectOneRowBRX: 1342,
-  lyricPosterTallDirectOneRowBRY: 186,
+  lyricPosterTallDirectOneRowBRY: 310,
   lyricPosterTallDirectOneRowBLX: 460,
-  lyricPosterTallDirectOneRowBLY: 189,
-  lyricPosterTallDirectTwoTopTLX: 83,
-  lyricPosterTallDirectTwoTopTLY: -81,
-  lyricPosterTallDirectTwoTopTRX: 1676,
-  lyricPosterTallDirectTwoTopTRY: -83,
-  lyricPosterTallDirectTwoTopBRX: 1419,
-  lyricPosterTallDirectTwoTopBRY: 78,
+  lyricPosterTallDirectOneRowBLY: 310,
+  lyricPosterTallDirectTwoTopTLX: 86,
+  lyricPosterTallDirectTwoTopTLY: 64,
+  lyricPosterTallDirectTwoTopTRX: 1678,
+  lyricPosterTallDirectTwoTopTRY: 64,
+  lyricPosterTallDirectTwoTopBRX: 1420,
+  lyricPosterTallDirectTwoTopBRY: 186,
   lyricPosterTallDirectTwoTopBLX: 362,
-  lyricPosterTallDirectTwoTopBLY: 84,
+  lyricPosterTallDirectTwoTopBLY: 186,
   lyricPosterTallDirectTwoBottomTLX: 372,
-  lyricPosterTallDirectTwoBottomTLY: 95,
+  lyricPosterTallDirectTwoBottomTLY: 205,
   lyricPosterTallDirectTwoBottomTRX: 1409,
-  lyricPosterTallDirectTwoBottomTRY: 95,
+  lyricPosterTallDirectTwoBottomTRY: 205,
   lyricPosterTallDirectTwoBottomBRX: 1200,
-  lyricPosterTallDirectTwoBottomBRY: 180,
+  lyricPosterTallDirectTwoBottomBRY: 322,
   lyricPosterTallDirectTwoBottomBLX: 499,
-  lyricPosterTallDirectTwoBottomBLY: 180,
+  lyricPosterTallDirectTwoBottomBLY: 322,
   lyricPosterMaxRows: "auto",
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
@@ -670,7 +670,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v65a";
 const CLOCK_DISABLED_MIGRATION_KEY = "pocketdj-v65m-clock-disabled-default-applied";
 const MIXER_LED_TUNING_MIGRATION_KEY = "pocketdj-v65y-mixer-led-tuning-applied";
-const TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-rail-lyric-calibration-2026-06-01";
+const TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-direct-screen-lyric-targets-2026-06-01";
 let roomUtility = loadRoomUtilitySettings();
 
 function setUtilityLabel(id: string, value: number): void {
@@ -4503,6 +4503,14 @@ function tallGuideY(value: number, revealCoord: number): number {
   return value + revealCoord;
 }
 
+function directTallScreenY(value: number): number {
+  // Direct tall targets are now screen-space coordinates inside the expanded
+  // ceiling overlay. They should appear exactly where the utility values say,
+  // with no hidden reveal offset. Older tall rail/band guides still use
+  // tallGuideY because they are stored in the old logical 16:9 coordinate space.
+  return value;
+}
+
 function railXAtY(topX: number, topY: number, bottomX: number, bottomY: number, y: number): number {
   const denominator = bottomY - topY;
   if (Math.abs(denominator) < 0.001) return topX;
@@ -4646,25 +4654,25 @@ function updateTallLyricGuideReadout(enabled: boolean, revealRatio: number, mess
 function directTallGuidePoints(prefix: "one" | "twoTop" | "twoBottom", revealCoord: number): Array<[number, number]> {
   if (prefix === "one") {
     return [
-      [roomUtility.lyricPosterTallDirectOneRowTLX, tallGuideY(roomUtility.lyricPosterTallDirectOneRowTLY, revealCoord)],
-      [roomUtility.lyricPosterTallDirectOneRowTRX, tallGuideY(roomUtility.lyricPosterTallDirectOneRowTRY, revealCoord)],
-      [roomUtility.lyricPosterTallDirectOneRowBRX, tallGuideY(roomUtility.lyricPosterTallDirectOneRowBRY, revealCoord)],
-      [roomUtility.lyricPosterTallDirectOneRowBLX, tallGuideY(roomUtility.lyricPosterTallDirectOneRowBLY, revealCoord)],
+      [roomUtility.lyricPosterTallDirectOneRowTLX, directTallScreenY(roomUtility.lyricPosterTallDirectOneRowTLY)],
+      [roomUtility.lyricPosterTallDirectOneRowTRX, directTallScreenY(roomUtility.lyricPosterTallDirectOneRowTRY)],
+      [roomUtility.lyricPosterTallDirectOneRowBRX, directTallScreenY(roomUtility.lyricPosterTallDirectOneRowBRY)],
+      [roomUtility.lyricPosterTallDirectOneRowBLX, directTallScreenY(roomUtility.lyricPosterTallDirectOneRowBLY)],
     ];
   }
   if (prefix === "twoTop") {
     return [
-      [roomUtility.lyricPosterTallDirectTwoTopTLX, tallGuideY(roomUtility.lyricPosterTallDirectTwoTopTLY, revealCoord)],
-      [roomUtility.lyricPosterTallDirectTwoTopTRX, tallGuideY(roomUtility.lyricPosterTallDirectTwoTopTRY, revealCoord)],
-      [roomUtility.lyricPosterTallDirectTwoTopBRX, tallGuideY(roomUtility.lyricPosterTallDirectTwoTopBRY, revealCoord)],
-      [roomUtility.lyricPosterTallDirectTwoTopBLX, tallGuideY(roomUtility.lyricPosterTallDirectTwoTopBLY, revealCoord)],
+      [roomUtility.lyricPosterTallDirectTwoTopTLX, directTallScreenY(roomUtility.lyricPosterTallDirectTwoTopTLY)],
+      [roomUtility.lyricPosterTallDirectTwoTopTRX, directTallScreenY(roomUtility.lyricPosterTallDirectTwoTopTRY)],
+      [roomUtility.lyricPosterTallDirectTwoTopBRX, directTallScreenY(roomUtility.lyricPosterTallDirectTwoTopBRY)],
+      [roomUtility.lyricPosterTallDirectTwoTopBLX, directTallScreenY(roomUtility.lyricPosterTallDirectTwoTopBLY)],
     ];
   }
   return [
-    [roomUtility.lyricPosterTallDirectTwoBottomTLX, tallGuideY(roomUtility.lyricPosterTallDirectTwoBottomTLY, revealCoord)],
-    [roomUtility.lyricPosterTallDirectTwoBottomTRX, tallGuideY(roomUtility.lyricPosterTallDirectTwoBottomTRY, revealCoord)],
-    [roomUtility.lyricPosterTallDirectTwoBottomBRX, tallGuideY(roomUtility.lyricPosterTallDirectTwoBottomBRY, revealCoord)],
-    [roomUtility.lyricPosterTallDirectTwoBottomBLX, tallGuideY(roomUtility.lyricPosterTallDirectTwoBottomBLY, revealCoord)],
+    [roomUtility.lyricPosterTallDirectTwoBottomTLX, directTallScreenY(roomUtility.lyricPosterTallDirectTwoBottomTLY)],
+    [roomUtility.lyricPosterTallDirectTwoBottomTRX, directTallScreenY(roomUtility.lyricPosterTallDirectTwoBottomTRY)],
+    [roomUtility.lyricPosterTallDirectTwoBottomBRX, directTallScreenY(roomUtility.lyricPosterTallDirectTwoBottomBRY)],
+    [roomUtility.lyricPosterTallDirectTwoBottomBLX, directTallScreenY(roomUtility.lyricPosterTallDirectTwoBottomBLY)],
   ];
 }
 

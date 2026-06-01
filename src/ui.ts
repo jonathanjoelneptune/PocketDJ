@@ -502,6 +502,27 @@ export function renderShell(state: AppState): void {
                 <div class="utility-readout tall-guide-readout">
                   Tall guide status: <span id="lyricPosterTallGuideStatus">hidden</span> | Reveal ratio: <span id="lyricPosterTallGuideRevealRatio">0.00</span>
                 </div>
+                <details class="lyric-tall-calibration-group lyric-test-utility-group" open>
+                  <summary>Lyric test utility</summary>
+                  <p class="utility-help">Freeze a known test lyric on the ceiling while tuning. This bypasses the changing synced lyric feed.</p>
+                  <label class="utility-checkbox"><input id="lyricTestEnabled" type="checkbox" /> Use test lyric</label>
+                  <label>Test lyric type
+                    <select id="lyricTestMode">
+                      <option value="short">Short lyric</option>
+                      <option value="one">1-row lyric</option>
+                      <option value="two" selected>2-row lyric</option>
+                    </select>
+                  </label>
+                  <label>Short lyric
+                    <input id="lyricTestShortText" class="utility-text-input" type="text" value="I" />
+                  </label>
+                  <label>1-row lyric
+                    <input id="lyricTestOneText" class="utility-text-input" type="text" value="I know all my hoes miss me" />
+                  </label>
+                  <label>2-row lyric
+                    <input id="lyricTestTwoText" class="utility-text-input" type="text" value="Every noun and verb can't define you" />
+                  </label>
+                </details>
                 <details class="lyric-tall-calibration-group lyric-geometry-monitor-group" open>
                   <summary>Lyric geometry monitor</summary>
                   <p class="utility-help">Shows the active lyric type and compares the actual text projection corners against the guide corners. Deltas should be near 0 when the tall layout is behaving correctly.</p>
@@ -538,82 +559,82 @@ export function renderShell(state: AppState): void {
               </details>
               <details class="lyric-tall-calibration-group" open>
                 <summary>Direct tall lyric row targets</summary>
-                <p class="utility-help">Clean tall-mode placement: these are absolute row trapezoids. The words render directly inside these frames without band/offset math.</p>
+                <p class="utility-help">Clean tall-mode placement: these are final visible screen-space trapezoids inside the expanded ceiling overlay. Moving a corner moves only that row target, with no hidden reveal offset.</p>
                 <div class="lyric-utility-stack lyric-tall-grid">
                   <div class="lyric-direct-target-heading">1-row</div>
               <label>1-row TL X <span id="lyricPosterTallDirectOneRowTLXValue">0</span>
                 <input id="lyricPosterTallDirectOneRowTLX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>1-row TL Y <span id="lyricPosterTallDirectOneRowTLYValue">0</span>
-                <input id="lyricPosterTallDirectOneRowTLY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectOneRowTLY" type="range" min="0" max="700" step="1" value="0" />
               </label>
               <label>1-row TR X <span id="lyricPosterTallDirectOneRowTRXValue">0</span>
                 <input id="lyricPosterTallDirectOneRowTRX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>1-row TR Y <span id="lyricPosterTallDirectOneRowTRYValue">0</span>
-                <input id="lyricPosterTallDirectOneRowTRY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectOneRowTRY" type="range" min="0" max="700" step="1" value="0" />
               </label>
               <label>1-row BR X <span id="lyricPosterTallDirectOneRowBRXValue">0</span>
                 <input id="lyricPosterTallDirectOneRowBRX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>1-row BR Y <span id="lyricPosterTallDirectOneRowBRYValue">0</span>
-                <input id="lyricPosterTallDirectOneRowBRY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectOneRowBRY" type="range" min="0" max="700" step="1" value="0" />
               </label>
               <label>1-row BL X <span id="lyricPosterTallDirectOneRowBLXValue">0</span>
                 <input id="lyricPosterTallDirectOneRowBLX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>1-row BL Y <span id="lyricPosterTallDirectOneRowBLYValue">0</span>
-                <input id="lyricPosterTallDirectOneRowBLY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectOneRowBLY" type="range" min="0" max="700" step="1" value="0" />
               </label>
                   <div class="lyric-direct-target-heading">2-row top</div>
               <label>2-row top TL X <span id="lyricPosterTallDirectTwoTopTLXValue">0</span>
                 <input id="lyricPosterTallDirectTwoTopTLX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>2-row top TL Y <span id="lyricPosterTallDirectTwoTopTLYValue">0</span>
-                <input id="lyricPosterTallDirectTwoTopTLY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectTwoTopTLY" type="range" min="0" max="700" step="1" value="0" />
               </label>
               <label>2-row top TR X <span id="lyricPosterTallDirectTwoTopTRXValue">0</span>
                 <input id="lyricPosterTallDirectTwoTopTRX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>2-row top TR Y <span id="lyricPosterTallDirectTwoTopTRYValue">0</span>
-                <input id="lyricPosterTallDirectTwoTopTRY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectTwoTopTRY" type="range" min="0" max="700" step="1" value="0" />
               </label>
               <label>2-row top BR X <span id="lyricPosterTallDirectTwoTopBRXValue">0</span>
                 <input id="lyricPosterTallDirectTwoTopBRX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>2-row top BR Y <span id="lyricPosterTallDirectTwoTopBRYValue">0</span>
-                <input id="lyricPosterTallDirectTwoTopBRY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectTwoTopBRY" type="range" min="0" max="700" step="1" value="0" />
               </label>
               <label>2-row top BL X <span id="lyricPosterTallDirectTwoTopBLXValue">0</span>
                 <input id="lyricPosterTallDirectTwoTopBLX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>2-row top BL Y <span id="lyricPosterTallDirectTwoTopBLYValue">0</span>
-                <input id="lyricPosterTallDirectTwoTopBLY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectTwoTopBLY" type="range" min="0" max="700" step="1" value="0" />
               </label>
                   <div class="lyric-direct-target-heading">2-row bottom</div>
               <label>2-row bottom TL X <span id="lyricPosterTallDirectTwoBottomTLXValue">0</span>
                 <input id="lyricPosterTallDirectTwoBottomTLX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>2-row bottom TL Y <span id="lyricPosterTallDirectTwoBottomTLYValue">0</span>
-                <input id="lyricPosterTallDirectTwoBottomTLY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectTwoBottomTLY" type="range" min="0" max="700" step="1" value="0" />
               </label>
               <label>2-row bottom TR X <span id="lyricPosterTallDirectTwoBottomTRXValue">0</span>
                 <input id="lyricPosterTallDirectTwoBottomTRX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>2-row bottom TR Y <span id="lyricPosterTallDirectTwoBottomTRYValue">0</span>
-                <input id="lyricPosterTallDirectTwoBottomTRY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectTwoBottomTRY" type="range" min="0" max="700" step="1" value="0" />
               </label>
               <label>2-row bottom BR X <span id="lyricPosterTallDirectTwoBottomBRXValue">0</span>
                 <input id="lyricPosterTallDirectTwoBottomBRX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>2-row bottom BR Y <span id="lyricPosterTallDirectTwoBottomBRYValue">0</span>
-                <input id="lyricPosterTallDirectTwoBottomBRY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectTwoBottomBRY" type="range" min="0" max="700" step="1" value="0" />
               </label>
               <label>2-row bottom BL X <span id="lyricPosterTallDirectTwoBottomBLXValue">0</span>
                 <input id="lyricPosterTallDirectTwoBottomBLX" type="range" min="-400" max="2200" step="1" value="0" />
               </label>
               <label>2-row bottom BL Y <span id="lyricPosterTallDirectTwoBottomBLYValue">0</span>
-                <input id="lyricPosterTallDirectTwoBottomBLY" type="range" min="-360" max="360" step="1" value="0" />
+                <input id="lyricPosterTallDirectTwoBottomBLY" type="range" min="0" max="700" step="1" value="0" />
               </label>
                 </div>
               </details>
@@ -1281,6 +1302,23 @@ function getEstimatedProgress(track: NormalizedTrack): number {
   return Math.min(track.durationMs, track.progressMs + (Date.now() - track.updatedAt));
 }
 
+type LyricTestOverride = {
+  active: boolean;
+  mode: "short" | "one" | "two";
+  text: string;
+};
+
+function readLyricTestOverride(): LyricTestOverride {
+  const enabled = document.querySelector<HTMLInputElement>("#lyricTestEnabled")?.checked ?? false;
+  const modeRaw = document.querySelector<HTMLSelectElement>("#lyricTestMode")?.value;
+  const mode = modeRaw === "short" || modeRaw === "one" || modeRaw === "two" ? modeRaw : "two";
+  const shortText = document.querySelector<HTMLInputElement>("#lyricTestShortText")?.value.trim() || "I";
+  const oneText = document.querySelector<HTMLInputElement>("#lyricTestOneText")?.value.trim() || "I know all my hoes miss me";
+  const twoText = document.querySelector<HTMLInputElement>("#lyricTestTwoText")?.value.trim() || "Every noun and verb can't define you";
+  const text = mode === "short" ? shortText : mode === "one" ? oneText : twoText;
+  return { active: enabled, mode, text };
+}
+
 export function updateLyricsCeiling(
   lyrics: LyricsPayload,
   playbackMs: number,
@@ -1292,9 +1330,10 @@ export function updateLyricsCeiling(
   const activeBlock = qs<HTMLElement>("#activeLyricsBlock");
 
   updateLyricsToggleUi(lyrics.status, enabled);
+  const lyricTest = readLyricTestOverride();
 
   const available = lyrics.status === "found" && lyrics.syncedLyrics.length > 0;
-  const shouldShow = enabled && available;
+  const shouldShow = lyricTest.active || (enabled && available);
   ceiling.classList.toggle("lyrics-ceiling-hidden", !shouldShow);
   ceiling.classList.toggle("lyrics-ceiling-visible", shouldShow);
 
@@ -1321,19 +1360,21 @@ export function updateLyricsCeiling(
     return;
   }
 
-  if (!playbackActive) {
+  if (!lyricTest.active && !playbackActive) {
     clearLyrics();
     return;
   }
 
-  if (activeIndex < 0) {
+  if (!lyricTest.active && activeIndex < 0) {
     clearLyrics();
     return;
   }
 
-  const centerIndex = Math.max(0, Math.min(activeIndex, lyrics.syncedLyrics.length - 1));
-  const activeLine = lyrics.syncedLyrics[centerIndex];
-  if (!activeLine?.text?.trim() || !isLyricLineCurrentlyVisible(lyrics.syncedLyrics, centerIndex, playbackMs)) {
+  const centerIndex = lyricTest.active ? 0 : Math.max(0, Math.min(activeIndex, lyrics.syncedLyrics.length - 1));
+  const activeLine = lyricTest.active
+    ? { timeMs: playbackMs, text: lyricTest.text }
+    : lyrics.syncedLyrics[centerIndex];
+  if (!activeLine?.text?.trim() || (!lyricTest.active && !isLyricLineCurrentlyVisible(lyrics.syncedLyrics, centerIndex, playbackMs))) {
     clearLyrics();
     return;
   }
@@ -1342,13 +1383,14 @@ export function updateLyricsCeiling(
   const ceilingViewHeight = 529 + getDynamicCeilingRevealCoord(rootStyles);
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
   const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
-  const maxRowsValue = rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue;
+  const testRowsValue = lyricTest.active ? (lyricTest.mode === "two" ? "2" : "1") : null;
+  const maxRowsValue = testRowsValue || (rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue);
   const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "none") as LyricPosterTransitionMode;
   const diagnostics = readLyricDiagnosticSettings();
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, diagnostics.staticMode ? "none" : transitionValue);
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
-  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${JSON.stringify(trapezoid)}|${JSON.stringify(controls)}|${JSON.stringify(diagnostics)}|${animationRevision}|${rootClassSignature}`;
+  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${lyricTest.active ? lyricTest.mode : "live"}|${JSON.stringify(trapezoid)}|${JSON.stringify(controls)}|${JSON.stringify(diagnostics)}|${animationRevision}|${rootClassSignature}`;
 
   if (renderSignature === lastLyricsRenderSignature) {
     activeBlock.style.setProperty("--lyric-line-visibility", "1");
@@ -1727,30 +1769,30 @@ function readCeilingPosterControls(
     maxRows: maxRowsValue,
     transition: transitionValue,
     tallRevealRatio: revealAmount,
-    lyricPosterTallDirectOneRowTLX: readNumber("--lyric-poster-tall-direct-one-row-tl-x", -44),
-    lyricPosterTallDirectOneRowTLY: readNumber("--lyric-poster-tall-direct-one-row-tl-y", -24),
-    lyricPosterTallDirectOneRowTRX: readNumber("--lyric-poster-tall-direct-one-row-tr-x", 1827),
-    lyricPosterTallDirectOneRowTRY: readNumber("--lyric-poster-tall-direct-one-row-tr-y", -24),
+    lyricPosterTallDirectOneRowTLX: readNumber("--lyric-poster-tall-direct-one-row-tl-x", 70),
+    lyricPosterTallDirectOneRowTLY: readNumber("--lyric-poster-tall-direct-one-row-tl-y", 84),
+    lyricPosterTallDirectOneRowTRX: readNumber("--lyric-poster-tall-direct-one-row-tr-x", 1694),
+    lyricPosterTallDirectOneRowTRY: readNumber("--lyric-poster-tall-direct-one-row-tr-y", 84),
     lyricPosterTallDirectOneRowBRX: readNumber("--lyric-poster-tall-direct-one-row-br-x", 1342),
-    lyricPosterTallDirectOneRowBRY: readNumber("--lyric-poster-tall-direct-one-row-br-y", 186),
+    lyricPosterTallDirectOneRowBRY: readNumber("--lyric-poster-tall-direct-one-row-br-y", 310),
     lyricPosterTallDirectOneRowBLX: readNumber("--lyric-poster-tall-direct-one-row-bl-x", 460),
-    lyricPosterTallDirectOneRowBLY: readNumber("--lyric-poster-tall-direct-one-row-bl-y", 189),
-    lyricPosterTallDirectTwoTopTLX: readNumber("--lyric-poster-tall-direct-two-top-tl-x", 83),
-    lyricPosterTallDirectTwoTopTLY: readNumber("--lyric-poster-tall-direct-two-top-tl-y", -81),
-    lyricPosterTallDirectTwoTopTRX: readNumber("--lyric-poster-tall-direct-two-top-tr-x", 1676),
-    lyricPosterTallDirectTwoTopTRY: readNumber("--lyric-poster-tall-direct-two-top-tr-y", -83),
-    lyricPosterTallDirectTwoTopBRX: readNumber("--lyric-poster-tall-direct-two-top-br-x", 1419),
-    lyricPosterTallDirectTwoTopBRY: readNumber("--lyric-poster-tall-direct-two-top-br-y", 78),
+    lyricPosterTallDirectOneRowBLY: readNumber("--lyric-poster-tall-direct-one-row-bl-y", 310),
+    lyricPosterTallDirectTwoTopTLX: readNumber("--lyric-poster-tall-direct-two-top-tl-x", 86),
+    lyricPosterTallDirectTwoTopTLY: readNumber("--lyric-poster-tall-direct-two-top-tl-y", 64),
+    lyricPosterTallDirectTwoTopTRX: readNumber("--lyric-poster-tall-direct-two-top-tr-x", 1678),
+    lyricPosterTallDirectTwoTopTRY: readNumber("--lyric-poster-tall-direct-two-top-tr-y", 64),
+    lyricPosterTallDirectTwoTopBRX: readNumber("--lyric-poster-tall-direct-two-top-br-x", 1420),
+    lyricPosterTallDirectTwoTopBRY: readNumber("--lyric-poster-tall-direct-two-top-br-y", 186),
     lyricPosterTallDirectTwoTopBLX: readNumber("--lyric-poster-tall-direct-two-top-bl-x", 362),
-    lyricPosterTallDirectTwoTopBLY: readNumber("--lyric-poster-tall-direct-two-top-bl-y", 84),
+    lyricPosterTallDirectTwoTopBLY: readNumber("--lyric-poster-tall-direct-two-top-bl-y", 186),
     lyricPosterTallDirectTwoBottomTLX: readNumber("--lyric-poster-tall-direct-two-bottom-tl-x", 372),
-    lyricPosterTallDirectTwoBottomTLY: readNumber("--lyric-poster-tall-direct-two-bottom-tl-y", 95),
+    lyricPosterTallDirectTwoBottomTLY: readNumber("--lyric-poster-tall-direct-two-bottom-tl-y", 205),
     lyricPosterTallDirectTwoBottomTRX: readNumber("--lyric-poster-tall-direct-two-bottom-tr-x", 1409),
-    lyricPosterTallDirectTwoBottomTRY: readNumber("--lyric-poster-tall-direct-two-bottom-tr-y", 95),
+    lyricPosterTallDirectTwoBottomTRY: readNumber("--lyric-poster-tall-direct-two-bottom-tr-y", 205),
     lyricPosterTallDirectTwoBottomBRX: readNumber("--lyric-poster-tall-direct-two-bottom-br-x", 1200),
-    lyricPosterTallDirectTwoBottomBRY: readNumber("--lyric-poster-tall-direct-two-bottom-br-y", 180),
+    lyricPosterTallDirectTwoBottomBRY: readNumber("--lyric-poster-tall-direct-two-bottom-br-y", 322),
     lyricPosterTallDirectTwoBottomBLX: readNumber("--lyric-poster-tall-direct-two-bottom-bl-x", 499),
-    lyricPosterTallDirectTwoBottomBLY: readNumber("--lyric-poster-tall-direct-two-bottom-bl-y", 180),
+    lyricPosterTallDirectTwoBottomBLY: readNumber("--lyric-poster-tall-direct-two-bottom-bl-y", 322),
     rowBreakpoint: readNumber("--lyric-poster-row-breakpoint", 28),
     twoRowBandGuideOpacity: readNumber("--lyric-poster-two-row-band-guide-opacity", 0),
     threeRowBandGuideOpacity: readNumber("--lyric-poster-three-row-band-guide-opacity", 0),
@@ -2008,9 +2050,10 @@ function buildCeilingPosterLayout(
     const actualQuad = correctQuadToGuideFrame(directTallQuad ? directTallQuad : (tallModeActive ? tallTarget : legacyFit), guideQuad);
     [topLeft, topRight, bottomRight, bottomLeft] = actualQuad;
 
+    const directTallScreenSpace = Boolean(directTallQuad && tallModeActive);
     const destination = actualQuad.map((point) => ({
       x: point.x * scaleX,
-      y: (point.y + ceilingRevealCoord) * scaleY,
+      y: (point.y + (directTallScreenSpace ? 0 : ceilingRevealCoord)) * scaleY,
     }));
 
     // The projected quad is now the source of truth. Keep the text safely inside
