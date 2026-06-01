@@ -4175,11 +4175,14 @@ function updateDynamicCeilingReveal(): void {
   const coordScale = baseRoomWidth > 0 ? ROOM_COORD_WIDTH / baseRoomWidth : 1;
   const revealCoord = Math.round(revealPx * coordScale);
   const revealRatio = maxRevealPx > 0 ? clamp(revealPx / maxRevealPx, 0, 1) : 0;
+  const lyricCeilingViewCoord = 529 + revealCoord;
+  const lyricCeilingViewPx = Math.round((lyricCeilingViewCoord / ROOM_COORD_WIDTH) * baseRoomWidth);
 
   const root = document.documentElement;
   root.style.setProperty("--dynamic-ceiling-reveal-px", `${revealPx}px`);
   root.style.setProperty("--dynamic-ceiling-reveal-coord", String(revealCoord));
   root.style.setProperty("--dynamic-ceiling-reveal-ratio", revealRatio.toFixed(4));
+  root.style.setProperty("--lyric-ceiling-view-px", `${lyricCeilingViewPx}px`);
   root.classList.toggle("dynamic-ceiling-reveal-active", revealPx > 2);
 
   // The tall-window guide overlay is independent from normal lyric visibility,

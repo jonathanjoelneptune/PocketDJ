@@ -8514,6 +8514,7 @@ body.lyrics-marquee-unavailable .marquee::after {
   --room-bg-img-h: calc(var(--room-w) * var(--room-bg-scale) * 0.666015625);
   --room-bg-base-offset-y: calc((var(--room-base-h) - var(--room-bg-img-h)) * 0.431);
   --lyric-ceiling-view-h: calc(529px + var(--dynamic-ceiling-reveal-coord) * 1px);
+  --lyric-ceiling-view-px: calc(var(--room-w) * 529 / 1764);
 }
 
 .stage {
@@ -8567,15 +8568,20 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 .room-base-layer > .lyrics-ceiling {
+  left: 0;
   top: calc(var(--dynamic-ceiling-reveal-px) * -1);
-  height: calc(var(--room-base-h) + var(--dynamic-ceiling-reveal-px));
+  width: 100%;
+  height: var(--lyric-ceiling-view-px);
   pointer-events: none;
+  overflow: visible;
+  z-index: 82;
 }
 
 .active-lyrics-block,
 .lyric-poster-line,
-.lyric-poster-svg {
-  height: var(--lyric-ceiling-view-h) !important;
+.lyric-poster-svg,
+.lyric-poster-html-rows {
+  height: var(--lyric-ceiling-view-px) !important;
 }
 
 :root.room-fill-stretch {
@@ -8633,7 +8639,7 @@ body.lyrics-marquee-unavailable .marquee::after {
   left: 0;
   top: calc(var(--dynamic-ceiling-reveal-px) * -1);
   width: 100%;
-  height: var(--lyric-ceiling-view-h);
+  height: var(--lyric-ceiling-view-px);
   z-index: 80;
   pointer-events: none;
   overflow: visible;
