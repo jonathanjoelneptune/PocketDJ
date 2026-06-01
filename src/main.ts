@@ -563,50 +563,50 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterThreeRowBottomTextBottomLeftY: 0,
   lyricPosterThreeRowBottomTextBottomRightX: 0,
   lyricPosterThreeRowBottomTextBottomRightY: 0,
-  lyricPosterTallTopLeftX: 150,
-  lyricPosterTallTopLeftY: -150,
-  lyricPosterTallTopRightX: 1615,
-  lyricPosterTallTopRightY: -160,
-  lyricPosterTallBottomLeftX: 454,
-  lyricPosterTallBottomLeftY: 195,
-  lyricPosterTallBottomRightX: 1343,
-  lyricPosterTallBottomRightY: 189,
-  lyricPosterTallShortTopLeftX: 170,
+  lyricPosterTallTopLeftX: 12,
+  lyricPosterTallTopLeftY: -139,
+  lyricPosterTallTopRightX: 1764,
+  lyricPosterTallTopRightY: -135,
+  lyricPosterTallBottomLeftX: 453,
+  lyricPosterTallBottomLeftY: 346,
+  lyricPosterTallBottomRightX: 1332,
+  lyricPosterTallBottomRightY: 344,
+  lyricPosterTallShortTopLeftX: -3,
   lyricPosterTallShortTopLeftY: -145,
-  lyricPosterTallShortTopRightX: 1510,
-  lyricPosterTallShortTopRightY: -160,
-  lyricPosterTallShortBottomLeftX: 454,
-  lyricPosterTallShortBottomLeftY: 195,
-  lyricPosterTallShortBottomRightX: 1343,
-  lyricPosterTallShortBottomRightY: 189,
-  lyricPosterTallOneRowTextTopLeftX: -300,
-  lyricPosterTallOneRowTextTopLeftY: 8,
-  lyricPosterTallOneRowTextTopRightX: 300,
-  lyricPosterTallOneRowTextTopRightY: 8,
+  lyricPosterTallShortTopRightX: 1759,
+  lyricPosterTallShortTopRightY: -132,
+  lyricPosterTallShortBottomLeftX: 453,
+  lyricPosterTallShortBottomLeftY: 342,
+  lyricPosterTallShortBottomRightX: 1332,
+  lyricPosterTallShortBottomRightY: 345,
+  lyricPosterTallOneRowTextTopLeftX: 66,
+  lyricPosterTallOneRowTextTopLeftY: 40,
+  lyricPosterTallOneRowTextTopRightX: -93,
+  lyricPosterTallOneRowTextTopRightY: 40,
   lyricPosterTallOneRowTextBottomLeftX: 8,
-  lyricPosterTallOneRowTextBottomLeftY: 0,
+  lyricPosterTallOneRowTextBottomLeftY: -31,
   lyricPosterTallOneRowTextBottomRightX: 0,
-  lyricPosterTallOneRowTextBottomRightY: 0,
+  lyricPosterTallOneRowTextBottomRightY: -31,
   lyricPosterTallTwoRowTopBandTopY: -150,
   lyricPosterTallTwoRowTopBandBottomY: 20,
   lyricPosterTallTwoRowBottomBandTopY: 20,
   lyricPosterTallTwoRowBottomBandBottomY: 195,
-  lyricPosterTallTwoRowTopTextTopLeftX: -240,
-  lyricPosterTallTwoRowTopTextTopLeftY: 0,
-  lyricPosterTallTwoRowTopTextTopRightX: 240,
-  lyricPosterTallTwoRowTopTextTopRightY: 0,
-  lyricPosterTallTwoRowTopTextBottomLeftX: 0,
-  lyricPosterTallTwoRowTopTextBottomLeftY: 0,
-  lyricPosterTallTwoRowTopTextBottomRightX: 0,
-  lyricPosterTallTwoRowTopTextBottomRightY: 0,
-  lyricPosterTallTwoRowBottomTextTopLeftX: -210,
-  lyricPosterTallTwoRowBottomTextTopLeftY: 0,
-  lyricPosterTallTwoRowBottomTextTopRightX: 210,
-  lyricPosterTallTwoRowBottomTextTopRightY: 0,
-  lyricPosterTallTwoRowBottomTextBottomLeftX: 0,
-  lyricPosterTallTwoRowBottomTextBottomLeftY: 0,
-  lyricPosterTallTwoRowBottomTextBottomRightX: 0,
-  lyricPosterTallTwoRowBottomTextBottomRightY: 0,
+  lyricPosterTallTwoRowTopTextTopLeftX: 71,
+  lyricPosterTallTwoRowTopTextTopLeftY: 56,
+  lyricPosterTallTwoRowTopTextTopRightX: -88,
+  lyricPosterTallTwoRowTopTextTopRightY: 56,
+  lyricPosterTallTwoRowTopTextBottomLeftX: 131,
+  lyricPosterTallTwoRowTopTextBottomLeftY: 106,
+  lyricPosterTallTwoRowTopTextBottomRightX: -142,
+  lyricPosterTallTwoRowTopTextBottomRightY: 106,
+  lyricPosterTallTwoRowBottomTextTopLeftX: 146,
+  lyricPosterTallTwoRowBottomTextTopLeftY: 126,
+  lyricPosterTallTwoRowBottomTextTopRightX: -152,
+  lyricPosterTallTwoRowBottomTextTopRightY: 126,
+  lyricPosterTallTwoRowBottomTextBottomLeftX: 150,
+  lyricPosterTallTwoRowBottomTextBottomLeftY: 122,
+  lyricPosterTallTwoRowBottomTextBottomRightX: -132,
+  lyricPosterTallTwoRowBottomTextBottomRightY: 119,
   lyricPosterMaxRows: "auto",
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
@@ -614,6 +614,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v65a";
 const CLOCK_DISABLED_MIGRATION_KEY = "pocketdj-v65m-clock-disabled-default-applied";
 const MIXER_LED_TUNING_MIGRATION_KEY = "pocketdj-v65y-mixer-led-tuning-applied";
+const TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-tall-lyric-calibration-lock-2026-06-01";
 let roomUtility = loadRoomUtilitySettings();
 
 function setUtilityLabel(id: string, value: number): void {
@@ -680,6 +681,64 @@ function applyMixerLedTuningMigration(): void {
     window.localStorage.setItem(MIXER_LED_TUNING_MIGRATION_KEY, "true");
   } catch (error) {
     console.warn("Could not apply mixer LED tuning migration", error);
+  }
+}
+
+function applyTallLyricCalibrationMigration(): void {
+  try {
+    if (window.localStorage.getItem(TALL_LYRIC_CALIBRATION_MIGRATION_KEY)) return;
+    roomUtility = {
+      ...roomUtility,
+      lyricPosterTallGuideOpacity: 1,
+      lyricPosterTallTopLeftX: 12,
+      lyricPosterTallTopLeftY: -139,
+      lyricPosterTallTopRightX: 1764,
+      lyricPosterTallTopRightY: -135,
+      lyricPosterTallBottomLeftX: 453,
+      lyricPosterTallBottomLeftY: 346,
+      lyricPosterTallBottomRightX: 1332,
+      lyricPosterTallBottomRightY: 344,
+      lyricPosterTallShortTopLeftX: -3,
+      lyricPosterTallShortTopLeftY: -145,
+      lyricPosterTallShortTopRightX: 1759,
+      lyricPosterTallShortTopRightY: -132,
+      lyricPosterTallShortBottomLeftX: 453,
+      lyricPosterTallShortBottomLeftY: 342,
+      lyricPosterTallShortBottomRightX: 1332,
+      lyricPosterTallShortBottomRightY: 345,
+      lyricPosterTallOneRowTextTopLeftX: 66,
+      lyricPosterTallOneRowTextTopLeftY: 40,
+      lyricPosterTallOneRowTextTopRightX: -93,
+      lyricPosterTallOneRowTextTopRightY: 40,
+      lyricPosterTallOneRowTextBottomLeftX: 8,
+      lyricPosterTallOneRowTextBottomLeftY: -31,
+      lyricPosterTallOneRowTextBottomRightX: 0,
+      lyricPosterTallOneRowTextBottomRightY: -31,
+      lyricPosterTallTwoRowTopBandTopY: -150,
+      lyricPosterTallTwoRowTopBandBottomY: 20,
+      lyricPosterTallTwoRowBottomBandTopY: 20,
+      lyricPosterTallTwoRowBottomBandBottomY: 195,
+      lyricPosterTallTwoRowTopTextTopLeftX: 71,
+      lyricPosterTallTwoRowTopTextTopLeftY: 56,
+      lyricPosterTallTwoRowTopTextTopRightX: -88,
+      lyricPosterTallTwoRowTopTextTopRightY: 56,
+      lyricPosterTallTwoRowTopTextBottomLeftX: 131,
+      lyricPosterTallTwoRowTopTextBottomLeftY: 106,
+      lyricPosterTallTwoRowTopTextBottomRightX: -142,
+      lyricPosterTallTwoRowTopTextBottomRightY: 106,
+      lyricPosterTallTwoRowBottomTextTopLeftX: 146,
+      lyricPosterTallTwoRowBottomTextTopLeftY: 126,
+      lyricPosterTallTwoRowBottomTextTopRightX: -152,
+      lyricPosterTallTwoRowBottomTextTopRightY: 126,
+      lyricPosterTallTwoRowBottomTextBottomLeftX: 150,
+      lyricPosterTallTwoRowBottomTextBottomLeftY: 122,
+      lyricPosterTallTwoRowBottomTextBottomRightX: -132,
+      lyricPosterTallTwoRowBottomTextBottomRightY: 119,
+    };
+    saveRoomUtilitySettings();
+    window.localStorage.setItem(TALL_LYRIC_CALIBRATION_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply tall lyric calibration migration", error);
   }
 }
 
@@ -2499,6 +2558,7 @@ async function boot(): Promise<void> {
   bindSessionWallAlbumControls();
   applyClockDisabledDefaultMigration();
   applyMixerLedTuningMigration();
+  applyTallLyricCalibrationMigration();
   applyRoomUtilitySettings();
 
   if (state.spotifyClientId) {

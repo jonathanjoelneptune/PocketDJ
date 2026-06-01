@@ -1208,20 +1208,24 @@ export function updateLyricsCeiling(
   activeBlock.dataset.lyricRows = String(layout.rows.length);
 
   const clipId = `lyricPosterClip-${Math.abs(hashString(renderSignature))}`;
-  const clipPolygon = `${(trapezoid.topLeftX / 1764) * 100}% ${(trapezoid.topLeftY / ceilingViewHeight) * 100}%, ${(trapezoid.topRightX / 1764) * 100}% ${(trapezoid.topRightY / ceilingViewHeight) * 100}%, ${(trapezoid.bottomRightX / 1764) * 100}% ${(trapezoid.bottomRightY / ceilingViewHeight) * 100}%, ${(trapezoid.bottomLeftX / 1764) * 100}% ${(trapezoid.bottomLeftY / ceilingViewHeight) * 100}%`;
+  const ceilingRevealCoordForRender = getDynamicCeilingRevealCoord(rootStyles);
+  const shiftedTrapezoid = shiftTrapezoidY(trapezoid, ceilingRevealCoordForRender);
+  const shiftedRowBands = layout.rowBands.map((band) => shiftTrapezoidY(band, ceilingRevealCoordForRender));
+  const shiftedCenterY = layout.centerY + ceilingRevealCoordForRender;
+  const clipPolygon = `${(shiftedTrapezoid.topLeftX / 1764) * 100}% ${(shiftedTrapezoid.topLeftY / ceilingViewHeight) * 100}%, ${(shiftedTrapezoid.topRightX / 1764) * 100}% ${(shiftedTrapezoid.topRightY / ceilingViewHeight) * 100}%, ${(shiftedTrapezoid.bottomRightX / 1764) * 100}% ${(shiftedTrapezoid.bottomRightY / ceilingViewHeight) * 100}%, ${(shiftedTrapezoid.bottomLeftX / 1764) * 100}% ${(shiftedTrapezoid.bottomLeftY / ceilingViewHeight) * 100}%`;
   activeBlock.innerHTML = `
     <svg class="lyric-poster-svg lyric-poster-guide-svg" viewBox="0 0 1764 ${ceilingViewHeight}" preserveAspectRatio="none" aria-hidden="true">
       <defs>
         <clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">
-          <polygon points="${trapezoid.topLeftX},${trapezoid.topLeftY} ${trapezoid.topRightX},${trapezoid.topRightY} ${trapezoid.bottomRightX},${trapezoid.bottomRightY} ${trapezoid.bottomLeftX},${trapezoid.bottomLeftY}" />
+          <polygon points="${shiftedTrapezoid.topLeftX},${shiftedTrapezoid.topLeftY} ${shiftedTrapezoid.topRightX},${shiftedTrapezoid.topRightY} ${shiftedTrapezoid.bottomRightX},${shiftedTrapezoid.bottomRightY} ${shiftedTrapezoid.bottomLeftX},${shiftedTrapezoid.bottomLeftY}" />
         </clipPath>
       </defs>
       <polygon
         class="lyric-poster-svg-guide"
-        points="${trapezoid.topLeftX},${trapezoid.topLeftY} ${trapezoid.topRightX},${trapezoid.topRightY} ${trapezoid.bottomRightX},${trapezoid.bottomRightY} ${trapezoid.bottomLeftX},${trapezoid.bottomLeftY}"
+        points="${shiftedTrapezoid.topLeftX},${shiftedTrapezoid.topLeftY} ${shiftedTrapezoid.topRightX},${shiftedTrapezoid.topRightY} ${shiftedTrapezoid.bottomRightX},${shiftedTrapezoid.bottomRightY} ${shiftedTrapezoid.bottomLeftX},${shiftedTrapezoid.bottomLeftY}"
       />
-      <circle class="lyric-poster-center-guide" cx="${layout.centerX}" cy="${layout.centerY}" r="8" />
-      ${renderBandGuidePolygons(layout.rowBands, layout.rows.length)}
+      <circle class="lyric-poster-center-guide" cx="${layout.centerX}" cy="${shiftedCenterY}" r="8" />
+      ${renderBandGuidePolygons(shiftedRowBands, layout.rows.length)}
     </svg>
     <div class="lyric-poster-html-rows" style="clip-path: polygon(${clipPolygon});">
       ${
@@ -1344,6 +1348,7 @@ function readCeilingPosterControls(
   return {
     maxRows: maxRowsValue,
     transition: transitionValue,
+    tallRevealRatio: revealAmount,
     rowBreakpoint: readNumber("--lyric-poster-row-breakpoint", 28),
     twoRowBandGuideOpacity: readNumber("--lyric-poster-two-row-band-guide-opacity", 0),
     threeRowBandGuideOpacity: readNumber("--lyric-poster-three-row-band-guide-opacity", 0),
@@ -1500,7 +1505,8 @@ function buildCeilingPosterLayout(
   const n = Math.max(1, Math.min(2, rowTexts.length)) as 1 | 2;
   const profile = getPosterRowProfile(n, activeControls);
   const scaleX = Math.max(0.001, ceilingWidth / 1764);
-  const ceilingViewHeight = Math.max(529, 529 + getDynamicCeilingRevealCoord(getComputedStyle(document.documentElement)));
+  const ceilingRevealCoord = getDynamicCeilingRevealCoord(getComputedStyle(document.documentElement));
+  const ceilingViewHeight = Math.max(529, 529 + ceilingRevealCoord);
   const scaleY = Math.max(0.001, ceilingHeight / ceilingViewHeight);
   const rowBands = getRowBandTrapezoids(n, activeTrapezoid, activeControls);
 
@@ -1541,14 +1547,22 @@ function buildCeilingPosterLayout(
     topRight = addPoint(topRight, cornerOffsets.topRightX, cornerOffsets.topRightY);
     bottomLeft = addPoint(bottomLeft, cornerOffsets.bottomLeftX, cornerOffsets.bottomLeftY);
     bottomRight = addPoint(bottomRight, cornerOffsets.bottomRightX, cornerOffsets.bottomRightY);
-    [topLeft, topRight, bottomRight, bottomLeft] = centerAndFitQuadInsideTrapezoid(
+
+    const legacyFit = centerAndFitQuadInsideTrapezoid(
       [topLeft, topRight, bottomRight, bottomLeft],
       band,
     );
+    const tallTarget: [Point2D, Point2D, Point2D, Point2D] = [
+      addPoint({ x: band.topLeftX, y: band.topLeftY }, cornerOffsets.topLeftX, cornerOffsets.topLeftY),
+      addPoint({ x: band.topRightX, y: band.topRightY }, cornerOffsets.topRightX, cornerOffsets.topRightY),
+      addPoint({ x: band.bottomRightX, y: band.bottomRightY }, cornerOffsets.bottomRightX, cornerOffsets.bottomRightY),
+      addPoint({ x: band.bottomLeftX, y: band.bottomLeftY }, cornerOffsets.bottomLeftX, cornerOffsets.bottomLeftY),
+    ];
+    [topLeft, topRight, bottomRight, bottomLeft] = blendQuads(legacyFit, tallTarget, controls.tallRevealRatio);
 
     const destination = [topLeft, topRight, bottomRight, bottomLeft].map((point) => ({
       x: point.x * scaleX,
-      y: point.y * scaleY,
+      y: (point.y + ceilingRevealCoord) * scaleY,
     }));
 
     const sourceWidth = 1200;
@@ -1611,6 +1625,18 @@ function makeBandTrapezoid(full: LyricPosterTrapezoid, rawTopY: number, rawBotto
     bottomRightY: safeBottomY,
     centerX: (topBounds.left + topBounds.right + bottomBounds.left + bottomBounds.right) / 4,
     centerY: (topY + safeBottomY) / 2,
+  };
+}
+
+function shiftTrapezoidY(trapezoid: LyricPosterTrapezoid, amount: number): LyricPosterTrapezoid {
+  if (!amount) return trapezoid;
+  return {
+    ...trapezoid,
+    topLeftY: trapezoid.topLeftY + amount,
+    topRightY: trapezoid.topRightY + amount,
+    bottomLeftY: trapezoid.bottomLeftY + amount,
+    bottomRightY: trapezoid.bottomRightY + amount,
+    centerY: trapezoid.centerY + amount,
   };
 }
 
@@ -1780,6 +1806,18 @@ function scalePointAbout(point: Point2D, center: Point2D, scale: number): Point2
     x: center.x + (point.x - center.x) * scale,
     y: center.y + (point.y - center.y) * scale,
   };
+}
+
+function blendQuads(
+  start: [Point2D, Point2D, Point2D, Point2D],
+  end: [Point2D, Point2D, Point2D, Point2D],
+  amount: number,
+): [Point2D, Point2D, Point2D, Point2D] {
+  const t = clamp(amount, 0, 1);
+  return start.map((point, index) => ({
+    x: lerp(point.x, end[index].x, t),
+    y: lerp(point.y, end[index].y, t),
+  })) as [Point2D, Point2D, Point2D, Point2D];
 }
 
 function isQuadInsideTrapezoid(points: Point2D[], trapezoid: LyricPosterTrapezoid): boolean {
@@ -2001,6 +2039,7 @@ type LyricPosterTransitionMode = "none" | "push-slide" | "fade-slide" | "shadow-
 type CeilingPosterControls = {
   maxRows: "auto" | "1" | "2" | "3";
   transition: LyricPosterTransitionMode;
+  tallRevealRatio: number;
   rowBreakpoint: number;
   twoRowBandGuideOpacity: number;
   threeRowBandGuideOpacity: number;
