@@ -502,6 +502,24 @@ export function renderShell(state: AppState): void {
                 <div class="utility-readout tall-guide-readout">
                   Tall guide status: <span id="lyricPosterTallGuideStatus">hidden</span> | Reveal ratio: <span id="lyricPosterTallGuideRevealRatio">0.00</span>
                 </div>
+                <details class="lyric-tall-calibration-group">
+                <summary>Tall ceiling top clamp</summary>
+                <p class="utility-help">Absolute top limits for the dynamic tall-window lyric trapezoid. The computed top-left and top-right points will not go above these coordinates.</p>
+                <div class="lyric-utility-stack lyric-tall-grid">
+              <label>Clamp TL X <span id="lyricPosterTallClampTopLeftXValue">0</span>
+                <input id="lyricPosterTallClampTopLeftX" type="range" min="-400" max="2200" step="1" value="0" />
+              </label>
+              <label>Clamp TL Y <span id="lyricPosterTallClampTopLeftYValue">0</span>
+                <input id="lyricPosterTallClampTopLeftY" type="range" min="-360" max="360" step="1" value="0" />
+              </label>
+              <label>Clamp TR X <span id="lyricPosterTallClampTopRightXValue">0</span>
+                <input id="lyricPosterTallClampTopRightX" type="range" min="-400" max="2200" step="1" value="0" />
+              </label>
+              <label>Clamp TR Y <span id="lyricPosterTallClampTopRightYValue">0</span>
+                <input id="lyricPosterTallClampTopRightY" type="range" min="-360" max="360" step="1" value="0" />
+              </label>
+                </div>
+              </details>
                               <details class="lyric-tall-calibration-group">
                 <summary>Main ceiling boundary target</summary>
                 <div class="lyric-utility-stack lyric-tall-grid">
@@ -1396,14 +1414,26 @@ function readRailDrivenLyricTrapezoid(
   const bottomLeftY = lerpNumber(base.bottomLeftY, tallBottomLeftY, revealAmount);
   const bottomRightX = lerpNumber(base.bottomRightX, tallBottomRightX, revealAmount);
   const bottomRightY = lerpNumber(base.bottomRightY, tallBottomRightY, revealAmount);
-  const topLeftX = lineXAtY(tallTopLeftX, tallTopLeftY, tallBottomLeftX, tallBottomLeftY, visibleTopY);
-  const topRightX = lineXAtY(tallTopRightX, tallTopRightY, tallBottomRightX, tallBottomRightY, visibleTopY);
+  const clampTopLeftX = readCssNumber(rootStyles, "--lyric-poster-tall-clamp-top-left-x", tallTopLeftX);
+  const clampTopLeftY = readCssNumber(rootStyles, "--lyric-poster-tall-clamp-top-left-y", tallTopLeftY);
+  const clampTopRightX = readCssNumber(rootStyles, "--lyric-poster-tall-clamp-top-right-x", tallTopRightX);
+  const clampTopRightY = readCssNumber(rootStyles, "--lyric-poster-tall-clamp-top-right-y", tallTopRightY);
+  const useLeftClamp = visibleTopY <= clampTopLeftY;
+  const useRightClamp = visibleTopY <= clampTopRightY;
+  const topLeftY = useLeftClamp ? clampTopLeftY : visibleTopY;
+  const topRightY = useRightClamp ? clampTopRightY : visibleTopY;
+  const topLeftX = useLeftClamp
+    ? clampTopLeftX
+    : lineXAtY(tallTopLeftX, tallTopLeftY, tallBottomLeftX, tallBottomLeftY, topLeftY);
+  const topRightX = useRightClamp
+    ? clampTopRightX
+    : lineXAtY(tallTopRightX, tallTopRightY, tallBottomRightX, tallBottomRightY, topRightY);
 
   return makeLyricPosterTrapezoid(
     topLeftX,
-    visibleTopY,
+    topLeftY,
     topRightX,
-    visibleTopY,
+    topRightY,
     bottomLeftX,
     bottomLeftY,
     bottomRightX,

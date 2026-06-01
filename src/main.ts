@@ -240,6 +240,10 @@ type RoomUtilitySettings = {
   lyricPosterShortGuideOpacity: number;
   lyricPosterTallGuideEnabled: boolean;
   lyricPosterTallGuideOpacity: number;
+  lyricPosterTallClampTopLeftX: number;
+  lyricPosterTallClampTopLeftY: number;
+  lyricPosterTallClampTopRightX: number;
+  lyricPosterTallClampTopRightY: number;
   lyricPosterShortTopLeftX: number;
   lyricPosterShortTopLeftY: number;
   lyricPosterShortTopRightX: number;
@@ -456,6 +460,10 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterShortGuideOpacity: 0.00,
   lyricPosterTallGuideEnabled: false,
   lyricPosterTallGuideOpacity: 0.60,
+  lyricPosterTallClampTopLeftX: 12,
+  lyricPosterTallClampTopLeftY: -139,
+  lyricPosterTallClampTopRightX: 1764,
+  lyricPosterTallClampTopRightY: -133,
   lyricPosterShortTopLeftX: 221,
   lyricPosterShortTopLeftY: 18,
   lyricPosterShortTopRightX: 1460,
@@ -690,6 +698,10 @@ function applyTallLyricCalibrationMigration(): void {
     roomUtility = {
       ...roomUtility,
       lyricPosterTallGuideOpacity: 1,
+      lyricPosterTallClampTopLeftX: 12,
+      lyricPosterTallClampTopLeftY: -139,
+      lyricPosterTallClampTopRightX: 1764,
+      lyricPosterTallClampTopRightY: -133,
       lyricPosterTallTopLeftX: 12,
       lyricPosterTallTopLeftY: -139,
       lyricPosterTallTopRightX: 1764,
@@ -4513,11 +4525,20 @@ function buildRailDrivenTallGuideQuad(revealCoord: number, revealRatio: number, 
         bottomRightY: roomUtility.lyricPosterTallBottomRightY,
       };
 
+  const useLeftClamp = visibleTopY <= roomUtility.lyricPosterTallClampTopLeftY;
+  const useRightClamp = visibleTopY <= roomUtility.lyricPosterTallClampTopRightY;
+  const topLeftY = useLeftClamp ? roomUtility.lyricPosterTallClampTopLeftY : visibleTopY;
+  const topRightY = useRightClamp ? roomUtility.lyricPosterTallClampTopRightY : visibleTopY;
+
   return {
-    topLeftX: railXAtY(tall.topLeftX, tall.topLeftY, tall.bottomLeftX, tall.bottomLeftY, visibleTopY),
-    topLeftY: visibleTopY,
-    topRightX: railXAtY(tall.topRightX, tall.topRightY, tall.bottomRightX, tall.bottomRightY, visibleTopY),
-    topRightY: visibleTopY,
+    topLeftX: useLeftClamp
+      ? roomUtility.lyricPosterTallClampTopLeftX
+      : railXAtY(tall.topLeftX, tall.topLeftY, tall.bottomLeftX, tall.bottomLeftY, topLeftY),
+    topLeftY,
+    topRightX: useRightClamp
+      ? roomUtility.lyricPosterTallClampTopRightX
+      : railXAtY(tall.topRightX, tall.topRightY, tall.bottomRightX, tall.bottomRightY, topRightY),
+    topRightY,
     bottomLeftX: base.bottomLeftX + (tall.bottomLeftX - base.bottomLeftX) * revealRatio,
     bottomLeftY: base.bottomLeftY + (tall.bottomLeftY - base.bottomLeftY) * revealRatio,
     bottomRightX: base.bottomRightX + (tall.bottomRightX - base.bottomRightX) * revealRatio,
@@ -5414,6 +5435,10 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-short-guide-opacity", String(roomUtility.lyricPosterShortGuideOpacity));
   root.style.setProperty("--lyric-poster-tall-guide-opacity", String(roomUtility.lyricPosterTallGuideOpacity));
   root.classList.toggle("tall-lyric-guides-enabled", roomUtility.lyricPosterTallGuideEnabled && roomUtility.lyricPosterTallGuideOpacity > 0);
+  root.style.setProperty("--lyric-poster-tall-clamp-top-left-x", `${roomUtility.lyricPosterTallClampTopLeftX}px`);
+  root.style.setProperty("--lyric-poster-tall-clamp-top-left-y", `${roomUtility.lyricPosterTallClampTopLeftY}px`);
+  root.style.setProperty("--lyric-poster-tall-clamp-top-right-x", `${roomUtility.lyricPosterTallClampTopRightX}px`);
+  root.style.setProperty("--lyric-poster-tall-clamp-top-right-y", `${roomUtility.lyricPosterTallClampTopRightY}px`);
   root.style.setProperty("--lyric-poster-short-tl-x", `${roomUtility.lyricPosterShortTopLeftX}px`);
   root.style.setProperty("--lyric-poster-short-tl-y", `${roomUtility.lyricPosterShortTopLeftY}px`);
   root.style.setProperty("--lyric-poster-short-tr-x", `${roomUtility.lyricPosterShortTopRightX}px`);
