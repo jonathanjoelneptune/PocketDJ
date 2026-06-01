@@ -1310,17 +1310,16 @@ function readTallInterpolatedNumber(
   return lerpNumber(base, tall, amount);
 }
 
-function readLyricPosterTrapezoid(rootStyles: CSSStyleDeclaration): LyricPosterTrapezoid {
-  const revealAmount = getDynamicCeilingRevealRatio(rootStyles);
-  const topLeftX = readTallInterpolatedNumber(rootStyles, "--lyric-poster-top-left-x", "--lyric-poster-tall-top-left-x", 221, revealAmount);
-  const topLeftY = readTallInterpolatedNumber(rootStyles, "--lyric-poster-top-left-y", "--lyric-poster-tall-top-left-y", 12, revealAmount);
-  const topRightX = readTallInterpolatedNumber(rootStyles, "--lyric-poster-top-right-x", "--lyric-poster-tall-top-right-x", 1562, revealAmount);
-  const topRightY = readTallInterpolatedNumber(rootStyles, "--lyric-poster-top-right-y", "--lyric-poster-tall-top-right-y", 3, revealAmount);
-  const bottomLeftX = readTallInterpolatedNumber(rootStyles, "--lyric-poster-bottom-left-x", "--lyric-poster-tall-bottom-left-x", 454, revealAmount);
-  const bottomLeftY = readTallInterpolatedNumber(rootStyles, "--lyric-poster-bottom-left-y", "--lyric-poster-tall-bottom-left-y", 189, revealAmount);
-  const bottomRightX = readTallInterpolatedNumber(rootStyles, "--lyric-poster-bottom-right-x", "--lyric-poster-tall-bottom-right-x", 1343, revealAmount);
-  const bottomRightY = readTallInterpolatedNumber(rootStyles, "--lyric-poster-bottom-right-y", "--lyric-poster-tall-bottom-right-y", 189, revealAmount);
-
+function makeLyricPosterTrapezoid(
+  topLeftX: number,
+  topLeftY: number,
+  topRightX: number,
+  topRightY: number,
+  bottomLeftX: number,
+  bottomLeftY: number,
+  bottomRightX: number,
+  bottomRightY: number,
+): LyricPosterTrapezoid {
   return {
     topLeftX,
     topLeftY,
@@ -1335,6 +1334,130 @@ function readLyricPosterTrapezoid(rootStyles: CSSStyleDeclaration): LyricPosterT
   };
 }
 
+function lineXAtY(x1: number, y1: number, x2: number, y2: number, y: number): number {
+  const denominator = y2 - y1;
+  if (Math.abs(denominator) < 0.001) return x1;
+  return x1 + (x2 - x1) * ((y - y1) / denominator);
+}
+
+function readRailDrivenLyricTrapezoid(
+  rootStyles: CSSStyleDeclaration,
+  names: {
+    baseTopLeftX: string;
+    baseTopLeftY: string;
+    baseTopRightX: string;
+    baseTopRightY: string;
+    baseBottomLeftX: string;
+    baseBottomLeftY: string;
+    baseBottomRightX: string;
+    baseBottomRightY: string;
+    tallTopLeftX: string;
+    tallTopLeftY: string;
+    tallTopRightX: string;
+    tallTopRightY: string;
+    tallBottomLeftX: string;
+    tallBottomLeftY: string;
+    tallBottomRightX: string;
+    tallBottomRightY: string;
+  },
+  fallback: LyricPosterTrapezoid,
+): LyricPosterTrapezoid {
+  const revealCoord = getDynamicCeilingRevealCoord(rootStyles);
+  const revealAmount = getDynamicCeilingRevealRatio(rootStyles);
+
+  const base = makeLyricPosterTrapezoid(
+    readCssNumber(rootStyles, names.baseTopLeftX, fallback.topLeftX),
+    readCssNumber(rootStyles, names.baseTopLeftY, fallback.topLeftY),
+    readCssNumber(rootStyles, names.baseTopRightX, fallback.topRightX),
+    readCssNumber(rootStyles, names.baseTopRightY, fallback.topRightY),
+    readCssNumber(rootStyles, names.baseBottomLeftX, fallback.bottomLeftX),
+    readCssNumber(rootStyles, names.baseBottomLeftY, fallback.bottomLeftY),
+    readCssNumber(rootStyles, names.baseBottomRightX, fallback.bottomRightX),
+    readCssNumber(rootStyles, names.baseBottomRightY, fallback.bottomRightY),
+  );
+
+  if (revealCoord <= 0.5 || revealAmount <= 0.0001) return base;
+
+  const tallTopLeftX = readCssNumber(rootStyles, names.tallTopLeftX, base.topLeftX);
+  const tallTopLeftY = readCssNumber(rootStyles, names.tallTopLeftY, base.topLeftY);
+  const tallTopRightX = readCssNumber(rootStyles, names.tallTopRightX, base.topRightX);
+  const tallTopRightY = readCssNumber(rootStyles, names.tallTopRightY, base.topRightY);
+  const tallBottomLeftX = readCssNumber(rootStyles, names.tallBottomLeftX, base.bottomLeftX);
+  const tallBottomLeftY = readCssNumber(rootStyles, names.tallBottomLeftY, base.bottomLeftY);
+  const tallBottomRightX = readCssNumber(rootStyles, names.tallBottomRightX, base.bottomRightX);
+  const tallBottomRightY = readCssNumber(rootStyles, names.tallBottomRightY, base.bottomRightY);
+
+  // The top of the lyric ceiling is not a stored calibration Y. It is the current
+  // visible top of the expanded ceiling, expressed in the locked 1764x992 room
+  // coordinate space. Side rails come from the tall top/bottom calibration points;
+  // the active top corners are where those rails intersect the current visible top.
+  const visibleTopY = -revealCoord;
+  const bottomLeftX = lerpNumber(base.bottomLeftX, tallBottomLeftX, revealAmount);
+  const bottomLeftY = lerpNumber(base.bottomLeftY, tallBottomLeftY, revealAmount);
+  const bottomRightX = lerpNumber(base.bottomRightX, tallBottomRightX, revealAmount);
+  const bottomRightY = lerpNumber(base.bottomRightY, tallBottomRightY, revealAmount);
+  const topLeftX = lineXAtY(tallTopLeftX, tallTopLeftY, tallBottomLeftX, tallBottomLeftY, visibleTopY);
+  const topRightX = lineXAtY(tallTopRightX, tallTopRightY, tallBottomRightX, tallBottomRightY, visibleTopY);
+
+  return makeLyricPosterTrapezoid(
+    topLeftX,
+    visibleTopY,
+    topRightX,
+    visibleTopY,
+    bottomLeftX,
+    bottomLeftY,
+    bottomRightX,
+    bottomRightY,
+  );
+}
+
+function readLyricPosterTrapezoid(rootStyles: CSSStyleDeclaration): LyricPosterTrapezoid {
+  return readRailDrivenLyricTrapezoid(
+    rootStyles,
+    {
+      baseTopLeftX: "--lyric-poster-top-left-x",
+      baseTopLeftY: "--lyric-poster-top-left-y",
+      baseTopRightX: "--lyric-poster-top-right-x",
+      baseTopRightY: "--lyric-poster-top-right-y",
+      baseBottomLeftX: "--lyric-poster-bottom-left-x",
+      baseBottomLeftY: "--lyric-poster-bottom-left-y",
+      baseBottomRightX: "--lyric-poster-bottom-right-x",
+      baseBottomRightY: "--lyric-poster-bottom-right-y",
+      tallTopLeftX: "--lyric-poster-tall-top-left-x",
+      tallTopLeftY: "--lyric-poster-tall-top-left-y",
+      tallTopRightX: "--lyric-poster-tall-top-right-x",
+      tallTopRightY: "--lyric-poster-tall-top-right-y",
+      tallBottomLeftX: "--lyric-poster-tall-bottom-left-x",
+      tallBottomLeftY: "--lyric-poster-tall-bottom-left-y",
+      tallBottomRightX: "--lyric-poster-tall-bottom-right-x",
+      tallBottomRightY: "--lyric-poster-tall-bottom-right-y",
+    },
+    makeLyricPosterTrapezoid(221, 18, 1562, 3, 454, 195, 1343, 189),
+  );
+}
+
+function mapTallBandYToActiveCeiling(
+  rootStyles: CSSStyleDeclaration,
+  activeTrapezoid: LyricPosterTrapezoid,
+  baseName: string,
+  tallName: string,
+  fallbackBase: number,
+): number {
+  const revealCoord = getDynamicCeilingRevealCoord(rootStyles);
+  const revealAmount = getDynamicCeilingRevealRatio(rootStyles);
+  const base = readCssNumber(rootStyles, baseName, fallbackBase);
+  if (revealCoord <= 0.5 || revealAmount <= 0.0001) return base;
+
+  const tallValue = readCssNumber(rootStyles, tallName, base);
+  const tallTopY = (readCssNumber(rootStyles, "--lyric-poster-tall-top-left-y", -139) + readCssNumber(rootStyles, "--lyric-poster-tall-top-right-y", -133)) / 2;
+  const tallBottomY = (readCssNumber(rootStyles, "--lyric-poster-tall-bottom-left-y", 187) + readCssNumber(rootStyles, "--lyric-poster-tall-bottom-right-y", 191)) / 2;
+  const denominator = tallBottomY - tallTopY;
+  const ratio = Math.abs(denominator) < 0.001 ? 0 : clamp((tallValue - tallTopY) / denominator, 0, 1);
+  const activeTopY = Math.min(activeTrapezoid.topLeftY, activeTrapezoid.topRightY);
+  const activeBottomY = Math.max(activeTrapezoid.bottomLeftY, activeTrapezoid.bottomRightY);
+  return lerpNumber(activeTopY, activeBottomY, ratio);
+}
+
 function readCeilingPosterControls(
   rootStyles: CSSStyleDeclaration,
   maxRowsValue: "auto" | "1" | "2" | "3",
@@ -1342,8 +1465,33 @@ function readCeilingPosterControls(
 ): CeilingPosterControls {
   const readNumber = (name: string, fallback: number) => readCssNumber(rootStyles, name, fallback);
   const revealAmount = getDynamicCeilingRevealRatio(rootStyles);
+  const activeMainTrapezoid = readLyricPosterTrapezoid(rootStyles);
   const tall = (baseName: string, tallName: string, fallback: number) =>
     readTallInterpolatedNumber(rootStyles, baseName, tallName, fallback, revealAmount);
+  const activeBandY = (baseName: string, tallName: string, fallback: number) =>
+    mapTallBandYToActiveCeiling(rootStyles, activeMainTrapezoid, baseName, tallName, fallback);
+  const activeShortTrapezoid = readRailDrivenLyricTrapezoid(
+    rootStyles,
+    {
+      baseTopLeftX: "--lyric-poster-short-tl-x",
+      baseTopLeftY: "--lyric-poster-short-tl-y",
+      baseTopRightX: "--lyric-poster-short-tr-x",
+      baseTopRightY: "--lyric-poster-short-tr-y",
+      baseBottomLeftX: "--lyric-poster-short-bl-x",
+      baseBottomLeftY: "--lyric-poster-short-bl-y",
+      baseBottomRightX: "--lyric-poster-short-br-x",
+      baseBottomRightY: "--lyric-poster-short-br-y",
+      tallTopLeftX: "--lyric-poster-tall-short-top-left-x",
+      tallTopLeftY: "--lyric-poster-tall-short-top-left-y",
+      tallTopRightX: "--lyric-poster-tall-short-top-right-x",
+      tallTopRightY: "--lyric-poster-tall-short-top-right-y",
+      tallBottomLeftX: "--lyric-poster-tall-short-bottom-left-x",
+      tallBottomLeftY: "--lyric-poster-tall-short-bottom-left-y",
+      tallBottomRightX: "--lyric-poster-tall-short-bottom-right-x",
+      tallBottomRightY: "--lyric-poster-tall-short-bottom-right-y",
+    },
+    makeLyricPosterTrapezoid(221, 18, 1460, 3, 454, 195, 1343, 189),
+  );
 
   return {
     maxRows: maxRowsValue,
@@ -1353,14 +1501,14 @@ function readCeilingPosterControls(
     twoRowBandGuideOpacity: readNumber("--lyric-poster-two-row-band-guide-opacity", 0),
     threeRowBandGuideOpacity: readNumber("--lyric-poster-three-row-band-guide-opacity", 0),
     shortGuideOpacity: readNumber("--lyric-poster-short-guide-opacity", 0),
-    shortTopLeftX: tall("--lyric-poster-short-tl-x", "--lyric-poster-tall-short-top-left-x", 221),
-    shortTopLeftY: tall("--lyric-poster-short-tl-y", "--lyric-poster-tall-short-top-left-y", 18),
-    shortTopRightX: tall("--lyric-poster-short-tr-x", "--lyric-poster-tall-short-top-right-x", 1460),
-    shortTopRightY: tall("--lyric-poster-short-tr-y", "--lyric-poster-tall-short-top-right-y", 3),
-    shortBottomLeftX: tall("--lyric-poster-short-bl-x", "--lyric-poster-tall-short-bottom-left-x", 454),
-    shortBottomLeftY: tall("--lyric-poster-short-bl-y", "--lyric-poster-tall-short-bottom-left-y", 195),
-    shortBottomRightX: tall("--lyric-poster-short-br-x", "--lyric-poster-tall-short-bottom-right-x", 1343),
-    shortBottomRightY: tall("--lyric-poster-short-br-y", "--lyric-poster-tall-short-bottom-right-y", 189),
+    shortTopLeftX: activeShortTrapezoid.topLeftX,
+    shortTopLeftY: activeShortTrapezoid.topLeftY,
+    shortTopRightX: activeShortTrapezoid.topRightX,
+    shortTopRightY: activeShortTrapezoid.topRightY,
+    shortBottomLeftX: activeShortTrapezoid.bottomLeftX,
+    shortBottomLeftY: activeShortTrapezoid.bottomLeftY,
+    shortBottomRightX: activeShortTrapezoid.bottomRightX,
+    shortBottomRightY: activeShortTrapezoid.bottomRightY,
     shortVerticalStretch: readNumber("--lyric-poster-short-vertical-stretch", 0.78),
     shortPerspective: readNumber("--lyric-poster-short-perspective", 1.2),
     shortTilt: readNumber("--lyric-poster-short-tilt", -26),
@@ -1372,10 +1520,10 @@ function readCeilingPosterControls(
     shortTextBottomLeftY: readNumber("--lyric-poster-short-text-bl-y", 0),
     shortTextBottomRightX: readNumber("--lyric-poster-short-text-br-x", 0),
     shortTextBottomRightY: readNumber("--lyric-poster-short-text-br-y", 0),
-    twoRowTopBandTopY: tall("--lyric-poster-two-row-top-band-top-y", "--lyric-poster-tall-two-row-top-band-top-y", 18),
-    twoRowTopBandBottomY: tall("--lyric-poster-two-row-top-band-bottom-y", "--lyric-poster-tall-two-row-top-band-bottom-y", 106),
-    twoRowBottomBandTopY: tall("--lyric-poster-two-row-bottom-band-top-y", "--lyric-poster-tall-two-row-bottom-band-top-y", 106),
-    twoRowBottomBandBottomY: tall("--lyric-poster-two-row-bottom-band-bottom-y", "--lyric-poster-tall-two-row-bottom-band-bottom-y", 195),
+    twoRowTopBandTopY: activeBandY("--lyric-poster-two-row-top-band-top-y", "--lyric-poster-tall-two-row-top-band-top-y", 18),
+    twoRowTopBandBottomY: activeBandY("--lyric-poster-two-row-top-band-bottom-y", "--lyric-poster-tall-two-row-top-band-bottom-y", 106),
+    twoRowBottomBandTopY: activeBandY("--lyric-poster-two-row-bottom-band-top-y", "--lyric-poster-tall-two-row-bottom-band-top-y", 106),
+    twoRowBottomBandBottomY: activeBandY("--lyric-poster-two-row-bottom-band-bottom-y", "--lyric-poster-tall-two-row-bottom-band-bottom-y", 195),
     threeRowTopBandTopY: readNumber("--lyric-poster-three-row-top-band-top-y", 18),
     threeRowTopBandBottomY: readNumber("--lyric-poster-three-row-top-band-bottom-y", 76),
     threeRowMiddleBandTopY: readNumber("--lyric-poster-three-row-middle-band-top-y", 76),

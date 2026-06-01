@@ -566,19 +566,19 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTallTopLeftX: 12,
   lyricPosterTallTopLeftY: -139,
   lyricPosterTallTopRightX: 1764,
-  lyricPosterTallTopRightY: -135,
+  lyricPosterTallTopRightY: -133,
   lyricPosterTallBottomLeftX: 453,
-  lyricPosterTallBottomLeftY: 346,
+  lyricPosterTallBottomLeftY: 187,
   lyricPosterTallBottomRightX: 1332,
-  lyricPosterTallBottomRightY: 344,
+  lyricPosterTallBottomRightY: 191,
   lyricPosterTallShortTopLeftX: -3,
   lyricPosterTallShortTopLeftY: -145,
   lyricPosterTallShortTopRightX: 1759,
   lyricPosterTallShortTopRightY: -132,
   lyricPosterTallShortBottomLeftX: 453,
-  lyricPosterTallShortBottomLeftY: 342,
+  lyricPosterTallShortBottomLeftY: 188,
   lyricPosterTallShortBottomRightX: 1332,
-  lyricPosterTallShortBottomRightY: 345,
+  lyricPosterTallShortBottomRightY: 186,
   lyricPosterTallOneRowTextTopLeftX: 66,
   lyricPosterTallOneRowTextTopLeftY: 40,
   lyricPosterTallOneRowTextTopRightX: -93,
@@ -592,21 +592,21 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTallTwoRowBottomBandTopY: 20,
   lyricPosterTallTwoRowBottomBandBottomY: 195,
   lyricPosterTallTwoRowTopTextTopLeftX: 71,
-  lyricPosterTallTwoRowTopTextTopLeftY: 56,
+  lyricPosterTallTwoRowTopTextTopLeftY: 58,
   lyricPosterTallTwoRowTopTextTopRightX: -88,
   lyricPosterTallTwoRowTopTextTopRightY: 56,
-  lyricPosterTallTwoRowTopTextBottomLeftX: 131,
-  lyricPosterTallTwoRowTopTextBottomLeftY: 106,
+  lyricPosterTallTwoRowTopTextBottomLeftX: 136,
+  lyricPosterTallTwoRowTopTextBottomLeftY: 65,
   lyricPosterTallTwoRowTopTextBottomRightX: -142,
-  lyricPosterTallTwoRowTopTextBottomRightY: 106,
+  lyricPosterTallTwoRowTopTextBottomRightY: 59,
   lyricPosterTallTwoRowBottomTextTopLeftX: 146,
-  lyricPosterTallTwoRowBottomTextTopLeftY: 126,
+  lyricPosterTallTwoRowBottomTextTopLeftY: 76,
   lyricPosterTallTwoRowBottomTextTopRightX: -152,
-  lyricPosterTallTwoRowBottomTextTopRightY: 126,
-  lyricPosterTallTwoRowBottomTextBottomLeftX: 150,
-  lyricPosterTallTwoRowBottomTextBottomLeftY: 122,
+  lyricPosterTallTwoRowBottomTextTopRightY: 76,
+  lyricPosterTallTwoRowBottomTextBottomLeftX: 46,
+  lyricPosterTallTwoRowBottomTextBottomLeftY: -11,
   lyricPosterTallTwoRowBottomTextBottomRightX: -132,
-  lyricPosterTallTwoRowBottomTextBottomRightY: 119,
+  lyricPosterTallTwoRowBottomTextBottomRightY: -11,
   lyricPosterMaxRows: "auto",
   lyricPosterRowBreakpoint: 28,
   lyricPosterTransition: "none"};
@@ -614,7 +614,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
 const ROOM_UTILITY_KEY = "pocketdj-room-utility-v65a";
 const CLOCK_DISABLED_MIGRATION_KEY = "pocketdj-v65m-clock-disabled-default-applied";
 const MIXER_LED_TUNING_MIGRATION_KEY = "pocketdj-v65y-mixer-led-tuning-applied";
-const TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-tall-lyric-calibration-lock-2026-06-01";
+const TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-rail-lyric-calibration-2026-06-01";
 let roomUtility = loadRoomUtilitySettings();
 
 function setUtilityLabel(id: string, value: number): void {
@@ -693,19 +693,19 @@ function applyTallLyricCalibrationMigration(): void {
       lyricPosterTallTopLeftX: 12,
       lyricPosterTallTopLeftY: -139,
       lyricPosterTallTopRightX: 1764,
-      lyricPosterTallTopRightY: -135,
+      lyricPosterTallTopRightY: -133,
       lyricPosterTallBottomLeftX: 453,
-      lyricPosterTallBottomLeftY: 346,
+      lyricPosterTallBottomLeftY: 187,
       lyricPosterTallBottomRightX: 1332,
-      lyricPosterTallBottomRightY: 344,
+      lyricPosterTallBottomRightY: 191,
       lyricPosterTallShortTopLeftX: -3,
       lyricPosterTallShortTopLeftY: -145,
       lyricPosterTallShortTopRightX: 1759,
       lyricPosterTallShortTopRightY: -132,
       lyricPosterTallShortBottomLeftX: 453,
-      lyricPosterTallShortBottomLeftY: 342,
+      lyricPosterTallShortBottomLeftY: 188,
       lyricPosterTallShortBottomRightX: 1332,
-      lyricPosterTallShortBottomRightY: 345,
+      lyricPosterTallShortBottomRightY: 186,
       lyricPosterTallOneRowTextTopLeftX: 66,
       lyricPosterTallOneRowTextTopLeftY: 40,
       lyricPosterTallOneRowTextTopRightX: -93,
@@ -719,21 +719,21 @@ function applyTallLyricCalibrationMigration(): void {
       lyricPosterTallTwoRowBottomBandTopY: 20,
       lyricPosterTallTwoRowBottomBandBottomY: 195,
       lyricPosterTallTwoRowTopTextTopLeftX: 71,
-      lyricPosterTallTwoRowTopTextTopLeftY: 56,
+      lyricPosterTallTwoRowTopTextTopLeftY: 58,
       lyricPosterTallTwoRowTopTextTopRightX: -88,
       lyricPosterTallTwoRowTopTextTopRightY: 56,
-      lyricPosterTallTwoRowTopTextBottomLeftX: 131,
-      lyricPosterTallTwoRowTopTextBottomLeftY: 106,
+      lyricPosterTallTwoRowTopTextBottomLeftX: 136,
+      lyricPosterTallTwoRowTopTextBottomLeftY: 65,
       lyricPosterTallTwoRowTopTextBottomRightX: -142,
-      lyricPosterTallTwoRowTopTextBottomRightY: 106,
+      lyricPosterTallTwoRowTopTextBottomRightY: 59,
       lyricPosterTallTwoRowBottomTextTopLeftX: 146,
-      lyricPosterTallTwoRowBottomTextTopLeftY: 126,
+      lyricPosterTallTwoRowBottomTextTopLeftY: 76,
       lyricPosterTallTwoRowBottomTextTopRightX: -152,
-      lyricPosterTallTwoRowBottomTextTopRightY: 126,
-      lyricPosterTallTwoRowBottomTextBottomLeftX: 150,
-      lyricPosterTallTwoRowBottomTextBottomLeftY: 122,
+      lyricPosterTallTwoRowBottomTextTopRightY: 76,
+      lyricPosterTallTwoRowBottomTextBottomLeftX: 46,
+      lyricPosterTallTwoRowBottomTextBottomLeftY: -11,
       lyricPosterTallTwoRowBottomTextBottomRightX: -132,
-      lyricPosterTallTwoRowBottomTextBottomRightY: 119,
+      lyricPosterTallTwoRowBottomTextBottomRightY: -11,
     };
     saveRoomUtilitySettings();
     window.localStorage.setItem(TALL_LYRIC_CALIBRATION_MIGRATION_KEY, "true");
@@ -4443,13 +4443,107 @@ function tallGuideY(value: number, revealCoord: number): number {
   return value + revealCoord;
 }
 
+function railXAtY(topX: number, topY: number, bottomX: number, bottomY: number, y: number): number {
+  const denominator = bottomY - topY;
+  if (Math.abs(denominator) < 0.001) return topX;
+  return topX + (bottomX - topX) * ((y - topY) / denominator);
+}
+
 function interpolateTrapezoidX(leftTop: number, leftBottom: number, y: number, topY: number, bottomY: number): number {
   const denominator = bottomY - topY;
   const ratio = Math.abs(denominator) < 0.001 ? 0 : (y - topY) / denominator;
   return leftTop + (leftBottom - leftTop) * Math.max(0, Math.min(1, ratio));
 }
 
+type TallGuideQuad = {
+  topLeftX: number;
+  topLeftY: number;
+  topRightX: number;
+  topRightY: number;
+  bottomLeftX: number;
+  bottomLeftY: number;
+  bottomRightX: number;
+  bottomRightY: number;
+};
+
+function buildRailDrivenTallGuideQuad(revealCoord: number, revealRatio: number, short = false): TallGuideQuad {
+  const visibleTopY = -Math.max(0, revealCoord);
+  const base = short
+    ? {
+        topLeftX: roomUtility.lyricPosterShortTopLeftX,
+        topLeftY: roomUtility.lyricPosterShortTopLeftY,
+        topRightX: roomUtility.lyricPosterShortTopRightX,
+        topRightY: roomUtility.lyricPosterShortTopRightY,
+        bottomLeftX: roomUtility.lyricPosterShortBottomLeftX,
+        bottomLeftY: roomUtility.lyricPosterShortBottomLeftY,
+        bottomRightX: roomUtility.lyricPosterShortBottomRightX,
+        bottomRightY: roomUtility.lyricPosterShortBottomRightY,
+      }
+    : {
+        topLeftX: roomUtility.lyricPosterTopLeftX,
+        topLeftY: roomUtility.lyricPosterTopLeftY,
+        topRightX: roomUtility.lyricPosterTopRightX,
+        topRightY: roomUtility.lyricPosterTopRightY,
+        bottomLeftX: roomUtility.lyricPosterBottomLeftX,
+        bottomLeftY: roomUtility.lyricPosterBottomLeftY,
+        bottomRightX: roomUtility.lyricPosterBottomRightX,
+        bottomRightY: roomUtility.lyricPosterBottomRightY,
+      };
+  if (revealCoord <= 0.5 || revealRatio <= 0.0001) return base;
+
+  const tall = short
+    ? {
+        topLeftX: roomUtility.lyricPosterTallShortTopLeftX,
+        topLeftY: roomUtility.lyricPosterTallShortTopLeftY,
+        topRightX: roomUtility.lyricPosterTallShortTopRightX,
+        topRightY: roomUtility.lyricPosterTallShortTopRightY,
+        bottomLeftX: roomUtility.lyricPosterTallShortBottomLeftX,
+        bottomLeftY: roomUtility.lyricPosterTallShortBottomLeftY,
+        bottomRightX: roomUtility.lyricPosterTallShortBottomRightX,
+        bottomRightY: roomUtility.lyricPosterTallShortBottomRightY,
+      }
+    : {
+        topLeftX: roomUtility.lyricPosterTallTopLeftX,
+        topLeftY: roomUtility.lyricPosterTallTopLeftY,
+        topRightX: roomUtility.lyricPosterTallTopRightX,
+        topRightY: roomUtility.lyricPosterTallTopRightY,
+        bottomLeftX: roomUtility.lyricPosterTallBottomLeftX,
+        bottomLeftY: roomUtility.lyricPosterTallBottomLeftY,
+        bottomRightX: roomUtility.lyricPosterTallBottomRightX,
+        bottomRightY: roomUtility.lyricPosterTallBottomRightY,
+      };
+
+  return {
+    topLeftX: railXAtY(tall.topLeftX, tall.topLeftY, tall.bottomLeftX, tall.bottomLeftY, visibleTopY),
+    topLeftY: visibleTopY,
+    topRightX: railXAtY(tall.topRightX, tall.topRightY, tall.bottomRightX, tall.bottomRightY, visibleTopY),
+    topRightY: visibleTopY,
+    bottomLeftX: base.bottomLeftX + (tall.bottomLeftX - base.bottomLeftX) * revealRatio,
+    bottomLeftY: base.bottomLeftY + (tall.bottomLeftY - base.bottomLeftY) * revealRatio,
+    bottomRightX: base.bottomRightX + (tall.bottomRightX - base.bottomRightX) * revealRatio,
+    bottomRightY: base.bottomRightY + (tall.bottomRightY - base.bottomRightY) * revealRatio,
+  };
+}
+
+function activeBandYFromTallTarget(main: TallGuideQuad, targetY: number): number {
+  const tallTopY = (roomUtility.lyricPosterTallTopLeftY + roomUtility.lyricPosterTallTopRightY) / 2;
+  const tallBottomY = (roomUtility.lyricPosterTallBottomLeftY + roomUtility.lyricPosterTallBottomRightY) / 2;
+  const denominator = tallBottomY - tallTopY;
+  const ratio = Math.abs(denominator) < 0.001 ? 0 : clamp((targetY - tallTopY) / denominator, 0, 1);
+  const activeTopY = Math.min(main.topLeftY, main.topRightY);
+  const activeBottomY = Math.max(main.bottomLeftY, main.bottomRightY);
+  return activeTopY + (activeBottomY - activeTopY) * ratio;
+}
+
+function quadHorizontalBoundsAtY(quad: TallGuideQuad, y: number): { left: number; right: number } {
+  return {
+    left: railXAtY(quad.topLeftX, quad.topLeftY, quad.bottomLeftX, quad.bottomLeftY, y),
+    right: railXAtY(quad.topRightX, quad.topRightY, quad.bottomRightX, quad.bottomRightY, y),
+  };
+}
+
 function makeTallGuideBandPoints(
+  main: TallGuideQuad,
   topY: number,
   bottomY: number,
   topLeftOffsetX: number,
@@ -4462,18 +4556,14 @@ function makeTallGuideBandPoints(
   bottomRightOffsetY: number,
   revealCoord: number,
 ): Array<[number, number]> {
-  const mainTopY = roomUtility.lyricPosterTallTopLeftY;
-  const mainBottomY = roomUtility.lyricPosterTallBottomLeftY;
-  const leftTopX = interpolateTrapezoidX(roomUtility.lyricPosterTallTopLeftX, roomUtility.lyricPosterTallBottomLeftX, topY, mainTopY, mainBottomY);
-  const leftBottomX = interpolateTrapezoidX(roomUtility.lyricPosterTallTopLeftX, roomUtility.lyricPosterTallBottomLeftX, bottomY, mainTopY, mainBottomY);
-  const rightTopX = interpolateTrapezoidX(roomUtility.lyricPosterTallTopRightX, roomUtility.lyricPosterTallBottomRightX, topY, mainTopY, mainBottomY);
-  const rightBottomX = interpolateTrapezoidX(roomUtility.lyricPosterTallTopRightX, roomUtility.lyricPosterTallBottomRightX, bottomY, mainTopY, mainBottomY);
+  const topBounds = quadHorizontalBoundsAtY(main, topY);
+  const bottomBounds = quadHorizontalBoundsAtY(main, bottomY);
 
   return [
-    [leftTopX + topLeftOffsetX, tallGuideY(topY + topLeftOffsetY, revealCoord)],
-    [rightTopX + topRightOffsetX, tallGuideY(topY + topRightOffsetY, revealCoord)],
-    [rightBottomX + bottomRightOffsetX, tallGuideY(bottomY + bottomRightOffsetY, revealCoord)],
-    [leftBottomX + bottomLeftOffsetX, tallGuideY(bottomY + bottomLeftOffsetY, revealCoord)],
+    [topBounds.left + topLeftOffsetX, tallGuideY(topY + topLeftOffsetY, revealCoord)],
+    [topBounds.right + topRightOffsetX, tallGuideY(topY + topRightOffsetY, revealCoord)],
+    [bottomBounds.right + bottomRightOffsetX, tallGuideY(bottomY + bottomRightOffsetY, revealCoord)],
+    [bottomBounds.left + bottomLeftOffsetX, tallGuideY(bottomY + bottomLeftOffsetY, revealCoord)],
   ];
 }
 
@@ -4504,30 +4594,38 @@ function renderTallLyricGuideOverlay(): void {
     return;
   }
 
+  const mainQuad = buildRailDrivenTallGuideQuad(revealCoord, revealRatio, false);
+  const shortQuad = buildRailDrivenTallGuideQuad(revealCoord, revealRatio, true);
   const mainPoints: Array<[number, number]> = [
-    [roomUtility.lyricPosterTallTopLeftX, tallGuideY(roomUtility.lyricPosterTallTopLeftY, revealCoord)],
-    [roomUtility.lyricPosterTallTopRightX, tallGuideY(roomUtility.lyricPosterTallTopRightY, revealCoord)],
-    [roomUtility.lyricPosterTallBottomRightX, tallGuideY(roomUtility.lyricPosterTallBottomRightY, revealCoord)],
-    [roomUtility.lyricPosterTallBottomLeftX, tallGuideY(roomUtility.lyricPosterTallBottomLeftY, revealCoord)],
+    [mainQuad.topLeftX, tallGuideY(mainQuad.topLeftY, revealCoord)],
+    [mainQuad.topRightX, tallGuideY(mainQuad.topRightY, revealCoord)],
+    [mainQuad.bottomRightX, tallGuideY(mainQuad.bottomRightY, revealCoord)],
+    [mainQuad.bottomLeftX, tallGuideY(mainQuad.bottomLeftY, revealCoord)],
   ];
 
   const shortPoints: Array<[number, number]> = [
-    [roomUtility.lyricPosterTallShortTopLeftX, tallGuideY(roomUtility.lyricPosterTallShortTopLeftY, revealCoord)],
-    [roomUtility.lyricPosterTallShortTopRightX, tallGuideY(roomUtility.lyricPosterTallShortTopRightY, revealCoord)],
-    [roomUtility.lyricPosterTallShortBottomRightX, tallGuideY(roomUtility.lyricPosterTallShortBottomRightY, revealCoord)],
-    [roomUtility.lyricPosterTallShortBottomLeftX, tallGuideY(roomUtility.lyricPosterTallShortBottomLeftY, revealCoord)],
+    [shortQuad.topLeftX, tallGuideY(shortQuad.topLeftY, revealCoord)],
+    [shortQuad.topRightX, tallGuideY(shortQuad.topRightY, revealCoord)],
+    [shortQuad.bottomRightX, tallGuideY(shortQuad.bottomRightY, revealCoord)],
+    [shortQuad.bottomLeftX, tallGuideY(shortQuad.bottomLeftY, revealCoord)],
   ];
 
   const oneRowPoints: Array<[number, number]> = [
-    [roomUtility.lyricPosterTallTopLeftX + roomUtility.lyricPosterTallOneRowTextTopLeftX, tallGuideY(roomUtility.lyricPosterTallTopLeftY + roomUtility.lyricPosterTallOneRowTextTopLeftY, revealCoord)],
-    [roomUtility.lyricPosterTallTopRightX + roomUtility.lyricPosterTallOneRowTextTopRightX, tallGuideY(roomUtility.lyricPosterTallTopRightY + roomUtility.lyricPosterTallOneRowTextTopRightY, revealCoord)],
-    [roomUtility.lyricPosterTallBottomRightX + roomUtility.lyricPosterTallOneRowTextBottomRightX, tallGuideY(roomUtility.lyricPosterTallBottomRightY + roomUtility.lyricPosterTallOneRowTextBottomRightY, revealCoord)],
-    [roomUtility.lyricPosterTallBottomLeftX + roomUtility.lyricPosterTallOneRowTextBottomLeftX, tallGuideY(roomUtility.lyricPosterTallBottomLeftY + roomUtility.lyricPosterTallOneRowTextBottomLeftY, revealCoord)],
+    [mainQuad.topLeftX + roomUtility.lyricPosterTallOneRowTextTopLeftX, tallGuideY(mainQuad.topLeftY + roomUtility.lyricPosterTallOneRowTextTopLeftY, revealCoord)],
+    [mainQuad.topRightX + roomUtility.lyricPosterTallOneRowTextTopRightX, tallGuideY(mainQuad.topRightY + roomUtility.lyricPosterTallOneRowTextTopRightY, revealCoord)],
+    [mainQuad.bottomRightX + roomUtility.lyricPosterTallOneRowTextBottomRightX, tallGuideY(mainQuad.bottomRightY + roomUtility.lyricPosterTallOneRowTextBottomRightY, revealCoord)],
+    [mainQuad.bottomLeftX + roomUtility.lyricPosterTallOneRowTextBottomLeftX, tallGuideY(mainQuad.bottomLeftY + roomUtility.lyricPosterTallOneRowTextBottomLeftY, revealCoord)],
   ];
 
+  const topBandTopY = activeBandYFromTallTarget(mainQuad, roomUtility.lyricPosterTallTwoRowTopBandTopY);
+  const topBandBottomY = activeBandYFromTallTarget(mainQuad, roomUtility.lyricPosterTallTwoRowTopBandBottomY);
+  const bottomBandTopY = activeBandYFromTallTarget(mainQuad, roomUtility.lyricPosterTallTwoRowBottomBandTopY);
+  const bottomBandBottomY = activeBandYFromTallTarget(mainQuad, roomUtility.lyricPosterTallTwoRowBottomBandBottomY);
+
   const twoTopPoints = makeTallGuideBandPoints(
-    roomUtility.lyricPosterTallTwoRowTopBandTopY,
-    roomUtility.lyricPosterTallTwoRowTopBandBottomY,
+    mainQuad,
+    topBandTopY,
+    topBandBottomY,
     roomUtility.lyricPosterTallTwoRowTopTextTopLeftX,
     roomUtility.lyricPosterTallTwoRowTopTextTopLeftY,
     roomUtility.lyricPosterTallTwoRowTopTextTopRightX,
@@ -4540,8 +4638,9 @@ function renderTallLyricGuideOverlay(): void {
   );
 
   const twoBottomPoints = makeTallGuideBandPoints(
-    roomUtility.lyricPosterTallTwoRowBottomBandTopY,
-    roomUtility.lyricPosterTallTwoRowBottomBandBottomY,
+    mainQuad,
+    bottomBandTopY,
+    bottomBandBottomY,
     roomUtility.lyricPosterTallTwoRowBottomTextTopLeftX,
     roomUtility.lyricPosterTallTwoRowBottomTextTopLeftY,
     roomUtility.lyricPosterTallTwoRowBottomTextTopRightX,
