@@ -502,6 +502,11 @@ export function renderShell(state: AppState): void {
                 <div class="utility-readout tall-guide-readout">
                   Tall guide status: <span id="lyricPosterTallGuideStatus">hidden</span> | Reveal ratio: <span id="lyricPosterTallGuideRevealRatio">0.00</span>
                 </div>
+                <details class="lyric-tall-calibration-group lyric-geometry-monitor-group" open>
+                  <summary>Lyric geometry monitor</summary>
+                  <p class="utility-help">Shows the active lyric type and compares the actual text projection corners against the guide corners. Deltas should be near 0 when the tall layout is behaving correctly.</p>
+                  <pre id="lyricGeometryMonitor" class="lyric-geometry-monitor">No active lyric geometry yet.</pre>
+                </details>
                 <details class="lyric-tall-calibration-group">
                 <summary>Tall ceiling top clamp</summary>
                 <p class="utility-help">Absolute top limits for the dynamic tall-window lyric trapezoid. The computed top-left and top-right points will not go above these coordinates.</p>
@@ -1113,6 +1118,7 @@ export function updateLyricsCeiling(
 
   const clearLyrics = () => {
     lastLyricsRenderSignature = "";
+    updateLyricGeometryMonitor(null, null, null);
     activeBlock.style.setProperty("--lyric-line-visibility", "0");
 
     if (lyricClearFadeTimer) {
@@ -1182,6 +1188,7 @@ export function updateLyricsCeiling(
 
   const ceilingRect = ceiling.getBoundingClientRect();
   const layout = buildCeilingPosterLayout(activeLine.text, trapezoid, controls, ceilingRect.width, ceilingRect.height);
+  updateLyricGeometryMonitor(layout, trapezoid, controls);
   const shouldUseBackPushTrack =
     controls.transition === "back-push" &&
     lyricTextChanged &&
@@ -1681,6 +1688,9 @@ function buildCeilingPosterLayout(
   const rowCount = Math.max(1, Math.min(2, requestedRows));
   const rowTexts = balanceWordsIntoRows(words, rowCount);
   const n = Math.max(1, Math.min(2, rowTexts.length)) as 1 | 2;
+  const tallModeActive = controls.tallRevealRatio > 0.001;
+  const geometryMode: CeilingPosterLayout["geometryMode"] = tallModeActive ? "tall" : "legacy-16x9";
+  const lyricMode: CeilingPosterLayout["lyricMode"] = isShortLyric ? "short" : n === 1 ? "1-row" : "2-row";
   const profile = getPosterRowProfile(n, activeControls);
   const scaleX = Math.max(0.001, ceilingWidth / 1764);
   const ceilingRevealCoord = getDynamicCeilingRevealCoord(getComputedStyle(document.documentElement));
@@ -1720,7 +1730,7 @@ function buildCeilingPosterLayout(
     let bottomLeft = { x: left, y: bottom - padY };
     let bottomRight = { x: right, y: bottom - padY };
 
-    const cornerOffsets = getRowProjectionOffsets(n, index, controls);
+    const cornerOffsets = getRowProjectionOffsets(n, index, activeControls);
     topLeft = addPoint(topLeft, cornerOffsets.topLeftX, cornerOffsets.topLeftY);
     topRight = addPoint(topRight, cornerOffsets.topRightX, cornerOffsets.topRightY);
     bottomLeft = addPoint(bottomLeft, cornerOffsets.bottomLeftX, cornerOffsets.bottomLeftY);
@@ -1730,15 +1740,22 @@ function buildCeilingPosterLayout(
       [topLeft, topRight, bottomRight, bottomLeft],
       band,
     );
-    const tallTarget: [Point2D, Point2D, Point2D, Point2D] = [
+    const tallTarget: PosterQuad = [
       addPoint({ x: band.topLeftX, y: band.topLeftY }, cornerOffsets.topLeftX, cornerOffsets.topLeftY),
       addPoint({ x: band.topRightX, y: band.topRightY }, cornerOffsets.topRightX, cornerOffsets.topRightY),
       addPoint({ x: band.bottomRightX, y: band.bottomRightY }, cornerOffsets.bottomRightX, cornerOffsets.bottomRightY),
       addPoint({ x: band.bottomLeftX, y: band.bottomLeftY }, cornerOffsets.bottomLeftX, cornerOffsets.bottomLeftY),
     ];
-    [topLeft, topRight, bottomRight, bottomLeft] = blendQuads(legacyFit, tallTarget, controls.tallRevealRatio);
 
-    const destination = [topLeft, topRight, bottomRight, bottomLeft].map((point) => ({
+    // Once any ceiling reveal exists, stop blending with the 16:9 legacy placement.
+    // Tall mode now uses the same active guide quad as the target for the text.
+    // This prevents the old normal-window placement from pulling the lyrics down
+    // while the tall guide is already in the expanded ceiling area.
+    const guideQuad: PosterQuad = tallModeActive ? tallTarget : legacyFit;
+    const actualQuad = correctQuadToGuideFrame(tallModeActive ? tallTarget : legacyFit, guideQuad);
+    [topLeft, topRight, bottomRight, bottomLeft] = actualQuad;
+
+    const destination = actualQuad.map((point) => ({
       x: point.x * scaleX,
       y: (point.y + ceilingRevealCoord) * scaleY,
     }));
@@ -1762,10 +1779,12 @@ function buildCeilingPosterLayout(
       sourceTextLength,
       sourceTextY,
       matrix3d,
+      guideQuad,
+      actualQuad,
     };
   });
 
-  return { rows, centerX: trapezoid.centerX, centerY: trapezoid.centerY, rowBands };
+  return { rows, centerX: trapezoid.centerX, centerY: trapezoid.centerY, rowBands, geometryMode, lyricMode };
 }
 
 
@@ -2002,6 +2021,75 @@ function blendQuads(
     x: lerp(point.x, end[index].x, t),
     y: lerp(point.y, end[index].y, t),
   })) as [Point2D, Point2D, Point2D, Point2D];
+}
+
+function correctQuadToGuideFrame(actual: PosterQuad, guide: PosterQuad): PosterQuad {
+  // The tall lyric engine treats the guide as the source of truth. Keep this
+  // function explicit so later tuning can add real bounds checks without
+  // reintroducing the old 16:9/tall blending path.
+  const deltaY = getQuadDelta(actual, guide).some((point) => Math.abs(point.y) > 0.5);
+  const deltaX = getQuadDelta(actual, guide).some((point) => Math.abs(point.x) > 0.5);
+  return deltaX || deltaY ? guide.map((point) => ({ ...point })) as PosterQuad : actual;
+}
+
+function getQuadDelta(actual: PosterQuad, guide: PosterQuad): PosterQuad {
+  return actual.map((point, index) => ({
+    x: point.x - guide[index].x,
+    y: point.y - guide[index].y,
+  })) as PosterQuad;
+}
+
+function formatPoint(point: Point2D): string {
+  return `${Math.round(point.x)}, ${Math.round(point.y)}`;
+}
+
+function formatQuad(quad: PosterQuad): string {
+  return [
+    `TL ${formatPoint(quad[0])}`,
+    `TR ${formatPoint(quad[1])}`,
+    `BR ${formatPoint(quad[2])}`,
+    `BL ${formatPoint(quad[3])}`,
+  ].join(" | ");
+}
+
+function updateLyricGeometryMonitor(
+  layout: CeilingPosterLayout | null,
+  trapezoid: LyricPosterTrapezoid | null,
+  controls: CeilingPosterControls | null,
+): void {
+  const monitor = document.querySelector<HTMLElement>("#lyricGeometryMonitor");
+  if (!monitor) return;
+
+  if (!layout || !trapezoid || !controls) {
+    monitor.textContent = "No active lyric geometry yet.";
+    return;
+  }
+
+  const mainQuad: PosterQuad = [
+    { x: trapezoid.topLeftX, y: trapezoid.topLeftY },
+    { x: trapezoid.topRightX, y: trapezoid.topRightY },
+    { x: trapezoid.bottomRightX, y: trapezoid.bottomRightY },
+    { x: trapezoid.bottomLeftX, y: trapezoid.bottomLeftY },
+  ];
+
+  const lines = [
+    `Lyric mode: ${layout.lyricMode}`,
+    `Placement engine: ${layout.geometryMode}`,
+    `Reveal ratio: ${controls.tallRevealRatio.toFixed(4)}`,
+    `Main guide: ${formatQuad(mainQuad)}`,
+  ];
+
+  layout.rows.forEach((row, index) => {
+    const deltas = getQuadDelta(row.actualQuad, row.guideQuad);
+    const maxDelta = Math.max(...deltas.map((point) => Math.max(Math.abs(point.x), Math.abs(point.y))));
+    lines.push("");
+    lines.push(`Row ${index + 1}: ${row.text}`);
+    lines.push(`Guide:  ${formatQuad(row.guideQuad)}`);
+    lines.push(`Actual: ${formatQuad(row.actualQuad)}`);
+    lines.push(`Delta:  ${formatQuad(deltas)} | max ${maxDelta.toFixed(2)}`);
+  });
+
+  monitor.textContent = lines.join("\n");
 }
 
 function isQuadInsideTrapezoid(points: Point2D[], trapezoid: LyricPosterTrapezoid): boolean {
@@ -2348,6 +2436,8 @@ type CeilingPosterLayout = {
   centerX: number;
   centerY: number;
   rowBands: LyricPosterTrapezoid[];
+  geometryMode: "legacy-16x9" | "tall";
+  lyricMode: "short" | "1-row" | "2-row";
 };
 
 type LyricPosterSvgRowLayout = {
@@ -2358,12 +2448,16 @@ type LyricPosterSvgRowLayout = {
   sourceTextLength: number;
   sourceTextY: number;
   matrix3d: string;
+  guideQuad: PosterQuad;
+  actualQuad: PosterQuad;
 };
 
 type Point2D = {
   x: number;
   y: number;
 };
+
+type PosterQuad = [Point2D, Point2D, Point2D, Point2D];
 
 export function updateLyricsToggleUi(status: LyricsPayload["status"], enabled: boolean): void {
   const toggle = qs<HTMLButtonElement>("#lyricsToggle");
