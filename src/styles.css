@@ -8501,16 +8501,15 @@ body.lyrics-marquee-unavailable .marquee::after {
   }
 }
 
-/* v65Z: dynamic ceiling reveal
-   The active room remains a 16:9 base layer anchored to the bottom.
-   Extra vertical browser space reveals more ceiling above the old crop instead of stretching the DJ/table/walls.
-   Keep --room-h as the fixed 16:9 base height so all tuned objects keep their old positions. */
+/* Dynamic ceiling reveal, fixed-bottom crop
+   The tuned 16:9 room remains the source of truth. The .room box never becomes taller,
+   so the current 16:9 bottom/floor crop does not move and no additional floor is shown.
+   Extra browser height only reveals the background and lyric projection above the base room. */
 :root {
   --dynamic-ceiling-reveal-px: 0px;
   --dynamic-ceiling-reveal-coord: 0;
   --dynamic-ceiling-max-px: 220px;
   --room-base-h: var(--room-h);
-  --room-viewport-h: calc(var(--room-base-h) + var(--dynamic-ceiling-reveal-px));
   --lyric-ceiling-view-h: calc(529px + var(--dynamic-ceiling-reveal-coord) * 1px);
 }
 
@@ -8519,8 +8518,9 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 .room {
-  height: var(--room-viewport-h);
-  transform: translateY(calc(var(--dynamic-ceiling-reveal-px) * -0.5));
+  height: var(--room-base-h);
+  overflow: visible;
+  transform: none;
   transform-origin: center bottom;
 }
 
@@ -8535,9 +8535,10 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 .room-bg {
-  top: auto;
-  bottom: 0;
-  height: var(--room-viewport-h);
+  top: calc(var(--dynamic-ceiling-reveal-px) * -1);
+  bottom: auto;
+  height: calc(var(--room-base-h) + var(--dynamic-ceiling-reveal-px));
+  background-position: var(--room-bg-x) calc(var(--room-bg-y) + var(--dynamic-ceiling-reveal-px));
 }
 
 .room-filter-overlay,
@@ -8561,16 +8562,18 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 :root.room-fill-stretch .room-bg {
+  top: 0 !important;
+  height: var(--room-base-h) !important;
   background-size: calc(var(--room-bg-scale) * 100%) auto !important;
   background-position: var(--room-bg-x) var(--room-bg-y) !important;
 }
 
 :root.room-fill-stretch .room {
   transform: none !important;
+  overflow: hidden !important;
 }
 
 :root.room-fill-stretch {
   --dynamic-ceiling-reveal-px: 0px;
   --dynamic-ceiling-reveal-coord: 0;
-  --room-viewport-h: var(--room-h);
 }
