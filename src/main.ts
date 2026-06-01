@@ -2391,6 +2391,8 @@ function bindSessionWallAlbumControls(): void {
 async function boot(): Promise<void> {
   if (!loadClientId()) saveClientId(STANDARD_SPOTIFY_CLIENT_ID);
   applyStringLightPresetMigration();
+  updateDynamicCeilingReveal();
+  window.addEventListener("resize", updateDynamicCeilingReveal, { passive: true });
   renderShell(state);
   setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
@@ -4005,6 +4007,26 @@ function bindSpotifyBrowserControls(): void {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function updateDynamicCeilingReveal(): void {
+  const viewportWidth = window.innerWidth || 0;
+  const viewportHeight = window.innerHeight || 0;
+  if (viewportWidth <= 0 || viewportHeight <= 0) return;
+
+  // Base scene stays 16:9 and bottom-anchored. Extra vertical space becomes ceiling reveal.
+  const baseRoomWidth = Math.min(viewportWidth, viewportHeight * (16 / 9));
+  const baseRoomHeight = baseRoomWidth * (9 / 16);
+  const availableExtra = Math.max(0, viewportHeight - baseRoomHeight);
+  const maxRevealPx = Math.min(260, baseRoomHeight * 0.28);
+  const revealPx = Math.round(clamp(availableExtra, 0, maxRevealPx));
+  const coordScale = baseRoomWidth > 0 ? ROOM_COORD_WIDTH / baseRoomWidth : 1;
+  const revealCoord = Math.round(revealPx * coordScale);
+
+  const root = document.documentElement;
+  root.style.setProperty("--dynamic-ceiling-reveal-px", `${revealPx}px`);
+  root.style.setProperty("--dynamic-ceiling-reveal-coord", String(revealCoord));
+  root.classList.toggle("dynamic-ceiling-reveal-active", revealPx > 2);
 }
 
 function loadStringLightSettings(): StringLightSettings {

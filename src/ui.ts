@@ -30,6 +30,7 @@ export function renderShell(state: AppState): void {
         <div class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\')" aria-hidden="true"></div>
         <div class="album-wash" id="albumWash"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
+        <div class="room-base-layer" aria-hidden="false">
         <div id="sessionAlbumFrameOverlay" class="session-album-frame-overlay" aria-hidden="true"></div>
         <canvas id="sessionAlbumWarpCanvas" class="session-album-warp-canvas" width="1764" height="992" aria-hidden="true"></canvas>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
@@ -116,6 +117,7 @@ export function renderShell(state: AppState): void {
             <div class="floor-progress-fill" id="floorProgressFill"></div>
           </div>
           <button id="floorControlsLock" class="floor-controls-lock" type="button" aria-label="Lock floor controls open" aria-pressed="false" title="Lock floor controls open"></button>
+        </div>
         </div>
       </section>
 
@@ -956,6 +958,7 @@ export function updateLyricsCeiling(
   }
 
   const rootStyles = getComputedStyle(document.documentElement);
+  const ceilingViewHeight = 529 + getDynamicCeilingRevealCoord(rootStyles);
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
   const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
   const maxRowsValue = rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue;
@@ -1030,9 +1033,9 @@ export function updateLyricsCeiling(
   activeBlock.dataset.lyricRows = String(layout.rows.length);
 
   const clipId = `lyricPosterClip-${Math.abs(hashString(renderSignature))}`;
-  const clipPolygon = `${(trapezoid.topLeftX / 1764) * 100}% ${(trapezoid.topLeftY / 529) * 100}%, ${(trapezoid.topRightX / 1764) * 100}% ${(trapezoid.topRightY / 529) * 100}%, ${(trapezoid.bottomRightX / 1764) * 100}% ${(trapezoid.bottomRightY / 529) * 100}%, ${(trapezoid.bottomLeftX / 1764) * 100}% ${(trapezoid.bottomLeftY / 529) * 100}%`;
+  const clipPolygon = `${(trapezoid.topLeftX / 1764) * 100}% ${(trapezoid.topLeftY / ceilingViewHeight) * 100}%, ${(trapezoid.topRightX / 1764) * 100}% ${(trapezoid.topRightY / ceilingViewHeight) * 100}%, ${(trapezoid.bottomRightX / 1764) * 100}% ${(trapezoid.bottomRightY / ceilingViewHeight) * 100}%, ${(trapezoid.bottomLeftX / 1764) * 100}% ${(trapezoid.bottomLeftY / ceilingViewHeight) * 100}%`;
   activeBlock.innerHTML = `
-    <svg class="lyric-poster-svg lyric-poster-guide-svg" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true">
+    <svg class="lyric-poster-svg lyric-poster-guide-svg" viewBox="0 0 1764 ${ceilingViewHeight}" preserveAspectRatio="none" aria-hidden="true">
       <defs>
         <clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">
           <polygon points="${trapezoid.topLeftX},${trapezoid.topLeftY} ${trapezoid.topRightX},${trapezoid.topRightY} ${trapezoid.bottomRightX},${trapezoid.bottomRightY} ${trapezoid.bottomLeftX},${trapezoid.bottomLeftY}" />
@@ -1097,14 +1100,26 @@ function estimateLyricLineHoldMs(text: string): number {
 }
 
 
+function getDynamicCeilingRevealCoord(rootStyles: CSSStyleDeclaration): number {
+  const value = Number.parseFloat(rootStyles.getPropertyValue("--dynamic-ceiling-reveal-coord"));
+  return Number.isFinite(value) ? Math.max(0, value) : 0;
+}
+
+function expandYForCeilingReveal(value: number, reveal: number, bottomY = 195): number {
+  if (reveal <= 0) return value;
+  // Keep the bottom of the tuned ceiling area fixed and stretch everything above it upward.
+  return bottomY - ((bottomY - value) * (bottomY + reveal)) / bottomY;
+}
+
 function readLyricPosterTrapezoid(rootStyles: CSSStyleDeclaration): LyricPosterTrapezoid {
   const readPx = (name: string, fallback: number) => {
     const value = Number.parseFloat(rootStyles.getPropertyValue(name));
     return Number.isFinite(value) ? value : fallback;
   };
 
+  const reveal = getDynamicCeilingRevealCoord(rootStyles);
   const topLeftX = readPx("--lyric-poster-top-left-x", 221);
-  const topLeftY = readPx("--lyric-poster-top-left-y", 12);
+  const topLeftY = expandYForCeilingReveal(readPx("--lyric-poster-top-left-y", 12), reveal);
   const topRightX = readPx("--lyric-poster-top-right-x", 1562);
   const topRightY = readPx("--lyric-poster-top-right-y", 3);
   const bottomLeftX = readPx("--lyric-poster-bottom-left-x", 454);
@@ -1135,6 +1150,8 @@ function readCeilingPosterControls(
     const value = Number.parseFloat(rootStyles.getPropertyValue(name));
     return Number.isFinite(value) ? value : fallback;
   };
+  const reveal = getDynamicCeilingRevealCoord(rootStyles);
+  const expandY = (value: number) => expandYForCeilingReveal(value, reveal);
 
   return {
     maxRows: maxRowsValue,
@@ -1144,13 +1161,13 @@ function readCeilingPosterControls(
     threeRowBandGuideOpacity: readNumber("--lyric-poster-three-row-band-guide-opacity", 0),
     shortGuideOpacity: readNumber("--lyric-poster-short-guide-opacity", 0),
     shortTopLeftX: readNumber("--lyric-poster-short-tl-x", 221),
-    shortTopLeftY: readNumber("--lyric-poster-short-tl-y", 18),
+    shortTopLeftY: expandY(readNumber("--lyric-poster-short-tl-y", 18)),
     shortTopRightX: readNumber("--lyric-poster-short-tr-x", 1460),
-    shortTopRightY: readNumber("--lyric-poster-short-tr-y", 3),
+    shortTopRightY: expandY(readNumber("--lyric-poster-short-tr-y", 3)),
     shortBottomLeftX: readNumber("--lyric-poster-short-bl-x", 454),
-    shortBottomLeftY: readNumber("--lyric-poster-short-bl-y", 195),
+    shortBottomLeftY: expandY(readNumber("--lyric-poster-short-bl-y", 195)),
     shortBottomRightX: readNumber("--lyric-poster-short-br-x", 1343),
-    shortBottomRightY: readNumber("--lyric-poster-short-br-y", 189),
+    shortBottomRightY: expandY(readNumber("--lyric-poster-short-br-y", 189)),
     shortVerticalStretch: readNumber("--lyric-poster-short-vertical-stretch", 0.78),
     shortPerspective: readNumber("--lyric-poster-short-perspective", 1.2),
     shortTilt: readNumber("--lyric-poster-short-tilt", -26),
@@ -1162,16 +1179,16 @@ function readCeilingPosterControls(
     shortTextBottomLeftY: readNumber("--lyric-poster-short-text-bl-y", 0),
     shortTextBottomRightX: readNumber("--lyric-poster-short-text-br-x", 0),
     shortTextBottomRightY: readNumber("--lyric-poster-short-text-br-y", 0),
-    twoRowTopBandTopY: readNumber("--lyric-poster-two-row-top-band-top-y", 18),
-    twoRowTopBandBottomY: readNumber("--lyric-poster-two-row-top-band-bottom-y", 106),
-    twoRowBottomBandTopY: readNumber("--lyric-poster-two-row-bottom-band-top-y", 106),
-    twoRowBottomBandBottomY: readNumber("--lyric-poster-two-row-bottom-band-bottom-y", 195),
-    threeRowTopBandTopY: readNumber("--lyric-poster-three-row-top-band-top-y", 18),
-    threeRowTopBandBottomY: readNumber("--lyric-poster-three-row-top-band-bottom-y", 76),
-    threeRowMiddleBandTopY: readNumber("--lyric-poster-three-row-middle-band-top-y", 76),
-    threeRowMiddleBandBottomY: readNumber("--lyric-poster-three-row-middle-band-bottom-y", 136),
-    threeRowBottomBandTopY: readNumber("--lyric-poster-three-row-bottom-band-top-y", 136),
-    threeRowBottomBandBottomY: readNumber("--lyric-poster-three-row-bottom-band-bottom-y", 195),
+    twoRowTopBandTopY: expandY(readNumber("--lyric-poster-two-row-top-band-top-y", 18)),
+    twoRowTopBandBottomY: expandY(readNumber("--lyric-poster-two-row-top-band-bottom-y", 106)),
+    twoRowBottomBandTopY: expandY(readNumber("--lyric-poster-two-row-bottom-band-top-y", 106)),
+    twoRowBottomBandBottomY: expandY(readNumber("--lyric-poster-two-row-bottom-band-bottom-y", 195)),
+    threeRowTopBandTopY: expandY(readNumber("--lyric-poster-three-row-top-band-top-y", 18)),
+    threeRowTopBandBottomY: expandY(readNumber("--lyric-poster-three-row-top-band-bottom-y", 76)),
+    threeRowMiddleBandTopY: expandY(readNumber("--lyric-poster-three-row-middle-band-top-y", 76)),
+    threeRowMiddleBandBottomY: expandY(readNumber("--lyric-poster-three-row-middle-band-bottom-y", 136)),
+    threeRowBottomBandTopY: expandY(readNumber("--lyric-poster-three-row-bottom-band-top-y", 136)),
+    threeRowBottomBandBottomY: expandY(readNumber("--lyric-poster-three-row-bottom-band-bottom-y", 195)),
     oneRowVerticalStretch: readNumber("--lyric-poster-one-row-vertical-stretch", 1.35),
     oneRowTightness: readNumber("--lyric-poster-one-row-tightness", 0),
     oneRowPerspective: readNumber("--lyric-poster-one-row-perspective", 1),
@@ -1295,7 +1312,8 @@ function buildCeilingPosterLayout(
   const n = Math.max(1, Math.min(2, rowTexts.length)) as 1 | 2;
   const profile = getPosterRowProfile(n, activeControls);
   const scaleX = Math.max(0.001, ceilingWidth / 1764);
-  const scaleY = Math.max(0.001, ceilingHeight / 529);
+  const ceilingViewHeight = Math.max(529, 529 + getDynamicCeilingRevealCoord(getComputedStyle(document.documentElement)));
+  const scaleY = Math.max(0.001, ceilingHeight / ceilingViewHeight);
   const rowBands = getRowBandTrapezoids(n, activeTrapezoid, activeControls);
 
   const autoCeilingTilt = getCeilingSideTiltDegrees(activeTrapezoid);
