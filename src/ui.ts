@@ -509,6 +509,13 @@ export function renderShell(state: AppState): void {
                     <button id="lyricGeometryMonitorCopy" type="button">Copy monitor</button>
                     <span id="lyricGeometryMonitorCopyStatus" class="lyric-monitor-copy-status" aria-live="polite"></span>
                   </div>
+                  <div class="lyric-diagnostic-controls">
+                    <label class="utility-checkbox"><input id="lyricDiagnosticStaticMode" type="checkbox" /> Static tall lyric test mode</label>
+                    <label class="utility-checkbox"><input id="lyricDiagnosticNoEffects" type="checkbox" /> Disable lyric filters/effects</label>
+                    <label class="utility-checkbox"><input id="lyricDiagnosticShowProjectionBoxes" type="checkbox" /> Show projected row boxes</label>
+                    <label class="utility-checkbox"><input id="lyricDiagnosticShowDomBounds" type="checkbox" /> Show final DOM bounds</label>
+                  </div>
+                  <p class="utility-help">Static mode disables old/new transition panels and SVG row animations so we can isolate whether the placement bug is geometry or post-render CSS.</p>
                   <pre id="lyricGeometryMonitor" class="lyric-geometry-monitor">No active lyric geometry yet.</pre>
                 </details>
                 <details class="lyric-tall-calibration-group">
@@ -724,6 +731,22 @@ export function renderShell(state: AppState): void {
     </main>
   `;
   bindLyricGeometryMonitorCopyButton();
+  bindLyricDiagnosticControls();
+}
+
+function bindLyricDiagnosticControls(): void {
+  [
+    "lyricDiagnosticStaticMode",
+    "lyricDiagnosticNoEffects",
+    "lyricDiagnosticShowProjectionBoxes",
+    "lyricDiagnosticShowDomBounds",
+  ].forEach((id) => {
+    const control = document.querySelector<HTMLInputElement>(`#${id}`);
+    control?.addEventListener("change", () => {
+      lastLyricsRenderSignature = "";
+      document.documentElement.classList.toggle(`diag-${id}`, control.checked);
+    });
+  });
 }
 
 function bindLyricGeometryMonitorCopyButton(): void {
@@ -753,6 +776,33 @@ function bindLyricGeometryMonitorCopyButton(): void {
     fallbackCopyText(text);
     markCopied();
   });
+}
+
+type LyricDiagnosticSettings = {
+  staticMode: boolean;
+  noEffects: boolean;
+  showProjectionBoxes: boolean;
+  showDomBounds: boolean;
+};
+
+function readLyricDiagnosticSettings(): LyricDiagnosticSettings {
+  return {
+    staticMode: Boolean(document.querySelector<HTMLInputElement>("#lyricDiagnosticStaticMode")?.checked),
+    noEffects: Boolean(document.querySelector<HTMLInputElement>("#lyricDiagnosticNoEffects")?.checked),
+    showProjectionBoxes: Boolean(document.querySelector<HTMLInputElement>("#lyricDiagnosticShowProjectionBoxes")?.checked),
+    showDomBounds: Boolean(document.querySelector<HTMLInputElement>("#lyricDiagnosticShowDomBounds")?.checked),
+  };
+}
+
+function applyLyricDiagnosticClasses(activeBlock: HTMLElement, diagnostics: LyricDiagnosticSettings): void {
+  activeBlock.classList.toggle("lyric-diagnostic-static-mode", diagnostics.staticMode);
+  activeBlock.classList.toggle("lyric-diagnostic-no-effects", diagnostics.noEffects);
+  activeBlock.classList.toggle("lyric-diagnostic-show-projection-boxes", diagnostics.showProjectionBoxes);
+  activeBlock.classList.toggle("lyric-diagnostic-show-dom-bounds", diagnostics.showDomBounds);
+  document.documentElement.classList.toggle("lyric-diagnostic-static-mode-active", diagnostics.staticMode);
+  document.documentElement.classList.toggle("lyric-diagnostic-no-effects-active", diagnostics.noEffects);
+  document.documentElement.classList.toggle("lyric-diagnostic-show-projection-boxes-active", diagnostics.showProjectionBoxes);
+  document.documentElement.classList.toggle("lyric-diagnostic-show-dom-bounds-active", diagnostics.showDomBounds);
 }
 
 function fallbackCopyText(text: string): void {
@@ -1213,10 +1263,11 @@ export function updateLyricsCeiling(
   const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
   const maxRowsValue = rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue;
   const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "none") as LyricPosterTransitionMode;
-  const controls = readCeilingPosterControls(rootStyles, maxRowsValue, transitionValue);
+  const diagnostics = readLyricDiagnosticSettings();
+  const controls = readCeilingPosterControls(rootStyles, maxRowsValue, diagnostics.staticMode ? "none" : transitionValue);
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
-  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${JSON.stringify(trapezoid)}|${JSON.stringify(controls)}|${animationRevision}|${rootClassSignature}`;
+  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${JSON.stringify(trapezoid)}|${JSON.stringify(controls)}|${JSON.stringify(diagnostics)}|${animationRevision}|${rootClassSignature}`;
 
   if (renderSignature === lastLyricsRenderSignature) {
     activeBlock.style.setProperty("--lyric-line-visibility", "1");
@@ -1240,6 +1291,7 @@ export function updateLyricsCeiling(
   const ceilingRect = ceiling.getBoundingClientRect();
   const layout = buildCeilingPosterLayout(activeLine.text, trapezoid, controls, ceilingRect.width, ceilingRect.height);
   const shouldUseBackPushTrack =
+    !diagnostics.staticMode &&
     controls.transition === "back-push" &&
     lyricTextChanged &&
     Boolean(previousPosterTextForTransition?.trim());
@@ -1272,14 +1324,15 @@ export function updateLyricsCeiling(
           `,
       )
       .join("");
-  activeBlock.classList.toggle("lyric-poster-transition-none", controls.transition === "none");
-  activeBlock.classList.toggle("lyric-poster-transition-push", controls.transition === "push-slide");
-  activeBlock.classList.toggle("lyric-poster-transition-fade", controls.transition === "fade-slide");
-  activeBlock.classList.toggle("lyric-poster-transition-shadow-slide", controls.transition === "shadow-slide");
-  activeBlock.classList.toggle("lyric-poster-transition-ceiling-stamp", controls.transition === "ceiling-stamp");
-  activeBlock.classList.toggle("lyric-poster-transition-soft-dissolve", controls.transition === "soft-dissolve");
-  activeBlock.classList.toggle("lyric-poster-transition-ghost-drift", controls.transition === "ghost-drift");
-  activeBlock.classList.toggle("lyric-poster-transition-back-push", controls.transition === "back-push");
+  applyLyricDiagnosticClasses(activeBlock, diagnostics);
+  activeBlock.classList.toggle("lyric-poster-transition-none", controls.transition === "none" || diagnostics.staticMode);
+  activeBlock.classList.toggle("lyric-poster-transition-push", controls.transition === "push-slide" && !diagnostics.staticMode);
+  activeBlock.classList.toggle("lyric-poster-transition-fade", controls.transition === "fade-slide" && !diagnostics.staticMode);
+  activeBlock.classList.toggle("lyric-poster-transition-shadow-slide", controls.transition === "shadow-slide" && !diagnostics.staticMode);
+  activeBlock.classList.toggle("lyric-poster-transition-ceiling-stamp", controls.transition === "ceiling-stamp" && !diagnostics.staticMode);
+  activeBlock.classList.toggle("lyric-poster-transition-soft-dissolve", controls.transition === "soft-dissolve" && !diagnostics.staticMode);
+  activeBlock.classList.toggle("lyric-poster-transition-ghost-drift", controls.transition === "ghost-drift" && !diagnostics.staticMode);
+  activeBlock.classList.toggle("lyric-poster-transition-back-push", controls.transition === "back-push" && !diagnostics.staticMode);
   activeBlock.classList.toggle("lyric-poster-transition-a", !lyricPosterTransitionFlip);
   activeBlock.classList.toggle("lyric-poster-transition-b", lyricPosterTransitionFlip);
   activeBlock.dataset.lyricRows = String(layout.rows.length);
@@ -1314,11 +1367,13 @@ export function updateLyricsCeiling(
           : renderPosterRows(layout)
       }
     </div>
+    <div id="lyricDomDiagnosticOverlay" class="lyric-dom-diagnostic-overlay" aria-hidden="true"></div>
   `;
 
   window.requestAnimationFrame(() => {
     fitRenderedLyricGlyphsToSourceBoxes(layout, controls);
-    updateLyricGeometryMonitor(layout, trapezoid, controls);
+    updateLyricDomDiagnosticOverlay(layout, diagnostics);
+    updateLyricGeometryMonitor(layout, trapezoid, controls, diagnostics);
   });
 
   void playbackMs;
@@ -2198,10 +2253,65 @@ function getLyricGlyphMonitorLines(layout: CeilingPosterLayout): string[] {
   return lines;
 }
 
+function formatDomRect(rect: DOMRect, origin?: DOMRect): string {
+  const left = origin ? rect.left - origin.left : rect.left;
+  const top = origin ? rect.top - origin.top : rect.top;
+  return `x ${left.toFixed(1)}, y ${top.toFixed(1)}, w ${rect.width.toFixed(1)}, h ${rect.height.toFixed(1)}`;
+}
+
+function updateLyricDomDiagnosticOverlay(layout: CeilingPosterLayout, diagnostics: LyricDiagnosticSettings): void {
+  const activeBlock = document.querySelector<HTMLElement>("#activeLyricsBlock");
+  const overlay = document.querySelector<HTMLElement>("#lyricDomDiagnosticOverlay");
+  if (!activeBlock || !overlay) return;
+
+  overlay.innerHTML = "";
+  if (!diagnostics.showDomBounds) return;
+
+  const origin = activeBlock.getBoundingClientRect();
+  const rows = Array.from(activeBlock.querySelectorAll<HTMLElement>(".lyric-poster-html-row"));
+  const texts = Array.from(activeBlock.querySelectorAll<SVGTextElement>(".lyric-poster-row-text"));
+
+  const addBox = (rect: DOMRect, className: string, label: string) => {
+    const box = document.createElement("div");
+    box.className = `lyric-dom-diagnostic-box ${className}`;
+    box.style.left = `${rect.left - origin.left}px`;
+    box.style.top = `${rect.top - origin.top}px`;
+    box.style.width = `${rect.width}px`;
+    box.style.height = `${rect.height}px`;
+    box.textContent = label;
+    overlay.appendChild(box);
+  };
+
+  rows.forEach((row, index) => addBox(row.getBoundingClientRect(), "row-box", `row ${index + 1}`));
+  texts.forEach((text, index) => addBox(text.getBoundingClientRect(), "glyph-box", `glyph ${index + 1}`));
+
+  void layout;
+}
+
+function getLyricDomMonitorLines(layout: CeilingPosterLayout, diagnostics: LyricDiagnosticSettings): string[] {
+  const activeBlock = document.querySelector<HTMLElement>("#activeLyricsBlock");
+  if (!activeBlock) return [];
+
+  const lines = ["", "Final DOM paint monitor:"];
+  const origin = activeBlock.getBoundingClientRect();
+  lines.push(`activeBlock rect: ${formatDomRect(origin)}`);
+  lines.push(`activeBlock CSS top=${getComputedStyle(activeBlock).top || "n/a"} height=${getComputedStyle(activeBlock).height || "n/a"}`);
+  const rows = Array.from(activeBlock.querySelectorAll<HTMLElement>(".lyric-poster-html-row"));
+  const svgs = Array.from(activeBlock.querySelectorAll<SVGSVGElement>(".lyric-poster-row-svg"));
+  const texts = Array.from(activeBlock.querySelectorAll<SVGTextElement>(".lyric-poster-row-text"));
+  rows.forEach((row, index) => lines.push(`Row ${index + 1} DOM row rect: ${formatDomRect(row.getBoundingClientRect(), origin)}`));
+  svgs.forEach((svg, index) => lines.push(`Row ${index + 1} DOM svg rect: ${formatDomRect(svg.getBoundingClientRect(), origin)}`));
+  texts.forEach((text, index) => lines.push(`Row ${index + 1} DOM glyph rect: ${formatDomRect(text.getBoundingClientRect(), origin)}`));
+  lines.push(`DOM bounds overlay: ${diagnostics.showDomBounds ? "visible" : "hidden"}`);
+  void layout;
+  return lines;
+}
+
 function updateLyricGeometryMonitor(
   layout: CeilingPosterLayout | null,
   trapezoid: LyricPosterTrapezoid | null,
   controls: CeilingPosterControls | null,
+  diagnostics: LyricDiagnosticSettings = readLyricDiagnosticSettings(),
 ): void {
   const monitor = document.querySelector<HTMLElement>("#lyricGeometryMonitor");
   if (!monitor) return;
@@ -2223,6 +2333,7 @@ function updateLyricGeometryMonitor(
     `Placement engine: ${layout.geometryMode}`,
     `Reveal ratio: ${controls.tallRevealRatio.toFixed(4)}`,
     `Main guide: ${formatQuad(mainQuad)}`,
+    `Diagnostics: static=${diagnostics.staticMode ? "on" : "off"} | noEffects=${diagnostics.noEffects ? "on" : "off"} | projectionBoxes=${diagnostics.showProjectionBoxes ? "on" : "off"} | domBounds=${diagnostics.showDomBounds ? "on" : "off"}`,
   ];
 
   layout.rows.forEach((row, index) => {
@@ -2236,6 +2347,7 @@ function updateLyricGeometryMonitor(
   });
 
   lines.push(...getLyricGlyphMonitorLines(layout));
+  lines.push(...getLyricDomMonitorLines(layout, diagnostics));
   monitor.textContent = lines.join("\n");
 }
 
