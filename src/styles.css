@@ -8623,3 +8623,68 @@ body.lyrics-marquee-unavailable .marquee::after {
 .lyric-tall-grid label {
   min-width: 0;
 }
+
+
+/* Tall-window lyric guide overlay */
+.tall-lyric-guide-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: var(--lyric-ceiling-view-h);
+  z-index: 12;
+  pointer-events: none;
+  overflow: visible;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.tall-lyric-guides-enabled .tall-lyric-guide-overlay {
+  opacity: var(--lyric-poster-tall-guide-opacity, 0.6);
+}
+
+.tall-guide-polygon {
+  fill: rgba(255, 255, 255, 0.045);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+
+.tall-guide-main {
+  stroke: rgba(255, 72, 72, 0.95);
+  fill: rgba(255, 72, 72, 0.055);
+}
+
+.tall-guide-short {
+  stroke: rgba(85, 211, 255, 0.92);
+  fill: rgba(85, 211, 255, 0.045);
+  stroke-dasharray: 14 10;
+}
+
+.tall-guide-one {
+  stroke: rgba(255, 222, 92, 0.95);
+  fill: rgba(255, 222, 92, 0.05);
+  stroke-dasharray: 18 8;
+}
+
+.tall-guide-two-top {
+  stroke: rgba(184, 125, 255, 0.94);
+  fill: rgba(184, 125, 255, 0.05);
+}
+
+.tall-guide-two-bottom {
+  stroke: rgba(255, 154, 86, 0.94);
+  fill: rgba(255, 154, 86, 0.05);
+}
+
+.tall-guide-label {
+  font-family: "Press Start 2P", monospace;
+  font-size: 16px;
+  fill: rgba(255, 241, 196, 0.94);
+  stroke: rgba(0, 0, 0, 0.72);
+  stroke-width: 4;
+  paint-order: stroke;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+

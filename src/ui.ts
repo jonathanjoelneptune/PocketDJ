@@ -42,6 +42,7 @@ export function renderShell(state: AppState): void {
             <div class="lyrics-boundary-guide lyrics-boundary-guide-video"></div>
           </div>
           <div id="activeLyricsBlock" class="active-lyrics-block lyric-poster-line" aria-hidden="true"></div>
+          <svg id="tallLyricGuideOverlay" class="tall-lyric-guide-overlay" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true"></svg>
         </div>
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
@@ -494,6 +495,10 @@ export function renderShell(state: AppState): void {
               <details class="lyric-tall-calibration">
                 <summary>Tall-window lyric calibration</summary>
                 <p class="utility-help">Use this when the ceiling reveal is active. These are the full-height target coordinates. Pocket DJ interpolates between the normal 16:9 coordinates and these tall-window values based on how much extra ceiling is visible.</p>
+                <label class="utility-checkbox"><input id="lyricPosterTallGuideEnabled" type="checkbox" /> Show tall-window lyric guides</label>
+                <label>Tall guide opacity <span id="lyricPosterTallGuideOpacityValue">0.60</span>
+                  <input id="lyricPosterTallGuideOpacity" type="range" min="0" max="1" step="0.01" value="0.60" />
+                </label>
                               <details class="lyric-tall-calibration-group">
                 <summary>Main ceiling boundary target</summary>
                 <div class="lyric-utility-stack lyric-tall-grid">

@@ -238,6 +238,8 @@ type RoomUtilitySettings = {
   lyricPosterGuideOpacity: number;
   lyricPosterCenterGuideOpacity: number;
   lyricPosterShortGuideOpacity: number;
+  lyricPosterTallGuideEnabled: boolean;
+  lyricPosterTallGuideOpacity: number;
   lyricPosterShortTopLeftX: number;
   lyricPosterShortTopLeftY: number;
   lyricPosterShortTopRightX: number;
@@ -452,6 +454,8 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterGuideOpacity: 0.00,
   lyricPosterCenterGuideOpacity: 0.00,
   lyricPosterShortGuideOpacity: 0.00,
+  lyricPosterTallGuideEnabled: false,
+  lyricPosterTallGuideOpacity: 0.60,
   lyricPosterShortTopLeftX: 221,
   lyricPosterShortTopLeftY: 18,
   lyricPosterShortTopRightX: 1460,
@@ -4358,6 +4362,132 @@ function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
   }
 }
 
+
+function getDynamicCeilingRevealCoordFromRoot(rootStyles: CSSStyleDeclaration): number {
+  const value = Number.parseFloat(rootStyles.getPropertyValue("--dynamic-ceiling-reveal-coord"));
+  return Number.isFinite(value) ? Math.max(0, value) : 0;
+}
+
+function guidePointString(points: Array<[number, number]>): string {
+  return points.map(([x, y]) => `${Math.round(x * 10) / 10},${Math.round(y * 10) / 10}`).join(" ");
+}
+
+function tallGuideY(value: number, revealCoord: number): number {
+  return value + revealCoord;
+}
+
+function interpolateTrapezoidX(leftTop: number, leftBottom: number, y: number, topY: number, bottomY: number): number {
+  const denominator = bottomY - topY;
+  const ratio = Math.abs(denominator) < 0.001 ? 0 : (y - topY) / denominator;
+  return leftTop + (leftBottom - leftTop) * Math.max(0, Math.min(1, ratio));
+}
+
+function makeTallGuideBandPoints(
+  topY: number,
+  bottomY: number,
+  topLeftOffsetX: number,
+  topLeftOffsetY: number,
+  topRightOffsetX: number,
+  topRightOffsetY: number,
+  bottomLeftOffsetX: number,
+  bottomLeftOffsetY: number,
+  bottomRightOffsetX: number,
+  bottomRightOffsetY: number,
+  revealCoord: number,
+): Array<[number, number]> {
+  const mainTopY = roomUtility.lyricPosterTallTopLeftY;
+  const mainBottomY = roomUtility.lyricPosterTallBottomLeftY;
+  const leftTopX = interpolateTrapezoidX(roomUtility.lyricPosterTallTopLeftX, roomUtility.lyricPosterTallBottomLeftX, topY, mainTopY, mainBottomY);
+  const leftBottomX = interpolateTrapezoidX(roomUtility.lyricPosterTallTopLeftX, roomUtility.lyricPosterTallBottomLeftX, bottomY, mainTopY, mainBottomY);
+  const rightTopX = interpolateTrapezoidX(roomUtility.lyricPosterTallTopRightX, roomUtility.lyricPosterTallBottomRightX, topY, mainTopY, mainBottomY);
+  const rightBottomX = interpolateTrapezoidX(roomUtility.lyricPosterTallTopRightX, roomUtility.lyricPosterTallBottomRightX, bottomY, mainTopY, mainBottomY);
+
+  return [
+    [leftTopX + topLeftOffsetX, tallGuideY(topY + topLeftOffsetY, revealCoord)],
+    [rightTopX + topRightOffsetX, tallGuideY(topY + topRightOffsetY, revealCoord)],
+    [rightBottomX + bottomRightOffsetX, tallGuideY(bottomY + bottomRightOffsetY, revealCoord)],
+    [leftBottomX + bottomLeftOffsetX, tallGuideY(bottomY + bottomLeftOffsetY, revealCoord)],
+  ];
+}
+
+function renderTallLyricGuideOverlay(): void {
+  const overlay = document.querySelector<SVGSVGElement>("#tallLyricGuideOverlay");
+  if (!overlay) return;
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const revealCoord = getDynamicCeilingRevealCoordFromRoot(rootStyles);
+  const viewHeight = 529 + revealCoord;
+  overlay.setAttribute("viewBox", `0 0 ${ROOM_COORD_WIDTH} ${viewHeight}`);
+  overlay.style.setProperty("--tall-guide-opacity", String(roomUtility.lyricPosterTallGuideOpacity));
+
+  if (!roomUtility.lyricPosterTallGuideEnabled || roomUtility.lyricPosterTallGuideOpacity <= 0) {
+    overlay.innerHTML = "";
+    return;
+  }
+
+  const mainPoints: Array<[number, number]> = [
+    [roomUtility.lyricPosterTallTopLeftX, tallGuideY(roomUtility.lyricPosterTallTopLeftY, revealCoord)],
+    [roomUtility.lyricPosterTallTopRightX, tallGuideY(roomUtility.lyricPosterTallTopRightY, revealCoord)],
+    [roomUtility.lyricPosterTallBottomRightX, tallGuideY(roomUtility.lyricPosterTallBottomRightY, revealCoord)],
+    [roomUtility.lyricPosterTallBottomLeftX, tallGuideY(roomUtility.lyricPosterTallBottomLeftY, revealCoord)],
+  ];
+
+  const shortPoints: Array<[number, number]> = [
+    [roomUtility.lyricPosterTallShortTopLeftX, tallGuideY(roomUtility.lyricPosterTallShortTopLeftY, revealCoord)],
+    [roomUtility.lyricPosterTallShortTopRightX, tallGuideY(roomUtility.lyricPosterTallShortTopRightY, revealCoord)],
+    [roomUtility.lyricPosterTallShortBottomRightX, tallGuideY(roomUtility.lyricPosterTallShortBottomRightY, revealCoord)],
+    [roomUtility.lyricPosterTallShortBottomLeftX, tallGuideY(roomUtility.lyricPosterTallShortBottomLeftY, revealCoord)],
+  ];
+
+  const oneRowPoints: Array<[number, number]> = [
+    [roomUtility.lyricPosterTallTopLeftX + roomUtility.lyricPosterTallOneRowTextTopLeftX, tallGuideY(roomUtility.lyricPosterTallTopLeftY + roomUtility.lyricPosterTallOneRowTextTopLeftY, revealCoord)],
+    [roomUtility.lyricPosterTallTopRightX + roomUtility.lyricPosterTallOneRowTextTopRightX, tallGuideY(roomUtility.lyricPosterTallTopRightY + roomUtility.lyricPosterTallOneRowTextTopRightY, revealCoord)],
+    [roomUtility.lyricPosterTallBottomRightX + roomUtility.lyricPosterTallOneRowTextBottomRightX, tallGuideY(roomUtility.lyricPosterTallBottomRightY + roomUtility.lyricPosterTallOneRowTextBottomRightY, revealCoord)],
+    [roomUtility.lyricPosterTallBottomLeftX + roomUtility.lyricPosterTallOneRowTextBottomLeftX, tallGuideY(roomUtility.lyricPosterTallBottomLeftY + roomUtility.lyricPosterTallOneRowTextBottomLeftY, revealCoord)],
+  ];
+
+  const twoTopPoints = makeTallGuideBandPoints(
+    roomUtility.lyricPosterTallTwoRowTopBandTopY,
+    roomUtility.lyricPosterTallTwoRowTopBandBottomY,
+    roomUtility.lyricPosterTallTwoRowTopTextTopLeftX,
+    roomUtility.lyricPosterTallTwoRowTopTextTopLeftY,
+    roomUtility.lyricPosterTallTwoRowTopTextTopRightX,
+    roomUtility.lyricPosterTallTwoRowTopTextTopRightY,
+    roomUtility.lyricPosterTallTwoRowTopTextBottomLeftX,
+    roomUtility.lyricPosterTallTwoRowTopTextBottomLeftY,
+    roomUtility.lyricPosterTallTwoRowTopTextBottomRightX,
+    roomUtility.lyricPosterTallTwoRowTopTextBottomRightY,
+    revealCoord,
+  );
+
+  const twoBottomPoints = makeTallGuideBandPoints(
+    roomUtility.lyricPosterTallTwoRowBottomBandTopY,
+    roomUtility.lyricPosterTallTwoRowBottomBandBottomY,
+    roomUtility.lyricPosterTallTwoRowBottomTextTopLeftX,
+    roomUtility.lyricPosterTallTwoRowBottomTextTopLeftY,
+    roomUtility.lyricPosterTallTwoRowBottomTextTopRightX,
+    roomUtility.lyricPosterTallTwoRowBottomTextTopRightY,
+    roomUtility.lyricPosterTallTwoRowBottomTextBottomLeftX,
+    roomUtility.lyricPosterTallTwoRowBottomTextBottomLeftY,
+    roomUtility.lyricPosterTallTwoRowBottomTextBottomRightX,
+    roomUtility.lyricPosterTallTwoRowBottomTextBottomRightY,
+    revealCoord,
+  );
+
+  overlay.innerHTML = `
+    <polygon class="tall-guide-polygon tall-guide-main" points="${guidePointString(mainPoints)}" />
+    <polygon class="tall-guide-polygon tall-guide-short" points="${guidePointString(shortPoints)}" />
+    <polygon class="tall-guide-polygon tall-guide-one" points="${guidePointString(oneRowPoints)}" />
+    <polygon class="tall-guide-polygon tall-guide-two-top" points="${guidePointString(twoTopPoints)}" />
+    <polygon class="tall-guide-polygon tall-guide-two-bottom" points="${guidePointString(twoBottomPoints)}" />
+    <text class="tall-guide-label tall-guide-main-label" x="${mainPoints[0][0] + 8}" y="${mainPoints[0][1] + 18}">MAIN</text>
+    <text class="tall-guide-label tall-guide-short-label" x="${shortPoints[0][0] + 8}" y="${shortPoints[0][1] + 18}">SHORT</text>
+    <text class="tall-guide-label tall-guide-one-label" x="${oneRowPoints[0][0] + 8}" y="${oneRowPoints[0][1] + 18}">1 ROW</text>
+    <text class="tall-guide-label tall-guide-two-top-label" x="${twoTopPoints[0][0] + 8}" y="${twoTopPoints[0][1] + 18}">2 TOP</text>
+    <text class="tall-guide-label tall-guide-two-bottom-label" x="${twoBottomPoints[0][0] + 8}" y="${twoBottomPoints[0][1] + 18}">2 BOT</text>
+  `;
+}
+
 function setStringLightLabel(id: string, value: number): void {
   const label = document.querySelector<HTMLElement>(`#${id}`);
   if (!label) return;
@@ -4638,6 +4768,7 @@ function bindRoomUtilityControls(): void {
   const lyricPosterEffectInsetEmboss = document.querySelector<HTMLInputElement>("#lyricPosterEffectInsetEmboss");
   const lyricPosterEffectBevel = document.querySelector<HTMLInputElement>("#lyricPosterEffectBevel");
   const lyricPosterEffectSoftBlur = document.querySelector<HTMLInputElement>("#lyricPosterEffectSoftBlur");
+  const lyricPosterTallGuideEnabled = document.querySelector<HTMLInputElement>("#lyricPosterTallGuideEnabled");
   const panelHeightAdjustEnabled = document.querySelector<HTMLInputElement>("#panelHeightAdjustEnabled");
   const roomFillStretchMode = document.querySelector<HTMLInputElement>("#roomFillStretchMode");
   const utilityPanelLeftSide = document.querySelector<HTMLInputElement>("#utilityPanelLeftSide");
@@ -4656,6 +4787,7 @@ function bindRoomUtilityControls(): void {
   if (lyricPosterEffectInsetEmboss) lyricPosterEffectInsetEmboss.checked = roomUtility.lyricPosterEffectInsetEmboss;
   if (lyricPosterEffectBevel) lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
   if (lyricPosterEffectSoftBlur) lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
+  if (lyricPosterTallGuideEnabled) lyricPosterTallGuideEnabled.checked = roomUtility.lyricPosterTallGuideEnabled;
   if (panelHeightAdjustEnabled) panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
   if (roomFillStretchMode) roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
   if (utilityPanelLeftSide) utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
@@ -4746,6 +4878,7 @@ function bindRoomUtilityControls(): void {
     ["lyricPosterGuideOpacity", "lyricPosterGuideOpacityValue"],
     ["lyricPosterCenterGuideOpacity", "lyricPosterCenterGuideOpacityValue"],
     ["lyricPosterShortGuideOpacity", "lyricPosterShortGuideOpacityValue"],
+    ["lyricPosterTallGuideOpacity", "lyricPosterTallGuideOpacityValue"],
     ["lyricPosterShortTopLeftX", "lyricPosterShortTopLeftXValue"],
     ["lyricPosterShortTopLeftY", "lyricPosterShortTopLeftYValue"],
     ["lyricPosterShortTopRightX", "lyricPosterShortTopRightXValue"],
@@ -4958,6 +5091,12 @@ function bindRoomUtilityControls(): void {
     });
   });
 
+  lyricPosterTallGuideEnabled?.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, lyricPosterTallGuideEnabled: lyricPosterTallGuideEnabled.checked };
+    applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
+  });
+
   qs<HTMLButtonElement>("#saveRoomUtility").addEventListener("click", () => {
     saveRoomUtilitySettings();
     applyRoomUtilitySettings();
@@ -4975,6 +5114,7 @@ function bindRoomUtilityControls(): void {
     if (lyricPosterEffectInsetEmboss) lyricPosterEffectInsetEmboss.checked = roomUtility.lyricPosterEffectInsetEmboss;
     if (lyricPosterEffectBevel) lyricPosterEffectBevel.checked = roomUtility.lyricPosterEffectBevel;
     if (lyricPosterEffectSoftBlur) lyricPosterEffectSoftBlur.checked = roomUtility.lyricPosterEffectSoftBlur;
+    if (lyricPosterTallGuideEnabled) lyricPosterTallGuideEnabled.checked = roomUtility.lyricPosterTallGuideEnabled;
     if (panelHeightAdjustEnabled) panelHeightAdjustEnabled.checked = roomUtility.panelHeightAdjustEnabled;
     if (roomFillStretchMode) roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
     if (utilityPanelLeftSide) utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
@@ -5094,6 +5234,8 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-guide-opacity", String(roomUtility.lyricPosterGuideOpacity));
   root.style.setProperty("--lyric-poster-center-guide-opacity", String(roomUtility.lyricPosterCenterGuideOpacity));
   root.style.setProperty("--lyric-poster-short-guide-opacity", String(roomUtility.lyricPosterShortGuideOpacity));
+  root.style.setProperty("--lyric-poster-tall-guide-opacity", String(roomUtility.lyricPosterTallGuideOpacity));
+  root.classList.toggle("tall-lyric-guides-enabled", roomUtility.lyricPosterTallGuideEnabled && roomUtility.lyricPosterTallGuideOpacity > 0);
   root.style.setProperty("--lyric-poster-short-tl-x", `${roomUtility.lyricPosterShortTopLeftX}px`);
   root.style.setProperty("--lyric-poster-short-tl-y", `${roomUtility.lyricPosterShortTopLeftY}px`);
   root.style.setProperty("--lyric-poster-short-tr-x", `${roomUtility.lyricPosterShortTopRightX}px`);
@@ -5266,6 +5408,7 @@ function applyRoomUtilitySettings(): void {
   root.classList.toggle("lyric-poster-effect-inset-emboss", roomUtility.lyricPosterEffectInsetEmboss);
   root.classList.toggle("lyric-poster-effect-bevel", roomUtility.lyricPosterEffectBevel);
   root.classList.toggle("lyric-poster-effect-soft-blur", roomUtility.lyricPosterEffectSoftBlur);
+  renderTallLyricGuideOverlay();
 }
 
 
