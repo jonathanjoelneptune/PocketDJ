@@ -8753,3 +8753,30 @@ body.lyrics-marquee-unavailable .marquee::after {
 .lyric-poster-row-svg {
   overflow: hidden !important;
 }
+
+.lyric-monitor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.lyric-monitor-actions button {
+  border: 1px solid rgba(255, 210, 121, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 190, 82, 0.10);
+  color: rgba(255, 234, 178, 0.92);
+  font-family: inherit;
+  font-size: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.lyric-monitor-actions button:hover {
+  background: rgba(255, 190, 82, 0.18);
+}
+
+.lyric-monitor-copy-status {
+  color: rgba(143, 255, 170, 0.86);
+  font-size: 10px;
+}

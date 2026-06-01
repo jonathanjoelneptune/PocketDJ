@@ -505,6 +505,10 @@ export function renderShell(state: AppState): void {
                 <details class="lyric-tall-calibration-group lyric-geometry-monitor-group" open>
                   <summary>Lyric geometry monitor</summary>
                   <p class="utility-help">Shows the active lyric type and compares the actual text projection corners against the guide corners. Deltas should be near 0 when the tall layout is behaving correctly.</p>
+                  <div class="lyric-monitor-actions">
+                    <button id="lyricGeometryMonitorCopy" type="button">Copy monitor</button>
+                    <span id="lyricGeometryMonitorCopyStatus" class="lyric-monitor-copy-status" aria-live="polite"></span>
+                  </div>
                   <pre id="lyricGeometryMonitor" class="lyric-geometry-monitor">No active lyric geometry yet.</pre>
                 </details>
                 <details class="lyric-tall-calibration-group">
@@ -719,6 +723,53 @@ export function renderShell(state: AppState): void {
       <button id="panelAdjustDone" class="panel-adjust-done" type="button" aria-label="Done adjusting panel height" title="Done adjusting panel height">DONE</button>
     </main>
   `;
+  bindLyricGeometryMonitorCopyButton();
+}
+
+function bindLyricGeometryMonitorCopyButton(): void {
+  const button = document.querySelector<HTMLButtonElement>("#lyricGeometryMonitorCopy");
+  const monitor = document.querySelector<HTMLElement>("#lyricGeometryMonitor");
+  const status = document.querySelector<HTMLElement>("#lyricGeometryMonitorCopyStatus");
+  if (!button || !monitor) return;
+
+  button.addEventListener("click", () => {
+    const text = monitor.textContent || "No active lyric geometry yet.";
+    const markCopied = () => {
+      if (!status) return;
+      status.textContent = "copied";
+      window.setTimeout(() => {
+        if (status.textContent === "copied") status.textContent = "";
+      }, 1800);
+    };
+
+    if (navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(text).then(markCopied).catch(() => {
+        fallbackCopyText(text);
+        markCopied();
+      });
+      return;
+    }
+
+    fallbackCopyText(text);
+    markCopied();
+  });
+}
+
+function fallbackCopyText(text: string): void {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "true");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  try {
+    document.execCommand("copy");
+  } finally {
+    document.body.removeChild(textarea);
+  }
 }
 
 export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): void {
