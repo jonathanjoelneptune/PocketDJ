@@ -8870,3 +8870,22 @@ body.lyrics-marquee-unavailable .marquee::after {
 .lyric-test-utility-group label {
   display: block;
 }
+
+/* Tall lyric final visual correction tuning
+   When the art-directed final corner offsets are used in tall ceiling mode,
+   the visible lyric rows may intentionally move outside the original computed
+   ceiling clip. Keep the old 16:9 clipping behavior, but let tall-mode rows
+   remain visible while the final offsets are being tuned. */
+.active-lyrics-block.lyric-poster-tall-mode .lyric-poster-html-rows {
+  clip-path: none !important;
+  overflow: visible !important;
+}
+
+.active-lyrics-block.lyric-poster-tall-mode .lyric-poster-html-row,
+.active-lyrics-block.lyric-poster-tall-mode .lyric-poster-row-svg {
+  overflow: visible !important;
+}
+
+.active-lyrics-block.lyric-poster-tall-mode .lyric-poster-row-text {
+  overflow: visible !important;
+}
