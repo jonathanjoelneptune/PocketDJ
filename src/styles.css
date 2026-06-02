@@ -8128,7 +8128,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 .floor-controls-lock {
   position: absolute;
   left: 50%;
-  bottom: calc((var(--room-h) * -0.062) + 15px);
+  bottom: calc((var(--room-h) * -0.062) - 15px);
   width: clamp(32px, calc(var(--room-w) * 0.030), 56px);
   height: clamp(32px, calc(var(--room-w) * 0.030), 56px);
   transform: translateX(-50%);
@@ -9290,7 +9290,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 .floor-controls-fullscreen {
   position: absolute;
   left: calc(50% + clamp(40px, calc(var(--room-w) * 0.038), 68px));
-  bottom: calc((var(--room-h) * -0.062) + 15px);
+  bottom: calc((var(--room-h) * -0.062) - 15px);
   width: clamp(32px, calc(var(--room-w) * 0.030), 56px);
   height: clamp(32px, calc(var(--room-w) * 0.030), 56px);
   transform: translateX(-50%);
