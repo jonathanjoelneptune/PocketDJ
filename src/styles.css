@@ -8127,7 +8127,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 .floor-controls-lock {
   position: absolute;
-  left: 50%;
+  left: calc(50% - clamp(20px, calc(var(--room-w) * 0.019), 34px));
   bottom: calc((var(--room-h) * -0.062) - 15px);
   width: clamp(32px, calc(var(--room-w) * 0.030), 56px);
   height: clamp(32px, calc(var(--room-w) * 0.030), 56px);
@@ -9289,7 +9289,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 .floor-controls-fullscreen {
   position: absolute;
-  left: calc(50% + clamp(40px, calc(var(--room-w) * 0.038), 68px));
+  left: calc(50% + clamp(20px, calc(var(--room-w) * 0.019), 34px));
   bottom: calc((var(--room-h) * -0.062) - 15px);
   width: clamp(32px, calc(var(--room-w) * 0.030), 56px);
   height: clamp(32px, calc(var(--room-w) * 0.030), 56px);
@@ -9401,4 +9401,16 @@ body.lyrics-marquee-unavailable .marquee::after {
 .brand-actions .fullscreen-pill.fullscreen-icon-button.fullscreen-pill-active::before,
 .brand-actions .fullscreen-pill.fullscreen-icon-button.fullscreen-pill-active::after {
   border-color: #ffd98a !important;
+}
+
+
+/* v66m: center floor lock/fullscreen pair as one visual group beneath the transport controls. */
+.floor-controls-lock {
+  left: calc(50% - clamp(20px, calc(var(--room-w) * 0.019), 34px)) !important;
+  bottom: calc((var(--room-h) * -0.062) - 15px) !important;
+}
+
+.floor-controls-fullscreen {
+  left: calc(50% + clamp(20px, calc(var(--room-w) * 0.019), 34px)) !important;
+  bottom: calc((var(--room-h) * -0.062) - 15px) !important;
 }
