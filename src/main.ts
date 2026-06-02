@@ -136,6 +136,10 @@ let albumRevealPreloadUrl = "";
 let albumRevealLoadedUrl = "";
 let albumRevealPreloadStartedAt = 0;
 let albumRevealPreloadImage: HTMLImageElement | null = null;
+let placedAlbumCommittedTrackKey = "";
+let placedAlbumCommittedUrl = "";
+let placedAlbumPendingTrackKey = "";
+let placedAlbumPendingUrl = "";
 let vinylClockTimer: number | null = null;
 let speakerTempoTrackKey = "";
 let speakerTempoFetchKey = "";
@@ -561,14 +565,14 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   songChangeAlbumY: 45,
   songChangeAlbumSize: 12,
   placedAlbumEnabled: true,
-  placedAlbumX: 43.2,
-  placedAlbumY: 61.4,
-  placedAlbumSize: 7.2,
-  placedAlbumRotateX: 0,
-  placedAlbumRotateY: -16,
-  placedAlbumRotateZ: -7,
-  placedAlbumDepth: 0.18,
-  placedAlbumShadow: 0.62,
+  placedAlbumX: 44,
+  placedAlbumY: 60,
+  placedAlbumSize: 4,
+  placedAlbumRotateX: 33,
+  placedAlbumRotateY: 0,
+  placedAlbumRotateZ: 0,
+  placedAlbumDepth: 0,
+  placedAlbumShadow: 1,
   placedAlbumOpacity: 1,
   panelStartY: 39,
   panelHeightAdjustEnabled: false,
@@ -885,6 +889,8 @@ const CLOCK_DISABLED_MIGRATION_KEY = "pocketdj-v65m-clock-disabled-default-appli
 const MIXER_LED_TUNING_MIGRATION_KEY = "pocketdj-v65y-mixer-led-tuning-applied";
 const TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-final-16x9-lyric-offsets-2026-06-02";
 const FINAL_TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-final-full-tall-lyric-offsets-effects-disabled-2026-06-02";
+const PLACED_ACTIVE_ALBUM_TUNING_MIGRATION_KEY = "pocketdj-v66b-placed-active-album-tuned-2026-06-03";
+const AMBIENT_TWINKLE_VISIBILITY_MIGRATION_KEY = "pocketdj-v66b-ambient-twinkles-visibility-2026-06-03";
 let roomUtility = loadRoomUtilitySettings();
 
 function setUtilityLabel(id: string, value: number): void {
@@ -1249,6 +1255,45 @@ const DEFAULT_PARTIAL_ALBUM_OVERHANG = 0.55;
 const MIN_PARTIAL_ALBUM_OVERHANG = 0.1;
 const MAX_PARTIAL_ALBUM_OVERHANG = 0.85;
 
+
+function applyPlacedActiveAlbumTuningMigration(): void {
+  try {
+    if (window.localStorage.getItem(PLACED_ACTIVE_ALBUM_TUNING_MIGRATION_KEY)) return;
+    roomUtility = {
+      ...roomUtility,
+      placedAlbumEnabled: true,
+      placedAlbumX: 44,
+      placedAlbumY: 60,
+      placedAlbumSize: 4,
+      placedAlbumRotateX: 33,
+      placedAlbumRotateY: 0,
+      placedAlbumRotateZ: 0,
+      placedAlbumDepth: 0,
+      placedAlbumShadow: 1,
+      placedAlbumOpacity: 1,
+      panelStartY: 39,
+    };
+    saveRoomUtilitySettings();
+    window.localStorage.setItem(PLACED_ACTIVE_ALBUM_TUNING_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply placed active album tuning migration", error);
+  }
+}
+
+function applyAmbientTwinkleVisibilityMigration(): void {
+  try {
+    if (window.localStorage.getItem(AMBIENT_TWINKLE_VISIBILITY_MIGRATION_KEY)) return;
+    ambientTwinkleSettings = {
+      ...DEFAULT_AMBIENT_TWINKLE_SETTINGS,
+      points: DEFAULT_AMBIENT_TWINKLE_POINTS.map((point) => ({ ...point })),
+    };
+    saveAmbientTwinkleSettings();
+    window.localStorage.setItem(AMBIENT_TWINKLE_VISIBILITY_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply ambient twinkle visibility migration", error);
+  }
+}
+
 type StringLightPoint = {
   id: number;
   x: number;
@@ -1334,8 +1379,8 @@ type AmbientTwinkleSettings = {
 
 const AMBIENT_TWINKLE_KEY = "pocketdj-ambient-stars-city-lights-v1";
 const DEFAULT_AMBIENT_TWINKLE_POINTS: AmbientTwinklePoint[] = [
-  { id: 1, kind: "star", x: 704, y: 375, size: 2.0, intensity: 0.68, phase: 0.02 },
-  { id: 2, kind: "star", x: 767, y: 392, size: 1.7, intensity: 0.58, phase: 0.22 },
+  { id: 1, kind: "star", x: 689, y: 375, size: 2.9, intensity: 0.68, phase: 0.02 },
+  { id: 2, kind: "star", x: 754, y: 392, size: 2.4, intensity: 0.58, phase: 0.22 },
   { id: 3, kind: "star", x: 829, y: 371, size: 1.9, intensity: 0.64, phase: 0.41 },
   { id: 4, kind: "star", x: 906, y: 386, size: 1.5, intensity: 0.52, phase: 0.73 },
   { id: 5, kind: "star", x: 982, y: 369, size: 1.8, intensity: 0.60, phase: 0.31 },
@@ -1356,17 +1401,24 @@ const DEFAULT_AMBIENT_TWINKLE_POINTS: AmbientTwinklePoint[] = [
   { id: 20, kind: "city", x: 1068, y: 532, size: 1.9, intensity: 0.68, phase: 0.44 },
   { id: 21, kind: "city", x: 1108, y: 498, size: 2.2, intensity: 0.74, phase: 0.91 },
   { id: 22, kind: "city", x: 1150, y: 521, size: 1.8, intensity: 0.62, phase: 0.19 },
+  { id: 23, kind: "star", x: 842, y: 425, size: 1.8, intensity: 0.62, phase: 0.15100000000000025 },
+  { id: 24, kind: "star", x: 893, y: 410, size: 1.6, intensity: 0.56, phase: 0.95 },
+  { id: 25, kind: "star", x: 1092, y: 421, size: 1.5, intensity: 0.53, phase: 0.36 },
+  { id: 26, kind: "city", x: 705, y: 545, size: 1.8, intensity: 0.64, phase: 0.32 },
+  { id: 27, kind: "city", x: 821, y: 486, size: 1.7, intensity: 0.60, phase: 0.58 },
+  { id: 28, kind: "city", x: 965, y: 474, size: 1.9, intensity: 0.66, phase: 0.05 },
+  { id: 29, kind: "city", x: 1086, y: 485, size: 1.8, intensity: 0.62, phase: 0.72 },
 ];
 
 const DEFAULT_AMBIENT_TWINKLE_SETTINGS: AmbientTwinkleSettings = {
   enabled: true,
   editMode: false,
   showGuides: false,
-  starOpacity: 0.78,
-  cityOpacity: 0.82,
+  starOpacity: 0.88,
+  cityOpacity: 1.06,
   twinkle: 0.55,
-  selectedId: 1,
-  nextId: 23,
+  selectedId: 3,
+  nextId: 30,
   points: DEFAULT_AMBIENT_TWINKLE_POINTS.map((point) => ({ ...point })),
 };
 
@@ -3044,7 +3096,9 @@ async function boot(): Promise<void> {
   applyClockDisabledDefaultMigration();
   applyMixerLedTuningMigration();
   applyTallLyricCalibrationMigration();
-applyFinalTallLyricCalibrationMigration();
+  applyFinalTallLyricCalibrationMigration();
+  applyPlacedActiveAlbumTuningMigration();
+  applyAmbientTwinkleVisibilityMigration();
   applyRoomUtilitySettings();
 
   if (state.spotifyClientId) {
@@ -6777,19 +6831,55 @@ function updateSongChangeAlbumOverlay(track: AppState["playback"]): void {
   updatePlacedActiveAlbum(track);
 }
 
+function playbackAlbumTrackKey(track: AppState["playback"]): string {
+  if (track.trackId) return track.trackId;
+  if (track.source === "demo" && track.title) return `demo:${track.title}|${track.artist}|${track.album}`;
+  return "";
+}
+
+function isSongChangeRevealActive(): boolean {
+  return roomUtility.songChangeMode || document.documentElement.classList.contains("dj-pose-a41");
+}
+
+function commitPlacedActiveAlbum(trackKey: string, url: string): void {
+  placedAlbumCommittedTrackKey = trackKey;
+  placedAlbumCommittedUrl = url;
+  placedAlbumPendingTrackKey = "";
+  placedAlbumPendingUrl = "";
+}
+
 function updatePlacedActiveAlbum(track: AppState["playback"]): void {
   const layer = document.querySelector<HTMLElement>("#placedActiveAlbumLayer");
   const image = document.querySelector<HTMLImageElement>("#placedActiveAlbumCover");
   if (!layer || !image) return;
 
+  const trackKey = playbackAlbumTrackKey(track);
   const albumArtUrl = track.albumArtUrl || "";
-  const readyUrl = albumArtUrl && (albumRevealLoadedUrl === albumArtUrl || albumRevealPreloadUrl === albumArtUrl) ? albumArtUrl : "";
-  const showAlbum = Boolean(readyUrl && roomUtility.placedAlbumEnabled && (track.trackId || track.source === "demo"));
+  const readyUrl = albumArtUrl && albumRevealLoadedUrl === albumArtUrl ? albumArtUrl : "";
+  const revealActive = isSongChangeRevealActive();
+
+  if (trackKey && readyUrl) {
+    const alreadyCommitted = placedAlbumCommittedTrackKey === trackKey && placedAlbumCommittedUrl === readyUrl;
+    if (!alreadyCommitted) {
+      placedAlbumPendingTrackKey = trackKey;
+      placedAlbumPendingUrl = readyUrl;
+      if (!revealActive) {
+        commitPlacedActiveAlbum(trackKey, readyUrl);
+      }
+    }
+  }
+
+  if (!revealActive && placedAlbumPendingTrackKey && placedAlbumPendingUrl) {
+    commitPlacedActiveAlbum(placedAlbumPendingTrackKey, placedAlbumPendingUrl);
+  }
+
+  const displayUrl = placedAlbumCommittedUrl;
+  const showAlbum = Boolean(roomUtility.placedAlbumEnabled && displayUrl);
   layer.classList.toggle("placed-active-album-has-art", showAlbum);
 
-  if (showAlbum && image.src !== readyUrl) image.src = readyUrl;
+  if (showAlbum && image.getAttribute("src") !== displayUrl) image.src = displayUrl;
   if (!showAlbum) image.removeAttribute("src");
-  image.alt = showAlbum ? `${track.title} album cover placed on the back shelf` : "";
+  image.alt = showAlbum ? "Placed album cover on the back shelf" : "";
 }
 
 function speakerPulseDurationMs(): number {

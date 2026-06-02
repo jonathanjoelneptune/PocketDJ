@@ -324,11 +324,11 @@ export function renderShell(state: AppState): void {
               <label class="utility-checkbox"><input id="ambientTwinkleEnabled" type="checkbox" checked /> Enable stars and city lights</label>
               <label class="utility-checkbox"><input id="ambientTwinkleEditMode" type="checkbox" /> Edit twinkle points</label>
               <label class="utility-checkbox"><input id="ambientTwinkleShowGuides" type="checkbox" /> Show point labels</label>
-              <label>Star opacity <span id="ambientStarOpacityValue">0.78</span>
-                <input id="ambientStarOpacity" type="range" min="0" max="1.5" step="0.01" value="0.78" />
+              <label>Star opacity <span id="ambientStarOpacityValue">0.88</span>
+                <input id="ambientStarOpacity" type="range" min="0" max="1.5" step="0.01" value="0.88" />
               </label>
-              <label>City light opacity <span id="ambientCityOpacityValue">0.82</span>
-                <input id="ambientCityOpacity" type="range" min="0" max="1.5" step="0.01" value="0.82" />
+              <label>City light opacity <span id="ambientCityOpacityValue">1.06</span>
+                <input id="ambientCityOpacity" type="range" min="0" max="1.5" step="0.01" value="1.06" />
               </label>
               <label>Random twinkle <span id="ambientTwinkleAmountValue">0.55</span>
                 <input id="ambientTwinkleAmount" type="range" min="0" max="1" step="0.01" value="0.55" />
@@ -481,29 +481,29 @@ export function renderShell(state: AppState): void {
             <p class="utility-help">Shows the currently playing album art after the song-change reveal, positioned as if the DJ set the sleeve on the back shelf.</p>
             <div class="utility-grid">
               <label class="utility-checkbox"><input id="placedAlbumEnabled" type="checkbox" checked /> Enable placed active album</label>
-              <label>Placed album X % <span id="placedAlbumXValue">43.2</span>
-                <input id="placedAlbumX" type="range" min="0" max="100" step="0.1" value="43.2" />
+              <label>Placed album X % <span id="placedAlbumXValue">44</span>
+                <input id="placedAlbumX" type="range" min="0" max="100" step="0.1" value="44" />
               </label>
-              <label>Placed album Y % <span id="placedAlbumYValue">61.4</span>
-                <input id="placedAlbumY" type="range" min="0" max="100" step="0.1" value="61.4" />
+              <label>Placed album Y % <span id="placedAlbumYValue">60</span>
+                <input id="placedAlbumY" type="range" min="0" max="100" step="0.1" value="60" />
               </label>
-              <label>Placed album size % <span id="placedAlbumSizeValue">7.2</span>
-                <input id="placedAlbumSize" type="range" min="2" max="24" step="0.1" value="7.2" />
+              <label>Placed album size % <span id="placedAlbumSizeValue">4</span>
+                <input id="placedAlbumSize" type="range" min="2" max="24" step="0.1" value="4" />
               </label>
-              <label>Rotate X deg <span id="placedAlbumRotateXValue">0</span>
-                <input id="placedAlbumRotateX" type="range" min="-60" max="60" step="1" value="0" />
+              <label>Rotate X deg <span id="placedAlbumRotateXValue">33</span>
+                <input id="placedAlbumRotateX" type="range" min="-60" max="60" step="1" value="33" />
               </label>
-              <label>Rotate Y deg <span id="placedAlbumRotateYValue">-16</span>
-                <input id="placedAlbumRotateY" type="range" min="-60" max="60" step="1" value="-16" />
+              <label>Rotate Y deg <span id="placedAlbumRotateYValue">0</span>
+                <input id="placedAlbumRotateY" type="range" min="-60" max="60" step="1" value="0" />
               </label>
-              <label>Rotate Z deg <span id="placedAlbumRotateZValue">-7</span>
-                <input id="placedAlbumRotateZ" type="range" min="-45" max="45" step="1" value="-7" />
+              <label>Rotate Z deg <span id="placedAlbumRotateZValue">0</span>
+                <input id="placedAlbumRotateZ" type="range" min="-45" max="45" step="1" value="0" />
               </label>
-              <label>Album depth <span id="placedAlbumDepthValue">0.18</span>
-                <input id="placedAlbumDepth" type="range" min="0" max="0.8" step="0.01" value="0.18" />
+              <label>Album depth <span id="placedAlbumDepthValue">0</span>
+                <input id="placedAlbumDepth" type="range" min="0" max="0.8" step="0.01" value="0" />
               </label>
-              <label>Drop shadow <span id="placedAlbumShadowValue">0.62</span>
-                <input id="placedAlbumShadow" type="range" min="0" max="1.5" step="0.01" value="0.62" />
+              <label>Drop shadow <span id="placedAlbumShadowValue">1</span>
+                <input id="placedAlbumShadow" type="range" min="0" max="1.5" step="0.01" value="1" />
               </label>
               <label>Album opacity <span id="placedAlbumOpacityValue">1</span>
                 <input id="placedAlbumOpacity" type="range" min="0" max="1" step="0.01" value="1" />
