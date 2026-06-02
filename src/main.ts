@@ -3689,7 +3689,7 @@ function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume
     repeat: '<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
     queue: '<path d="M5 7h14M5 12h14M5 17h9"/>',
     connect: '<circle cx="12" cy="16.8" r="2.2" fill="currentColor" stroke="none"/><path d="M12 14.5V20"/><path d="M7.1 12.8a6.8 6.8 0 0 1 9.8 0"/><path d="M4.1 9.7a11.2 11.2 0 0 1 15.8 0"/><path d="M1.9 6.8a14.6 14.6 0 0 1 20.2 0"/>',
-    broadcast: '<circle cx="12" cy="17.2" r="2.1" fill="currentColor" stroke="none"/><path d="M12 15v5.3"/><path d="M7.2 12.8a6.9 6.9 0 0 1 9.6 0"/><path d="M4.2 9.6a11.1 11.1 0 0 1 15.6 0"/><path d="M2 6.8a14.5 14.5 0 0 1 20 0"/>',
+    broadcast: '<path d="M12 9.4v8.2" stroke-width="2.2"/><path d="M7.3 16.9h9.4" stroke-width="2.2"/><circle cx="12" cy="8.1" r="2.4" fill="currentColor" stroke="none"/><path d="M8 11.9a5.8 5.8 0 0 1 8 0" stroke-width="2.2"/><path d="M5 8.9a9.9 9.9 0 0 1 14 0" stroke-width="2.2"/><path d="M2.5 5.8a13.6 13.6 0 0 1 19 0" stroke-width="2.2"/>',
     now: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/>',
     playlists: '<path d="M6 7h12M6 12h12M6 17h8"/><rect x="3" y="5" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="10" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="15" width="1.5" height="1.5" fill="currentColor" stroke="none"/>',
     search: '<circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l5 5"/>',
@@ -3777,8 +3777,8 @@ function menu2TrackRow(track: SpotifyCatalogTrack, index?: number, contextUri?: 
         <strong>${escapeHtmlInline(track.name)}</strong>
         <span>${escapeHtmlInline(track.artists)}${track.album ? ` • ${escapeHtmlInline(track.album)}` : ""}</span>
       </div>
-      <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="${playAction}" data-uri="${escapeHtmlInline(track.uri)}" ${contextUri ? `data-context-uri="${escapeHtmlInline(contextUri)}"` : ""} aria-label="Play track" title="Play">${menu2Icon("play")}</button>
-      <button class="menu2-mini-action secondary menu2-icon-action" type="button" data-menu2-action="queue-uri" data-uri="${escapeHtmlInline(track.uri)}" aria-label="Add to queue" title="Queue">${menu2Icon("queue")}</button>
+      <button class="menu2-mini-action menu2-icon-action menu2-row-action-primary" type="button" data-menu2-action="${playAction}" data-uri="${escapeHtmlInline(track.uri)}" ${contextUri ? `data-context-uri="${escapeHtmlInline(contextUri)}"` : ""} aria-label="Play track" title="Play">${menu2Icon("play")}</button>
+      <button class="menu2-mini-action secondary menu2-icon-action menu2-row-action-secondary" type="button" data-menu2-action="queue-uri" data-uri="${escapeHtmlInline(track.uri)}" aria-label="Add to queue" title="Queue">${menu2Icon("queue")}</button>
     </article>`;
 }
 
@@ -3791,8 +3791,8 @@ function menu2PlaylistRow(playlist: SpotifyCatalogPlaylist): string {
         <button class="menu2-row-title-button" type="button" data-menu2-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">${escapeHtmlInline(playlist.name)}</button>
         <span>${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</span>
       </div>
-      <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="play-context-order" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Play playlist in order" title="Play in order">${menu2Icon("play")}</button>
-      <button class="menu2-mini-action secondary menu2-icon-action" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Shuffle playlist" title="Shuffle">${menu2Icon("shuffle")}</button>
+      <button class="menu2-mini-action menu2-icon-action menu2-row-action-primary" type="button" data-menu2-action="play-context-order" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Play playlist in order" title="Play in order">${menu2Icon("play")}</button>
+      <button class="menu2-mini-action secondary menu2-icon-action menu2-row-action-secondary" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Shuffle playlist" title="Shuffle">${menu2Icon("shuffle")}</button>
     </article>`;
 }
 
@@ -3802,8 +3802,8 @@ function menu2AlbumRow(album: SpotifyCatalogAlbum): string {
       <div class="menu2-row-index">▧</div>
       <div class="menu2-row-art">${album.imageUrl ? `<img src="${escapeHtmlInline(album.imageUrl)}" alt="" />` : "▧"}</div>
       <div class="menu2-row-copy"><strong>${escapeHtmlInline(album.name)}</strong><span>${escapeHtmlInline(album.artists)}${album.releaseYear ? ` • ${escapeHtmlInline(album.releaseYear)}` : ""}</span></div>
-      <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="play-context-order" data-uri="${escapeHtmlInline(album.uri)}" aria-label="Play album" title="Play">${menu2Icon("play")}</button>
-      <button class="menu2-mini-action secondary menu2-icon-action" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(album.uri)}" aria-label="Shuffle album" title="Shuffle">${menu2Icon("shuffle")}</button>
+      <button class="menu2-mini-action menu2-icon-action menu2-row-action-primary" type="button" data-menu2-action="play-context-order" data-uri="${escapeHtmlInline(album.uri)}" aria-label="Play album" title="Play">${menu2Icon("play")}</button>
+      <button class="menu2-mini-action secondary menu2-icon-action menu2-row-action-secondary" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(album.uri)}" aria-label="Shuffle album" title="Shuffle">${menu2Icon("shuffle")}</button>
     </article>`;
 }
 
@@ -3819,9 +3819,8 @@ function menu2PlaybackContextText(track: AppState["playback"]): string {
     void resolveMenu2ContextPlaylistName(contextUri);
     return "Playing from Spotify";
   }
-  if (contextType === "album") return "Playing from Album";
-  if (contextType === "artist") return "Playing from Artist";
-  if (contextType) return `Playing from ${contextType}`;
+  if (contextType === "album") return track.album ? `Playing from "${track.album}" Album` : "Playing from Album";
+  if (contextType === "artist") return track.artist ? `Playing from ${track.artist}` : "Playing from Artist";
   return "Playing from Spotify";
 }
 
@@ -3831,7 +3830,7 @@ function menu2ArtistRow(artist: SpotifyCatalogArtist): string {
       <div class="menu2-row-index">◎</div>
       <div class="menu2-row-art menu2-row-art-round">${artist.imageUrl ? `<img src="${escapeHtmlInline(artist.imageUrl)}" alt="" />` : "◎"}</div>
       <div class="menu2-row-copy"><strong>${escapeHtmlInline(artist.name)}</strong><span>Artist</span></div>
-      <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="artist-top" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}" aria-label="Top tracks" title="Top tracks">${menu2Icon("play")}</button>
+      <button class="menu2-mini-action menu2-icon-action menu2-row-action-primary" type="button" data-menu2-action="artist-top" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}" aria-label="Top tracks" title="Top tracks">${menu2Icon("play")}</button>
     </article>`;
 }
 
@@ -3977,6 +3976,8 @@ function syncMenu2Bubble(): void {
   if (play) play.innerHTML = state.playback.isPlaying ? menu2Icon("pause") : menu2Icon("play");
   if (next) next.innerHTML = menu2Icon("next");
   if (volume) volume.innerHTML = menu2Icon("volume");
+  const grab = document.querySelector<HTMLButtonElement>("#menu2BubbleGrab");
+  if (grab) grab.innerHTML = menu2Icon("broadcast");
   const bubbleVolumeInput = document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput");
   if (bubbleVolumeInput) bubbleVolumeInput.value = String(phase2Volume);
 }
@@ -4078,8 +4079,8 @@ function renderMenu2PlaylistDetail(): void {
         <div><strong>${escapeHtmlInline(playlist.name)}</strong><span>${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</span></div>
       </div>
       <div class="menu2-playlist-detail-actions">
-        <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="play-context-order" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Play playlist in order" title="Play in order">${menu2Icon("play")}</button>
-        <button class="menu2-mini-action secondary menu2-icon-action" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Shuffle playlist" title="Shuffle">${menu2Icon("shuffle")}</button>
+        <button class="menu2-mini-action menu2-icon-action menu2-row-action-primary" type="button" data-menu2-action="play-context-order" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Play playlist in order" title="Play in order">${menu2Icon("play")}</button>
+        <button class="menu2-mini-action secondary menu2-icon-action menu2-row-action-secondary" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Shuffle playlist" title="Shuffle">${menu2Icon("shuffle")}</button>
       </div>
     </div>
     <div class="menu2-playlist-track-list">

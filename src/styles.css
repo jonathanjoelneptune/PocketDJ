@@ -11845,3 +11845,258 @@ body.lyrics-marquee-unavailable .marquee::after {
 .menu2-connect-menu:not(.menu2-connect-menu-open) {
   display: none !important;
 }
+
+/* v79: final room-edge and bottom-left Menu 2.0 anchoring cleanup. */
+.menu2-panel {
+  left: var(--menu2-room-left, 0px) !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  top: auto !important;
+  right: auto !important;
+  transform: translate3d(-108%, 0, 0) !important;
+  width: min(492px, calc(var(--menu2-room-right, 100vw) - var(--menu2-room-left, 0px))) !important;
+  max-height: min(calc(var(--menu2-room-height, 760px) * 0.75), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+}
+
+.menu2-panel.menu2-open {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-shell {
+  height: min(calc(var(--menu2-room-height, 760px) * 0.75), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+  max-height: min(calc(var(--menu2-room-height, 760px) * 0.75), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+  border-bottom-left-radius: 0 !important;
+  border-left-width: 1px !important;
+}
+
+.menu2-mode-compact.menu2-panel {
+  left: var(--menu2-room-left, 0px) !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  width: min(258px, calc(var(--menu2-room-right, 100vw) - var(--menu2-room-left, 0px))) !important;
+  max-height: min(405px, calc(var(--menu2-room-height, 760px) * 0.55), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+}
+
+.menu2-mode-compact .menu2-shell {
+  height: min(405px, calc(var(--menu2-room-height, 760px) * 0.55), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+  max-height: min(405px, calc(var(--menu2-room-height, 760px) * 0.55), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+/* v79: collapsed rail belongs to the room edge and grows upward from the bottom-left. */
+.menu2-bubble {
+  left: var(--menu2-room-left, 0px) !important;
+  bottom: calc(var(--menu2-room-bottom, 0px) + 12px) !important;
+  top: auto !important;
+  transform: translate3d(-112%, 0, 0) !important;
+  border-radius: 0 20px 20px 0 !important;
+  padding: 8px 8px 8px 0 !important;
+  border-left: 0 !important;
+}
+
+:root.menu2-bubble-ready .menu2-bubble {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-bubble-grab {
+  width: 48px !important;
+  height: 42px !important;
+  min-width: 48px !important;
+  border-radius: 0 16px 16px 0 !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.menu2-bubble-grab > span {
+  display: none !important;
+}
+
+.menu2-bubble-grab .menu2-svg-icon {
+  width: 31px !important;
+  height: 31px !important;
+  stroke-width: 2.2 !important;
+}
+
+/* v79: make quick rail controls readable and centered. */
+.menu2-bubble-controls {
+  align-items: center !important;
+  gap: 9px !important;
+}
+
+.menu2-bubble-button {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+}
+
+.menu2-bubble-button .menu2-svg-icon {
+  width: 19px !important;
+  height: 19px !important;
+  margin: 0 !important;
+  display: block !important;
+}
+
+.menu2-bubble-play .menu2-svg-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* v79: repair My Playlists, playlist detail, and search rows with one stable grid. */
+#menu2PlaylistsPane .menu2-row,
+#menu2SearchResults .menu2-row,
+.menu2-playlist-track-list .menu2-row {
+  display: grid !important;
+  grid-template-columns: 54px minmax(0, 1fr) 42px 42px !important;
+  grid-template-areas: "art copy act1 act2" !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 70px !important;
+  padding: 10px 12px !important;
+}
+
+#menu2PlaylistsPane .menu2-row-index,
+#menu2SearchResults .menu2-row-index,
+.menu2-playlist-track-list .menu2-row-index {
+  display: none !important;
+}
+
+#menu2PlaylistsPane .menu2-row-art,
+#menu2SearchResults .menu2-row-art,
+.menu2-playlist-track-list .menu2-row-art {
+  grid-area: art !important;
+  position: static !important;
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  margin: 0 !important;
+  align-self: center !important;
+  justify-self: center !important;
+}
+
+#menu2PlaylistsPane .menu2-row-copy,
+#menu2SearchResults .menu2-row-copy,
+.menu2-playlist-track-list .menu2-row-copy {
+  grid-area: copy !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  text-align: left !important;
+  align-self: center !important;
+}
+
+#menu2PlaylistsPane .menu2-row-title-button,
+#menu2SearchResults .menu2-row-title-button,
+#menu2PlaylistsPane .menu2-row-copy strong,
+#menu2SearchResults .menu2-row-copy strong,
+.menu2-playlist-track-list .menu2-row-copy strong {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  font: inherit !important;
+  font-weight: 900 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+}
+
+#menu2PlaylistsPane .menu2-row-copy span,
+#menu2SearchResults .menu2-row-copy span,
+.menu2-playlist-track-list .menu2-row-copy span {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+}
+
+#menu2PlaylistsPane .menu2-row .menu2-row-action-primary,
+#menu2SearchResults .menu2-row .menu2-row-action-primary,
+.menu2-playlist-track-list .menu2-row .menu2-row-action-primary {
+  grid-area: act1 !important;
+  align-self: center !important;
+  justify-self: center !important;
+}
+
+#menu2PlaylistsPane .menu2-row .menu2-row-action-secondary,
+#menu2SearchResults .menu2-row .menu2-row-action-secondary,
+.menu2-playlist-track-list .menu2-row .menu2-row-action-secondary {
+  grid-area: act2 !important;
+  align-self: center !important;
+  justify-self: center !important;
+}
+
+.menu2-playlist-detail-head {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 8px !important;
+}
+
+.menu2-playlist-detail-title {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: 58px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+/* v79: compact Now Playing stays bottom-left and keeps visual backing, but remains short. */
+.menu2-mode-compact .menu2-topbar {
+  flex-wrap: nowrap !important;
+}
+
+.menu2-mode-compact .menu2-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 6px !important;
+}
+
+.menu2-mode-compact .menu2-tab {
+  min-width: 0 !important;
+  height: 32px !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.menu2-mode-compact .menu2-tab .menu2-svg-icon {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+.menu2-mode-compact .menu2-now-card {
+  max-height: 100% !important;
+}
+
+.menu2-mode-compact .menu2-now-copy,
+.menu2-mode-compact .menu2-progress-row,
+.menu2-mode-compact .menu2-controls,
+.menu2-mode-compact .menu2-volume-row {
+  background: rgba(0, 0, 0, 0.34) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  border-radius: 10px !important;
+}
+
+.menu2-mode-compact .menu2-controls {
+  min-height: 44px !important;
+  align-items: center !important;
+}
+
+.menu2-mode-compact .menu2-control,
+.menu2-mode-compact .menu2-play {
+  align-self: center !important;
+  justify-self: center !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
