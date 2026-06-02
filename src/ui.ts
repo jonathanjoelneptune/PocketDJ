@@ -1365,12 +1365,17 @@ export function renderShell(state: AppState): void {
         </div>
       </aside>
 
-      <div id="menu2Bubble" class="menu2-bubble" aria-label="PocketDJ quick controls. Hover or tap the rail to open Menu 2.0." aria-hidden="true" role="button" tabindex="0">
-        <button id="menu2BubbleLyrics" class="menu2-bubble-button menu2-bubble-lyrics" type="button" aria-label="Toggle lyrics" title="Lyrics"></button>
-        <button id="menu2BubblePrev" class="menu2-bubble-button menu2-bubble-prev" type="button" aria-label="Previous track" title="Previous"></button>
-        <button id="menu2BubblePlay" class="menu2-bubble-button menu2-bubble-play" type="button" aria-label="Play or pause" title="Play/Pause"></button>
-        <button id="menu2BubbleNext" class="menu2-bubble-button menu2-bubble-next" type="button" aria-label="Next track" title="Next"></button>
-        <button id="menu2BubbleVolume" class="menu2-bubble-button menu2-bubble-volume" type="button" aria-label="Volume" title="Volume"></button>
+      <div id="menu2Bubble" class="menu2-bubble" aria-label="PocketDJ quick controls" aria-hidden="true">
+        <button id="menu2BubbleGrab" class="menu2-bubble-grab" type="button" aria-label="Open PocketDJ menu" title="Open PocketDJ menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="menu2-bubble-controls" aria-label="Quick playback controls">
+          <button id="menu2BubbleLyrics" class="menu2-bubble-button menu2-bubble-lyrics" type="button" aria-label="Toggle lyrics" title="Lyrics"></button>
+          <button id="menu2BubblePrev" class="menu2-bubble-button menu2-bubble-prev" type="button" aria-label="Previous track" title="Previous"></button>
+          <button id="menu2BubblePlay" class="menu2-bubble-button menu2-bubble-play" type="button" aria-label="Play or pause" title="Play/Pause"></button>
+          <button id="menu2BubbleNext" class="menu2-bubble-button menu2-bubble-next" type="button" aria-label="Next track" title="Next"></button>
+          <button id="menu2BubbleVolume" class="menu2-bubble-button menu2-bubble-volume" type="button" aria-label="Volume" title="Volume"></button>
+        </div>
       </div>
 
 

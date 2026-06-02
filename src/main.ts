@@ -3753,9 +3753,12 @@ function renderMenu2NowPlaying(): void {
     const playlist = menu2ContextPlaylist();
     if (playlist) {
       context.innerHTML = `<button class="menu2-context-link" type="button" data-menu2-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Playing from &quot;${escapeHtmlInline(playlist.name)}&quot; Playlist</button>`;
+    } else if (track.playbackContextType === "playlist" && track.playbackContextUri) {
+      const playlistId = menu2PlaylistIdFromUri(track.playbackContextUri);
+      context.textContent = playlistId ? "Resolving playlist..." : "Playing from playlist";
+      void resolveMenu2ContextPlaylistName(track.playbackContextUri);
     } else if (track.playbackContextType && track.playbackContextUri) {
-      const label = track.playbackContextType === "playlist" ? "Playlist" : track.playbackContextType;
-      context.textContent = `Playing from Spotify ${label}`;
+      context.textContent = `Playing from ${track.playbackContextType}`;
     } else {
       context.textContent = "Playing from Spotify";
     }
@@ -3803,6 +3806,7 @@ function menu2NowPlayingRenderKey(track: AppState["playback"]): string {
     track.isPlaying,
     track.playbackContextUri,
     track.playbackContextType,
+    menu2ContextPlaylist()?.name || "",
     menu2PanelMode,
     menu2StyleMode,
     lyricsEnabled,
@@ -4007,6 +4011,41 @@ function renderMenu2SearchResults(): void {
   container.innerHTML = tabs + (body || `<div class="menu2-empty menu2-result-tab-empty">No ${menu2SearchResultTab} found.</div>`);
 }
 
+function normalizeMenu2SearchText(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function menu2PlaylistSearchScore(playlist: SpotifyCatalogPlaylist, query: string): number {
+  const name = normalizeMenu2SearchText(playlist.name);
+  const owner = normalizeMenu2SearchText(playlist.owner);
+  const q = normalizeMenu2SearchText(query);
+  const words = q.split(/\s+/).filter(Boolean);
+  let score = 0;
+
+  if (!q) return score;
+  if (owner === "spotify") score += 900;
+  if (name === `${q} radio`) score += 1600;
+  if (name === `this is ${q}`) score += 1500;
+  if (name.startsWith(`${q} radio`)) score += 1200;
+  if (name.startsWith(`this is ${q}`)) score += 1150;
+  if (name === q) score += 1000;
+  if (name.startsWith(q)) score += 700;
+  if (name.includes(q)) score += 420;
+  if (words.length && words.every((word) => name.includes(word))) score += 260;
+  if (/\bradio\b/.test(name)) score += 180;
+  if (/\bthis is\b|\bessentials\b|\bbest of\b|\bgreatest hits\b/.test(name)) score += 160;
+  if (/official|spotify singles|complete collection/.test(name)) score += 80;
+  score += Math.min(playlist.trackCount, 250) * 0.5;
+  return score;
+}
+
+function sortMenu2SearchPlaylists(playlists: SpotifyCatalogPlaylist[], query: string): SpotifyCatalogPlaylist[] {
+  return [...playlists].sort((a, b) =>
+    menu2PlaylistSearchScore(b, query) - menu2PlaylistSearchScore(a, query)
+    || compareText(a.name, b.name)
+  );
+}
+
 async function performMenu2Search(source: "now" | "pane" = "now"): Promise<void> {
   const primaryInput = document.querySelector<HTMLInputElement>(source === "pane" ? "#menu2SearchPaneInput" : "#menu2SearchInput");
   const secondaryInput = document.querySelector<HTMLInputElement>(source === "pane" ? "#menu2SearchInput" : "#menu2SearchPaneInput");
@@ -4030,26 +4069,30 @@ async function performMenu2Search(source: "now" | "pane" = "now"): Promise<void>
   }
   setMenu2Status(`Searching Spotify for "${query}"...`, true);
   try {
-    const results = await searchSpotifyCatalog(state.spotifyClientId, query, type || "all", 10, 0);
+    const results = await searchSpotifyCatalog(state.spotifyClientId, query, type || "all", 20, 0);
     let playlists = results.playlists;
     if (type === "all" || type === "playlist" || type === "artist") {
-      try {
-        const playlistBoost = await searchSpotifyCatalog(state.spotifyClientId, `This Is ${query} ${query} Radio`, "playlist", 10, 0);
-        const seen = new Set<string>();
-        playlists = [...playlistBoost.playlists, ...playlists].filter((playlist) => {
-          const key = playlist.id || playlist.uri;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        }).slice(0, 10);
-      } catch {
-        // Main search results are still usable if the boost search fails.
+      const boosted: SpotifyCatalogPlaylist[] = [];
+      for (const boostQuery of [`${query} Radio`, `This Is ${query}`, query]) {
+        try {
+          const playlistBoost = await searchSpotifyCatalog(state.spotifyClientId, boostQuery, "playlist", 20, 0);
+          boosted.push(...playlistBoost.playlists);
+        } catch {
+          // Main search results are still usable if a boost search fails.
+        }
       }
+      const seen = new Set<string>();
+      playlists = sortMenu2SearchPlaylists([...boosted, ...playlists].filter((playlist) => {
+        const key = playlist.id || playlist.uri;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }), query).slice(0, 10);
     }
-    menu2SearchTracks = results.tracks;
-    menu2SearchArtists = results.artists;
-    menu2SearchPlaylists = playlists;
-    menu2SearchAlbums = results.albums;
+    menu2SearchTracks = results.tracks.slice(0, 10);
+    menu2SearchArtists = results.artists.slice(0, 10);
+    menu2SearchPlaylists = playlists.slice(0, 10);
+    menu2SearchAlbums = results.albums.slice(0, 10);
     menu2SearchResultTab = menu2SearchTracks.length ? "tracks" : menu2SearchArtists.length ? "artists" : menu2SearchPlaylists.length ? "playlists" : "albums";
     menu2ActiveTab = "search";
     applyMenu2Settings();
@@ -4318,15 +4361,17 @@ function bindMenu2Controls(): void {
     }
   });
   const bubble = document.querySelector<HTMLElement>("#menu2Bubble");
-  bubble?.addEventListener("pointerenter", () => { menu2PointerInside = true; clearMenu2AutoCollapseTimer(); });
-  bubble?.addEventListener("pointerleave", () => { menu2PointerInside = false; cancelMenu2BubbleHoverOpen(); scheduleMenu2AutoCollapse(); });
-  bubble?.addEventListener("mouseenter", scheduleMenu2BubbleHoverOpen);
-  bubble?.addEventListener("mouseleave", cancelMenu2BubbleHoverOpen);
-  bubble?.addEventListener("click", (event) => {
-    if ((event.target as HTMLElement).closest(".menu2-bubble-button")) return;
+  const bubbleGrab = document.querySelector<HTMLButtonElement>("#menu2BubbleGrab");
+  bubble?.addEventListener("pointerenter", () => { clearMenu2AutoCollapseTimer(); });
+  bubble?.addEventListener("pointerleave", () => { cancelMenu2BubbleHoverOpen(); scheduleMenu2AutoCollapse(); });
+  bubbleGrab?.addEventListener("mouseenter", scheduleMenu2BubbleHoverOpen);
+  bubbleGrab?.addEventListener("mouseleave", cancelMenu2BubbleHoverOpen);
+  bubbleGrab?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     openMenu2FromBubbleRail();
   });
-  bubble?.addEventListener("keydown", (event) => {
+  bubbleGrab?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       openMenu2FromBubbleRail();
@@ -4334,7 +4379,10 @@ function bindMenu2Controls(): void {
   });
 
   document.querySelectorAll<HTMLButtonElement>(".menu2-bubble-button").forEach((button) => {
-    button.addEventListener("click", (event) => event.stopPropagation());
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
   });
   document.querySelector<HTMLButtonElement>("#menu2BubbleLyrics")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#lyricsToggle")?.click());
   document.querySelector<HTMLButtonElement>("#menu2BubblePrev")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPrevButton")?.click());
