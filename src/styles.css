@@ -11541,3 +11541,307 @@ body.lyrics-marquee-unavailable .marquee::after {
   --menu2-accent-strong: #7cf7a5;
   --menu2-accent-border: rgba(30, 215, 96, 0.46);
 }
+
+
+/* v78 Menu 2.9: bottom-left discipline, compact icon tabs, now-card backing, playlist row repair. */
+.menu2-panel {
+  left: var(--menu2-room-safe-left, 8px) !important;
+  bottom: var(--menu2-room-safe-bottom, 8px) !important;
+  transform-origin: left bottom !important;
+}
+
+.menu2-panel.menu2-open {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-panel.menu2-mode-compact {
+  width: min(292px, calc(100vw - var(--menu2-room-safe-left, 8px) - 10px)) !important;
+  max-height: min(332px, calc(var(--menu2-room-height, 760px) * 0.46), calc(100vh - var(--menu2-room-safe-bottom, 8px) - 10px)) !important;
+}
+
+.menu2-mode-compact .menu2-shell {
+  height: min(332px, calc(var(--menu2-room-height, 760px) * 0.46), calc(100vh - var(--menu2-room-safe-bottom, 8px) - 10px)) !important;
+  max-height: min(332px, calc(var(--menu2-room-height, 760px) * 0.46), calc(100vh - var(--menu2-room-safe-bottom, 8px) - 10px)) !important;
+  padding: 12px !important;
+  gap: 7px !important;
+}
+
+.menu2-bottom-search-row {
+  display: none !important;
+}
+
+.menu2-now-copy,
+.menu2-progress-row,
+.menu2-controls,
+.menu2-volume-row {
+  background: rgba(0, 0, 0, 0.28) !important;
+  border: 1px solid rgba(255, 255, 255, 0.055) !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.025) !important;
+}
+
+.menu2-now-copy {
+  padding: 8px 10px !important;
+}
+
+.menu2-progress-row,
+.menu2-volume-row {
+  padding: 7px 9px !important;
+}
+
+.menu2-controls {
+  padding: 8px !important;
+  align-items: center !important;
+}
+
+.menu2-mode-compact .menu2-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 6px !important;
+}
+
+.menu2-mode-compact .menu2-tab:not(.menu2-dev-tab) {
+  display: grid !important;
+  place-items: center !important;
+  min-width: 0 !important;
+  height: 32px !important;
+  padding: 0 !important;
+}
+
+.menu2-mode-compact .menu2-tab .menu2-svg-icon {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+.menu2-mode-compact .menu2-dev-tab:not([hidden]) {
+  grid-column: 1 / -1 !important;
+  height: 28px !important;
+}
+
+.menu2-mode-compact .menu2-topbar {
+  gap: 5px !important;
+}
+
+.menu2-mode-compact .menu2-round-pill {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+}
+
+.menu2-mode-compact .menu2-brand-pill {
+  font-size: 0.62rem !important;
+  margin-right: auto !important;
+}
+
+.menu2-mode-compact .menu2-pane {
+  height: calc(100% - 82px) !important;
+  overflow: auto !important;
+}
+
+.menu2-mode-compact #menu2NowPane.menu2-pane-active {
+  overflow: hidden !important;
+}
+
+.menu2-mode-compact .menu2-now-card {
+  display: grid !important;
+  grid-template-columns: 70px minmax(0, 1fr) !important;
+  grid-template-areas:
+    "art copy"
+    "progress progress"
+    "controls controls"
+    "volume volume" !important;
+  gap: 6px 8px !important;
+}
+
+.menu2-mode-compact .menu2-album-art {
+  grid-area: art !important;
+  width: 70px !important;
+  max-height: 70px !important;
+}
+
+.menu2-mode-compact .menu2-now-copy { grid-area: copy !important; }
+.menu2-mode-compact .menu2-progress-row { grid-area: progress !important; }
+.menu2-mode-compact .menu2-controls { grid-area: controls !important; }
+.menu2-mode-compact .menu2-volume-row { grid-area: volume !important; }
+
+.menu2-mode-compact .menu2-playback-context,
+.menu2-mode-compact .menu2-track-album {
+  display: none !important;
+}
+
+.menu2-mode-compact .menu2-control {
+  width: 30px !important;
+  height: 30px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  align-self: center !important;
+}
+
+.menu2-mode-compact .menu2-play {
+  width: 40px !important;
+  height: 40px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  align-self: center !important;
+}
+
+.menu2-mode-compact .menu2-control .menu2-svg-icon,
+.menu2-mode-compact .menu2-play .menu2-svg-icon {
+  display: block !important;
+}
+
+.menu2-bubble {
+  left: var(--menu2-room-safe-left, 6px) !important;
+  bottom: calc(var(--menu2-room-bottom, 0px) + max(14px, calc(var(--menu2-room-height, 760px) * 0.23))) !important;
+  transform: translate3d(-125%, 0, 0) !important;
+  border-radius: 0 18px 18px 0 !important;
+  padding: 8px 8px 8px 0 !important;
+}
+
+:root.menu2-bubble-ready .menu2-bubble {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-bubble-grab {
+  border-radius: 0 16px 16px 0 !important;
+  width: 46px !important;
+  height: 38px !important;
+}
+
+.menu2-bubble-grab .menu2-svg-icon {
+  width: 27px !important;
+  height: 27px !important;
+}
+
+.menu2-bubble-controls {
+  align-items: center !important;
+}
+
+.menu2-bubble-button {
+  width: 44px !important;
+  height: 44px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.menu2-bubble-button .menu2-svg-icon {
+  width: 19px !important;
+  height: 19px !important;
+  margin: 0 !important;
+}
+
+.menu2-bubble-play .menu2-svg-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+#menu2PlaylistsPane .menu2-row,
+#menu2SearchResults .menu2-row,
+.menu2-playlist-track-list .menu2-row {
+  display: grid !important;
+  grid-template-columns: 54px minmax(0, 1fr) 42px 42px !important;
+  grid-template-areas: "art copy act1 act2" !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 70px !important;
+  padding: 10px 12px !important;
+}
+
+#menu2PlaylistsPane .menu2-row-index,
+#menu2SearchResults .menu2-row-index,
+.menu2-playlist-track-list .menu2-row-index {
+  display: none !important;
+}
+
+#menu2PlaylistsPane .menu2-row-art,
+#menu2SearchResults .menu2-row-art,
+.menu2-playlist-track-list .menu2-row-art {
+  grid-area: art !important;
+  position: static !important;
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  margin: 0 !important;
+}
+
+#menu2PlaylistsPane .menu2-row-copy,
+#menu2SearchResults .menu2-row-copy,
+.menu2-playlist-track-list .menu2-row-copy {
+  grid-area: copy !important;
+  min-width: 0 !important;
+  width: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  text-align: left !important;
+}
+
+#menu2PlaylistsPane .menu2-row-title-button,
+#menu2SearchResults .menu2-row-title-button,
+#menu2PlaylistsPane .menu2-row-copy strong,
+#menu2SearchResults .menu2-row-copy strong,
+.menu2-playlist-track-list .menu2-row-copy strong {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+}
+
+#menu2PlaylistsPane .menu2-row-copy span,
+#menu2SearchResults .menu2-row-copy span,
+.menu2-playlist-track-list .menu2-row-copy span {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+}
+
+#menu2PlaylistsPane .menu2-row .menu2-mini-action:nth-of-type(1),
+#menu2SearchResults .menu2-row .menu2-mini-action:nth-of-type(1),
+.menu2-playlist-track-list .menu2-row .menu2-mini-action:nth-of-type(1) {
+  grid-area: act1 !important;
+}
+
+#menu2PlaylistsPane .menu2-row .menu2-mini-action:nth-of-type(2),
+#menu2SearchResults .menu2-row .menu2-mini-action:nth-of-type(2),
+.menu2-playlist-track-list .menu2-row .menu2-mini-action:nth-of-type(2) {
+  grid-area: act2 !important;
+}
+
+.menu2-playlist-detail-head {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 8px !important;
+}
+
+.menu2-playlist-detail-title {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: 58px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.menu2-playback-context {
+  min-height: 24px !important;
+  padding: 3px 8px !important;
+  margin: -2px 0 0 !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+.menu2-context-link {
+  padding: 0 !important;
+  min-height: 18px !important;
+  line-height: 1.15 !important;
+}
+
+.menu2-connect-menu:not(.menu2-connect-menu-open) {
+  display: none !important;
+}

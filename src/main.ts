@@ -88,6 +88,7 @@ let menu2QueueDragIndex: number | null = null;
 let menu2ContextFetchKey = "";
 const menu2ResolvedContextPlaylists = new Map<string, SpotifyCatalogPlaylist>();
 const menu2ContextResolutionFailures = new Set<string>();
+const menu2ContextLabels = new Map<string, string>();
 let menu2StyleMode: "pocket" | "spotify" | "web" = (localStorage.getItem("pocketdj-menu2-style") as "pocket" | "spotify" | "web") || "pocket";
 let menu2ArtSize: "large" | "medium" | "small" = (localStorage.getItem("pocketdj-menu2-art-size") as "large" | "medium" | "small") || "large";
 let menu2PanelMode: "full" | "compact" = (localStorage.getItem("pocketdj-menu2-panel-mode") as "full" | "compact") || "full";
@@ -3529,18 +3530,21 @@ function setMenu2Status(message: string, busy = false): void {
 
 
 function updateMenu2RoomAnchor(): void {
-  const room = document.querySelector<HTMLElement>(".room");
+  const room = document.querySelector<HTMLElement>(".room-base-layer") || document.querySelector<HTMLElement>(".room");
   if (!room) return;
   const rect = room.getBoundingClientRect();
   const root = document.documentElement;
+  const inset = 6;
   const roomLeft = Math.max(0, rect.left);
+  const roomRight = Math.max(roomLeft, rect.right);
   const roomBottom = Math.max(0, window.innerHeight - rect.bottom);
   const roomHeight = Math.max(320, rect.height);
   root.style.setProperty("--menu2-room-left", `${roomLeft}px`);
+  root.style.setProperty("--menu2-room-right", `${roomRight}px`);
   root.style.setProperty("--menu2-room-bottom", `${roomBottom}px`);
   root.style.setProperty("--menu2-room-height", `${roomHeight}px`);
-  root.style.setProperty("--menu2-room-safe-left", `${roomLeft + 6}px`);
-  root.style.setProperty("--menu2-room-safe-bottom", `${roomBottom + 8}px`);
+  root.style.setProperty("--menu2-room-safe-left", `${roomLeft + inset}px`);
+  root.style.setProperty("--menu2-room-safe-bottom", `${roomBottom + inset}px`);
 }
 
 function applyMenu2Settings(): void {
@@ -3592,8 +3596,19 @@ function applyMenu2Settings(): void {
   if (devTab) devTab.hidden = !menu2DevUnlocked;
   if (!menu2DevUnlocked && menu2ActiveTab === "dev") menu2ActiveTab = "now";
 
-  document.querySelectorAll<HTMLElement>(".menu2-tab").forEach((tab) => {
-    tab.classList.toggle("menu2-tab-active", tab.dataset.menu2Tab === menu2ActiveTab);
+  const tabLabels: Record<string, string> = { now: "Now Playing", playlists: "My Playlists", search: "Search", devices: "Devices", dev: "Dev" };
+  document.querySelectorAll<HTMLButtonElement>(".menu2-tab").forEach((tab) => {
+    const tabKey = tab.dataset.menu2Tab || "";
+    tab.classList.toggle("menu2-tab-active", tabKey === menu2ActiveTab);
+    if (menu2PanelMode === "compact" && ["now", "playlists", "search", "devices"].includes(tabKey)) {
+      tab.innerHTML = menu2Icon(tabKey as "now" | "playlists" | "search" | "devices");
+      tab.setAttribute("aria-label", tabLabels[tabKey] || tabKey);
+      tab.setAttribute("title", tabLabels[tabKey] || tabKey);
+    } else {
+      tab.textContent = tabLabels[tabKey] || tabKey;
+      tab.removeAttribute("aria-label");
+      tab.setAttribute("title", tabLabels[tabKey] || tabKey);
+    }
   });
   document.querySelectorAll<HTMLElement>(".menu2-pane").forEach((pane) => pane.classList.remove("menu2-pane-active"));
   document.querySelector<HTMLElement>(`#menu2${menu2ActiveTab[0].toUpperCase()}${menu2ActiveTab.slice(1)}Pane`)?.classList.add("menu2-pane-active");
@@ -3658,7 +3673,7 @@ async function refreshMenu2ActiveTab(): Promise<void> {
 }
 
 
-function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "shuffle" | "repeat" | "queue" | "connect" | "broadcast"): string {
+function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "shuffle" | "repeat" | "queue" | "connect" | "broadcast" | "now" | "playlists" | "search" | "devices"): string {
   const paths: Record<typeof name, string> = {
     lyrics: '<path d="M10 18V7l8-1.7v10.2"/><circle cx="8" cy="18" r="2.1"/><circle cx="18" cy="15.5" r="2.1"/>',
     play: '<path d="M8.2 5.2v13.6L18.8 12z" fill="currentColor" stroke="none"/>',
@@ -3673,8 +3688,12 @@ function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume
     shuffle: '<path d="M4 7h3l10 10h3M17 7h3M17 7l3-3M17 7l3 3M4 17h3l3-3"/>',
     repeat: '<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
     queue: '<path d="M5 7h14M5 12h14M5 17h9"/>',
-    connect: '<path d="M12 18.5v-3.2"/><circle cx="12" cy="20" r="1.6" fill="currentColor" stroke="none"/><path d="M7.1 14.7a7 7 0 0 1 9.8 0M4.2 11.8a11 11 0 0 1 15.6 0M1.8 8.9a14.5 14.5 0 0 1 20.4 0"/>',
-    broadcast: '<path d="M12 19v-5"/><circle cx="12" cy="20" r="2" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r="2.2"/><path d="M7.3 15.8a7 7 0 1 1 9.4 0M4.5 18.2a11 11 0 1 1 15 0"/>',
+    connect: '<circle cx="12" cy="16.8" r="2.2" fill="currentColor" stroke="none"/><path d="M12 14.5V20"/><path d="M7.1 12.8a6.8 6.8 0 0 1 9.8 0"/><path d="M4.1 9.7a11.2 11.2 0 0 1 15.8 0"/><path d="M1.9 6.8a14.6 14.6 0 0 1 20.2 0"/>',
+    broadcast: '<circle cx="12" cy="17.2" r="2.1" fill="currentColor" stroke="none"/><path d="M12 15v5.3"/><path d="M7.2 12.8a6.9 6.9 0 0 1 9.6 0"/><path d="M4.2 9.6a11.1 11.1 0 0 1 15.6 0"/><path d="M2 6.8a14.5 14.5 0 0 1 20 0"/>',
+    now: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/>',
+    playlists: '<path d="M6 7h12M6 12h12M6 17h8"/><rect x="3" y="5" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="10" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="15" width="1.5" height="1.5" fill="currentColor" stroke="none"/>',
+    search: '<circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l5 5"/>',
+    devices: '<rect x="5" y="5" width="14" height="10" rx="2"/><path d="M9 19h6M12 15v4"/>',
   };
   return `<svg class="menu2-svg-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths[name]}</svg>`;
 }
@@ -3687,7 +3706,11 @@ function menu2PlaylistIdFromUri(uri: string | null | undefined): string {
 
 function cacheMenu2ContextPlaylist(playlist: SpotifyCatalogPlaylist): void {
   menu2ResolvedContextPlaylists.set(playlist.id, playlist);
-  if (playlist.uri) menu2ResolvedContextPlaylists.set(playlist.uri, playlist);
+  menu2ContextLabels.set(playlist.id, playlist.name);
+  if (playlist.uri) {
+    menu2ResolvedContextPlaylists.set(playlist.uri, playlist);
+    menu2ContextLabels.set(playlist.uri, playlist.name);
+  }
   if (!menu2PlaylistCache.some((item) => item.id === playlist.id)) {
     menu2PlaylistCache = [playlist, ...menu2PlaylistCache];
   }
@@ -3784,6 +3807,24 @@ function menu2AlbumRow(album: SpotifyCatalogAlbum): string {
     </article>`;
 }
 
+function menu2PlaybackContextText(track: AppState["playback"]): string {
+  const contextUri = track.playbackContextUri || "";
+  const contextType = (track.playbackContextType || "").toLowerCase();
+  const playlist = menu2ContextPlaylist();
+  if (playlist) return `Playing from "${playlist.name}" Playlist`;
+  const playlistId = menu2PlaylistIdFromUri(contextUri);
+  const cachedName = menu2ContextLabels.get(contextUri) || (playlistId ? menu2ContextLabels.get(playlistId) : "");
+  if (cachedName) return `Playing from "${cachedName}" Playlist`;
+  if (contextType === "playlist" && contextUri) {
+    void resolveMenu2ContextPlaylistName(contextUri);
+    return "Playing from Spotify";
+  }
+  if (contextType === "album") return "Playing from Album";
+  if (contextType === "artist") return "Playing from Artist";
+  if (contextType) return `Playing from ${contextType}`;
+  return "Playing from Spotify";
+}
+
 function menu2ArtistRow(artist: SpotifyCatalogArtist): string {
   return `
     <article class="menu2-row menu2-artist-row">
@@ -3810,13 +3851,8 @@ function renderMenu2NowPlaying(): void {
     const playlist = menu2ContextPlaylist();
     if (playlist) {
       context.innerHTML = `<button class="menu2-context-link" type="button" data-menu2-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Playing from &quot;${escapeHtmlInline(playlist.name)}&quot; Playlist</button>`;
-    } else if (track.playbackContextType === "playlist" && track.playbackContextUri) {
-      context.textContent = "Playing from Spotify";
-      void resolveMenu2ContextPlaylistName(track.playbackContextUri);
-    } else if (track.playbackContextType && track.playbackContextUri) {
-      context.textContent = `Playing from ${track.playbackContextType}`;
     } else {
-      context.textContent = "Playing from Spotify";
+      context.textContent = menu2PlaybackContextText(track);
     }
   }
 
@@ -4279,11 +4315,16 @@ function bindMenu2QueueDragEvents(): void {
 }
 
 function handleMenu2OutsidePointer(event: PointerEvent): void {
-  if (!menu2Open || menu2Locked) return;
   const target = event.target as Node | null;
   const panel = document.querySelector("#menu2Panel");
   const bubble = document.querySelector("#menu2Bubble");
   const brand = document.querySelector(".pocket-title-pill");
+  const connectMenu = document.querySelector("#menu2ConnectMenu");
+  const connectButton = document.querySelector("#menu2ConnectPill");
+  if (target && !connectMenu?.contains(target) && !connectButton?.contains(target)) {
+    toggleMenu2ConnectMenu(false);
+  }
+  if (!menu2Open || menu2Locked) return;
   if ((target && panel?.contains(target)) || (target && bubble?.contains(target)) || (target && brand?.contains(target))) return;
   menu2PointerInside = false;
   setMenu2Open(false);
@@ -4460,6 +4501,9 @@ function bindMenu2Controls(): void {
     if (action === "open-playlist") void openMenu2Playlist(button.dataset.playlistId || "");
     if (action === "playlist-back") closeMenu2PlaylistDetail();
     if (action === "play-context-order" && uri) void runSpotifyBrowserAction(async () => {
+      const playlistId = button.dataset.playlistId || menu2PlaylistIdFromUri(uri);
+      const playlist = playlistId ? (menu2PlaylistCache.find((item) => item.id === playlistId) || menu2SearchPlaylists.find((item) => item.id === playlistId) || menu2SelectedPlaylist) : null;
+      if (playlist) cacheMenu2ContextPlaylist(playlist);
       await setSpotifyShuffle(state.spotifyClientId, false);
       await playSpotifyContext(state.spotifyClientId, uri);
       await pollSpotifyNow();
@@ -4471,7 +4515,13 @@ function bindMenu2Controls(): void {
       await pollSpotifyNow();
     });
     if (action === "play-context" && uri) void runSpotifyBrowserAction(async () => { await playSpotifyContext(state.spotifyClientId, uri); await pollSpotifyNow(); });
-    if (action === "shuffle-context" && uri) void runSpotifyBrowserAction(async () => { await playSpotifyContextShuffled(state.spotifyClientId, uri); await pollSpotifyNow(); });
+    if (action === "shuffle-context" && uri) void runSpotifyBrowserAction(async () => {
+      const playlistId = button.dataset.playlistId || menu2PlaylistIdFromUri(uri);
+      const playlist = playlistId ? (menu2PlaylistCache.find((item) => item.id === playlistId) || menu2SearchPlaylists.find((item) => item.id === playlistId) || menu2SelectedPlaylist) : null;
+      if (playlist) cacheMenu2ContextPlaylist(playlist);
+      await playSpotifyContextShuffled(state.spotifyClientId, uri);
+      await pollSpotifyNow();
+    });
     if (action === "play-vibe") void playVibe(button.dataset.vibeQuery || "");
     if (action === "device") void runSpotifyBrowserAction(async () => { await transferToSpotifyDevice(button.dataset.deviceId || ""); await loadMenu2Devices(); });
     if (action === "artist-top") void openArtistTopTracks(button.dataset.artistId || "", button.dataset.artistName || "artist");
