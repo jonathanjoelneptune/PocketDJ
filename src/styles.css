@@ -10009,3 +10009,39 @@ body.lyrics-marquee-unavailable .marquee::after {
   .menu2-round-pill { width: 34px; height: 34px; min-width: 34px; }
   .menu2-brand-pill { font-size: 0.74rem; }
 }
+
+
+/* v69 Menu 2.1 collapsed rail: only lyrics, previous, play, next, and volume.
+   The rail itself is hover/click/tap target to reopen Menu 2.0. */
+.menu2-bubble {
+  cursor: pointer;
+  gap: 10px;
+  padding: 12px 9px;
+  border-radius: 999px;
+}
+
+.menu2-bubble:focus-visible {
+  outline: 2px solid rgba(30, 215, 96, 0.82);
+  outline-offset: 4px;
+}
+
+.menu2-bubble::before {
+  content: "";
+  position: absolute;
+  inset: -10px -8px;
+  border-radius: 999px;
+}
+
+.menu2-bubble-button {
+  position: relative;
+  z-index: 1;
+}
+
+.menu2-bubble-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(30, 215, 96, 0.62);
+}
+
+#menu2BubbleVolume {
+  font-size: 0.84rem;
+}

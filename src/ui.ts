@@ -1352,14 +1352,12 @@ export function renderShell(state: AppState): void {
         </div>
       </aside>
 
-      <div id="menu2Bubble" class="menu2-bubble" aria-label="PocketDJ quick controls" aria-hidden="true">
+      <div id="menu2Bubble" class="menu2-bubble" aria-label="PocketDJ quick controls. Hover or tap the rail to open Menu 2.0." aria-hidden="true" role="button" tabindex="0">
         <button id="menu2BubbleLyrics" class="menu2-bubble-button" type="button" aria-label="Toggle lyrics" title="Lyrics">♫</button>
-        <button id="menu2BubbleConnect" class="menu2-bubble-button" type="button" aria-label="Connect Spotify" title="Connected">●</button>
-        <button id="menu2BubbleCompact" class="menu2-bubble-button" type="button" aria-label="Toggle full panel or compact panel" title="Full Panel">▣</button>
-        <button id="menu2BubbleFullscreen" class="menu2-bubble-button menu2-bubble-fullscreen" type="button" aria-label="Toggle fullscreen" title="Fullscreen"></button>
         <button id="menu2BubblePrev" class="menu2-bubble-button" type="button" aria-label="Previous track" title="Previous">⏮</button>
         <button id="menu2BubblePlay" class="menu2-bubble-button menu2-bubble-play" type="button" aria-label="Play or pause" title="Play/Pause">▶</button>
         <button id="menu2BubbleNext" class="menu2-bubble-button" type="button" aria-label="Next track" title="Next">⏭</button>
+        <button id="menu2BubbleVolume" class="menu2-bubble-button" type="button" aria-label="Volume" title="Volume">🔊</button>
       </div>
 
 

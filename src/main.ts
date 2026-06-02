@@ -79,6 +79,7 @@ let menu2ActiveTab: "now" | "queue" | "playlists" | "search" | "discover" | "dev
 let menu2DevUnlocked = false;
 let menu2LockClickCount = 0;
 let menu2LockClickTimer: number | null = null;
+let menu2BubbleHoverTimer: number | null = null;
 let menu2StyleMode: "pocket" | "spotify" = (localStorage.getItem("pocketdj-menu2-style") as "pocket" | "spotify") || "pocket";
 let menu2ArtSize: "large" | "medium" | "small" = (localStorage.getItem("pocketdj-menu2-art-size") as "large" | "medium" | "small") || "large";
 let menu2QueueTracks: SpotifyCatalogTrack[] = [];
@@ -3805,6 +3806,26 @@ function handleMenu2LockClick(): void {
   }, 430);
 }
 
+function scheduleMenu2BubbleHoverOpen(): void {
+  if (menu2Open) return;
+  if (menu2BubbleHoverTimer) window.clearTimeout(menu2BubbleHoverTimer);
+  menu2BubbleHoverTimer = window.setTimeout(() => {
+    menu2BubbleHoverTimer = null;
+    setMenu2Open(true);
+  }, 1000);
+}
+
+function cancelMenu2BubbleHoverOpen(): void {
+  if (!menu2BubbleHoverTimer) return;
+  window.clearTimeout(menu2BubbleHoverTimer);
+  menu2BubbleHoverTimer = null;
+}
+
+function openMenu2FromBubbleRail(): void {
+  cancelMenu2BubbleHoverOpen();
+  if (!menu2Open) setMenu2Open(true);
+}
+
 function bindMenu2Controls(): void {
   document.querySelector<HTMLButtonElement>("#menu2BrandPill")?.addEventListener("click", () => setMenu2Open(false));
   document.querySelectorAll<HTMLButtonElement>(".menu2-tab").forEach((button) => {
@@ -3861,13 +3882,32 @@ function bindMenu2Controls(): void {
       panelVolume.dispatchEvent(new Event("input", { bubbles: true }));
     }
   });
+  const bubble = document.querySelector<HTMLElement>("#menu2Bubble");
+  bubble?.addEventListener("mouseenter", scheduleMenu2BubbleHoverOpen);
+  bubble?.addEventListener("mouseleave", cancelMenu2BubbleHoverOpen);
+  bubble?.addEventListener("click", (event) => {
+    if ((event.target as HTMLElement).closest(".menu2-bubble-button")) return;
+    openMenu2FromBubbleRail();
+  });
+  bubble?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openMenu2FromBubbleRail();
+    }
+  });
+
+  document.querySelectorAll<HTMLButtonElement>(".menu2-bubble-button").forEach((button) => {
+    button.addEventListener("click", (event) => event.stopPropagation());
+  });
   document.querySelector<HTMLButtonElement>("#menu2BubbleLyrics")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#lyricsToggle")?.click());
-  document.querySelector<HTMLButtonElement>("#menu2BubbleConnect")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#connectSpotify")?.click());
-  document.querySelector<HTMLButtonElement>("#menu2BubbleCompact")?.addEventListener("click", () => setCompactPanelEnabled(!compactPanelEnabled));
-  document.querySelector<HTMLButtonElement>("#menu2BubbleFullscreen")?.addEventListener("click", () => void toggleAppFullscreen());
   document.querySelector<HTMLButtonElement>("#menu2BubblePrev")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPrevButton")?.click());
   document.querySelector<HTMLButtonElement>("#menu2BubblePlay")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPlayButton")?.click());
   document.querySelector<HTMLButtonElement>("#menu2BubbleNext")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelNextButton")?.click());
+  document.querySelector<HTMLButtonElement>("#menu2BubbleVolume")?.addEventListener("click", () => {
+    setMenu2Tab("now");
+    setMenu2Open(true);
+    window.setTimeout(() => document.querySelector<HTMLInputElement>("#menu2Volume")?.focus(), 120);
+  });
   applyMenu2Settings();
   renderMenu2Discover();
 }
