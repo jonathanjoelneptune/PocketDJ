@@ -646,104 +646,104 @@ export function renderShell(state: AppState): void {
                   <p class="utility-help">Tune the normal 16:9 lyric placement. These offsets apply at reveal ratio 0.00 and become the starting point for the mid/full tall interpolation.</p>
                   <div class="lyric-utility-stack lyric-tall-grid">
                   <div class="lyric-direct-target-heading">Short lyric 16:9 corner offsets</div>
-                  <label>Short lyric TL X offset <span id="lyricPosterTallBaseShortTLXValue">-257</span>
-                    <input id="lyricPosterTallBaseShortTLX" type="range" min="-2500" max="2500" step="1" value="-257" />
+                  <label>Short lyric TL X offset <span id="lyricPosterTallBaseShortTLXValue">0</span>
+                    <input id="lyricPosterTallBaseShortTLX" type="range" min="-2500" max="2500" step="1" value="0" />
                   </label>
-                  <label>Short lyric TL Y offset <span id="lyricPosterTallBaseShortTLYValue">-86</span>
-                    <input id="lyricPosterTallBaseShortTLY" type="range" min="-2500" max="2500" step="1" value="-86" />
+                  <label>Short lyric TL Y offset <span id="lyricPosterTallBaseShortTLYValue">0</span>
+                    <input id="lyricPosterTallBaseShortTLY" type="range" min="-2500" max="2500" step="1" value="0" />
                   </label>
-                  <label>Short lyric TR X offset <span id="lyricPosterTallBaseShortTRXValue">65</span>
-                    <input id="lyricPosterTallBaseShortTRX" type="range" min="-2500" max="2500" step="1" value="65" />
+                  <label>Short lyric TR X offset <span id="lyricPosterTallBaseShortTRXValue">0</span>
+                    <input id="lyricPosterTallBaseShortTRX" type="range" min="-2500" max="2500" step="1" value="0" />
                   </label>
-                  <label>Short lyric TR Y offset <span id="lyricPosterTallBaseShortTRYValue">-96</span>
-                    <input id="lyricPosterTallBaseShortTRY" type="range" min="-2500" max="2500" step="1" value="-96" />
+                  <label>Short lyric TR Y offset <span id="lyricPosterTallBaseShortTRYValue">0</span>
+                    <input id="lyricPosterTallBaseShortTRY" type="range" min="-2500" max="2500" step="1" value="0" />
                   </label>
-                  <label>Short lyric BR X offset <span id="lyricPosterTallBaseShortBRXValue">85</span>
-                    <input id="lyricPosterTallBaseShortBRX" type="range" min="-2500" max="2500" step="1" value="85" />
+                  <label>Short lyric BR X offset <span id="lyricPosterTallBaseShortBRXValue">19</span>
+                    <input id="lyricPosterTallBaseShortBRX" type="range" min="-2500" max="2500" step="1" value="19" />
                   </label>
                   <label>Short lyric BR Y offset <span id="lyricPosterTallBaseShortBRYValue">0</span>
                     <input id="lyricPosterTallBaseShortBRY" type="range" min="-2500" max="2500" step="1" value="0" />
                   </label>
-                  <label>Short lyric BL X offset <span id="lyricPosterTallBaseShortBLXValue">65</span>
-                    <input id="lyricPosterTallBaseShortBLX" type="range" min="-2500" max="2500" step="1" value="65" />
+                  <label>Short lyric BL X offset <span id="lyricPosterTallBaseShortBLXValue">0</span>
+                    <input id="lyricPosterTallBaseShortBLX" type="range" min="-2500" max="2500" step="1" value="0" />
                   </label>
                   <label>Short lyric BL Y offset <span id="lyricPosterTallBaseShortBLYValue">0</span>
                     <input id="lyricPosterTallBaseShortBLY" type="range" min="-2500" max="2500" step="1" value="0" />
                   </label>
                   <div class="lyric-direct-target-heading">1-row 16:9 corner offsets</div>
-                  <label>1-row TL X offset <span id="lyricPosterTallBaseOneRowTLXValue">0</span>
-                    <input id="lyricPosterTallBaseOneRowTLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>1-row TL X offset <span id="lyricPosterTallBaseOneRowTLXValue">-163</span>
+                    <input id="lyricPosterTallBaseOneRowTLX" type="range" min="-2500" max="2500" step="1" value="-163" />
                   </label>
-                  <label>1-row TL Y offset <span id="lyricPosterTallBaseOneRowTLYValue">0</span>
-                    <input id="lyricPosterTallBaseOneRowTLY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>1-row TL Y offset <span id="lyricPosterTallBaseOneRowTLYValue">-152</span>
+                    <input id="lyricPosterTallBaseOneRowTLY" type="range" min="-2500" max="2500" step="1" value="-152" />
                   </label>
-                  <label>1-row TR X offset <span id="lyricPosterTallBaseOneRowTRXValue">0</span>
-                    <input id="lyricPosterTallBaseOneRowTRX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>1-row TR X offset <span id="lyricPosterTallBaseOneRowTRXValue">150</span>
+                    <input id="lyricPosterTallBaseOneRowTRX" type="range" min="-2500" max="2500" step="1" value="150" />
                   </label>
-                  <label>1-row TR Y offset <span id="lyricPosterTallBaseOneRowTRYValue">0</span>
-                    <input id="lyricPosterTallBaseOneRowTRY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>1-row TR Y offset <span id="lyricPosterTallBaseOneRowTRYValue">-152</span>
+                    <input id="lyricPosterTallBaseOneRowTRY" type="range" min="-2500" max="2500" step="1" value="-152" />
                   </label>
-                  <label>1-row BR X offset <span id="lyricPosterTallBaseOneRowBRXValue">0</span>
-                    <input id="lyricPosterTallBaseOneRowBRX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>1-row BR X offset <span id="lyricPosterTallBaseOneRowBRXValue">-122</span>
+                    <input id="lyricPosterTallBaseOneRowBRX" type="range" min="-2500" max="2500" step="1" value="-122" />
                   </label>
-                  <label>1-row BR Y offset <span id="lyricPosterTallBaseOneRowBRYValue">0</span>
-                    <input id="lyricPosterTallBaseOneRowBRY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>1-row BR Y offset <span id="lyricPosterTallBaseOneRowBRYValue">19</span>
+                    <input id="lyricPosterTallBaseOneRowBRY" type="range" min="-2500" max="2500" step="1" value="19" />
                   </label>
-                  <label>1-row BL X offset <span id="lyricPosterTallBaseOneRowBLXValue">0</span>
-                    <input id="lyricPosterTallBaseOneRowBLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>1-row BL X offset <span id="lyricPosterTallBaseOneRowBLXValue">120</span>
+                    <input id="lyricPosterTallBaseOneRowBLX" type="range" min="-2500" max="2500" step="1" value="120" />
                   </label>
-                  <label>1-row BL Y offset <span id="lyricPosterTallBaseOneRowBLYValue">0</span>
-                    <input id="lyricPosterTallBaseOneRowBLY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>1-row BL Y offset <span id="lyricPosterTallBaseOneRowBLYValue">19</span>
+                    <input id="lyricPosterTallBaseOneRowBLY" type="range" min="-2500" max="2500" step="1" value="19" />
                   </label>
                   <div class="lyric-direct-target-heading">2-row top 16:9 corner offsets</div>
-                  <label>2-row top TL X offset <span id="lyricPosterTallBaseTwoTopTLXValue">0</span>
-                    <input id="lyricPosterTallBaseTwoTopTLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row top TL X offset <span id="lyricPosterTallBaseTwoTopTLXValue">-82</span>
+                    <input id="lyricPosterTallBaseTwoTopTLX" type="range" min="-2500" max="2500" step="1" value="-82" />
                   </label>
-                  <label>2-row top TL Y offset <span id="lyricPosterTallBaseTwoTopTLYValue">0</span>
-                    <input id="lyricPosterTallBaseTwoTopTLY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row top TL Y offset <span id="lyricPosterTallBaseTwoTopTLYValue">-72</span>
+                    <input id="lyricPosterTallBaseTwoTopTLY" type="range" min="-2500" max="2500" step="1" value="-72" />
                   </label>
-                  <label>2-row top TR X offset <span id="lyricPosterTallBaseTwoTopTRXValue">0</span>
-                    <input id="lyricPosterTallBaseTwoTopTRX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row top TR X offset <span id="lyricPosterTallBaseTwoTopTRXValue">100</span>
+                    <input id="lyricPosterTallBaseTwoTopTRX" type="range" min="-2500" max="2500" step="1" value="100" />
                   </label>
-                  <label>2-row top TR Y offset <span id="lyricPosterTallBaseTwoTopTRYValue">0</span>
-                    <input id="lyricPosterTallBaseTwoTopTRY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row top TR Y offset <span id="lyricPosterTallBaseTwoTopTRYValue">-72</span>
+                    <input id="lyricPosterTallBaseTwoTopTRY" type="range" min="-2500" max="2500" step="1" value="-72" />
                   </label>
                   <label>2-row top BR X offset <span id="lyricPosterTallBaseTwoTopBRXValue">0</span>
                     <input id="lyricPosterTallBaseTwoTopBRX" type="range" min="-2500" max="2500" step="1" value="0" />
                   </label>
-                  <label>2-row top BR Y offset <span id="lyricPosterTallBaseTwoTopBRYValue">0</span>
-                    <input id="lyricPosterTallBaseTwoTopBRY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row top BR Y offset <span id="lyricPosterTallBaseTwoTopBRYValue">29</span>
+                    <input id="lyricPosterTallBaseTwoTopBRY" type="range" min="-2500" max="2500" step="1" value="29" />
                   </label>
-                  <label>2-row top BL X offset <span id="lyricPosterTallBaseTwoTopBLXValue">0</span>
-                    <input id="lyricPosterTallBaseTwoTopBLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row top BL X offset <span id="lyricPosterTallBaseTwoTopBLXValue">39</span>
+                    <input id="lyricPosterTallBaseTwoTopBLX" type="range" min="-2500" max="2500" step="1" value="39" />
                   </label>
-                  <label>2-row top BL Y offset <span id="lyricPosterTallBaseTwoTopBLYValue">0</span>
-                    <input id="lyricPosterTallBaseTwoTopBLY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row top BL Y offset <span id="lyricPosterTallBaseTwoTopBLYValue">29</span>
+                    <input id="lyricPosterTallBaseTwoTopBLY" type="range" min="-2500" max="2500" step="1" value="29" />
                   </label>
                   <div class="lyric-direct-target-heading">2-row bottom 16:9 corner offsets</div>
-                  <label>2-row bottom TL X offset <span id="lyricPosterTallBaseTwoBottomTLXValue">0</span>
-                    <input id="lyricPosterTallBaseTwoBottomTLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row bottom TL X offset <span id="lyricPosterTallBaseTwoBottomTLXValue">-52</span>
+                    <input id="lyricPosterTallBaseTwoBottomTLX" type="range" min="-2500" max="2500" step="1" value="-52" />
                   </label>
-                  <label>2-row bottom TL Y offset <span id="lyricPosterTallBaseTwoBottomTLYValue">0</span>
-                    <input id="lyricPosterTallBaseTwoBottomTLY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row bottom TL Y offset <span id="lyricPosterTallBaseTwoBottomTLYValue">-70</span>
+                    <input id="lyricPosterTallBaseTwoBottomTLY" type="range" min="-2500" max="2500" step="1" value="-70" />
                   </label>
-                  <label>2-row bottom TR X offset <span id="lyricPosterTallBaseTwoBottomTRXValue">0</span>
-                    <input id="lyricPosterTallBaseTwoBottomTRX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row bottom TR X offset <span id="lyricPosterTallBaseTwoBottomTRXValue">69</span>
+                    <input id="lyricPosterTallBaseTwoBottomTRX" type="range" min="-2500" max="2500" step="1" value="69" />
                   </label>
-                  <label>2-row bottom TR Y offset <span id="lyricPosterTallBaseTwoBottomTRYValue">0</span>
-                    <input id="lyricPosterTallBaseTwoBottomTRY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row bottom TR Y offset <span id="lyricPosterTallBaseTwoBottomTRYValue">-70</span>
+                    <input id="lyricPosterTallBaseTwoBottomTRY" type="range" min="-2500" max="2500" step="1" value="-70" />
                   </label>
-                  <label>2-row bottom BR X offset <span id="lyricPosterTallBaseTwoBottomBRXValue">0</span>
-                    <input id="lyricPosterTallBaseTwoBottomBRX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row bottom BR X offset <span id="lyricPosterTallBaseTwoBottomBRXValue">9</span>
+                    <input id="lyricPosterTallBaseTwoBottomBRX" type="range" min="-2500" max="2500" step="1" value="9" />
                   </label>
-                  <label>2-row bottom BR Y offset <span id="lyricPosterTallBaseTwoBottomBRYValue">0</span>
-                    <input id="lyricPosterTallBaseTwoBottomBRY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row bottom BR Y offset <span id="lyricPosterTallBaseTwoBottomBRYValue">20</span>
+                    <input id="lyricPosterTallBaseTwoBottomBRY" type="range" min="-2500" max="2500" step="1" value="20" />
                   </label>
                   <label>2-row bottom BL X offset <span id="lyricPosterTallBaseTwoBottomBLXValue">0</span>
                     <input id="lyricPosterTallBaseTwoBottomBLX" type="range" min="-2500" max="2500" step="1" value="0" />
                   </label>
-                  <label>2-row bottom BL Y offset <span id="lyricPosterTallBaseTwoBottomBLYValue">0</span>
-                    <input id="lyricPosterTallBaseTwoBottomBLY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>2-row bottom BL Y offset <span id="lyricPosterTallBaseTwoBottomBLYValue">20</span>
+                    <input id="lyricPosterTallBaseTwoBottomBLY" type="range" min="-2500" max="2500" step="1" value="20" />
                   </label>
                   </div>
                 </details>

@@ -8889,3 +8889,20 @@ body.lyrics-marquee-unavailable .marquee::after {
 .active-lyrics-block.lyric-poster-tall-mode .lyric-poster-row-text {
   overflow: visible !important;
 }
+
+
+/* Tall mode uses the tuned geometry only. Strip the decorative lyric text effects
+   so the tall interpolation is not visually pushed by shadows, bevels, blur, or glow. */
+.active-lyrics-block.lyric-poster-tall-mode .lyric-poster-row-text,
+.active-lyrics-block.lyric-poster-tall-mode .lyric-poster-html-row span {
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+.active-lyrics-block.lyric-poster-tall-mode .lyric-poster-row-text {
+  stroke-width: max(1px, calc(var(--lyric-poster-stroke) * 0.35)) !important;
+}
+
+.active-lyrics-block.lyric-poster-tall-mode .lyric-poster-html-row span {
+  -webkit-text-stroke-width: max(1px, calc(var(--lyric-poster-stroke) * 0.35)) !important;
+}
