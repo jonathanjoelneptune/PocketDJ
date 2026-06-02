@@ -81,6 +81,8 @@ let menu2LockClickCount = 0;
 let menu2LockClickTimer: number | null = null;
 let menu2BubbleHoverTimer: number | null = null;
 let menu2AutoCollapseTimer: number | null = null;
+let menu2PointerInside = false;
+let menu2NowRenderKey = "";
 let menu2QueueDragIndex: number | null = null;
 let menu2ContextFetchKey = "";
 let menu2StyleMode: "pocket" | "spotify" | "web" = (localStorage.getItem("pocketdj-menu2-style") as "pocket" | "spotify" | "web") || "pocket";
@@ -3584,12 +3586,24 @@ function clearMenu2AutoCollapseTimer(): void {
   }
 }
 
+function menu2HasActiveInteraction(): boolean {
+  if (menu2PointerInside) return true;
+  const active = document.activeElement;
+  return Boolean(active && (document.querySelector("#menu2Panel")?.contains(active) || document.querySelector("#menu2Bubble")?.contains(active)));
+}
+
 function scheduleMenu2AutoCollapse(): void {
   clearMenu2AutoCollapseTimer();
   if (!menu2Open || menu2Locked) return;
+  if (menu2HasActiveInteraction()) return;
   menu2AutoCollapseTimer = window.setTimeout(() => {
     menu2AutoCollapseTimer = null;
-    if (menu2Open && !menu2Locked) setMenu2Open(false);
+    if (!menu2Open || menu2Locked) return;
+    if (menu2HasActiveInteraction()) {
+      scheduleMenu2AutoCollapse();
+      return;
+    }
+    setMenu2Open(false);
   }, 2000);
 }
 
@@ -3603,6 +3617,7 @@ function setMenu2Open(open: boolean): void {
   }
   applyMenu2Settings();
   if (open) {
+    menu2NowRenderKey = "";
     renderMenu2NowPlaying();
     void refreshMenu2ActiveTab();
   }
@@ -3724,6 +3739,7 @@ function menu2ArtistRow(artist: SpotifyCatalogArtist): string {
 
 function renderMenu2NowPlaying(): void {
   const track = state.playback;
+  menu2NowRenderKey = menu2NowPlayingRenderKey(track);
   const art = document.querySelector<HTMLElement>("#menu2AlbumArt");
   if (art) art.innerHTML = track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "<span>♪</span>";
   const title = document.querySelector<HTMLElement>("#menu2TrackTitle");
@@ -3773,6 +3789,49 @@ function renderMenu2NowPlaying(): void {
   if (repeat) repeat.innerHTML = menu2Icon("repeat");
   if (queue) queue.innerHTML = menu2Icon("queue");
   syncMenu2Pills();
+}
+
+
+function menu2NowPlayingRenderKey(track: AppState["playback"]): string {
+  return [
+    track.trackId,
+    track.title,
+    track.artist,
+    track.album,
+    track.albumArtUrl,
+    track.durationMs,
+    track.isPlaying,
+    track.playbackContextUri,
+    track.playbackContextType,
+    menu2PanelMode,
+    menu2StyleMode,
+    lyricsEnabled,
+  ].join("|");
+}
+
+function updateMenu2NowPlayingProgress(): void {
+  const track = state.playback;
+  const progressMs = getEstimatedPlaybackProgress(track);
+  const percent = track.durationMs > 0 ? Math.min(100, (progressMs / track.durationMs) * 100) : 0;
+  const fill = document.querySelector<HTMLElement>("#menu2ProgressFill");
+  const now = document.querySelector<HTMLElement>("#menu2ProgressNow");
+  const end = document.querySelector<HTMLElement>("#menu2ProgressEnd");
+  const seek = document.querySelector<HTMLElement>("#menu2SeekBar");
+  if (fill) fill.style.width = `${percent}%`;
+  if (now) now.textContent = formatDurationMs(progressMs) || "0:00";
+  if (end) end.textContent = formatDurationMs(track.durationMs) || "0:00";
+  if (seek) seek.setAttribute("aria-valuenow", String(Math.round(percent)));
+}
+
+function refreshMenu2NowPlayingIfNeeded(): void {
+  if (!menu2Open) return;
+  const nextKey = menu2NowPlayingRenderKey(state.playback);
+  if (nextKey !== menu2NowRenderKey) {
+    menu2NowRenderKey = nextKey;
+    renderMenu2NowPlaying();
+  } else {
+    updateMenu2NowPlayingProgress();
+  }
 }
 
 function syncMenu2Pills(): void {
@@ -4022,29 +4081,29 @@ async function loadMenu2Devices(): Promise<void> {
 function handleMenu2LockClick(event?: Event): void {
   event?.preventDefault();
   event?.stopPropagation();
+
   menu2Locked = !menu2Locked;
   menu2LockClickCount += 1;
   if (menu2LockClickTimer) window.clearTimeout(menu2LockClickTimer);
 
+  let devToggled = false;
   if (menu2LockClickCount >= 5) {
     menu2LockClickCount = 0;
-    menu2LockClickTimer = null;
     menu2DevUnlocked = !menu2DevUnlocked;
-    if (menu2DevUnlocked) {
-      menu2ActiveTab = "dev";
-      menu2Locked = true;
-    }
-    applyMenu2Settings();
-    setMenu2Status(menu2DevUnlocked ? "Dev unlocked." : "Dev hidden.", false);
-    return;
+    devToggled = true;
+    if (menu2DevUnlocked) menu2ActiveTab = "dev";
+    else if (menu2ActiveTab === "dev") menu2ActiveTab = "now";
   }
 
   applyMenu2Settings();
-  scheduleMenu2AutoCollapse();
+  setMenu2Status(devToggled ? (menu2DevUnlocked ? "Dev unlocked." : "Dev hidden.") : (menu2Locked ? "Menu locked open." : "Menu unlocked."), false);
+
   menu2LockClickTimer = window.setTimeout(() => {
     menu2LockClickCount = 0;
     menu2LockClickTimer = null;
   }, 1300);
+
+  if (!menu2Locked) scheduleMenu2AutoCollapse();
 }
 
 function scheduleMenu2BubbleHoverOpen(): void {
@@ -4112,8 +4171,12 @@ function bindMenu2QueueDragEvents(): void {
 
 function handleMenu2OutsidePointer(event: PointerEvent): void {
   if (!menu2Open || menu2Locked) return;
-  const target = event.target as HTMLElement;
-  if (target.closest("#menu2Panel") || target.closest("#menu2Bubble") || target.closest(".pocket-title-pill")) return;
+  const target = event.target as Node | null;
+  const panel = document.querySelector("#menu2Panel");
+  const bubble = document.querySelector("#menu2Bubble");
+  const brand = document.querySelector(".pocket-title-pill");
+  if ((target && panel?.contains(target)) || (target && bubble?.contains(target)) || (target && brand?.contains(target))) return;
+  menu2PointerInside = false;
   setMenu2Open(false);
 }
 
@@ -4130,6 +4193,7 @@ function bindMenu2Controls(): void {
     menu2PanelMode = menu2PanelMode === "compact" ? "full" : "compact";
     localStorage.setItem("pocketdj-menu2-panel-mode", menu2PanelMode);
     applyMenu2Settings();
+    menu2NowRenderKey = "";
     renderMenu2NowPlaying();
   });
   document.querySelector<HTMLButtonElement>("#menu2FullscreenPill")?.addEventListener("click", () => void toggleAppFullscreen());
@@ -4175,8 +4239,40 @@ function bindMenu2Controls(): void {
     menu2SearchResultTab = tab.dataset.menu2SearchTab as typeof menu2SearchResultTab;
     renderMenu2SearchResults();
   });
-  document.querySelector<HTMLElement>("#menu2Panel")?.addEventListener("pointerdown", () => clearMenu2AutoCollapseTimer());
-  document.querySelector<HTMLElement>("#menu2Panel")?.addEventListener("pointerleave", () => scheduleMenu2AutoCollapse());
+  const menu2Panel = document.querySelector<HTMLElement>("#menu2Panel");
+  menu2Panel?.addEventListener("pointerenter", () => {
+    menu2PointerInside = true;
+    clearMenu2AutoCollapseTimer();
+  });
+  menu2Panel?.addEventListener("pointerover", () => {
+    menu2PointerInside = true;
+    clearMenu2AutoCollapseTimer();
+  });
+  menu2Panel?.addEventListener("pointerdown", (event) => {
+    menu2PointerInside = true;
+    clearMenu2AutoCollapseTimer();
+    event.stopPropagation();
+  });
+  menu2Panel?.addEventListener("click", (event) => {
+    menu2PointerInside = true;
+    event.stopPropagation();
+  });
+  menu2Panel?.addEventListener("focusin", () => {
+    menu2PointerInside = true;
+    clearMenu2AutoCollapseTimer();
+  });
+  menu2Panel?.addEventListener("focusout", () => {
+    window.setTimeout(() => {
+      if (!document.querySelector("#menu2Panel")?.contains(document.activeElement)) {
+        menu2PointerInside = false;
+        scheduleMenu2AutoCollapse();
+      }
+    }, 0);
+  });
+  menu2Panel?.addEventListener("pointerleave", () => {
+    menu2PointerInside = false;
+    scheduleMenu2AutoCollapse();
+  });
   document.querySelector<HTMLElement>("#menu2Panel")?.addEventListener("click", (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-menu2-action]");
     if (!button) return;
@@ -4222,6 +4318,8 @@ function bindMenu2Controls(): void {
     }
   });
   const bubble = document.querySelector<HTMLElement>("#menu2Bubble");
+  bubble?.addEventListener("pointerenter", () => { menu2PointerInside = true; clearMenu2AutoCollapseTimer(); });
+  bubble?.addEventListener("pointerleave", () => { menu2PointerInside = false; cancelMenu2BubbleHoverOpen(); scheduleMenu2AutoCollapse(); });
   bubble?.addEventListener("mouseenter", scheduleMenu2BubbleHoverOpen);
   bubble?.addEventListener("mouseleave", cancelMenu2BubbleHoverOpen);
   bubble?.addEventListener("click", (event) => {
@@ -8123,7 +8221,7 @@ function tick(): void {
   syncMusicReactiveEnvironment(state.playback);
   updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
   updatePlaybackUi(state.playback, state.debugOpen);
-  if (menu2Open) renderMenu2NowPlaying();
+  refreshMenu2NowPlayingIfNeeded();
 
   const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
