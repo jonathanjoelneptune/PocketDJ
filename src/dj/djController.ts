@@ -376,6 +376,8 @@ export class DjController {
       this.poseElement.setAttribute("aria-label", `Pocket DJ ${label}: ${this.currentFrame}`);
       this.modeElement.textContent = label.toUpperCase();
       document.documentElement.dataset.djMode = label;
+      document.documentElement.classList.toggle("dj-pose-i6", this.currentFrame === "i6.png");
+      document.documentElement.classList.toggle("dj-pose-a41", this.currentFrame === "a41.png");
       this.updateAnimationDebug(label);
     }
   }

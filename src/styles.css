@@ -8906,3 +8906,236 @@ body.lyrics-marquee-unavailable .marquee::after {
 .active-lyrics-block.lyric-poster-tall-mode .lyric-poster-html-row span {
   -webkit-text-stroke-width: max(1px, calc(var(--lyric-poster-stroke) * 0.35)) !important;
 }
+
+/* v66: hide mixer LEDs when idle i6 covers the table, and give lyrics LED a slow alive blink. */
+.dj-pose-i6 .mixer-status-led {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.mixer-lyrics-led .mixer-status-led-core {
+  animation: mixerLyricsSlowBlink 2850ms ease-in-out infinite;
+}
+
+.mixer-lyrics-led .mixer-status-led-glow {
+  animation: mixerLyricsSlowGlow 2850ms ease-in-out infinite;
+}
+
+@keyframes mixerLyricsSlowBlink {
+  0%, 100% {
+    filter: brightness(0.86) saturate(0.95);
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  50% {
+    filter: brightness(1.22) saturate(1.10);
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+@keyframes mixerLyricsSlowGlow {
+  0%, 100% {
+    opacity: 0.52;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.14);
+  }
+}
+
+/* v66: active album sleeve placed on the back shelf after the reveal pose. */
+.placed-active-album-layer {
+  position: absolute;
+  left: var(--placed-album-x, 43.2%);
+  top: var(--placed-album-y, 61.4%);
+  width: var(--placed-album-size, 7.2%);
+  aspect-ratio: 1 / 1;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transform:
+    translate(-50%, -100%)
+    perspective(calc(var(--room-w) * 0.42))
+    rotateX(var(--placed-album-rotate-x, 0deg))
+    rotateY(var(--placed-album-rotate-y, -16deg))
+    rotateZ(var(--placed-album-rotate-z, -7deg));
+  transform-origin: 50% 100%;
+  transition: opacity 420ms ease, filter 420ms ease;
+  filter: drop-shadow(0 calc(var(--room-unit) * 7) calc(var(--room-unit) * 9) rgba(0, 0, 0, calc(var(--placed-album-shadow, 0.62) * 0.72)));
+}
+
+.placed-active-album-layer::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--placed-album-depth, 0.18) * 10%);
+  top: calc(var(--placed-album-depth, 0.18) * 5%);
+  width: 100%;
+  height: 100%;
+  border-radius: 3%;
+  background: linear-gradient(135deg, rgba(16, 10, 7, 0.82), rgba(70, 40, 22, 0.46));
+  transform: translate(calc(var(--placed-album-depth, 0.18) * var(--room-unit) * 9), calc(var(--placed-album-depth, 0.18) * var(--room-unit) * 7));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.placed-active-album-depth {
+  position: absolute;
+  inset: 3% -4% -5% 5%;
+  border-radius: 3%;
+  background: linear-gradient(135deg, rgba(32, 20, 12, 0.86), rgba(9, 6, 4, 0.74));
+  transform: translate(calc(var(--placed-album-depth, 0.18) * var(--room-unit) * 14), calc(var(--placed-album-depth, 0.18) * var(--room-unit) * 10));
+  opacity: calc(0.42 + var(--placed-album-depth, 0.18) * 0.45);
+}
+
+.placed-active-album-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 3%;
+  image-rendering: auto;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.12),
+    inset 0 -10px 16px rgba(0,0,0,0.22);
+}
+
+.placed-active-album-cover::after {
+  content: "";
+}
+
+.placed-active-album-layer.placed-active-album-has-art {
+  opacity: var(--placed-album-opacity, 1);
+}
+
+.placed-active-album-disabled .placed-active-album-layer,
+.dj-frame-img[data-pose="a41.png"] ~ .song-change-album-layer.song-change-album-has-art ~ .placed-active-album-layer,
+.dj-pose-a41 .placed-active-album-layer {
+  opacity: 0 !important;
+}
+
+/* v66: separate tiny star and city-light overlay. */
+.ambient-twinkle-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 240ms ease;
+  --ambient-star-opacity: 0.78;
+  --ambient-city-opacity: 0.82;
+  --ambient-twinkle: 0.55;
+}
+
+.ambient-twinkle-overlay.ambient-twinkles-enabled {
+  opacity: 1;
+}
+
+.ambient-twinkle-overlay.ambient-twinkles-editing {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.ambient-twinkle-point {
+  position: absolute;
+  --twinkle-render-size: calc(var(--twinkle-size) * var(--room-unit));
+  width: calc(var(--twinkle-render-size) * 6);
+  height: calc(var(--twinkle-render-size) * 6);
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  animation: ambientTwinklePulse 4200ms steps(1, end) infinite;
+  animation-delay: var(--twinkle-phase);
+}
+
+.ambient-twinkle-overlay.ambient-twinkles-editing .ambient-twinkle-point {
+  pointer-events: auto;
+  cursor: crosshair;
+  mix-blend-mode: normal;
+}
+
+.ambient-twinkle-core,
+.ambient-twinkle-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.ambient-twinkle-core {
+  width: var(--twinkle-render-size);
+  height: var(--twinkle-render-size);
+  opacity: calc(var(--twinkle-intensity) * 0.78);
+}
+
+.ambient-twinkle-glow {
+  width: calc(var(--twinkle-render-size) * 5.5);
+  height: calc(var(--twinkle-render-size) * 5.5);
+  filter: blur(calc(var(--twinkle-render-size) * 0.9));
+  opacity: calc(var(--twinkle-intensity) * var(--ambient-twinkle) * 0.42);
+}
+
+.ambient-twinkle-star .ambient-twinkle-core {
+  background: rgba(235, 244, 255, var(--ambient-star-opacity));
+  box-shadow: 0 0 calc(var(--twinkle-render-size) * 2.2) rgba(191, 219, 254, calc(var(--ambient-star-opacity) * 0.62));
+}
+
+.ambient-twinkle-star .ambient-twinkle-glow {
+  background: radial-gradient(circle, rgba(190, 219, 255, calc(var(--ambient-star-opacity) * 0.52)) 0%, rgba(120, 170, 255, calc(var(--ambient-star-opacity) * 0.22)) 42%, rgba(80, 120, 255, 0) 72%);
+}
+
+.ambient-twinkle-city .ambient-twinkle-core {
+  background: rgba(255, 214, 132, var(--ambient-city-opacity));
+  box-shadow: 0 0 calc(var(--twinkle-render-size) * 2.6) rgba(255, 169, 78, calc(var(--ambient-city-opacity) * 0.58));
+}
+
+.ambient-twinkle-city .ambient-twinkle-glow {
+  background: radial-gradient(circle, rgba(255, 202, 108, calc(var(--ambient-city-opacity) * 0.55)) 0%, rgba(255, 143, 64, calc(var(--ambient-city-opacity) * 0.20)) 45%, rgba(255, 143, 64, 0) 74%);
+}
+
+.ambient-twinkle-label {
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  transform: translate(-50%, -100%);
+  padding: 3px 4px;
+  border-radius: 6px;
+  background: rgba(8, 12, 20, 0.74);
+  border: 1px solid rgba(180, 214, 255, 0.42);
+  color: rgba(230, 242, 255, 0.96);
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  line-height: 1;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.ambient-twinkle-overlay.ambient-twinkles-show-guides .ambient-twinkle-label,
+.ambient-twinkle-overlay.ambient-twinkles-editing .ambient-twinkle-label {
+  opacity: 1;
+}
+
+.ambient-twinkle-overlay.ambient-twinkles-editing .ambient-twinkle-point::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--twinkle-render-size) * 4);
+  height: calc(var(--twinkle-render-size) * 4);
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  border: 1px solid rgba(190, 219, 255, 0.65);
+}
+
+@keyframes ambientTwinklePulse {
+  0%, 100% { opacity: 0.78; filter: brightness(0.9); }
+  12% { opacity: calc(0.42 + var(--ambient-twinkle) * 0.25); filter: brightness(0.72); }
+  24% { opacity: 0.95; filter: brightness(1.18); }
+  47% { opacity: 0.68; filter: brightness(0.88); }
+  71% { opacity: calc(0.56 + var(--ambient-twinkle) * 0.34); filter: brightness(1.06); }
+}

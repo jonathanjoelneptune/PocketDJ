@@ -35,6 +35,7 @@ export function renderShell(state: AppState): void {
         <canvas id="sessionAlbumWarpCanvas" class="session-album-warp-canvas" width="1764" height="992" aria-hidden="true"></canvas>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
         <div id="stringLightOverlay" class="string-light-overlay" aria-hidden="true"></div>
+        <div id="ambientTwinkleOverlay" class="ambient-twinkle-overlay" aria-hidden="true"></div>
         <div id="ambientMusicGlow" class="ambient-music-glow" aria-hidden="true"></div>
 
         <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
@@ -60,6 +61,11 @@ export function renderShell(state: AppState): void {
 
         <div class="floor-shadow table-floor-shadow" aria-hidden="true"></div>
         <div class="floor-shadow dj-feet-shadow" aria-hidden="true"></div>
+
+        <div id="placedActiveAlbumLayer" class="placed-active-album-layer" aria-hidden="true">
+          <div class="placed-active-album-depth" aria-hidden="true"></div>
+          <img id="placedActiveAlbumCover" class="placed-active-album-cover" src="" alt="" draggable="false" />
+        </div>
 
         <div class="marquee marquee-empty" aria-live="polite">
           <div class="marquee-viewport">
@@ -311,6 +317,55 @@ export function renderShell(state: AppState): void {
             <textarea id="stringLightJson" class="session-album-export-text string-light-json" readonly spellcheck="false"></textarea>
           </details>
 
+          <details class="ambient-twinkle-utility">
+            <summary>Stars and city lights utility</summary>
+            <p class="utility-help">Tiny window stars and building lights. Turn on edit mode, select a point, then click the room to place it using the same 1764 x 992 room coordinates.</p>
+            <div class="utility-grid">
+              <label class="utility-checkbox"><input id="ambientTwinkleEnabled" type="checkbox" checked /> Enable stars and city lights</label>
+              <label class="utility-checkbox"><input id="ambientTwinkleEditMode" type="checkbox" /> Edit twinkle points</label>
+              <label class="utility-checkbox"><input id="ambientTwinkleShowGuides" type="checkbox" /> Show point labels</label>
+              <label>Star opacity <span id="ambientStarOpacityValue">0.78</span>
+                <input id="ambientStarOpacity" type="range" min="0" max="1.5" step="0.01" value="0.78" />
+              </label>
+              <label>City light opacity <span id="ambientCityOpacityValue">0.82</span>
+                <input id="ambientCityOpacity" type="range" min="0" max="1.5" step="0.01" value="0.82" />
+              </label>
+              <label>Random twinkle <span id="ambientTwinkleAmountValue">0.55</span>
+                <input id="ambientTwinkleAmount" type="range" min="0" max="1" step="0.01" value="0.55" />
+              </label>
+            </div>
+            <div class="button-grid utility-buttons">
+              <button id="ambientTwinkleAddStar" class="secondary" type="button">Add Star</button>
+              <button id="ambientTwinkleAddCity" class="secondary" type="button">Add City Light</button>
+              <button id="ambientTwinklePrev" class="secondary" type="button">Previous</button>
+              <button id="ambientTwinkleNext" class="secondary" type="button">Next</button>
+              <button id="ambientTwinkleDelete" class="secondary" type="button">Delete Selected</button>
+              <button id="ambientTwinkleReset" class="secondary" type="button">Reset Defaults</button>
+              <button id="ambientTwinkleCopyJson" class="secondary" type="button">Copy Twinkle JSON</button>
+            </div>
+            <div class="utility-readout">Selected twinkle: <span id="ambientTwinkleSelectedLabel">none</span></div>
+            <label class="field-label" for="ambientTwinkleKind">Selected point type</label>
+            <select id="ambientTwinkleKind" class="text-input">
+              <option value="star">Star</option>
+              <option value="city">City light</option>
+            </select>
+            <div class="utility-grid">
+              <label>Point X px <span id="ambientTwinkleXValue">0</span>
+                <input id="ambientTwinkleX" type="range" min="0" max="1764" step="1" value="0" />
+              </label>
+              <label>Point Y px <span id="ambientTwinkleYValue">0</span>
+                <input id="ambientTwinkleY" type="range" min="0" max="992" step="1" value="0" />
+              </label>
+              <label>Point size px <span id="ambientTwinkleSizeValue">2</span>
+                <input id="ambientTwinkleSize" type="range" min="0.5" max="12" step="0.1" value="2" />
+              </label>
+              <label>Point intensity <span id="ambientTwinkleIntensityValue">0.70</span>
+                <input id="ambientTwinkleIntensity" type="range" min="0" max="2" step="0.01" value="0.7" />
+              </label>
+            </div>
+            <textarea id="ambientTwinkleJson" class="session-album-export-text ambient-twinkle-json" readonly spellcheck="false"></textarea>
+          </details>
+
           <details class="room-utility-controls">
           <summary>Room utility controls</summary>
 
@@ -366,8 +421,8 @@ export function renderShell(state: AppState): void {
             <label>Tempo LED size % <span id="mixerTempoLedSizeValue">2</span>
               <input id="mixerTempoLedSize" type="range" min="0.5" max="4" step="0.05" value="2" />
             </label>
-            <label>Lyrics LED X % <span id="mixerLyricsLedXValue">55</span>
-              <input id="mixerLyricsLedX" type="range" min="30" max="70" step="0.1" value="55" />
+            <label>Lyrics LED X % <span id="mixerLyricsLedXValue">57</span>
+              <input id="mixerLyricsLedX" type="range" min="30" max="70" step="0.1" value="57" />
             </label>
             <label>Lyrics LED Y % <span id="mixerLyricsLedYValue">63</span>
               <input id="mixerLyricsLedY" type="range" min="45" max="78" step="0.1" value="63" />
@@ -419,6 +474,44 @@ export function renderShell(state: AppState): void {
             <label>Album size % <span id="songChangeAlbumSizeValue">12</span>
               <input id="songChangeAlbumSize" type="range" min="5" max="55" step="0.1" value="12" />
             </label>
+          </div>
+
+          <details class="placed-active-album-utility">
+            <summary>Placed Active Album</summary>
+            <p class="utility-help">Shows the currently playing album art after the song-change reveal, positioned as if the DJ set the sleeve on the back shelf.</p>
+            <div class="utility-grid">
+              <label class="utility-checkbox"><input id="placedAlbumEnabled" type="checkbox" checked /> Enable placed active album</label>
+              <label>Placed album X % <span id="placedAlbumXValue">43.2</span>
+                <input id="placedAlbumX" type="range" min="0" max="100" step="0.1" value="43.2" />
+              </label>
+              <label>Placed album Y % <span id="placedAlbumYValue">61.4</span>
+                <input id="placedAlbumY" type="range" min="0" max="100" step="0.1" value="61.4" />
+              </label>
+              <label>Placed album size % <span id="placedAlbumSizeValue">7.2</span>
+                <input id="placedAlbumSize" type="range" min="2" max="24" step="0.1" value="7.2" />
+              </label>
+              <label>Rotate X deg <span id="placedAlbumRotateXValue">0</span>
+                <input id="placedAlbumRotateX" type="range" min="-60" max="60" step="1" value="0" />
+              </label>
+              <label>Rotate Y deg <span id="placedAlbumRotateYValue">-16</span>
+                <input id="placedAlbumRotateY" type="range" min="-60" max="60" step="1" value="-16" />
+              </label>
+              <label>Rotate Z deg <span id="placedAlbumRotateZValue">-7</span>
+                <input id="placedAlbumRotateZ" type="range" min="-45" max="45" step="1" value="-7" />
+              </label>
+              <label>Album depth <span id="placedAlbumDepthValue">0.18</span>
+                <input id="placedAlbumDepth" type="range" min="0" max="0.8" step="0.01" value="0.18" />
+              </label>
+              <label>Drop shadow <span id="placedAlbumShadowValue">0.62</span>
+                <input id="placedAlbumShadow" type="range" min="0" max="1.5" step="0.01" value="0.62" />
+              </label>
+              <label>Album opacity <span id="placedAlbumOpacityValue">1</span>
+                <input id="placedAlbumOpacity" type="range" min="0" max="1" step="0.01" value="1" />
+              </label>
+            </div>
+          </details>
+
+          <div class="utility-grid">
             <label>Panel starting Y % <span id="panelStartYValue">39</span>
               <input id="panelStartY" type="range" min="4" max="86" step="0.1" value="39" />
             </label>

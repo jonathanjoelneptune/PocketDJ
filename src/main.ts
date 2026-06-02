@@ -168,6 +168,7 @@ const reactiveRoomPaletteCache = new Map<string, ReactiveRoomPalette>();
 let reactiveRoomPaletteUrl = "";
 let reactiveRoomPalettePendingUrl = "";
 let stringLightResizeTimer: number | null = null;
+let ambientTwinkleResizeTimer: number | null = null;
 
 type SceneFilter =
   | "none"
@@ -209,6 +210,16 @@ type RoomUtilitySettings = {
   songChangeAlbumX: number;
   songChangeAlbumY: number;
   songChangeAlbumSize: number;
+  placedAlbumEnabled: boolean;
+  placedAlbumX: number;
+  placedAlbumY: number;
+  placedAlbumSize: number;
+  placedAlbumRotateX: number;
+  placedAlbumRotateY: number;
+  placedAlbumRotateZ: number;
+  placedAlbumDepth: number;
+  placedAlbumShadow: number;
+  placedAlbumOpacity: number;
   panelStartY: number;
   panelHeightAdjustEnabled: boolean;
   roomFillStretchMode: boolean;
@@ -549,6 +560,16 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   songChangeAlbumX: 49,
   songChangeAlbumY: 45,
   songChangeAlbumSize: 12,
+  placedAlbumEnabled: true,
+  placedAlbumX: 43.2,
+  placedAlbumY: 61.4,
+  placedAlbumSize: 7.2,
+  placedAlbumRotateX: 0,
+  placedAlbumRotateY: -16,
+  placedAlbumRotateZ: -7,
+  placedAlbumDepth: 0.18,
+  placedAlbumShadow: 0.62,
+  placedAlbumOpacity: 1,
   panelStartY: 39,
   panelHeightAdjustEnabled: false,
   roomFillStretchMode: false,
@@ -1286,6 +1307,70 @@ const DEFAULT_STRING_LIGHT_SETTINGS: StringLightSettings = {
 };
 
 let stringLightSettings = loadStringLightSettings();
+
+type AmbientTwinkleKind = "star" | "city";
+
+type AmbientTwinklePoint = {
+  id: number;
+  kind: AmbientTwinkleKind;
+  x: number;
+  y: number;
+  size: number;
+  intensity: number;
+  phase: number;
+};
+
+type AmbientTwinkleSettings = {
+  enabled: boolean;
+  editMode: boolean;
+  showGuides: boolean;
+  starOpacity: number;
+  cityOpacity: number;
+  twinkle: number;
+  selectedId: number | null;
+  nextId: number;
+  points: AmbientTwinklePoint[];
+};
+
+const AMBIENT_TWINKLE_KEY = "pocketdj-ambient-stars-city-lights-v1";
+const DEFAULT_AMBIENT_TWINKLE_POINTS: AmbientTwinklePoint[] = [
+  { id: 1, kind: "star", x: 704, y: 375, size: 2.0, intensity: 0.68, phase: 0.02 },
+  { id: 2, kind: "star", x: 767, y: 392, size: 1.7, intensity: 0.58, phase: 0.22 },
+  { id: 3, kind: "star", x: 829, y: 371, size: 1.9, intensity: 0.64, phase: 0.41 },
+  { id: 4, kind: "star", x: 906, y: 386, size: 1.5, intensity: 0.52, phase: 0.73 },
+  { id: 5, kind: "star", x: 982, y: 369, size: 1.8, intensity: 0.60, phase: 0.31 },
+  { id: 6, kind: "star", x: 1056, y: 393, size: 1.6, intensity: 0.55, phase: 0.62 },
+  { id: 7, kind: "star", x: 1130, y: 377, size: 1.9, intensity: 0.62, phase: 0.88 },
+  { id: 8, kind: "star", x: 744, y: 430, size: 1.4, intensity: 0.48, phase: 0.54 },
+  { id: 9, kind: "star", x: 1018, y: 431, size: 1.5, intensity: 0.50, phase: 0.13 },
+  { id: 10, kind: "city", x: 689, y: 514, size: 2.1, intensity: 0.72, phase: 0.10 },
+  { id: 11, kind: "city", x: 722, y: 496, size: 2.4, intensity: 0.82, phase: 0.27 },
+  { id: 12, kind: "city", x: 751, y: 530, size: 1.8, intensity: 0.62, phase: 0.46 },
+  { id: 13, kind: "city", x: 790, y: 502, size: 2.2, intensity: 0.76, phase: 0.67 },
+  { id: 14, kind: "city", x: 833, y: 535, size: 1.9, intensity: 0.66, phase: 0.38 },
+  { id: 15, kind: "city", x: 868, y: 483, size: 2.5, intensity: 0.88, phase: 0.84 },
+  { id: 16, kind: "city", x: 910, y: 517, size: 2.1, intensity: 0.75, phase: 0.06 },
+  { id: 17, kind: "city", x: 948, y: 492, size: 2.4, intensity: 0.80, phase: 0.57 },
+  { id: 18, kind: "city", x: 986, y: 529, size: 1.8, intensity: 0.64, phase: 0.24 },
+  { id: 19, kind: "city", x: 1024, y: 505, size: 2.3, intensity: 0.78, phase: 0.74 },
+  { id: 20, kind: "city", x: 1068, y: 532, size: 1.9, intensity: 0.68, phase: 0.44 },
+  { id: 21, kind: "city", x: 1108, y: 498, size: 2.2, intensity: 0.74, phase: 0.91 },
+  { id: 22, kind: "city", x: 1150, y: 521, size: 1.8, intensity: 0.62, phase: 0.19 },
+];
+
+const DEFAULT_AMBIENT_TWINKLE_SETTINGS: AmbientTwinkleSettings = {
+  enabled: true,
+  editMode: false,
+  showGuides: false,
+  starOpacity: 0.78,
+  cityOpacity: 0.82,
+  twinkle: 0.55,
+  selectedId: 1,
+  nextId: 23,
+  points: DEFAULT_AMBIENT_TWINKLE_POINTS.map((point) => ({ ...point })),
+};
+
+let ambientTwinkleSettings = loadAmbientTwinkleSettings();
 
 const DEFAULT_SESSION_ALBUM_SETTINGS: SessionAlbumSettings = {
   showGuides: false,
@@ -2954,6 +3039,7 @@ async function boot(): Promise<void> {
   scheduleSidePanelAutoHide();
   bindRoomUtilityControls();
   bindStringLightControls();
+  bindAmbientTwinkleControls();
   bindSessionWallAlbumControls();
   applyClockDisabledDefaultMigration();
   applyMixerLedTuningMigration();
@@ -4634,6 +4720,53 @@ function saveStringLightSettings(): void {
   window.localStorage.setItem(STRING_LIGHT_KEY, JSON.stringify(stringLightSettings));
 }
 
+function loadAmbientTwinkleSettings(): AmbientTwinkleSettings {
+  try {
+    const raw = window.localStorage.getItem(AMBIENT_TWINKLE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<AmbientTwinkleSettings>;
+      const points = Array.isArray(parsed.points) && parsed.points.length
+        ? parsed.points.map((point, index) => ({
+            id: Number(point.id) || index + 1,
+            kind: point.kind === "city" ? "city" as const : "star" as const,
+            x: clamp(Number(point.x) || 0, 0, ROOM_COORD_WIDTH),
+            y: clamp(Number(point.y) || 0, 0, ROOM_COORD_HEIGHT),
+            size: clamp(Number(point.size) || 2, 0.5, 12),
+            intensity: clamp(Number(point.intensity) || 0.7, 0, 2),
+            phase: Number.isFinite(Number(point.phase)) ? Number(point.phase) : index / 10,
+          }))
+        : DEFAULT_AMBIENT_TWINKLE_POINTS.map((point) => ({ ...point }));
+
+      const selectedId = points.some((point) => point.id === parsed.selectedId)
+        ? Number(parsed.selectedId)
+        : points[0]?.id ?? null;
+
+      return {
+        ...DEFAULT_AMBIENT_TWINKLE_SETTINGS,
+        ...parsed,
+        selectedId,
+        nextId: Math.max(Number(parsed.nextId) || 1, ...points.map((point) => point.id + 1), 1),
+        points,
+      };
+    }
+  } catch (error) {
+    console.warn("Could not load ambient twinkle settings", error);
+  }
+
+  return {
+    ...DEFAULT_AMBIENT_TWINKLE_SETTINGS,
+    points: DEFAULT_AMBIENT_TWINKLE_POINTS.map((point) => ({ ...point })),
+  };
+}
+
+function saveAmbientTwinkleSettings(): void {
+  window.localStorage.setItem(AMBIENT_TWINKLE_KEY, JSON.stringify(ambientTwinkleSettings));
+}
+
+function selectedAmbientTwinklePoint(): AmbientTwinklePoint | null {
+  return ambientTwinkleSettings.points.find((point) => point.id === ambientTwinkleSettings.selectedId) || null;
+}
+
 function selectedStringLightPoint(): StringLightPoint | null {
   return stringLightSettings.points.find((point) => point.id === stringLightSettings.selectedId) || null;
 }
@@ -4806,6 +4939,7 @@ function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
   const root = document.documentElement;
   const overlay = document.querySelector<HTMLElement>("#stringLightOverlay");
   const ambientGlow = document.querySelector<HTMLElement>("#ambientMusicGlow");
+  const twinkleOverlay = document.querySelector<HTMLElement>("#ambientTwinkleOverlay");
   const playing = track.isPlaying || track.source === "demo";
   const beatMs = speakerPulseDurationMs();
   const pulseEnergy = clamp(((speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM) - 62) / 108, 0, 1);
@@ -4826,6 +4960,10 @@ function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
 
   if (ambientGlow) {
     ambientGlow.classList.toggle("ambient-music-glow-active", playing);
+  }
+
+  if (twinkleOverlay) {
+    twinkleOverlay.classList.toggle("ambient-twinkles-playing", playing);
   }
 }
 
@@ -5381,6 +5519,265 @@ function bindStringLightControls(): void {
   syncStringLightControls();
 }
 
+function setAmbientTwinkleLabel(id: string, value: number): void {
+  const decimals = id.includes("Opacity") || id.includes("Twinkle") || id.includes("Intensity") || id.includes("Size") ? 2 : 0;
+  const element = document.querySelector<HTMLElement>(`#${id}`);
+  if (element) element.textContent = value.toFixed(decimals).replace(/\.00$/, "");
+}
+
+function syncAmbientTwinkleControls(): void {
+  const enabled = document.querySelector<HTMLInputElement>("#ambientTwinkleEnabled");
+  const editMode = document.querySelector<HTMLInputElement>("#ambientTwinkleEditMode");
+  const showGuides = document.querySelector<HTMLInputElement>("#ambientTwinkleShowGuides");
+  const kind = document.querySelector<HTMLSelectElement>("#ambientTwinkleKind");
+  const selectedLabel = document.querySelector<HTMLElement>("#ambientTwinkleSelectedLabel");
+  const json = document.querySelector<HTMLTextAreaElement>("#ambientTwinkleJson");
+
+  if (enabled) enabled.checked = ambientTwinkleSettings.enabled;
+  if (editMode) editMode.checked = ambientTwinkleSettings.editMode;
+  if (showGuides) showGuides.checked = ambientTwinkleSettings.showGuides;
+
+  const globalControls: Array<[string, string, keyof AmbientTwinkleSettings]> = [
+    ["ambientStarOpacity", "ambientStarOpacityValue", "starOpacity"],
+    ["ambientCityOpacity", "ambientCityOpacityValue", "cityOpacity"],
+    ["ambientTwinkleAmount", "ambientTwinkleAmountValue", "twinkle"],
+  ];
+  globalControls.forEach(([inputId, labelId, key]) => {
+    const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+    const value = Number(ambientTwinkleSettings[key]);
+    if (input) input.value = String(value);
+    setAmbientTwinkleLabel(labelId, value);
+  });
+
+  const selected = selectedAmbientTwinklePoint();
+  if (selectedLabel) selectedLabel.textContent = selected ? `${selected.kind} #${selected.id}` : "none";
+  if (kind && selected) kind.value = selected.kind;
+
+  const pointControls: Array<[string, string, keyof AmbientTwinklePoint]> = [
+    ["ambientTwinkleX", "ambientTwinkleXValue", "x"],
+    ["ambientTwinkleY", "ambientTwinkleYValue", "y"],
+    ["ambientTwinkleSize", "ambientTwinkleSizeValue", "size"],
+    ["ambientTwinkleIntensity", "ambientTwinkleIntensityValue", "intensity"],
+  ];
+  pointControls.forEach(([inputId, labelId, key]) => {
+    const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+    const value = selected ? Number(selected[key]) : 0;
+    if (input) {
+      input.value = String(value);
+      input.disabled = !selected;
+    }
+    setAmbientTwinkleLabel(labelId, value);
+  });
+
+  if (json) json.value = JSON.stringify(ambientTwinkleSettings, null, 2);
+}
+
+function renderAmbientTwinkles(): void {
+  const overlay = document.querySelector<HTMLElement>("#ambientTwinkleOverlay");
+  if (!overlay) return;
+
+  overlay.innerHTML = "";
+  overlay.classList.toggle("ambient-twinkles-enabled", ambientTwinkleSettings.enabled);
+  overlay.classList.toggle("ambient-twinkles-editing", ambientTwinkleSettings.editMode);
+  overlay.classList.toggle("ambient-twinkles-show-guides", ambientTwinkleSettings.showGuides);
+  document.documentElement.classList.toggle("ambient-twinkle-editing", ambientTwinkleSettings.editMode);
+  overlay.style.setProperty("--ambient-star-opacity", String(ambientTwinkleSettings.starOpacity));
+  overlay.style.setProperty("--ambient-city-opacity", String(ambientTwinkleSettings.cityOpacity));
+  overlay.style.setProperty("--ambient-twinkle", String(ambientTwinkleSettings.twinkle));
+
+  ambientTwinkleSettings.points.forEach((point) => {
+    const light = document.createElement("button");
+    light.type = "button";
+    light.className = `ambient-twinkle-point ambient-twinkle-${point.kind}`;
+    light.dataset.twinkleId = String(point.id);
+    light.classList.toggle("ambient-twinkle-selected", point.id === ambientTwinkleSettings.selectedId);
+    light.style.left = `${(point.x / ROOM_COORD_WIDTH) * 100}%`;
+    light.style.top = `${(point.y / ROOM_COORD_HEIGHT) * 100}%`;
+    light.style.setProperty("--twinkle-size", String(point.size));
+    light.style.setProperty("--twinkle-intensity", String(point.intensity));
+    light.style.setProperty("--twinkle-phase", `${point.phase * -6.4}s`);
+    light.setAttribute("aria-label", `${point.kind} twinkle ${point.id}`);
+    light.title = `${point.kind} #${point.id}`;
+    light.innerHTML = `<span class="ambient-twinkle-glow"></span><span class="ambient-twinkle-core"></span><span class="ambient-twinkle-label">${point.kind[0].toUpperCase()}${point.id}</span>`;
+    light.addEventListener("click", (event) => {
+      event.stopPropagation();
+      ambientTwinkleSettings = { ...ambientTwinkleSettings, selectedId: point.id };
+      saveAmbientTwinkleSettings();
+      renderAmbientTwinkles();
+      syncAmbientTwinkleControls();
+    });
+    overlay.appendChild(light);
+  });
+}
+
+function setAmbientTwinkleSelectedByOffset(offset: number): void {
+  if (!ambientTwinkleSettings.points.length) return;
+  const currentIndex = Math.max(0, ambientTwinkleSettings.points.findIndex((point) => point.id === ambientTwinkleSettings.selectedId));
+  const nextIndex = (currentIndex + offset + ambientTwinkleSettings.points.length) % ambientTwinkleSettings.points.length;
+  ambientTwinkleSettings = { ...ambientTwinkleSettings, selectedId: ambientTwinkleSettings.points[nextIndex].id };
+  saveAmbientTwinkleSettings();
+  renderAmbientTwinkles();
+  syncAmbientTwinkleControls();
+}
+
+function updateSelectedAmbientTwinklePoint(partial: Partial<AmbientTwinklePoint>): void {
+  const selectedId = ambientTwinkleSettings.selectedId;
+  if (selectedId == null) return;
+  ambientTwinkleSettings = {
+    ...ambientTwinkleSettings,
+    points: ambientTwinkleSettings.points.map((point) => point.id === selectedId ? { ...point, ...partial } : point),
+  };
+  saveAmbientTwinkleSettings();
+  renderAmbientTwinkles();
+  syncAmbientTwinkleControls();
+}
+
+function addAmbientTwinklePoint(kind: AmbientTwinkleKind = "star"): void {
+  const last = selectedAmbientTwinklePoint();
+  const id = ambientTwinkleSettings.nextId;
+  const point: AmbientTwinklePoint = {
+    id,
+    kind,
+    x: clamp((last?.x ?? 900) + 18, 0, ROOM_COORD_WIDTH),
+    y: clamp((last?.y ?? (kind === "star" ? 390 : 520)) + 8, 0, ROOM_COORD_HEIGHT),
+    size: kind === "star" ? 1.8 : 2.2,
+    intensity: kind === "star" ? 0.62 : 0.74,
+    phase: (id * 0.137) % 1,
+  };
+  ambientTwinkleSettings = {
+    ...ambientTwinkleSettings,
+    selectedId: id,
+    nextId: id + 1,
+    points: [...ambientTwinkleSettings.points, point],
+  };
+  saveAmbientTwinkleSettings();
+  renderAmbientTwinkles();
+  syncAmbientTwinkleControls();
+}
+
+function deleteSelectedAmbientTwinklePoint(): void {
+  const selectedId = ambientTwinkleSettings.selectedId;
+  if (selectedId == null) return;
+  const points = ambientTwinkleSettings.points.filter((point) => point.id !== selectedId);
+  ambientTwinkleSettings = {
+    ...ambientTwinkleSettings,
+    points,
+    selectedId: points[0]?.id ?? null,
+  };
+  saveAmbientTwinkleSettings();
+  renderAmbientTwinkles();
+  syncAmbientTwinkleControls();
+}
+
+function resetAmbientTwinkles(): void {
+  ambientTwinkleSettings = {
+    ...DEFAULT_AMBIENT_TWINKLE_SETTINGS,
+    points: DEFAULT_AMBIENT_TWINKLE_POINTS.map((point) => ({ ...point })),
+  };
+  saveAmbientTwinkleSettings();
+  renderAmbientTwinkles();
+  syncAmbientTwinkleControls();
+}
+
+function bindAmbientTwinkleControls(): void {
+  const enabled = document.querySelector<HTMLInputElement>("#ambientTwinkleEnabled");
+  const editMode = document.querySelector<HTMLInputElement>("#ambientTwinkleEditMode");
+  const showGuides = document.querySelector<HTMLInputElement>("#ambientTwinkleShowGuides");
+  const kind = document.querySelector<HTMLSelectElement>("#ambientTwinkleKind");
+  const addStar = document.querySelector<HTMLButtonElement>("#ambientTwinkleAddStar");
+  const addCity = document.querySelector<HTMLButtonElement>("#ambientTwinkleAddCity");
+  const prevButton = document.querySelector<HTMLButtonElement>("#ambientTwinklePrev");
+  const nextButton = document.querySelector<HTMLButtonElement>("#ambientTwinkleNext");
+  const deleteButton = document.querySelector<HTMLButtonElement>("#ambientTwinkleDelete");
+  const resetButton = document.querySelector<HTMLButtonElement>("#ambientTwinkleReset");
+  const copyButton = document.querySelector<HTMLButtonElement>("#ambientTwinkleCopyJson");
+  const room = document.querySelector<HTMLElement>(".room");
+
+  enabled?.addEventListener("change", () => {
+    ambientTwinkleSettings = { ...ambientTwinkleSettings, enabled: enabled.checked };
+    saveAmbientTwinkleSettings();
+    renderAmbientTwinkles();
+    syncAmbientTwinkleControls();
+  });
+
+  editMode?.addEventListener("change", () => {
+    ambientTwinkleSettings = { ...ambientTwinkleSettings, editMode: editMode.checked };
+    saveAmbientTwinkleSettings();
+    renderAmbientTwinkles();
+    syncAmbientTwinkleControls();
+  });
+
+  showGuides?.addEventListener("change", () => {
+    ambientTwinkleSettings = { ...ambientTwinkleSettings, showGuides: showGuides.checked };
+    saveAmbientTwinkleSettings();
+    renderAmbientTwinkles();
+    syncAmbientTwinkleControls();
+  });
+
+  [
+    ["ambientStarOpacity", "starOpacity"],
+    ["ambientCityOpacity", "cityOpacity"],
+    ["ambientTwinkleAmount", "twinkle"],
+  ].forEach(([inputId, key]) => {
+    const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+    input?.addEventListener("input", () => {
+      ambientTwinkleSettings = { ...ambientTwinkleSettings, [key]: Number(input.value) };
+      saveAmbientTwinkleSettings();
+      renderAmbientTwinkles();
+      syncAmbientTwinkleControls();
+    });
+  });
+
+  kind?.addEventListener("change", () => updateSelectedAmbientTwinklePoint({ kind: kind.value === "city" ? "city" : "star" }));
+
+  [
+    ["ambientTwinkleX", "x", 0, ROOM_COORD_WIDTH],
+    ["ambientTwinkleY", "y", 0, ROOM_COORD_HEIGHT],
+    ["ambientTwinkleSize", "size", 0.5, 12],
+    ["ambientTwinkleIntensity", "intensity", 0, 2],
+  ].forEach(([inputId, key, min, max]) => {
+    const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+    input?.addEventListener("input", () => {
+      updateSelectedAmbientTwinklePoint({ [key as keyof AmbientTwinklePoint]: clamp(Number(input.value), Number(min), Number(max)) } as Partial<AmbientTwinklePoint>);
+    });
+  });
+
+  addStar?.addEventListener("click", () => addAmbientTwinklePoint("star"));
+  addCity?.addEventListener("click", () => addAmbientTwinklePoint("city"));
+  prevButton?.addEventListener("click", () => setAmbientTwinkleSelectedByOffset(-1));
+  nextButton?.addEventListener("click", () => setAmbientTwinkleSelectedByOffset(1));
+  deleteButton?.addEventListener("click", deleteSelectedAmbientTwinklePoint);
+  resetButton?.addEventListener("click", resetAmbientTwinkles);
+  copyButton?.addEventListener("click", () => {
+    const payload = JSON.stringify(ambientTwinkleSettings, null, 2);
+    void navigator.clipboard?.writeText(payload).catch(() => undefined);
+    const json = document.querySelector<HTMLTextAreaElement>("#ambientTwinkleJson");
+    if (json) {
+      json.value = payload;
+      json.select();
+    }
+  });
+
+  room?.addEventListener("click", (event) => {
+    if (!ambientTwinkleSettings.editMode) return;
+    if ((event.target as HTMLElement).closest(".ambient-twinkle-point")) return;
+    if ((event.target as HTMLElement).closest(".string-light-point")) return;
+    const rect = room.getBoundingClientRect();
+    const x = clamp(((event.clientX - rect.left) / rect.width) * ROOM_COORD_WIDTH, 0, ROOM_COORD_WIDTH);
+    const y = clamp(((event.clientY - rect.top) / rect.height) * ROOM_COORD_HEIGHT, 0, ROOM_COORD_HEIGHT);
+    if (ambientTwinkleSettings.selectedId == null) addAmbientTwinklePoint("star");
+    updateSelectedAmbientTwinklePoint({ x, y });
+  });
+
+  window.addEventListener("resize", () => {
+    if (ambientTwinkleResizeTimer) window.clearTimeout(ambientTwinkleResizeTimer);
+    ambientTwinkleResizeTimer = window.setTimeout(() => renderAmbientTwinkles(), 120);
+  });
+
+  renderAmbientTwinkles();
+  syncAmbientTwinkleControls();
+}
+
 function bindRoomUtilityControls(): void {
   const sceneFilter = document.querySelector<HTMLSelectElement>("#sceneFilterSelect");
   const lyricPosterMaxRows = document.querySelector<HTMLSelectElement>("#lyricPosterMaxRows");
@@ -5397,6 +5794,7 @@ function bindRoomUtilityControls(): void {
   const roomFillStretchMode = document.querySelector<HTMLInputElement>("#roomFillStretchMode");
   const utilityPanelLeftSide = document.querySelector<HTMLInputElement>("#utilityPanelLeftSide");
   const songChangeMode = document.querySelector<HTMLInputElement>("#songChangeMode");
+  const placedAlbumEnabled = document.querySelector<HTMLInputElement>("#placedAlbumEnabled");
   const vinylClockEnabled = document.querySelector<HTMLInputElement>("#vinylClockEnabled");
   const speakerPulseUseTempo = document.querySelector<HTMLInputElement>("#speakerPulseUseTempo");
   const speakerPulseUseExternalTempo = document.querySelector<HTMLInputElement>("#speakerPulseUseExternalTempo");
@@ -5416,6 +5814,7 @@ function bindRoomUtilityControls(): void {
   if (roomFillStretchMode) roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
   if (utilityPanelLeftSide) utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
   if (songChangeMode) songChangeMode.checked = roomUtility.songChangeMode;
+  if (placedAlbumEnabled) placedAlbumEnabled.checked = roomUtility.placedAlbumEnabled;
   if (vinylClockEnabled) vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
   if (speakerPulseUseTempo) speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
   if (speakerPulseUseExternalTempo) speakerPulseUseExternalTempo.checked = roomUtility.speakerPulseUseExternalTempo;
@@ -5437,6 +5836,13 @@ function bindRoomUtilityControls(): void {
   songChangeMode?.addEventListener("change", () => {
     roomUtility = { ...roomUtility, songChangeMode: songChangeMode.checked };
     applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
+  });
+
+  placedAlbumEnabled?.addEventListener("change", () => {
+    roomUtility = { ...roomUtility, placedAlbumEnabled: placedAlbumEnabled.checked };
+    applyRoomUtilitySettings();
+    updatePlacedActiveAlbum(state.playback);
     saveRoomUtilitySettings();
   });
 
@@ -5485,6 +5891,15 @@ function bindRoomUtilityControls(): void {
     ["songChangeAlbumX", "songChangeAlbumXValue"],
     ["songChangeAlbumY", "songChangeAlbumYValue"],
     ["songChangeAlbumSize", "songChangeAlbumSizeValue"],
+    ["placedAlbumX", "placedAlbumXValue"],
+    ["placedAlbumY", "placedAlbumYValue"],
+    ["placedAlbumSize", "placedAlbumSizeValue"],
+    ["placedAlbumRotateX", "placedAlbumRotateXValue"],
+    ["placedAlbumRotateY", "placedAlbumRotateYValue"],
+    ["placedAlbumRotateZ", "placedAlbumRotateZValue"],
+    ["placedAlbumDepth", "placedAlbumDepthValue"],
+    ["placedAlbumShadow", "placedAlbumShadowValue"],
+    ["placedAlbumOpacity", "placedAlbumOpacityValue"],
     ["panelStartY", "panelStartYValue"],
     ["vinylClockX", "vinylClockXValue"],
     ["vinylClockY", "vinylClockYValue"],
@@ -5863,6 +6278,7 @@ function bindRoomUtilityControls(): void {
     if (roomFillStretchMode) roomFillStretchMode.checked = roomUtility.roomFillStretchMode;
     if (utilityPanelLeftSide) utilityPanelLeftSide.checked = roomUtility.utilityPanelLeftSide;
     if (songChangeMode) songChangeMode.checked = roomUtility.songChangeMode;
+  if (placedAlbumEnabled) placedAlbumEnabled.checked = roomUtility.placedAlbumEnabled;
     if (vinylClockEnabled) vinylClockEnabled.checked = roomUtility.vinylClockEnabled;
     if (speakerPulseUseTempo) speakerPulseUseTempo.checked = roomUtility.speakerPulseUseTempo;
   if (speakerPulseUseExternalTempo) speakerPulseUseExternalTempo.checked = roomUtility.speakerPulseUseExternalTempo;
@@ -5934,6 +6350,16 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--song-change-album-x", `${roomUtility.songChangeAlbumX}%`);
   root.style.setProperty("--song-change-album-y", `${roomUtility.songChangeAlbumY}%`);
   root.style.setProperty("--song-change-album-size", `${roomUtility.songChangeAlbumSize}%`);
+  root.style.setProperty("--placed-album-x", `${roomUtility.placedAlbumX}%`);
+  root.style.setProperty("--placed-album-y", `${roomUtility.placedAlbumY}%`);
+  root.style.setProperty("--placed-album-size", `${roomUtility.placedAlbumSize}%`);
+  root.style.setProperty("--placed-album-rotate-x", `${roomUtility.placedAlbumRotateX}deg`);
+  root.style.setProperty("--placed-album-rotate-y", `${roomUtility.placedAlbumRotateY}deg`);
+  root.style.setProperty("--placed-album-rotate-z", `${roomUtility.placedAlbumRotateZ}deg`);
+  root.style.setProperty("--placed-album-depth", String(roomUtility.placedAlbumDepth));
+  root.style.setProperty("--placed-album-shadow", String(roomUtility.placedAlbumShadow));
+  root.style.setProperty("--placed-album-opacity", String(roomUtility.placedAlbumOpacity));
+  root.classList.toggle("placed-active-album-disabled", !roomUtility.placedAlbumEnabled);
   root.classList.toggle("song-change-preview", roomUtility.songChangeMode);
   root.style.setProperty("--panel-start-y", `${roomUtility.panelStartY}%`);
   root.style.setProperty("--panel-start-y-ratio", String(roomUtility.panelStartY / 100));
@@ -6348,6 +6774,22 @@ function updateSongChangeAlbumOverlay(track: AppState["playback"]): void {
   }
 
   albumCover.alt = readyUrl ? `${track.title} album cover` : "";
+  updatePlacedActiveAlbum(track);
+}
+
+function updatePlacedActiveAlbum(track: AppState["playback"]): void {
+  const layer = document.querySelector<HTMLElement>("#placedActiveAlbumLayer");
+  const image = document.querySelector<HTMLImageElement>("#placedActiveAlbumCover");
+  if (!layer || !image) return;
+
+  const albumArtUrl = track.albumArtUrl || "";
+  const readyUrl = albumArtUrl && (albumRevealLoadedUrl === albumArtUrl || albumRevealPreloadUrl === albumArtUrl) ? albumArtUrl : "";
+  const showAlbum = Boolean(readyUrl && roomUtility.placedAlbumEnabled && (track.trackId || track.source === "demo"));
+  layer.classList.toggle("placed-active-album-has-art", showAlbum);
+
+  if (showAlbum && image.src !== readyUrl) image.src = readyUrl;
+  if (!showAlbum) image.removeAttribute("src");
+  image.alt = showAlbum ? `${track.title} album cover placed on the back shelf` : "";
 }
 
 function speakerPulseDurationMs(): number {
