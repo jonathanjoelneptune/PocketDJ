@@ -73,7 +73,7 @@ let devToolsLockClickTimer: number | null = null;
 let aspectPocketClickCount = 0;
 let aspectPocketClickTimer: number | null = null;
 let menu2Open = false;
-let menu2Locked = true;
+let menu2Locked = false;
 let menu2HasOpened = localStorage.getItem("pocketdj-menu2-has-opened") === "true";
 let menu2ActiveTab: "now" | "queue" | "playlists" | "search" | "devices" | "dev" = "now";
 let menu2DevUnlocked = false;
@@ -3685,9 +3685,10 @@ function renderMenu2NowPlaying(): void {
   if (context) {
     const playlist = menu2ContextPlaylist();
     if (playlist) {
-      context.innerHTML = `<button class="menu2-context-link" type="button" data-menu2-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Playing from ${escapeHtmlInline(playlist.name)}</button>`;
+      context.innerHTML = `<button class="menu2-context-link" type="button" data-menu2-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Playing from &quot;${escapeHtmlInline(playlist.name)}&quot; Playlist</button>`;
     } else if (track.playbackContextType && track.playbackContextUri) {
-      context.textContent = `Playing from ${track.playbackContextType}`;
+      const label = track.playbackContextType === "playlist" ? "Playlist" : track.playbackContextType;
+      context.textContent = `Playing from Spotify ${label}`;
     } else {
       context.textContent = "Playing from Spotify";
     }
@@ -3705,27 +3706,28 @@ function renderMenu2NowPlaying(): void {
   if (seek) seek.setAttribute("aria-valuenow", String(Math.round(percent)));
   const playIcon = document.querySelector<HTMLElement>("#menu2PlayIcon");
   if (playIcon) playIcon.innerHTML = track.isPlaying ? menu2Icon("pause") : menu2Icon("play");
+  const lyricsControl = document.querySelector<HTMLElement>("#menu2LyricsControl");
   const shuffle = document.querySelector<HTMLElement>("#menu2Shuffle");
   const prev = document.querySelector<HTMLElement>("#menu2Prev");
   const next = document.querySelector<HTMLElement>("#menu2Next");
   const repeat = document.querySelector<HTMLElement>("#menu2Repeat");
+  const queue = document.querySelector<HTMLElement>("#menu2QueueControl");
+  if (lyricsControl) {
+    lyricsControl.innerHTML = menu2Icon("lyrics");
+    lyricsControl.classList.toggle("menu2-control-active", lyricsEnabled);
+  }
   if (shuffle) shuffle.innerHTML = menu2Icon("shuffle");
   if (prev) prev.innerHTML = menu2Icon("prev");
   if (next) next.innerHTML = menu2Icon("next");
   if (repeat) repeat.innerHTML = menu2Icon("repeat");
+  if (queue) queue.innerHTML = menu2Icon("queue");
   syncMenu2Pills();
 }
 
 function syncMenu2Pills(): void {
-  const lyrics = document.querySelector<HTMLButtonElement>("#menu2LyricsPill");
   const connect = document.querySelector<HTMLButtonElement>("#menu2ConnectPill");
   const compact = document.querySelector<HTMLButtonElement>("#menu2CompactPill");
   const fullscreen = document.querySelector<HTMLButtonElement>("#menu2FullscreenPill");
-  if (lyrics) {
-    lyrics.innerHTML = menu2Icon("lyrics");
-    lyrics.classList.toggle("menu2-pill-active", lyricsEnabled);
-    lyrics.title = lyricsEnabled ? "Lyrics on" : "Lyrics off";
-  }
   if (connect) {
     connect.textContent = "";
     connect.classList.toggle("menu2-pill-active", state.playback.isAuthenticated);
@@ -3917,6 +3919,8 @@ async function performMenu2Search(): Promise<void> {
     menu2SearchPlaylists = results.playlists;
     menu2SearchAlbums = results.albums;
     menu2SearchResultTab = menu2SearchTracks.length ? "tracks" : menu2SearchArtists.length ? "artists" : menu2SearchPlaylists.length ? "playlists" : "albums";
+    menu2ActiveTab = "search";
+    applyMenu2Settings();
     renderMenu2SearchResults();
     setMenu2Status("Search complete.", false);
   } catch (error) {
@@ -3943,6 +3947,7 @@ async function loadMenu2Devices(): Promise<void> {
 }
 
 function handleMenu2LockClick(): void {
+  menu2Locked = !menu2Locked;
   menu2LockClickCount += 1;
   if (menu2LockClickTimer) window.clearTimeout(menu2LockClickTimer);
 
@@ -3951,20 +3956,18 @@ function handleMenu2LockClick(): void {
     menu2LockClickTimer = null;
     menu2DevUnlocked = !menu2DevUnlocked;
     if (menu2DevUnlocked) menu2ActiveTab = "dev";
+    menu2Locked = true;
     applyMenu2Settings();
     setMenu2Status(menu2DevUnlocked ? "Dev unlocked." : "Dev hidden.", false);
     return;
   }
 
+  applyMenu2Settings();
+  if (!menu2Locked) setMenu2Open(false);
   menu2LockClickTimer = window.setTimeout(() => {
-    const shouldToggleLock = menu2LockClickCount > 0 && menu2LockClickCount < 5;
     menu2LockClickCount = 0;
     menu2LockClickTimer = null;
-    if (!shouldToggleLock) return;
-    menu2Locked = !menu2Locked;
-    applyMenu2Settings();
-    if (!menu2Locked) setMenu2Open(false);
-  }, 430);
+  }, 1200);
 }
 
 function scheduleMenu2BubbleHoverOpen(): void {
@@ -3992,12 +3995,12 @@ function bindMenu2Controls(): void {
   document.querySelectorAll<HTMLButtonElement>(".menu2-tab").forEach((button) => {
     button.addEventListener("click", () => setMenu2Tab(button.dataset.menu2Tab as typeof menu2ActiveTab));
   });
-  document.querySelector<HTMLButtonElement>("#menu2LyricsPill")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#lyricsToggle")?.click());
   document.querySelector<HTMLButtonElement>("#menu2ConnectPill")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#connectSpotify")?.click());
   document.querySelector<HTMLButtonElement>("#menu2CompactPill")?.addEventListener("click", () => {
     menu2PanelMode = menu2PanelMode === "compact" ? "full" : "compact";
     localStorage.setItem("pocketdj-menu2-panel-mode", menu2PanelMode);
     applyMenu2Settings();
+    renderMenu2NowPlaying();
   });
   document.querySelector<HTMLButtonElement>("#menu2FullscreenPill")?.addEventListener("click", () => void toggleAppFullscreen());
   document.querySelector<HTMLButtonElement>("#menu2LockPill")?.addEventListener("click", handleMenu2LockClick);
@@ -4017,6 +4020,7 @@ function bindMenu2Controls(): void {
     menu2StyleMode = (event.target as HTMLSelectElement).value as typeof menu2StyleMode;
     localStorage.setItem("pocketdj-menu2-style", menu2StyleMode);
     applyMenu2Settings();
+    renderMenu2NowPlaying();
   });
   document.querySelector<HTMLSelectElement>("#menu2ArtSize")?.addEventListener("change", (event) => {
     menu2ArtSize = (event.target as HTMLSelectElement).value as typeof menu2ArtSize;
@@ -4060,6 +4064,11 @@ function bindMenu2Controls(): void {
     if (action === "play-vibe") void playVibe(button.dataset.vibeQuery || "");
     if (action === "device") void runSpotifyBrowserAction(async () => { await transferToSpotifyDevice(button.dataset.deviceId || ""); await loadMenu2Devices(); });
     if (action === "artist-top") void openArtistTopTracks(button.dataset.artistId || "", button.dataset.artistName || "artist");
+  });
+  document.querySelector<HTMLButtonElement>("#menu2LyricsControl")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#lyricsToggle")?.click());
+  document.querySelector<HTMLButtonElement>("#menu2QueueControl")?.addEventListener("click", () => {
+    setMenu2Tab("queue");
+    void loadMenu2Queue();
   });
   document.querySelector<HTMLButtonElement>("#menu2Prev")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPrevButton")?.click());
   document.querySelector<HTMLButtonElement>("#menu2Play")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPlayButton")?.click());

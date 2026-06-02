@@ -10315,3 +10315,267 @@ body.lyrics-marquee-unavailable .marquee::after {
 .menu2-shell {
   scrollbar-color: #1ed760 #030303 !important;
 }
+
+/* v71 Menu 2.3: polished Now Playing fit, theme-aware accents, queue/search refinements. */
+.menu2-panel {
+  --menu2-accent: #d89b45;
+  --menu2-accent-strong: #ffd38a;
+  --menu2-accent-soft: rgba(216, 155, 69, 0.18);
+  --menu2-accent-border: rgba(216, 155, 69, 0.42);
+  --menu2-bg-top: rgba(15, 11, 8, 0.985);
+  --menu2-bg-bottom: rgba(3, 3, 4, 0.975);
+  --menu2-panel-border: rgba(216, 155, 69, 0.32);
+  --menu2-row-bg: rgba(255, 210, 130, 0.055);
+  --menu2-row-border: rgba(255, 210, 130, 0.09);
+  --menu2-scroll-track: rgba(7, 5, 4, 0.96);
+  --menu2-scroll-thumb: var(--menu2-accent);
+  width: min(492px, calc(100vw - 36px));
+  max-height: min(940px, calc(100vh - 24px));
+}
+
+.menu2-panel.menu2-style-spotify,
+.menu2-panel.menu2-style-web {
+  --menu2-accent: #1ed760;
+  --menu2-accent-strong: #7cf7a5;
+  --menu2-accent-soft: rgba(30, 215, 96, 0.16);
+  --menu2-accent-border: rgba(30, 215, 96, 0.46);
+  --menu2-bg-top: rgba(12, 12, 12, 0.985);
+  --menu2-bg-bottom: rgba(0, 0, 0, 0.98);
+  --menu2-panel-border: rgba(30, 215, 96, 0.24);
+  --menu2-row-bg: rgba(255, 255, 255, 0.055);
+  --menu2-row-border: rgba(255, 255, 255, 0.075);
+  --menu2-scroll-track: #050505;
+  --menu2-scroll-thumb: #1ed760;
+}
+
+.menu2-panel.menu2-style-web {
+  --menu2-bg-top: #121212;
+  --menu2-bg-bottom: #000;
+}
+
+.menu2-shell {
+  height: min(916px, calc(100vh - 24px));
+  background: linear-gradient(180deg, var(--menu2-bg-top), var(--menu2-bg-bottom)) !important;
+  border-color: var(--menu2-panel-border) !important;
+}
+
+.menu2-control-strip {
+  justify-content: flex-end !important;
+  align-items: center;
+}
+
+.menu2-brand-pill {
+  margin-right: auto;
+  color: var(--menu2-accent-strong) !important;
+}
+
+.menu2-round-pill,
+.menu2-control,
+.menu2-mini-action,
+.menu2-action,
+.menu2-tab,
+.menu2-input,
+.menu2-select {
+  border-color: var(--menu2-row-border) !important;
+}
+
+.menu2-pill-active,
+.menu2-tab-active,
+.menu2-control-active {
+  background: var(--menu2-accent) !important;
+  color: #080604 !important;
+  border-color: var(--menu2-accent-border) !important;
+}
+
+.menu2-status-busy,
+.menu2-row-title-button:hover,
+.menu2-context-link:hover {
+  color: var(--menu2-accent-strong) !important;
+}
+
+.menu2-panel .menu2-pane {
+  height: calc(100% - 130px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--menu2-scroll-thumb) var(--menu2-scroll-track);
+}
+
+#menu2NowPane.menu2-pane-active {
+  overflow: hidden !important;
+  padding-right: 0;
+}
+
+.menu2-now-card {
+  height: 100%;
+  display: grid !important;
+  grid-template-rows: minmax(0, auto) auto auto auto auto auto;
+  gap: 10px !important;
+}
+
+.menu2-album-art {
+  width: min(100%, 390px);
+  justify-self: center;
+  max-height: min(390px, 41vh);
+}
+
+.menu2-mode-compact .menu2-now-card {
+  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
+  align-items: center;
+  gap: 10px 14px !important;
+}
+
+.menu2-mode-compact .menu2-album-art {
+  width: 112px !important;
+  grid-row: 1 / span 2;
+}
+
+.menu2-mode-compact .menu2-now-copy {
+  align-self: end;
+}
+
+.menu2-mode-compact .menu2-progress-row,
+.menu2-mode-compact .menu2-controls,
+.menu2-mode-compact .menu2-playback-context,
+.menu2-mode-compact .menu2-volume-row,
+.menu2-mode-compact .menu2-bottom-search-row {
+  grid-column: 1 / -1;
+}
+
+.menu2-track-title {
+  font-size: 1.18rem !important;
+}
+
+.menu2-track-artist,
+.menu2-track-album {
+  font-size: 0.84rem !important;
+}
+
+.menu2-playback-context {
+  background: var(--menu2-accent-soft) !important;
+  border-color: var(--menu2-accent-border) !important;
+  color: rgba(255, 244, 220, 0.86) !important;
+  margin: 0 !important;
+  padding: 7px 10px !important;
+}
+
+.menu2-style-spotify .menu2-playback-context,
+.menu2-style-web .menu2-playback-context {
+  color: rgba(255,255,255,0.78) !important;
+}
+
+.menu2-controls {
+  gap: 9px !important;
+}
+
+.menu2-control {
+  width: 36px !important;
+  height: 36px !important;
+  color: rgba(255,255,255,0.88);
+}
+
+.menu2-play {
+  width: 52px !important;
+  height: 52px !important;
+}
+
+.menu2-bottom-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 82px 76px;
+  gap: 8px;
+  align-items: center;
+}
+
+.menu2-bottom-search-row .menu2-input,
+.menu2-bottom-search-row .menu2-select,
+.menu2-bottom-search-row .menu2-action {
+  min-height: 36px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.menu2-volume-row input,
+#menu2Volume {
+  accent-color: var(--menu2-accent) !important;
+}
+
+#menu2ProgressFill {
+  background: #fff !important;
+}
+
+.menu2-row,
+.menu2-device-row,
+.menu2-playlist-detail-title {
+  background: var(--menu2-row-bg) !important;
+  border-color: var(--menu2-row-border) !important;
+}
+
+.menu2-result-tab {
+  border-color: var(--menu2-accent-border) !important;
+  background: var(--menu2-accent-soft) !important;
+  color: var(--menu2-accent-strong) !important;
+}
+
+.menu2-result-tab-active {
+  background: color-mix(in srgb, var(--menu2-accent) 28%, transparent) !important;
+  border-color: var(--menu2-accent) !important;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--menu2-accent) 18%, transparent) !important;
+}
+
+.menu2-pane::-webkit-scrollbar,
+.menu2-list::-webkit-scrollbar,
+.menu2-shell::-webkit-scrollbar {
+  width: 10px;
+}
+
+.menu2-pane::-webkit-scrollbar-track,
+.menu2-list::-webkit-scrollbar-track,
+.menu2-shell::-webkit-scrollbar-track {
+  background: var(--menu2-scroll-track) !important;
+  border-radius: 999px;
+}
+
+.menu2-pane::-webkit-scrollbar-thumb,
+.menu2-list::-webkit-scrollbar-thumb,
+.menu2-shell::-webkit-scrollbar-thumb {
+  background: var(--menu2-scroll-thumb) !important;
+  border: 2px solid var(--menu2-scroll-track) !important;
+  border-radius: 999px;
+}
+
+.menu2-pane::-webkit-scrollbar-button,
+.menu2-list::-webkit-scrollbar-button,
+.menu2-shell::-webkit-scrollbar-button {
+  background: var(--menu2-scroll-track) !important;
+  border: 1px solid var(--menu2-accent-border);
+  height: 10px;
+}
+
+.menu2-pane::-webkit-scrollbar-button:single-button,
+.menu2-list::-webkit-scrollbar-button:single-button,
+.menu2-shell::-webkit-scrollbar-button:single-button {
+  background-color: var(--menu2-accent) !important;
+}
+
+.menu2-lock-pill .menu2-svg-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.menu2-svg-icon {
+  stroke-width: 2.2;
+}
+
+.menu2-style-pocket .menu2-play,
+.menu2-style-pocket .menu2-pill-active,
+.menu2-style-pocket .menu2-tab-active,
+.menu2-style-pocket .menu2-control-active {
+  color: #190f04 !important;
+}
+
+@media (max-height: 820px) {
+  .menu2-shell { height: calc(100vh - 18px); padding-top: 14px; padding-bottom: 14px; gap: 9px; }
+  .menu2-panel .menu2-tabs { gap: 6px; }
+  .menu2-panel .menu2-tab { padding: 7px 10px; font-size: 0.74rem; }
+  .menu2-album-art { max-height: min(310px, 36vh); }
+  .menu2-now-card { gap: 8px !important; }
+}

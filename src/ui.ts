@@ -1247,7 +1247,6 @@ export function renderShell(state: AppState): void {
         <div class="menu2-shell">
           <div class="menu2-topbar menu2-control-strip" aria-label="PocketDJ status controls">
             <button id="menu2BrandPill" class="menu2-brand-pill" type="button" aria-label="PocketDJ">PocketDJ</button>
-            <button id="menu2LyricsPill" class="menu2-pill menu2-round-pill menu2-lyrics-pill" type="button" aria-label="Toggle lyrics" title="Lyrics"></button>
             <button id="menu2ConnectPill" class="menu2-pill menu2-round-pill menu2-connect-pill" type="button" aria-label="Connect Spotify" title="Connected"></button>
             <button id="menu2CompactPill" class="menu2-pill menu2-round-pill menu2-panel-pill" type="button" aria-label="Toggle Menu 2.0 full or compact" title="Full Panel"></button>
             <button id="menu2FullscreenPill" class="menu2-pill menu2-round-pill menu2-icon-pill" type="button" aria-label="Toggle fullscreen" title="Fullscreen"></button>
@@ -1256,7 +1255,6 @@ export function renderShell(state: AppState): void {
 
           <nav class="menu2-tabs" aria-label="Menu 2.0 tabs">
             <button class="menu2-tab menu2-tab-active" type="button" data-menu2-tab="now">Now Playing</button>
-            <button class="menu2-tab" type="button" data-menu2-tab="queue">Queue</button>
             <button class="menu2-tab" type="button" data-menu2-tab="playlists">My Playlists</button>
             <button class="menu2-tab" type="button" data-menu2-tab="search">Search</button>
             <button class="menu2-tab" type="button" data-menu2-tab="devices">Devices</button>
@@ -1273,23 +1271,36 @@ export function renderShell(state: AppState): void {
                 <div id="menu2TrackArtist" class="menu2-track-artist">${escapeHtml(state.playback.artist)}</div>
                 <div id="menu2TrackAlbum" class="menu2-track-album">${escapeHtml(state.playback.album || "")}</div>
               </div>
-              <div id="menu2PlaybackContext" class="menu2-playback-context">Playing from Spotify</div>
               <div class="menu2-progress-row">
                 <span id="menu2ProgressNow">0:00</span>
                 <div id="menu2SeekBar" class="menu2-progress seek-surface" role="slider" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="menu2ProgressFill"></div></div>
                 <span id="menu2ProgressEnd">0:00</span>
               </div>
               <div class="menu2-controls">
-                <button id="menu2Shuffle" class="menu2-control" type="button" aria-label="Shuffle">⤨</button>
-                <button id="menu2Prev" class="menu2-control" type="button" aria-label="Previous">⏮</button>
-                <button id="menu2Play" class="menu2-play" type="button" aria-label="Play or pause"><span id="menu2PlayIcon">▶</span></button>
-                <button id="menu2Next" class="menu2-control" type="button" aria-label="Next">⏭</button>
-                <button id="menu2Repeat" class="menu2-control" type="button" aria-label="Repeat">↻</button>
+                <button id="menu2LyricsControl" class="menu2-control" type="button" aria-label="Toggle lyrics" title="Lyrics"></button>
+                <button id="menu2Shuffle" class="menu2-control" type="button" aria-label="Shuffle" title="Shuffle"></button>
+                <button id="menu2Prev" class="menu2-control" type="button" aria-label="Previous" title="Previous"></button>
+                <button id="menu2Play" class="menu2-play" type="button" aria-label="Play or pause" title="Play/Pause"><span id="menu2PlayIcon"></span></button>
+                <button id="menu2Next" class="menu2-control" type="button" aria-label="Next" title="Next"></button>
+                <button id="menu2Repeat" class="menu2-control" type="button" aria-label="Repeat" title="Repeat"></button>
+                <button id="menu2QueueControl" class="menu2-control" type="button" aria-label="Queue" title="Queue"></button>
               </div>
+              <div id="menu2PlaybackContext" class="menu2-playback-context">Playing from Spotify</div>
               <div class="menu2-volume-row">
                 <span>Volume</span>
                 <input id="menu2Volume" type="range" min="0" max="100" step="1" value="70" />
                 <strong id="menu2VolumeValue">70</strong>
+              </div>
+              <div class="menu2-bottom-search-row">
+                <input id="menu2SearchInput" class="menu2-input" type="search" placeholder="Search Spotify" autocomplete="off" />
+                <select id="menu2SearchType" class="menu2-select" aria-label="Search type">
+                  <option value="all">All</option>
+                  <option value="track">Tracks</option>
+                  <option value="artist">Artists</option>
+                  <option value="playlist">Playlists</option>
+                  <option value="album">Albums</option>
+                </select>
+                <button id="menu2SearchButton" class="menu2-action" type="button">Search</button>
               </div>
             </div>
           </section>
@@ -1306,17 +1317,6 @@ export function renderShell(state: AppState): void {
           </section>
 
           <section id="menu2SearchPane" class="menu2-pane">
-            <div class="menu2-search-row">
-              <input id="menu2SearchInput" class="menu2-input" type="search" placeholder="Search Spotify" autocomplete="off" />
-              <select id="menu2SearchType" class="menu2-select" aria-label="Search type">
-                <option value="all">All</option>
-                <option value="track">Tracks</option>
-                <option value="artist">Artists</option>
-                <option value="playlist">Playlists</option>
-                <option value="album">Albums</option>
-              </select>
-              <button id="menu2SearchButton" class="menu2-action" type="button">Search</button>
-            </div>
             <div id="menu2SearchResults" class="menu2-list menu2-empty">Search results will show here.</div>
           </section>
 
