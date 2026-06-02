@@ -646,26 +646,26 @@ export function renderShell(state: AppState): void {
                   <p class="utility-help">Tune the normal 16:9 lyric placement. These offsets apply at reveal ratio 0.00 and become the starting point for the mid/full tall interpolation.</p>
                   <div class="lyric-utility-stack lyric-tall-grid">
                   <div class="lyric-direct-target-heading">Short lyric 16:9 corner offsets</div>
-                  <label>Short lyric TL X offset <span id="lyricPosterTallBaseShortTLXValue">0</span>
-                    <input id="lyricPosterTallBaseShortTLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>Short lyric TL X offset <span id="lyricPosterTallBaseShortTLXValue">-257</span>
+                    <input id="lyricPosterTallBaseShortTLX" type="range" min="-2500" max="2500" step="1" value="-257" />
                   </label>
-                  <label>Short lyric TL Y offset <span id="lyricPosterTallBaseShortTLYValue">0</span>
-                    <input id="lyricPosterTallBaseShortTLY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>Short lyric TL Y offset <span id="lyricPosterTallBaseShortTLYValue">-86</span>
+                    <input id="lyricPosterTallBaseShortTLY" type="range" min="-2500" max="2500" step="1" value="-86" />
                   </label>
-                  <label>Short lyric TR X offset <span id="lyricPosterTallBaseShortTRXValue">0</span>
-                    <input id="lyricPosterTallBaseShortTRX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>Short lyric TR X offset <span id="lyricPosterTallBaseShortTRXValue">65</span>
+                    <input id="lyricPosterTallBaseShortTRX" type="range" min="-2500" max="2500" step="1" value="65" />
                   </label>
-                  <label>Short lyric TR Y offset <span id="lyricPosterTallBaseShortTRYValue">0</span>
-                    <input id="lyricPosterTallBaseShortTRY" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>Short lyric TR Y offset <span id="lyricPosterTallBaseShortTRYValue">-96</span>
+                    <input id="lyricPosterTallBaseShortTRY" type="range" min="-2500" max="2500" step="1" value="-96" />
                   </label>
-                  <label>Short lyric BR X offset <span id="lyricPosterTallBaseShortBRXValue">0</span>
-                    <input id="lyricPosterTallBaseShortBRX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>Short lyric BR X offset <span id="lyricPosterTallBaseShortBRXValue">85</span>
+                    <input id="lyricPosterTallBaseShortBRX" type="range" min="-2500" max="2500" step="1" value="85" />
                   </label>
                   <label>Short lyric BR Y offset <span id="lyricPosterTallBaseShortBRYValue">0</span>
                     <input id="lyricPosterTallBaseShortBRY" type="range" min="-2500" max="2500" step="1" value="0" />
                   </label>
-                  <label>Short lyric BL X offset <span id="lyricPosterTallBaseShortBLXValue">0</span>
-                    <input id="lyricPosterTallBaseShortBLX" type="range" min="-2500" max="2500" step="1" value="0" />
+                  <label>Short lyric BL X offset <span id="lyricPosterTallBaseShortBLXValue">65</span>
+                    <input id="lyricPosterTallBaseShortBLX" type="range" min="-2500" max="2500" step="1" value="65" />
                   </label>
                   <label>Short lyric BL Y offset <span id="lyricPosterTallBaseShortBLYValue">0</span>
                     <input id="lyricPosterTallBaseShortBLY" type="range" min="-2500" max="2500" step="1" value="0" />
@@ -2116,13 +2116,13 @@ function readCeilingPosterControls(
     lyricPosterTallDirectTwoBottomBRY: readNumber("--lyric-poster-tall-direct-two-bottom-br-y", 322),
     lyricPosterTallDirectTwoBottomBLX: readNumber("--lyric-poster-tall-direct-two-bottom-bl-x", 499),
     lyricPosterTallDirectTwoBottomBLY: readNumber("--lyric-poster-tall-direct-two-bottom-bl-y", 322),
-    lyricPosterTallBaseShortTLX: readNumber("--lyric-poster-tall-base-short-tl-x", 0),
-    lyricPosterTallBaseShortTLY: readNumber("--lyric-poster-tall-base-short-tl-y", 0),
-    lyricPosterTallBaseShortTRX: readNumber("--lyric-poster-tall-base-short-tr-x", 0),
-    lyricPosterTallBaseShortTRY: readNumber("--lyric-poster-tall-base-short-tr-y", 0),
-    lyricPosterTallBaseShortBRX: readNumber("--lyric-poster-tall-base-short-br-x", 0),
+    lyricPosterTallBaseShortTLX: readNumber("--lyric-poster-tall-base-short-tl-x", -257),
+    lyricPosterTallBaseShortTLY: readNumber("--lyric-poster-tall-base-short-tl-y", -86),
+    lyricPosterTallBaseShortTRX: readNumber("--lyric-poster-tall-base-short-tr-x", 65),
+    lyricPosterTallBaseShortTRY: readNumber("--lyric-poster-tall-base-short-tr-y", -96),
+    lyricPosterTallBaseShortBRX: readNumber("--lyric-poster-tall-base-short-br-x", 85),
     lyricPosterTallBaseShortBRY: readNumber("--lyric-poster-tall-base-short-br-y", 0),
-    lyricPosterTallBaseShortBLX: readNumber("--lyric-poster-tall-base-short-bl-x", 0),
+    lyricPosterTallBaseShortBLX: readNumber("--lyric-poster-tall-base-short-bl-x", 65),
     lyricPosterTallBaseShortBLY: readNumber("--lyric-poster-tall-base-short-bl-y", 0),
     lyricPosterTallBaseOneRowTLX: readNumber("--lyric-poster-tall-base-one-row-tl-x", 0),
     lyricPosterTallBaseOneRowTLY: readNumber("--lyric-poster-tall-base-one-row-tl-y", 0),
@@ -2186,32 +2186,32 @@ function readCeilingPosterControls(
     lyricPosterTallFinalShortTRY: readNumber("--lyric-poster-tall-final-short-tr-y", -663),
     lyricPosterTallFinalShortBRX: readNumber("--lyric-poster-tall-final-short-br-x", -58),
     lyricPosterTallFinalShortBRY: readNumber("--lyric-poster-tall-final-short-br-y", 23),
-    lyricPosterTallFinalShortBLX: readNumber("--lyric-poster-tall-final-short-bl-x", 0),
+    lyricPosterTallFinalShortBLX: readNumber("--lyric-poster-tall-final-short-bl-x", 101),
     lyricPosterTallFinalShortBLY: readNumber("--lyric-poster-tall-final-short-bl-y", 23),
-    lyricPosterTallFinalOneRowTLX: readNumber("--lyric-poster-tall-final-one-row-tl-x", -990),
-    lyricPosterTallFinalOneRowTLY: readNumber("--lyric-poster-tall-final-one-row-tl-y", -1390),
-    lyricPosterTallFinalOneRowTRX: readNumber("--lyric-poster-tall-final-one-row-tr-x", 980),
-    lyricPosterTallFinalOneRowTRY: readNumber("--lyric-poster-tall-final-one-row-tr-y", -1390),
-    lyricPosterTallFinalOneRowBRX: readNumber("--lyric-poster-tall-final-one-row-br-x", -83),
-    lyricPosterTallFinalOneRowBRY: readNumber("--lyric-poster-tall-final-one-row-br-y", 73),
+    lyricPosterTallFinalOneRowTLX: readNumber("--lyric-poster-tall-final-one-row-tl-x", -686),
+    lyricPosterTallFinalOneRowTLY: readNumber("--lyric-poster-tall-final-one-row-tl-y", -839),
+    lyricPosterTallFinalOneRowTRX: readNumber("--lyric-poster-tall-final-one-row-tr-x", 499),
+    lyricPosterTallFinalOneRowTRY: readNumber("--lyric-poster-tall-final-one-row-tr-y", -819),
+    lyricPosterTallFinalOneRowBRX: readNumber("--lyric-poster-tall-final-one-row-br-x", -63),
+    lyricPosterTallFinalOneRowBRY: readNumber("--lyric-poster-tall-final-one-row-br-y", 29),
     lyricPosterTallFinalOneRowBLX: readNumber("--lyric-poster-tall-final-one-row-bl-x", 89),
-    lyricPosterTallFinalOneRowBLY: readNumber("--lyric-poster-tall-final-one-row-bl-y", 73),
+    lyricPosterTallFinalOneRowBLY: readNumber("--lyric-poster-tall-final-one-row-bl-y", 29),
     lyricPosterTallFinalTwoTopTLX: readNumber("--lyric-poster-tall-final-two-top-tl-x", -361),
-    lyricPosterTallFinalTwoTopTLY: readNumber("--lyric-poster-tall-final-two-top-tl-y", -475),
+    lyricPosterTallFinalTwoTopTLY: readNumber("--lyric-poster-tall-final-two-top-tl-y", -476),
     lyricPosterTallFinalTwoTopTRX: readNumber("--lyric-poster-tall-final-two-top-tr-x", 359),
     lyricPosterTallFinalTwoTopTRY: readNumber("--lyric-poster-tall-final-two-top-tr-y", -475),
-    lyricPosterTallFinalTwoTopBRX: readNumber("--lyric-poster-tall-final-two-top-br-x", -17),
-    lyricPosterTallFinalTwoTopBRY: readNumber("--lyric-poster-tall-final-two-top-br-y", 0),
+    lyricPosterTallFinalTwoTopBRX: readNumber("--lyric-poster-tall-final-two-top-br-x", 60),
+    lyricPosterTallFinalTwoTopBRY: readNumber("--lyric-poster-tall-final-two-top-br-y", -63),
     lyricPosterTallFinalTwoTopBLX: readNumber("--lyric-poster-tall-final-two-top-bl-x", 0),
-    lyricPosterTallFinalTwoTopBLY: readNumber("--lyric-poster-tall-final-two-top-bl-y", 0),
-    lyricPosterTallFinalTwoBottomTLX: readNumber("--lyric-poster-tall-final-two-bottom-tl-x", -369),
-    lyricPosterTallFinalTwoBottomTLY: readNumber("--lyric-poster-tall-final-two-bottom-tl-y", -344),
-    lyricPosterTallFinalTwoBottomTRX: readNumber("--lyric-poster-tall-final-two-bottom-tr-x", 293),
-    lyricPosterTallFinalTwoBottomTRY: readNumber("--lyric-poster-tall-final-two-bottom-tr-y", -344),
-    lyricPosterTallFinalTwoBottomBRX: readNumber("--lyric-poster-tall-final-two-bottom-br-x", 110),
-    lyricPosterTallFinalTwoBottomBRY: readNumber("--lyric-poster-tall-final-two-bottom-br-y", 48),
-    lyricPosterTallFinalTwoBottomBLX: readNumber("--lyric-poster-tall-final-two-bottom-bl-x", 0),
-    lyricPosterTallFinalTwoBottomBLY: readNumber("--lyric-poster-tall-final-two-bottom-bl-y", 48),
+    lyricPosterTallFinalTwoTopBLY: readNumber("--lyric-poster-tall-final-two-top-bl-y", -63),
+    lyricPosterTallFinalTwoBottomTLX: readNumber("--lyric-poster-tall-final-two-bottom-tl-x", -287),
+    lyricPosterTallFinalTwoBottomTLY: readNumber("--lyric-poster-tall-final-two-bottom-tl-y", -328),
+    lyricPosterTallFinalTwoBottomTRX: readNumber("--lyric-poster-tall-final-two-bottom-tr-x", 275),
+    lyricPosterTallFinalTwoBottomTRY: readNumber("--lyric-poster-tall-final-two-bottom-tr-y", -328),
+    lyricPosterTallFinalTwoBottomBRX: readNumber("--lyric-poster-tall-final-two-bottom-br-x", 101),
+    lyricPosterTallFinalTwoBottomBRY: readNumber("--lyric-poster-tall-final-two-bottom-br-y", 9),
+    lyricPosterTallFinalTwoBottomBLX: readNumber("--lyric-poster-tall-final-two-bottom-bl-x", 40),
+    lyricPosterTallFinalTwoBottomBLY: readNumber("--lyric-poster-tall-final-two-bottom-bl-y", 9),
     rowBreakpoint: readNumber("--lyric-poster-row-breakpoint", 28),
     twoRowBandGuideOpacity: readNumber("--lyric-poster-two-row-band-guide-opacity", 0),
     threeRowBandGuideOpacity: readNumber("--lyric-poster-three-row-band-guide-opacity", 0),
@@ -2453,6 +2453,46 @@ function posterQuadToTrapezoid(quad: PosterQuad): LyricPosterTrapezoid {
   return makeLyricPosterTrapezoid(quad[0].x, quad[0].y, quad[1].x, quad[1].y, quad[3].x, quad[3].y, quad[2].x, quad[2].y);
 }
 
+
+const LEGACY_16X9_BASE_GUIDE_QUADS: Record<string, PosterQuad> = {
+  short: [
+    { x: 302, y: 9 },
+    { x: 1437, y: 9 },
+    { x: 1277, y: 194 },
+    { x: 462, y: 194 },
+  ],
+  one: [
+    { x: 238, y: 23 },
+    { x: 1533, y: 23 },
+    { x: 1394, y: 190 },
+    { x: 377, y: 190 },
+  ],
+  twoTop: [
+    { x: 238, y: 23 },
+    { x: 1533, y: 23 },
+    { x: 1394, y: 101 },
+    { x: 377, y: 101 },
+  ],
+  twoBottom: [
+    { x: 350, y: 111 },
+    { x: 1435, y: 111 },
+    { x: 1301, y: 190 },
+    { x: 489, y: 190 },
+  ],
+};
+
+function clonePosterQuad(quad: PosterQuad): PosterQuad {
+  return quad.map((point) => ({ x: point.x, y: point.y })) as PosterQuad;
+}
+
+function legacy16x9GuideQuadForRow(lyricMode: "short" | "1-row" | "2-row", rowIndex: number, fallback: PosterQuad): PosterQuad {
+  if (lyricMode === "short") return clonePosterQuad(LEGACY_16X9_BASE_GUIDE_QUADS.short);
+  if (lyricMode === "1-row") return clonePosterQuad(LEGACY_16X9_BASE_GUIDE_QUADS.one);
+  if (lyricMode === "2-row" && rowIndex === 0) return clonePosterQuad(LEGACY_16X9_BASE_GUIDE_QUADS.twoTop);
+  if (lyricMode === "2-row" && rowIndex === 1) return clonePosterQuad(LEGACY_16X9_BASE_GUIDE_QUADS.twoBottom);
+  return clonePosterQuad(fallback);
+}
+
 function buildCeilingPosterLayout(
   text: string,
   trapezoid: LyricPosterTrapezoid,
@@ -2573,11 +2613,16 @@ function buildCeilingPosterLayout(
     // This prevents the old normal-window placement from pulling the lyrics down
     // while the tall guide is already in the expanded ceiling area.
     const legacyGuideQuad: PosterQuad = legacyFit;
+    const legacy16x9GuideQuad: PosterQuad = legacy16x9GuideQuadForRow(lyricMode, index, legacyGuideQuad);
     const directTallBaseQuad: PosterQuad = directTallQuad ? directTallQuad : tallTarget;
     const tallGuideQuad: PosterQuad = directTallBaseQuad;
 
+    // Keep the normal 16:9 keyframe completely independent from the tall
+    // direct/base trapezoids. The previous path rebuilt the 16:9 starting
+    // position from the tall row boxes as soon as revealRatio became > 0,
+    // which caused the visible lyric jump at 0.01.
     const baseVisualQuad = addQuadOffsets(
-      correctQuadToGuideFrame(legacyGuideQuad, legacyGuideQuad),
+      correctQuadToGuideFrame(legacy16x9GuideQuad, legacy16x9GuideQuad),
       readFinalOffsetQuad("Base", lyricMode, index, activeControls),
     );
     const midVisualQuad = addQuadOffsets(
