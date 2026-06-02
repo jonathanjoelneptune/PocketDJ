@@ -575,7 +575,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   placedAlbumRotateZ: 0,
   placedAlbumDepth: 0,
   placedAlbumShadow: 1,
-  placedAlbumOpacity: 0.82,
+  placedAlbumOpacity: 1,
   panelStartY: 39,
   panelHeightAdjustEnabled: false,
   roomFillStretchMode: false,
@@ -894,6 +894,7 @@ const FINAL_TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-final-full-tall-lyr
 const PLACED_ACTIVE_ALBUM_TUNING_MIGRATION_KEY = "pocketdj-v66b-placed-active-album-tuned-2026-06-03";
 const AMBIENT_TWINKLE_VISIBILITY_MIGRATION_KEY = "pocketdj-v66b-ambient-twinkles-visibility-2026-06-03";
 const PLACED_ACTIVE_ALBUM_DIM_MIGRATION_KEY = "pocketdj-v66c-placed-active-album-dim-shelf-2026-06-03";
+const PLACED_ACTIVE_ALBUM_OPAQUE_MIGRATION_KEY = "pocketdj-v66e-placed-active-album-opaque-shared-filter-2026-06-03";
 const AMBIENT_TWINKLE_USER_EDIT_MIGRATION_KEY = "pocketdj-v66c-ambient-twinkles-user-edit-2026-06-03";
 let roomUtility = loadRoomUtilitySettings();
 
@@ -1312,7 +1313,7 @@ function applyPlacedActiveAlbumDimMigration(): void {
       placedAlbumRotateZ: 0,
       placedAlbumDepth: 0,
       placedAlbumShadow: 1,
-      placedAlbumOpacity: 0.82,
+      placedAlbumOpacity: 1,
       panelStartY: 39,
     };
     saveRoomUtilitySettings();
@@ -1333,6 +1334,21 @@ function applyAmbientTwinkleUserEditMigration(): void {
     window.localStorage.setItem(AMBIENT_TWINKLE_USER_EDIT_MIGRATION_KEY, "true");
   } catch (error) {
     console.warn("Could not apply ambient twinkle user edit migration", error);
+  }
+}
+
+
+function applyPlacedActiveAlbumOpaqueMigration(): void {
+  try {
+    if (window.localStorage.getItem(PLACED_ACTIVE_ALBUM_OPAQUE_MIGRATION_KEY)) return;
+    roomUtility = {
+      ...roomUtility,
+      placedAlbumOpacity: 1,
+    };
+    saveRoomUtilitySettings();
+    window.localStorage.setItem(PLACED_ACTIVE_ALBUM_OPAQUE_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply placed active album opaque migration", error);
   }
 }
 
@@ -3151,6 +3167,7 @@ async function boot(): Promise<void> {
   applyPlacedActiveAlbumTuningMigration();
   applyAmbientTwinkleVisibilityMigration();
   applyPlacedActiveAlbumDimMigration();
+  applyPlacedActiveAlbumOpaqueMigration();
   applyAmbientTwinkleUserEditMigration();
   applyRoomUtilitySettings();
 

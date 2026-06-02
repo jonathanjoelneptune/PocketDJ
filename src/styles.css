@@ -242,7 +242,7 @@ button {
     1px 1px 0 #7c2d12,
     0 0 4px rgba(253, 230, 138, 0.64),
     0 0 14px rgba(251, 191, 36, 0.30);
-  transition: opacity 520ms ease, filter 520ms ease;
+  transition: opacity 900ms ease-in-out, filter 900ms ease-in-out;
 }
 
 .marquee-artist.marquee-support-fading {
@@ -5920,19 +5920,24 @@ html[data-dj-mode="cinematic"] .dj-wrap {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: #4a2412;
-  opacity: 0.54;
-  mix-blend-mode: multiply;
+  background:
+    linear-gradient(180deg, rgba(8, 12, 24, 0.18), rgba(3, 4, 8, 0.32)),
+    radial-gradient(circle at 35% 18%, rgba(255, 210, 130, 0.08), rgba(0, 0, 0, 0) 54%);
+  opacity: 1;
+  mix-blend-mode: normal;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 220, 160, 0.06),
+    inset 0 -12px 22px rgba(0, 0, 0, 0.24);
 }
 
 .song-change-album-cover {
   position: relative;
   z-index: 1;
+  opacity: 1;
   filter:
+    brightness(0.72)
     saturate(0.86)
-    contrast(0.98)
-    brightness(0.90)
-    sepia(0.14)
+    contrast(0.94)
     drop-shadow(0 5px 8px rgba(0, 0, 0, 0.32));
 }
 
@@ -9045,7 +9050,7 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 .placed-active-album-layer.placed-active-album-has-art {
-  opacity: var(--placed-album-opacity, 1);
+  opacity: 1;
 }
 
 .placed-active-album-disabled .placed-active-album-layer {
@@ -9176,4 +9181,38 @@ body.lyrics-marquee-unavailable .marquee::after {
   24% { opacity: 1; filter: brightness(1.24); }
   47% { opacity: 0.82; filter: brightness(0.96); }
   71% { opacity: calc(0.72 + var(--ambient-twinkle) * 0.36); filter: brightness(1.14); }
+}
+
+
+/* v66e: held A41 album and placed shelf album share the exact same cover treatment. */
+.song-change-album-cover,
+.placed-active-album-cover {
+  opacity: 1 !important;
+  filter:
+    brightness(0.72)
+    saturate(0.86)
+    contrast(0.94)
+    drop-shadow(0 5px 8px rgba(0, 0, 0, 0.32)) !important;
+}
+
+.song-change-album-layer::after,
+.placed-active-album-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 3%;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(180deg, rgba(8, 12, 24, 0.18), rgba(3, 4, 8, 0.32)),
+    radial-gradient(circle at 35% 18%, rgba(255, 210, 130, 0.08), rgba(0, 0, 0, 0) 54%);
+  opacity: 1;
+  mix-blend-mode: normal;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 220, 160, 0.06),
+    inset 0 -12px 22px rgba(0, 0, 0, 0.24);
+}
+
+.placed-active-album-layer.placed-active-album-has-art {
+  opacity: 1 !important;
 }
