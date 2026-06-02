@@ -1306,7 +1306,7 @@ export function renderShell(state: AppState): void {
           </section>
 
           <section id="menu2QueuePane" class="menu2-pane">
-            <div class="menu2-section-head"><h3>Spotify Queue</h3><button id="menu2RefreshQueue" class="menu2-action" type="button">Refresh</button></div>
+            <div class="menu2-section-head menu2-queue-head"><h3>Spotify Queue</h3><div class="menu2-section-actions"><button id="menu2ReturnNow" class="menu2-action menu2-return-now" type="button">Return to Now Playing</button><button id="menu2RefreshQueue" class="menu2-action" type="button">Refresh</button></div></div>
             <div id="menu2QueueResults" class="menu2-list menu2-empty">Open Menu 2.0 while connected to load the actual Spotify queue.</div>
           </section>
 
@@ -1317,8 +1317,15 @@ export function renderShell(state: AppState): void {
           </section>
 
           <section id="menu2SearchPane" class="menu2-pane">
-            <div class="menu2-search-pane-bar">
+            <div class="menu2-search-pane-row">
               <input id="menu2SearchPaneInput" class="menu2-input" type="search" placeholder="Search Spotify" autocomplete="off" />
+              <select id="menu2SearchPaneType" class="menu2-select" aria-label="Search type">
+                <option value="all">All</option>
+                <option value="track">Tracks</option>
+                <option value="artist">Artists</option>
+                <option value="playlist">Playlists</option>
+                <option value="album">Albums</option>
+              </select>
               <button id="menu2SearchPaneButton" class="menu2-action" type="button">Search</button>
             </div>
             <div id="menu2SearchResults" class="menu2-list menu2-empty">Search results will show here.</div>

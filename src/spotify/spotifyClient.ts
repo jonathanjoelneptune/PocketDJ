@@ -742,6 +742,14 @@ export async function searchSpotifyCatalog(
   };
 }
 
+export async function getSpotifyPlaylist(clientId: string, playlistId: string): Promise<SpotifyCatalogPlaylist> {
+  const endpoint = `/playlists/${encodeURIComponent(playlistId)}?fields=id,uri,name,owner(display_name),images,tracks(total)`;
+  const json = await spotifyApiJson<SpotifyPlaylistItem>(clientId, endpoint);
+  const playlist = normalizeCatalogPlaylist(json);
+  if (!playlist) throw new Error("Spotify could not load that playlist.");
+  return playlist;
+}
+
 export async function getUserPlaylists(clientId: string, limit = 200): Promise<SpotifyCatalogPlaylist[]> {
   const all: SpotifyCatalogPlaylist[] = [];
   const pageSize = 50;
@@ -761,43 +769,6 @@ export async function getUserPlaylists(clientId: string, limit = 200): Promise<S
   }
 
   return all;
-}
-
-export async function getPlaylistSummary(clientId: string, playlistId: string): Promise<SpotifyCatalogPlaylist | null> {
-  const cleanId = playlistId.trim();
-  if (!cleanId) return null;
-  const json = await spotifyApiJson<SpotifyPlaylistItem>(clientId, `/playlists/${encodeURIComponent(cleanId)}?fields=id,uri,name,owner(display_name),images,tracks(total)`);
-  return normalizeCatalogPlaylist(json);
-}
-
-export async function getArtistRelatedPlaylists(clientId: string, artistName: string, limit = 8): Promise<SpotifyCatalogPlaylist[]> {
-  const cleanName = artistName.trim();
-  if (!cleanName) return [];
-  const queries = [`This Is ${cleanName}`, `${cleanName} Radio`, cleanName];
-  const merged: SpotifyCatalogPlaylist[] = [];
-  const seen = new Set<string>();
-  for (const query of queries) {
-    const result = await searchSpotifyCatalog(clientId, query, "playlist", Math.max(3, limit), 0);
-    for (const playlist of result.playlists) {
-      if (seen.has(playlist.id)) continue;
-      seen.add(playlist.id);
-      merged.push(playlist);
-    }
-  }
-  const normalized = cleanName.toLowerCase();
-  return merged.sort((a, b) => {
-    const score = (playlist: SpotifyCatalogPlaylist) => {
-      const name = playlist.name.toLowerCase();
-      let value = 0;
-      if (name === `this is ${normalized}`) value += 100;
-      if (name.includes(`this is ${normalized}`)) value += 70;
-      if (name.includes(`${normalized} radio`)) value += 60;
-      if ((playlist.owner || "").toLowerCase().includes("spotify")) value += 20;
-      value += Math.min(10, playlist.trackCount / 20);
-      return value;
-    };
-    return score(b) - score(a);
-  }).slice(0, Math.max(1, Math.min(20, limit)));
 }
 
 export async function getPlaylistTracks(clientId: string, playlistId: string, limit = 50): Promise<SpotifyCatalogTrack[]> {
