@@ -1317,6 +1317,10 @@ export function renderShell(state: AppState): void {
           </section>
 
           <section id="menu2SearchPane" class="menu2-pane">
+            <div class="menu2-search-pane-bar">
+              <input id="menu2SearchPaneInput" class="menu2-input" type="search" placeholder="Search Spotify" autocomplete="off" />
+              <button id="menu2SearchPaneButton" class="menu2-action" type="button">Search</button>
+            </div>
             <div id="menu2SearchResults" class="menu2-list menu2-empty">Search results will show here.</div>
           </section>
 

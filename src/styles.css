@@ -10579,3 +10579,169 @@ body.lyrics-marquee-unavailable .marquee::after {
   .menu2-album-art { max-height: min(310px, 36vh); }
   .menu2-now-card { gap: 8px !important; }
 }
+
+/* v72 Menu 2.4: context, lock, compact, theme, collapsed rail, and search polish. */
+.menu2-panel {
+  width: min(510px, calc(100vw - 36px));
+}
+
+.menu2-shell {
+  height: min(940px, calc(100vh - 18px));
+  overflow: hidden;
+}
+
+.menu2-control-strip {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) repeat(4, 38px) !important;
+  gap: 8px !important;
+}
+
+.menu2-brand-pill {
+  justify-self: start;
+}
+
+.menu2-round-pill,
+.menu2-control,
+.menu2-bubble-button {
+  color: var(--menu2-accent-strong) !important;
+}
+
+.menu2-pill-active,
+.menu2-tab-active,
+.menu2-control-active,
+.menu2-bubble-active {
+  background: var(--menu2-accent) !important;
+  color: #080604 !important;
+}
+
+.menu2-connect-pill.menu2-pill-active::before {
+  background: currentColor !important;
+}
+
+.menu2-panel .menu2-pane,
+.menu2-panel .menu2-list,
+.menu2-panel .menu2-shell,
+.menu2-panel .menu2-input,
+.menu2-panel .menu2-select {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--menu2-scroll-thumb) var(--menu2-scroll-track) !important;
+}
+
+.menu2-panel *::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+
+.menu2-panel *::-webkit-scrollbar-track {
+  background: var(--menu2-scroll-track) !important;
+  border-radius: 999px !important;
+}
+
+.menu2-panel *::-webkit-scrollbar-thumb {
+  background: var(--menu2-scroll-thumb) !important;
+  border: 2px solid var(--menu2-scroll-track) !important;
+  border-radius: 999px !important;
+}
+
+.menu2-panel *::-webkit-scrollbar-button {
+  background: var(--menu2-accent) !important;
+  border: 1px solid var(--menu2-accent-border) !important;
+  border-radius: 999px !important;
+}
+
+.menu2-bubble {
+  --bubble-accent: var(--menu2-accent, #d89b45);
+  --bubble-accent-strong: var(--menu2-accent-strong, #ffd38a);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+.menu2-bubble-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  color: var(--menu2-accent-strong) !important;
+  border-color: var(--menu2-accent-border) !important;
+}
+
+.menu2-bubble-button .menu2-svg-icon,
+#menu2LyricsControl .menu2-svg-icon {
+  display: block !important;
+  margin: auto !important;
+  transform: none !important;
+}
+
+.menu2-playback-context {
+  padding: 4px 8px !important;
+  min-height: 0 !important;
+  line-height: 1.25 !important;
+  font-size: 0.73rem !important;
+}
+
+.menu2-context-link {
+  padding: 0 !important;
+}
+
+.menu2-search-pane-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+#menu2SearchPane .menu2-list {
+  height: calc(100% - 48px);
+}
+
+#menu2NowPane.menu2-pane-active {
+  overflow: hidden !important;
+}
+
+.menu2-now-card {
+  grid-template-rows: auto auto auto auto auto auto !important;
+  gap: 8px !important;
+}
+
+.menu2-album-art {
+  max-height: min(350px, 35vh) !important;
+}
+
+.menu2-mode-compact .menu2-album-art {
+  max-height: 112px !important;
+}
+
+.menu2-bottom-search-row {
+  margin-top: 0 !important;
+}
+
+.menu2-style-pocket .menu2-input:focus,
+.menu2-style-pocket .menu2-select:focus {
+  box-shadow: 0 0 0 2px rgba(216, 155, 69, 0.35) !important;
+}
+
+.menu2-style-spotify .menu2-input:focus,
+.menu2-style-web .menu2-input:focus,
+.menu2-style-spotify .menu2-select:focus,
+.menu2-style-web .menu2-select:focus {
+  box-shadow: 0 0 0 2px rgba(30, 215, 96, 0.35) !important;
+}
+
+:root.menu2-theme-pocket #menu2Bubble,
+#menu2Bubble.menu2-bubble-pocket {
+  --menu2-accent: #d89b45;
+  --menu2-accent-strong: #ffd38a;
+  --menu2-accent-border: rgba(216, 155, 69, 0.42);
+}
+
+:root.menu2-theme-spotify #menu2Bubble,
+:root.menu2-theme-web #menu2Bubble,
+#menu2Bubble.menu2-bubble-spotify,
+#menu2Bubble.menu2-bubble-web {
+  --menu2-accent: #1ed760;
+  --menu2-accent-strong: #7cf7a5;
+  --menu2-accent-border: rgba(30, 215, 96, 0.46);
+}
