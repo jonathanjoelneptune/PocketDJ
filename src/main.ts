@@ -613,7 +613,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterGlow: 0,
   lyricPosterEffectDropShadow: false,
   lyricPosterEffectEmboss: false,
-  lyricPosterEffectInsetEmboss: true,
+  lyricPosterEffectInsetEmboss: false,
   lyricPosterEffectBevel: false,
   lyricPosterEffectSoftBlur: false,
   lyricPosterOneRowVerticalStretch: 0.86,
@@ -833,7 +833,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   lyricPosterTallFinalShortBLY: 23,
   lyricPosterTallFinalOneRowTLX: -686,
   lyricPosterTallFinalOneRowTLY: -839,
-  lyricPosterTallFinalOneRowTRX: 499,
+  lyricPosterTallFinalOneRowTRX: 632,
   lyricPosterTallFinalOneRowTRY: -819,
   lyricPosterTallFinalOneRowBRX: -63,
   lyricPosterTallFinalOneRowBRY: 29,
@@ -863,6 +863,7 @@ const ROOM_UTILITY_KEY = "pocketdj-room-utility-v65a";
 const CLOCK_DISABLED_MIGRATION_KEY = "pocketdj-v65m-clock-disabled-default-applied";
 const MIXER_LED_TUNING_MIGRATION_KEY = "pocketdj-v65y-mixer-led-tuning-applied";
 const TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-final-16x9-lyric-offsets-2026-06-02";
+const FINAL_TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-final-full-tall-lyric-offsets-effects-disabled-2026-06-02";
 let roomUtility = loadRoomUtilitySettings();
 
 function setUtilityLabel(id: string, value: number): void {
@@ -1061,7 +1062,7 @@ function applyTallLyricCalibrationMigration(): void {
   lyricPosterTallFinalShortBLY: 23,
   lyricPosterTallFinalOneRowTLX: -686,
   lyricPosterTallFinalOneRowTLY: -839,
-  lyricPosterTallFinalOneRowTRX: 499,
+  lyricPosterTallFinalOneRowTRX: 632,
   lyricPosterTallFinalOneRowTRY: -819,
   lyricPosterTallFinalOneRowBRX: -63,
   lyricPosterTallFinalOneRowBRY: 29,
@@ -1087,6 +1088,56 @@ function applyTallLyricCalibrationMigration(): void {
     window.localStorage.setItem(TALL_LYRIC_CALIBRATION_MIGRATION_KEY, "true");
   } catch (error) {
     console.warn("Could not apply tall lyric calibration migration", error);
+  }
+}
+
+function applyFinalTallLyricCalibrationMigration(): void {
+  try {
+    if (window.localStorage.getItem(FINAL_TALL_LYRIC_CALIBRATION_MIGRATION_KEY)) return;
+    roomUtility = {
+      ...roomUtility,
+      lyricPosterEffectDropShadow: false,
+      lyricPosterEffectEmboss: false,
+      lyricPosterEffectInsetEmboss: false,
+      lyricPosterEffectBevel: false,
+      lyricPosterEffectSoftBlur: false,
+      lyricPosterTallFinalShortTLX: -287,
+      lyricPosterTallFinalShortTLY: -630,
+      lyricPosterTallFinalShortTRX: 0,
+      lyricPosterTallFinalShortTRY: -663,
+      lyricPosterTallFinalShortBRX: -58,
+      lyricPosterTallFinalShortBRY: 23,
+      lyricPosterTallFinalShortBLX: 101,
+      lyricPosterTallFinalShortBLY: 23,
+      lyricPosterTallFinalOneRowTLX: -686,
+      lyricPosterTallFinalOneRowTLY: -839,
+      lyricPosterTallFinalOneRowTRX: 632,
+      lyricPosterTallFinalOneRowTRY: -819,
+      lyricPosterTallFinalOneRowBRX: -63,
+      lyricPosterTallFinalOneRowBRY: 29,
+      lyricPosterTallFinalOneRowBLX: 89,
+      lyricPosterTallFinalOneRowBLY: 29,
+      lyricPosterTallFinalTwoTopTLX: -361,
+      lyricPosterTallFinalTwoTopTLY: -476,
+      lyricPosterTallFinalTwoTopTRX: 359,
+      lyricPosterTallFinalTwoTopTRY: -475,
+      lyricPosterTallFinalTwoTopBRX: 60,
+      lyricPosterTallFinalTwoTopBRY: -63,
+      lyricPosterTallFinalTwoTopBLX: 0,
+      lyricPosterTallFinalTwoTopBLY: -63,
+      lyricPosterTallFinalTwoBottomTLX: -287,
+      lyricPosterTallFinalTwoBottomTLY: -328,
+      lyricPosterTallFinalTwoBottomTRX: 275,
+      lyricPosterTallFinalTwoBottomTRY: -328,
+      lyricPosterTallFinalTwoBottomBRX: 101,
+      lyricPosterTallFinalTwoBottomBRY: 9,
+      lyricPosterTallFinalTwoBottomBLX: 40,
+      lyricPosterTallFinalTwoBottomBLY: 9,
+    };
+    saveRoomUtilitySettings();
+    window.localStorage.setItem(FINAL_TALL_LYRIC_CALIBRATION_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply final full-tall lyric calibration migration", error);
   }
 }
 
@@ -2907,6 +2958,7 @@ async function boot(): Promise<void> {
   applyClockDisabledDefaultMigration();
   applyMixerLedTuningMigration();
   applyTallLyricCalibrationMigration();
+applyFinalTallLyricCalibrationMigration();
   applyRoomUtilitySettings();
 
   if (state.spotifyClientId) {
@@ -6219,11 +6271,11 @@ function applyRoomUtilitySettings(): void {
   root.classList.toggle("lyric-poster-transition-soft-dissolve", roomUtility.lyricPosterTransition === "soft-dissolve");
   root.classList.toggle("lyric-poster-transition-ghost-drift", roomUtility.lyricPosterTransition === "ghost-drift");
   root.classList.toggle("lyric-poster-transition-back-push", roomUtility.lyricPosterTransition === "back-push");
-  root.classList.toggle("lyric-poster-effect-drop-shadow", roomUtility.lyricPosterEffectDropShadow);
-  root.classList.toggle("lyric-poster-effect-emboss", roomUtility.lyricPosterEffectEmboss);
-  root.classList.toggle("lyric-poster-effect-inset-emboss", roomUtility.lyricPosterEffectInsetEmboss);
-  root.classList.toggle("lyric-poster-effect-bevel", roomUtility.lyricPosterEffectBevel);
-  root.classList.toggle("lyric-poster-effect-soft-blur", roomUtility.lyricPosterEffectSoftBlur);
+  root.classList.toggle("lyric-poster-effect-drop-shadow", false);
+  root.classList.toggle("lyric-poster-effect-emboss", false);
+  root.classList.toggle("lyric-poster-effect-inset-emboss", false);
+  root.classList.toggle("lyric-poster-effect-bevel", false);
+  root.classList.toggle("lyric-poster-effect-soft-blur", false);
   renderTallLyricGuideOverlay();
 }
 
