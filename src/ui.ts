@@ -1247,7 +1247,12 @@ export function renderShell(state: AppState): void {
         <div class="menu2-shell">
           <div class="menu2-topbar menu2-control-strip" aria-label="PocketDJ status controls">
             <button id="menu2BrandPill" class="menu2-brand-pill" type="button" aria-label="PocketDJ">PocketDJ</button>
-            <button id="menu2ConnectPill" class="menu2-pill menu2-round-pill menu2-connect-pill" type="button" aria-label="Connect Spotify" title="Connected"></button>
+            <div class="menu2-connect-wrap">
+              <button id="menu2ConnectPill" class="menu2-pill menu2-round-pill menu2-connect-pill" type="button" aria-label="Connect Spotify" aria-haspopup="true" aria-expanded="false" title="Connect Spotify"></button>
+              <div id="menu2ConnectMenu" class="menu2-connect-menu" role="menu" aria-hidden="true">
+                <button id="menu2DisconnectButton" class="menu2-connect-disconnect" type="button" role="menuitem">Disconnect</button>
+              </div>
+            </div>
             <button id="menu2CompactPill" class="menu2-pill menu2-round-pill menu2-panel-pill" type="button" aria-label="Toggle Menu 2.0 full or compact" title="Full Panel"></button>
             <button id="menu2FullscreenPill" class="menu2-pill menu2-round-pill menu2-icon-pill" type="button" aria-label="Toggle fullscreen" title="Fullscreen"></button>
             <button id="menu2LockPill" class="menu2-pill menu2-round-pill menu2-lock-pill" type="button" aria-label="Lock Menu 2.0 open" title="Lock menu open"></button>
