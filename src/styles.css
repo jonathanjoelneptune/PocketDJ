@@ -242,7 +242,7 @@ button {
     1px 1px 0 #7c2d12,
     0 0 4px rgba(253, 230, 138, 0.64),
     0 0 14px rgba(251, 191, 36, 0.30);
-  transition: opacity 900ms ease-in-out, filter 900ms ease-in-out;
+  transition: opacity 1200ms ease-in-out, filter 1200ms ease-in-out;
 }
 
 .marquee-artist.marquee-support-fading {
@@ -9243,6 +9243,25 @@ body.lyrics-marquee-unavailable .marquee::after {
 .active-lyrics-block.lyric-poster-transition-soft-dissolve .lyric-poster-row-svg,
 .active-lyrics-block.lyric-poster-transition-ghost-drift .lyric-poster-row-svg,
 .active-lyrics-block.lyric-poster-transition-back-push .lyric-poster-row-svg {
+  animation: none !important;
+  transition: none !important;
+}
+
+
+/* v66g: final ceiling lyric hard swap guard. No lyric element may animate or fade during line replacement. */
+#lyricsCeiling,
+#lyricsCeiling *,
+#activeLyricsBlock,
+#activeLyricsBlock * {
+  transition-property: none !important;
+}
+
+#activeLyricsBlock,
+#activeLyricsBlock .lyric-poster-svg,
+#activeLyricsBlock .lyric-poster-html-rows,
+#activeLyricsBlock .lyric-poster-html-row,
+#activeLyricsBlock .lyric-poster-row-svg,
+#activeLyricsBlock .lyric-poster-row-text {
   animation: none !important;
   transition: none !important;
 }

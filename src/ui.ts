@@ -4,9 +4,6 @@ import { formatMs, qs } from "./utils/dom";
 
 
 let lastLyricsRenderSignature = "";
-let previousLyricPosterText = "";
-let lyricPosterTransitionFlip = false;
-let lyricClearFadeTimer: number | null = null;
 
 type MarqueeState = "empty" | "paused" | "playing";
 
@@ -1632,8 +1629,7 @@ function startSupportingLineLoop(marquee: HTMLElement, artistEl: HTMLElement, pa
 
   if (!canShowAlbum) return;
 
-  const showAlbumAfterMs = 7_500;
-  const showArtistAfterMs = 5_000;
+  const supportingLineHoldMs = 10_500;
 
   const flip = () => {
     marqueeSupportingShowingAlbum = !marqueeSupportingShowingAlbum;
@@ -1641,10 +1637,10 @@ function startSupportingLineLoop(marquee: HTMLElement, artistEl: HTMLElement, pa
       ? artistEl.dataset.marqueeAlbumLine || payload.albumLine
       : artistEl.dataset.marqueeArtistLine || payload.artist;
     fadeSupportingLineTo(marquee, artistEl, nextText);
-    marqueeSupportingSwapTimer = window.setTimeout(flip, marqueeSupportingShowingAlbum ? showArtistAfterMs : showAlbumAfterMs);
+    marqueeSupportingSwapTimer = window.setTimeout(flip, supportingLineHoldMs);
   };
 
-  marqueeSupportingSwapTimer = window.setTimeout(flip, showAlbumAfterMs);
+  marqueeSupportingSwapTimer = window.setTimeout(flip, supportingLineHoldMs);
 }
 
 function fadeSupportingLineTo(marquee: HTMLElement, artistEl: HTMLElement, nextText: string): void {
@@ -1664,7 +1660,7 @@ function fadeSupportingLineTo(marquee: HTMLElement, artistEl: HTMLElement, nextT
     artistEl.style.transition = "";
     artistEl.classList.remove("marquee-support-fading");
     marqueeSupportingFadeTimer = null;
-  }, 900);
+  }, 1200);
 }
 
 function configureStaticArtistRow(options: {
@@ -1827,19 +1823,8 @@ export function updateLyricsCeiling(
   const clearLyrics = () => {
     lastLyricsRenderSignature = "";
     updateLyricGeometryMonitor(null, null, null);
-    activeBlock.style.setProperty("--lyric-line-visibility", "0");
-
-    if (lyricClearFadeTimer) {
-      window.clearTimeout(lyricClearFadeTimer);
-      lyricClearFadeTimer = null;
-    }
-
-    if (activeBlock.innerHTML.trim()) {
-      lyricClearFadeTimer = window.setTimeout(() => {
-        activeBlock.innerHTML = "";
-        lyricClearFadeTimer = null;
-      }, 650);
-    }
+    activeBlock.style.setProperty("--lyric-line-visibility", "1");
+    activeBlock.innerHTML = "";
   };
 
   if (!shouldShow) {
@@ -1872,9 +1857,7 @@ export function updateLyricsCeiling(
   const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
   const testRowsValue = lyricTest.active ? (lyricTest.mode === "two" ? "2" : "1") : null;
   const maxRowsValue = testRowsValue || (rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue);
-  // Lyric changes should be geometry-only right now. Ignore saved transition controls so
-  // old localStorage or utility-panel values cannot re-enable a flash/pulse between lines.
-  const transitionValue = "none" as LyricPosterTransitionMode;
+  // Lyric changes are geometry-only. No old/new panels, fades, pulses, or transition classes.
   const diagnostics = readLyricDiagnosticSettings();
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, "none");
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
@@ -1886,30 +1869,11 @@ export function updateLyricsCeiling(
     return;
   }
 
-  const previousPosterTextForTransition = previousLyricPosterText;
-  const lyricTextChanged = activeLine.text !== previousLyricPosterText;
-  if (lyricTextChanged) {
-    lyricPosterTransitionFlip = !lyricPosterTransitionFlip;
-    previousLyricPosterText = activeLine.text;
-  }
-
   lastLyricsRenderSignature = renderSignature;
-  if (lyricClearFadeTimer) {
-    window.clearTimeout(lyricClearFadeTimer);
-    lyricClearFadeTimer = null;
-  }
   activeBlock.style.setProperty("--lyric-line-visibility", "1");
 
   const ceilingRect = ceiling.getBoundingClientRect();
   const layout = buildCeilingPosterLayout(activeLine.text, trapezoid, controls, ceilingRect.width, ceilingRect.height);
-  const shouldUseBackPushTrack =
-    !diagnostics.staticMode &&
-    controls.transition === "back-push" &&
-    lyricTextChanged &&
-    Boolean(previousPosterTextForTransition?.trim());
-  const previousLayout = shouldUseBackPushTrack
-    ? buildCeilingPosterLayout(previousPosterTextForTransition, trapezoid, controls, ceilingRect.width, ceilingRect.height)
-    : null;
   const renderPosterRows = (posterLayout: CeilingPosterLayout): string =>
     posterLayout.rows
       .map(
@@ -1938,16 +1902,18 @@ export function updateLyricsCeiling(
       .join("");
   applyLyricDiagnosticClasses(activeBlock, diagnostics);
   activeBlock.classList.toggle("lyric-poster-tall-mode", controls.tallRevealRatio > 0.001);
-  activeBlock.classList.toggle("lyric-poster-transition-none", controls.transition === "none" || diagnostics.staticMode);
-  activeBlock.classList.toggle("lyric-poster-transition-push", controls.transition === "push-slide" && !diagnostics.staticMode);
-  activeBlock.classList.toggle("lyric-poster-transition-fade", controls.transition === "fade-slide" && !diagnostics.staticMode);
-  activeBlock.classList.toggle("lyric-poster-transition-shadow-slide", controls.transition === "shadow-slide" && !diagnostics.staticMode);
-  activeBlock.classList.toggle("lyric-poster-transition-ceiling-stamp", controls.transition === "ceiling-stamp" && !diagnostics.staticMode);
-  activeBlock.classList.toggle("lyric-poster-transition-soft-dissolve", controls.transition === "soft-dissolve" && !diagnostics.staticMode);
-  activeBlock.classList.toggle("lyric-poster-transition-ghost-drift", controls.transition === "ghost-drift" && !diagnostics.staticMode);
-  activeBlock.classList.toggle("lyric-poster-transition-back-push", false);
-  activeBlock.classList.toggle("lyric-poster-transition-a", false);
-  activeBlock.classList.toggle("lyric-poster-transition-b", false);
+  activeBlock.classList.remove(
+    "lyric-poster-transition-push",
+    "lyric-poster-transition-fade",
+    "lyric-poster-transition-shadow-slide",
+    "lyric-poster-transition-ceiling-stamp",
+    "lyric-poster-transition-soft-dissolve",
+    "lyric-poster-transition-ghost-drift",
+    "lyric-poster-transition-back-push",
+    "lyric-poster-transition-a",
+    "lyric-poster-transition-b",
+  );
+  activeBlock.classList.add("lyric-poster-transition-none");
   activeBlock.dataset.lyricRows = String(layout.rows.length);
 
   const clipId = `lyricPosterClip-${Math.abs(hashString(renderSignature))}`;
@@ -1971,14 +1937,7 @@ export function updateLyricsCeiling(
       ${renderBandGuidePolygons(shiftedRowBands, layout.rows.length)}
     </svg>
     <div class="lyric-poster-html-rows" style="clip-path: polygon(${clipPolygon});">
-      ${
-        shouldUseBackPushTrack && previousLayout
-          ? `
-            <div class="lyric-poster-track-panel lyric-poster-track-old">${renderPosterRows(previousLayout)}</div>
-            <div class="lyric-poster-track-panel lyric-poster-track-new">${renderPosterRows(layout)}</div>
-          `
-          : renderPosterRows(layout)
-      }
+      ${renderPosterRows(layout)}
     </div>
     <div id="lyricDomDiagnosticOverlay" class="lyric-dom-diagnostic-overlay" aria-hidden="true"></div>
   `;
