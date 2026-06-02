@@ -9414,3 +9414,325 @@ body.lyrics-marquee-unavailable .marquee::after {
   left: calc(50% + clamp(20px, calc(var(--room-w) * 0.019), 34px)) !important;
   bottom: calc((var(--room-h) * -0.062) - 15px) !important;
 }
+
+/* v67 Menu 2.0: polished left-side Spotify-style menu. */
+.brand-actions {
+  gap: 0.42rem;
+}
+.pocket-title-pill,
+.lyrics-toggle,
+.connect-pill,
+.aspect-pill,
+.compact-pill,
+.fullscreen-pill,
+.panel-lock-toggle {
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  background: linear-gradient(180deg, rgba(25, 25, 30, 0.92), rgba(8, 8, 12, 0.86)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 24px rgba(0,0,0,0.25) !important;
+}
+.fullscreen-pill,
+.panel-lock-toggle {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.menu2-panel {
+  position: fixed;
+  left: 18px;
+  top: 50%;
+  width: min(390px, calc(100vw - 36px));
+  max-height: min(860px, calc(100vh - 36px));
+  transform: translate3d(-112%, -50%, 0);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 80;
+  color: rgba(255,255,255,0.94);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transition: transform 260ms ease, opacity 260ms ease;
+}
+.menu2-panel.menu2-open {
+  transform: translate3d(0, -50%, 0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.menu2-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: inherit;
+  padding: 18px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(12,12,15,0.96), rgba(4,4,6,0.94));
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 30px 90px rgba(0,0,0,0.68), inset 0 1px 0 rgba(255,255,255,0.08);
+  backdrop-filter: blur(22px);
+  overflow: hidden;
+}
+.menu2-style-spotify .menu2-shell {
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(18,18,18,0.98), rgba(0,0,0,0.98));
+  border-color: rgba(30,215,96,0.20);
+}
+.menu2-topbar,
+.menu2-section-head,
+.menu2-search-row,
+.menu2-progress-row,
+.menu2-volume-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.menu2-kicker {
+  color: #1ed760;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.menu2-title {
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+.menu2-close,
+.menu2-pill,
+.menu2-action,
+.menu2-mini-action,
+.menu2-control,
+.menu2-play,
+.menu2-device-row,
+.menu2-discover-card,
+.menu2-tab {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.menu2-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  font-size: 1.5rem;
+}
+.menu2-pill-row,
+.menu2-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.menu2-pill,
+.menu2-tab,
+.menu2-action,
+.menu2-mini-action {
+  border: 1px solid rgba(255,255,255,0.11);
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.menu2-icon-pill {
+  width: 36px;
+  min-width: 36px;
+  position: relative;
+}
+.menu2-icon-pill::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  display: block;
+  margin: 0 auto;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,0.2);
+}
+.menu2-pill-active,
+.menu2-tab-active,
+.menu2-play {
+  background: #1ed760;
+  color: #031108;
+  border-color: rgba(30,215,96,0.9);
+}
+.menu2-status {
+  min-height: 18px;
+  color: rgba(255,255,255,0.58);
+  font-size: 0.78rem;
+}
+.menu2-status-busy { color: #1ed760; }
+.menu2-pane {
+  display: none;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+.menu2-pane-active {
+  display: block;
+}
+.menu2-now-card {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.menu2-album-art {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 18px;
+  overflow: hidden;
+  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.18), rgba(255,255,255,0.04)), #161616;
+  box-shadow: 0 22px 55px rgba(0,0,0,0.42);
+  display: grid;
+  place-items: center;
+  font-size: 3rem;
+}
+.menu2-album-art img,
+.menu2-row-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.menu2-art-medium .menu2-album-art { width: 72%; margin: 0 auto; }
+.menu2-art-small .menu2-album-art { width: 48%; margin: 0 auto; }
+.menu2-track-title {
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+.menu2-track-artist { color: rgba(255,255,255,0.80); font-weight: 700; }
+.menu2-track-album { color: rgba(255,255,255,0.52); font-size: 0.86rem; margin-top: 3px; }
+.menu2-progress {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  overflow: hidden;
+}
+#menu2ProgressFill {
+  height: 100%;
+  width: 0;
+  background: #fff;
+  border-radius: inherit;
+}
+.menu2-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+}
+.menu2-control,
+.menu2-play {
+  border: 0;
+  border-radius: 999px;
+  width: 38px;
+  height: 38px;
+  background: rgba(255,255,255,0.08);
+}
+.menu2-play {
+  width: 54px;
+  height: 54px;
+  font-weight: 900;
+}
+.menu2-volume-row input { flex: 1; }
+.menu2-input,
+.menu2-select {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 11px;
+}
+.menu2-search-row .menu2-input { flex: 1.7; }
+.menu2-search-row .menu2-select { flex: 0.8; }
+.menu2-search-row .menu2-action { flex: 0 0 auto; }
+.menu2-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.menu2-row,
+.menu2-device-row {
+  display: grid;
+  grid-template-columns: auto 48px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.menu2-device-row {
+  width: 100%;
+  grid-template-columns: 1fr;
+  text-align: left;
+}
+.menu2-device-active { border-color: rgba(30,215,96,0.65); background: rgba(30,215,96,0.12); }
+.menu2-row-index { width: 18px; color: rgba(255,255,255,0.42); font-size: 0.72rem; text-align: right; }
+.menu2-row-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.08);
+}
+.menu2-row-copy { min-width: 0; }
+.menu2-row-copy strong,
+.menu2-row-copy span,
+.menu2-device-row strong,
+.menu2-device-row span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu2-row-copy span,
+.menu2-device-row span,
+.menu2-section-head span,
+.menu2-empty,
+.menu2-dev-note {
+  color: rgba(255,255,255,0.56);
+  font-size: 0.78rem;
+}
+.menu2-mini-action.secondary { color: rgba(255,255,255,0.72); background: rgba(255,255,255,0.04); }
+.menu2-discover-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.menu2-discover-card {
+  min-height: 88px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(135deg, rgba(30,215,96,0.20), rgba(130,90,255,0.16));
+  text-align: left;
+  padding: 14px;
+}
+.menu2-discover-card span { display: block; margin-top: 6px; color: rgba(255,255,255,0.62); font-size: 0.75rem; }
+.menu2-wide-action { width: 100%; justify-content: center; margin: 8px 0; }
+.menu2-setting {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0;
+  color: rgba(255,255,255,0.72);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.menu2-dev-tab[hidden] { display: none !important; }
+@media (max-width: 640px) {
+  .menu2-panel { left: 10px; width: calc(100vw - 20px); }
+  .menu2-search-row { flex-wrap: wrap; }
+  .menu2-row { grid-template-columns: 26px 44px 1fr; }
+  .menu2-row .menu2-mini-action { grid-column: auto; }
+}

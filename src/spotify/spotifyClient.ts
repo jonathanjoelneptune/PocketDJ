@@ -597,6 +597,11 @@ type SpotifyRecentlyPlayedResponse = {
   items?: Array<{ track?: SpotifyTrackItem | null }>;
 };
 
+type SpotifyQueueResponse = {
+  currently_playing?: SpotifyTrackItem | null;
+  queue?: Array<SpotifyTrackItem | null>;
+};
+
 function normalizeCatalogTrack(item: SpotifyTrackItem | null | undefined): SpotifyCatalogTrack | null {
   if (!item?.id) return null;
   return {
@@ -777,6 +782,14 @@ export async function getRecentlyPlayed(clientId: string, limit = 30): Promise<S
   const json = await spotifyApiJson<SpotifyRecentlyPlayedResponse>(clientId, endpoint);
   return (json.items || [])
     .map((item) => normalizeCatalogTrack(item.track))
+    .filter((item): item is SpotifyCatalogTrack => Boolean(item));
+}
+
+export async function getSpotifyQueue(clientId: string, limit = 20): Promise<SpotifyCatalogTrack[]> {
+  const json = await spotifyApiJson<SpotifyQueueResponse>(clientId, "/me/player/queue");
+  return (json.queue || [])
+    .slice(0, Math.max(1, Math.min(50, limit)))
+    .map(normalizeCatalogTrack)
     .filter((item): item is SpotifyCatalogTrack => Boolean(item));
 }
 

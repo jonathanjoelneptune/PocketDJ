@@ -1243,6 +1243,123 @@ export function renderShell(state: AppState): void {
         </div>
       </aside>
 
+      <aside id="menu2Panel" class="menu2-panel menu2-closed menu2-style-pocket menu2-art-large" aria-label="Pocket DJ Menu 2.0" aria-hidden="true">
+        <div class="menu2-shell">
+          <div class="menu2-topbar">
+            <div>
+              <div class="menu2-kicker">Pocket DJ</div>
+              <div class="menu2-title">Menu 2.0</div>
+            </div>
+            <button id="menu2Close" class="menu2-close" type="button" aria-label="Close Menu 2.0">×</button>
+          </div>
+
+          <div class="menu2-pill-row" aria-label="Pocket DJ status controls">
+            <button id="menu2LyricsPill" class="menu2-pill" type="button">Lyrics</button>
+            <button id="menu2ConnectPill" class="menu2-pill" type="button">Connect</button>
+            <button id="menu2CompactPill" class="menu2-pill" type="button">Compact</button>
+            <button id="menu2FullscreenPill" class="menu2-pill menu2-icon-pill" type="button" aria-label="Toggle fullscreen"></button>
+            <button id="menu2LockPill" class="menu2-pill menu2-lock-pill" type="button" aria-label="Reveal Menu 2.0 dev tools">🔒</button>
+          </div>
+
+          <nav class="menu2-tabs" aria-label="Menu 2.0 tabs">
+            <button class="menu2-tab menu2-tab-active" type="button" data-menu2-tab="now">Now Playing</button>
+            <button class="menu2-tab" type="button" data-menu2-tab="queue">Queue</button>
+            <button class="menu2-tab" type="button" data-menu2-tab="playlists">My Playlists</button>
+            <button class="menu2-tab" type="button" data-menu2-tab="search">Search</button>
+            <button class="menu2-tab" type="button" data-menu2-tab="discover">Discover</button>
+            <button class="menu2-tab" type="button" data-menu2-tab="devices">Devices</button>
+            <button id="menu2DevTab" class="menu2-tab menu2-dev-tab" type="button" data-menu2-tab="dev" hidden>Dev</button>
+          </nav>
+
+          <div id="menu2Status" class="menu2-status">Five-click PocketDJ to open this menu.</div>
+
+          <section id="menu2NowPane" class="menu2-pane menu2-pane-active">
+            <div class="menu2-now-card">
+              <div id="menu2AlbumArt" class="menu2-album-art"><span>♪</span></div>
+              <div class="menu2-now-copy">
+                <div id="menu2TrackTitle" class="menu2-track-title">${escapeHtml(state.playback.title)}</div>
+                <div id="menu2TrackArtist" class="menu2-track-artist">${escapeHtml(state.playback.artist)}</div>
+                <div id="menu2TrackAlbum" class="menu2-track-album">${escapeHtml(state.playback.album || "")}</div>
+              </div>
+              <div class="menu2-progress-row">
+                <span id="menu2ProgressNow">0:00</span>
+                <div id="menu2SeekBar" class="menu2-progress seek-surface" role="slider" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="menu2ProgressFill"></div></div>
+                <span id="menu2ProgressEnd">0:00</span>
+              </div>
+              <div class="menu2-controls">
+                <button id="menu2Shuffle" class="menu2-control" type="button" aria-label="Shuffle">⤨</button>
+                <button id="menu2Prev" class="menu2-control" type="button" aria-label="Previous">⏮</button>
+                <button id="menu2Play" class="menu2-play" type="button" aria-label="Play or pause"><span id="menu2PlayIcon">▶</span></button>
+                <button id="menu2Next" class="menu2-control" type="button" aria-label="Next">⏭</button>
+                <button id="menu2Repeat" class="menu2-control" type="button" aria-label="Repeat">↻</button>
+              </div>
+              <div class="menu2-volume-row">
+                <span>Volume</span>
+                <input id="menu2Volume" type="range" min="0" max="100" step="1" value="70" />
+                <strong id="menu2VolumeValue">70</strong>
+              </div>
+            </div>
+          </section>
+
+          <section id="menu2QueuePane" class="menu2-pane">
+            <div class="menu2-section-head"><h3>Spotify Queue</h3><button id="menu2RefreshQueue" class="menu2-action" type="button">Refresh</button></div>
+            <div id="menu2QueueResults" class="menu2-list menu2-empty">Open Menu 2.0 while connected to load the actual Spotify queue.</div>
+          </section>
+
+          <section id="menu2PlaylistsPane" class="menu2-pane">
+            <div class="menu2-section-head"><h3>My Playlists</h3><button id="menu2RefreshPlaylists" class="menu2-action" type="button">Refresh</button></div>
+            <input id="menu2PlaylistFilter" class="menu2-input" type="search" placeholder="Filter playlists" autocomplete="off" />
+            <div id="menu2PlaylistsResults" class="menu2-list menu2-empty">Playlists will load here.</div>
+          </section>
+
+          <section id="menu2SearchPane" class="menu2-pane">
+            <div class="menu2-search-row">
+              <input id="menu2SearchInput" class="menu2-input" type="search" placeholder="Search Spotify" autocomplete="off" />
+              <select id="menu2SearchType" class="menu2-select" aria-label="Search type">
+                <option value="all">All</option>
+                <option value="track">Tracks</option>
+                <option value="artist">Artists</option>
+                <option value="playlist">Playlists</option>
+                <option value="album">Albums</option>
+              </select>
+              <button id="menu2SearchButton" class="menu2-action" type="button">Search</button>
+            </div>
+            <div id="menu2SearchResults" class="menu2-list menu2-empty">Search results will show here.</div>
+          </section>
+
+          <section id="menu2DiscoverPane" class="menu2-pane">
+            <div class="menu2-section-head"><h3>Discover</h3><span>Start a vibe</span></div>
+            <div id="menu2DiscoverGrid" class="menu2-discover-grid"></div>
+          </section>
+
+          <section id="menu2DevicesPane" class="menu2-pane">
+            <div class="menu2-section-head"><h3>Devices</h3><button id="menu2RefreshDevices" class="menu2-action" type="button">Refresh</button></div>
+            <button id="menu2PlayHere" class="menu2-action menu2-wide-action" type="button">Play through Pocket DJ</button>
+            <div id="menu2DeviceResults" class="menu2-list menu2-empty">Spotify devices will show here.</div>
+          </section>
+
+          <section id="menu2DevPane" class="menu2-pane menu2-dev-pane">
+            <div class="menu2-section-head"><h3>Menu 2.0 Dev</h3><span>Hidden until 5 lock clicks</span></div>
+            <label class="menu2-setting">Style mode
+              <select id="menu2StyleMode" class="menu2-select">
+                <option value="pocket">Pocket DJ polished</option>
+                <option value="spotify">Spotify web inspired</option>
+              </select>
+            </label>
+            <label class="menu2-setting">Album art size
+              <select id="menu2ArtSize" class="menu2-select">
+                <option value="large">Large</option>
+                <option value="medium">Medium</option>
+                <option value="small">Small</option>
+              </select>
+            </label>
+            <button id="menu2OpenCurrentUtility" class="menu2-action menu2-wide-action" type="button">Open current utility panel</button>
+            <p class="menu2-dev-note">Current utility/dev tools remain separate for now. Eventually this panel can become the normal user-facing menu.</p>
+          </section>
+        </div>
+      </aside>
+
+
       <button id="sidePanelTab" class="side-panel-tab" type="button" aria-label="Open Pocket DJ panel" title="Open Pocket DJ panel">
         <span class="side-panel-tab-note">♫</span>
         <span class="side-panel-tab-arrow">‹</span>
