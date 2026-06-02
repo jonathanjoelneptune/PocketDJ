@@ -1785,6 +1785,23 @@ function getEstimatedProgress(track: NormalizedTrack): number {
   return Math.min(track.durationMs, track.progressMs + (Date.now() - track.updatedAt));
 }
 
+function runWithoutVisibleLyricPaint(activeBlock: HTMLElement, updateDom: () => void): void {
+  const previousVisibility = activeBlock.style.visibility;
+  const previousContain = activeBlock.style.contain;
+
+  // Build and fit the new lyric DOM while hidden, then reveal it in its final
+  // fitted geometry during the same frame. This prevents the browser from
+  // painting the raw SVG text for one frame and then snapping it after getBBox()
+  // corrections run.
+  activeBlock.style.visibility = "hidden";
+  activeBlock.style.contain = "layout style paint";
+  updateDom();
+  void activeBlock.offsetHeight;
+  activeBlock.style.contain = previousContain;
+  activeBlock.style.visibility = previousVisibility;
+}
+
+
 type LyricTestOverride = {
   active: boolean;
   mode: "short" | "one" | "two";
@@ -1861,8 +1878,11 @@ export function updateLyricsCeiling(
   const diagnostics = readLyricDiagnosticSettings();
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, "none");
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
-  const rootClassSignature = document.documentElement.className;
-  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${lyricTest.active ? lyricTest.mode : "live"}|${JSON.stringify(trapezoid)}|${JSON.stringify(controls)}|${JSON.stringify(diagnostics)}|${animationRevision}|${rootClassSignature}`;
+  const structuralSignature = [
+    document.documentElement.classList.contains("room-fill-stretch") ? "fill" : "normal",
+    document.documentElement.classList.contains("tall-lyric-guides-enabled") ? "tall-guides" : "no-tall-guides",
+  ].join("|");
+  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${lyricTest.active ? lyricTest.mode : "live"}|${JSON.stringify(trapezoid)}|${JSON.stringify(controls)}|${JSON.stringify(diagnostics)}|${animationRevision}|${structuralSignature}`;
 
   if (renderSignature === lastLyricsRenderSignature) {
     activeBlock.style.setProperty("--lyric-line-visibility", "1");
@@ -1922,7 +1942,7 @@ export function updateLyricsCeiling(
   const shiftedRowBands = layout.rowBands.map((band) => shiftTrapezoidY(band, ceilingRevealCoordForRender));
   const shiftedCenterY = layout.centerY + ceilingRevealCoordForRender;
   const clipPolygon = `${(shiftedTrapezoid.topLeftX / 1764) * 100}% ${(shiftedTrapezoid.topLeftY / ceilingViewHeight) * 100}%, ${(shiftedTrapezoid.topRightX / 1764) * 100}% ${(shiftedTrapezoid.topRightY / ceilingViewHeight) * 100}%, ${(shiftedTrapezoid.bottomRightX / 1764) * 100}% ${(shiftedTrapezoid.bottomRightY / ceilingViewHeight) * 100}%, ${(shiftedTrapezoid.bottomLeftX / 1764) * 100}% ${(shiftedTrapezoid.bottomLeftY / ceilingViewHeight) * 100}%`;
-  activeBlock.innerHTML = `
+  const nextLyricsMarkup = `
     <svg class="lyric-poster-svg lyric-poster-guide-svg" viewBox="0 0 1764 ${ceilingViewHeight}" preserveAspectRatio="none" aria-hidden="true">
       <defs>
         <clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">
@@ -1942,7 +1962,8 @@ export function updateLyricsCeiling(
     <div id="lyricDomDiagnosticOverlay" class="lyric-dom-diagnostic-overlay" aria-hidden="true"></div>
   `;
 
-  window.requestAnimationFrame(() => {
+  runWithoutVisibleLyricPaint(activeBlock, () => {
+    activeBlock.innerHTML = nextLyricsMarkup;
     fitRenderedLyricGlyphsToSourceBoxes(layout, controls);
     updateLyricDomDiagnosticOverlay(layout, diagnostics);
     updateLyricGeometryMonitor(layout, trapezoid, controls, diagnostics);

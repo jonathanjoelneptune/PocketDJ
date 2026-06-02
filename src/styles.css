@@ -9265,3 +9265,15 @@ body.lyrics-marquee-unavailable .marquee::after {
   animation: none !important;
   transition: none !important;
 }
+
+
+/* v66h: prevent one-frame lyric paint before SVG glyph-fit correction.
+   The renderer now fits the replacement lyric while hidden and reveals only the final geometry. */
+#activeLyricsBlock {
+  opacity: 1 !important;
+  transition: none !important;
+}
+
+#activeLyricsBlock[style*="visibility: hidden"] {
+  pointer-events: none !important;
+}
