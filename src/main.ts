@@ -3327,8 +3327,78 @@ function setCompactPanelEnabled(enabled: boolean): void {
   }
 }
 
+type ScreenWakeLockSentinelLike = EventTarget & {
+  readonly released: boolean;
+  release: () => Promise<void>;
+};
+
+type NavigatorWithScreenWakeLock = Navigator & {
+  wakeLock?: {
+    request: (type: "screen") => Promise<ScreenWakeLockSentinelLike>;
+  };
+};
+
+let screenWakeLock: ScreenWakeLockSentinelLike | null = null;
+let screenWakeLockWanted = false;
+
 function isAppFullscreen(): boolean {
   return document.fullscreenElement === document.documentElement;
+}
+
+function supportsScreenWakeLock(): boolean {
+  return Boolean((navigator as NavigatorWithScreenWakeLock).wakeLock?.request);
+}
+
+async function requestScreenWakeLock(): Promise<void> {
+  if (!screenWakeLockWanted || !isAppFullscreen() || document.visibilityState !== "visible") return;
+  if (screenWakeLock && !screenWakeLock.released) return;
+
+  const wakeLock = (navigator as NavigatorWithScreenWakeLock).wakeLock;
+  if (!wakeLock?.request) return;
+
+  try {
+    screenWakeLock = await wakeLock.request("screen");
+    screenWakeLock.addEventListener("release", () => {
+      screenWakeLock = null;
+    }, { once: true });
+  } catch (error) {
+    screenWakeLock = null;
+    console.warn("Screen wake lock is not available right now", error);
+  }
+}
+
+async function releaseScreenWakeLock(): Promise<void> {
+  const lock = screenWakeLock;
+  screenWakeLock = null;
+  if (!lock || lock.released) return;
+
+  try {
+    await lock.release();
+  } catch (error) {
+    console.warn("Could not release screen wake lock", error);
+  }
+}
+
+function syncScreenWakeLockForFullscreen(): void {
+  const active = isAppFullscreen();
+  screenWakeLockWanted = active;
+
+  if (active) {
+    void requestScreenWakeLock();
+  } else {
+    void releaseScreenWakeLock();
+  }
+}
+
+function handleFullscreenChange(): void {
+  updateFullscreenUi();
+  syncScreenWakeLockForFullscreen();
+}
+
+function handleVisibilityChange(): void {
+  if (document.visibilityState === "visible" && screenWakeLockWanted && isAppFullscreen()) {
+    void requestScreenWakeLock();
+  }
 }
 
 function updateFullscreenUi(): void {
@@ -3336,6 +3406,7 @@ function updateFullscreenUi(): void {
   const sideButton = document.querySelector<HTMLButtonElement>("#fullscreenToggle");
   const floorButton = document.querySelector<HTMLButtonElement>("#floorFullscreenToggle");
   document.documentElement.classList.toggle("pocketdj-fullscreen-active", active);
+  document.documentElement.classList.toggle("pocketdj-wake-lock-supported", supportsScreenWakeLock());
 
   if (sideButton) {
     sideButton.classList.toggle("fullscreen-pill-active", active);
@@ -3367,7 +3438,7 @@ async function toggleAppFullscreen(): Promise<void> {
     lastPollError = error instanceof Error ? error.message : String(error);
     console.warn("Could not toggle fullscreen", error);
   } finally {
-    updateFullscreenUi();
+    handleFullscreenChange();
   }
 }
 
@@ -3425,7 +3496,8 @@ function bindControls(): void {
   qs<HTMLElement>(".pocket-title-pill").addEventListener("click", toggleAspectModeFromPocketClicks);
   qs<HTMLButtonElement>("#compactPanelToggle").addEventListener("click", () => setCompactPanelEnabled(!compactPanelEnabled));
   qs<HTMLButtonElement>("#fullscreenToggle").addEventListener("click", () => void toggleAppFullscreen());
-  document.addEventListener("fullscreenchange", updateFullscreenUi);
+  document.addEventListener("fullscreenchange", handleFullscreenChange);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 
   qs<HTMLButtonElement>("#panelToggle").addEventListener("click", () => {
     openSidePanel(true);
@@ -3869,7 +3941,7 @@ function bindFloorControlsLock(): void {
     setFloorControlsOpen(true, !floorControlsLocked);
     void toggleAppFullscreen();
   });
-  updateFullscreenUi();
+  handleFullscreenChange();
 }
 
 function setFloorControlsOpen(open: boolean, autoHide = true): void {
