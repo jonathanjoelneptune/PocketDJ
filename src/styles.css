@@ -9216,3 +9216,33 @@ body.lyrics-marquee-unavailable .marquee::after {
 .placed-active-album-layer.placed-active-album-has-art {
   opacity: 1 !important;
 }
+
+
+/* v66f: hard-disable all ceiling lyric transition/animation paths.
+   The ceiling lyrics should swap cleanly with no pulse, flicker, fade, slide, old/new overlap, or saved transition override. */
+.active-lyrics-block,
+.lyric-poster-line,
+.active-lyrics-block .lyric-poster-svg,
+.active-lyrics-block .lyric-poster-guide-svg,
+.active-lyrics-block .lyric-poster-html-rows,
+.active-lyrics-block .lyric-poster-html-row,
+.active-lyrics-block .lyric-poster-row-svg,
+.active-lyrics-block .lyric-poster-track-panel,
+.active-lyrics-block .lyric-poster-track-old,
+.active-lyrics-block .lyric-poster-track-new {
+  animation: none !important;
+  transition: none !important;
+}
+
+.active-lyrics-block.lyric-poster-transition-a .lyric-poster-row-svg,
+.active-lyrics-block.lyric-poster-transition-b .lyric-poster-row-svg,
+.active-lyrics-block.lyric-poster-transition-push .lyric-poster-row-svg,
+.active-lyrics-block.lyric-poster-transition-fade .lyric-poster-row-svg,
+.active-lyrics-block.lyric-poster-transition-shadow-slide .lyric-poster-row-svg,
+.active-lyrics-block.lyric-poster-transition-ceiling-stamp .lyric-poster-row-svg,
+.active-lyrics-block.lyric-poster-transition-soft-dissolve .lyric-poster-row-svg,
+.active-lyrics-block.lyric-poster-transition-ghost-drift .lyric-poster-row-svg,
+.active-lyrics-block.lyric-poster-transition-back-push .lyric-poster-row-svg {
+  animation: none !important;
+  transition: none !important;
+}

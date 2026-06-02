@@ -1872,9 +1872,11 @@ export function updateLyricsCeiling(
   const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
   const testRowsValue = lyricTest.active ? (lyricTest.mode === "two" ? "2" : "1") : null;
   const maxRowsValue = testRowsValue || (rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue);
-  const transitionValue = (qs<HTMLSelectElement>("#lyricPosterTransition")?.value || rootStyles.getPropertyValue("--lyric-poster-transition").trim() || "none") as LyricPosterTransitionMode;
+  // Lyric changes should be geometry-only right now. Ignore saved transition controls so
+  // old localStorage or utility-panel values cannot re-enable a flash/pulse between lines.
+  const transitionValue = "none" as LyricPosterTransitionMode;
   const diagnostics = readLyricDiagnosticSettings();
-  const controls = readCeilingPosterControls(rootStyles, maxRowsValue, diagnostics.staticMode ? "none" : transitionValue);
+  const controls = readCeilingPosterControls(rootStyles, maxRowsValue, "none");
   const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
   const rootClassSignature = document.documentElement.className;
   const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${lyricTest.active ? lyricTest.mode : "live"}|${JSON.stringify(trapezoid)}|${JSON.stringify(controls)}|${JSON.stringify(diagnostics)}|${animationRevision}|${rootClassSignature}`;
@@ -1943,9 +1945,9 @@ export function updateLyricsCeiling(
   activeBlock.classList.toggle("lyric-poster-transition-ceiling-stamp", controls.transition === "ceiling-stamp" && !diagnostics.staticMode);
   activeBlock.classList.toggle("lyric-poster-transition-soft-dissolve", controls.transition === "soft-dissolve" && !diagnostics.staticMode);
   activeBlock.classList.toggle("lyric-poster-transition-ghost-drift", controls.transition === "ghost-drift" && !diagnostics.staticMode);
-  activeBlock.classList.toggle("lyric-poster-transition-back-push", controls.transition === "back-push" && !diagnostics.staticMode);
-  activeBlock.classList.toggle("lyric-poster-transition-a", !lyricPosterTransitionFlip);
-  activeBlock.classList.toggle("lyric-poster-transition-b", lyricPosterTransitionFlip);
+  activeBlock.classList.toggle("lyric-poster-transition-back-push", false);
+  activeBlock.classList.toggle("lyric-poster-transition-a", false);
+  activeBlock.classList.toggle("lyric-poster-transition-b", false);
   activeBlock.dataset.lyricRows = String(layout.rows.length);
 
   const clipId = `lyricPosterClip-${Math.abs(hashString(renderSignature))}`;
