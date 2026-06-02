@@ -1381,6 +1381,9 @@ export function renderShell(state: AppState): void {
           <button id="menu2BubbleNext" class="menu2-bubble-button menu2-bubble-next" type="button" aria-label="Next track" title="Next"></button>
           <button id="menu2BubbleVolume" class="menu2-bubble-button menu2-bubble-volume" type="button" aria-label="Volume" title="Volume"></button>
         </div>
+        <div id="menu2BubbleVolumePopover" class="menu2-volume-popover" aria-label="Quick volume control">
+          <input id="menu2BubbleVolumeInput" type="range" min="0" max="100" step="1" value="70" aria-label="Volume" />
+        </div>
       </div>
 
 

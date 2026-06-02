@@ -11252,3 +11252,292 @@ body.lyrics-marquee-unavailable .marquee::after {
   min-height: 18px !important;
   align-items: center !important;
 }
+
+/* v77 Menu 2.8: room-edge anchoring, compact cleanup, volume popover, playlist layout repair. */
+.menu2-panel {
+  left: var(--menu2-room-safe-left, 8px) !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: var(--menu2-room-safe-bottom, 8px) !important;
+  width: min(492px, calc(100vw - var(--menu2-room-safe-left, 8px) - 12px)) !important;
+  max-height: min(calc(var(--menu2-room-height, 760px) * 0.75), calc(100vh - var(--menu2-room-safe-bottom, 8px) - 12px)) !important;
+}
+
+.menu2-shell {
+  height: min(calc(var(--menu2-room-height, 760px) * 0.75), calc(100vh - var(--menu2-room-safe-bottom, 8px) - 12px)) !important;
+  max-height: min(calc(var(--menu2-room-height, 760px) * 0.75), calc(100vh - var(--menu2-room-safe-bottom, 8px) - 12px)) !important;
+}
+
+.menu2-mode-compact.menu2-panel {
+  width: min(252px, calc(100vw - var(--menu2-room-safe-left, 8px) - 12px)) !important;
+  max-height: min(445px, calc(var(--menu2-room-height, 760px) * 0.64), calc(100vh - var(--menu2-room-safe-bottom, 8px) - 12px)) !important;
+}
+
+.menu2-mode-compact .menu2-shell {
+  height: min(445px, calc(var(--menu2-room-height, 760px) * 0.64), calc(100vh - var(--menu2-room-safe-bottom, 8px) - 12px)) !important;
+  max-height: min(445px, calc(var(--menu2-room-height, 760px) * 0.64), calc(100vh - var(--menu2-room-safe-bottom, 8px) - 12px)) !important;
+  padding: 14px !important;
+  gap: 8px !important;
+}
+
+.menu2-mode-compact .menu2-bottom-search-row {
+  display: none !important;
+}
+
+.menu2-mode-compact .menu2-tabs {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+}
+
+.menu2-mode-compact .menu2-tab {
+  min-width: 0 !important;
+  padding: 7px 6px !important;
+  font-size: 0.66rem !important;
+}
+
+.menu2-mode-compact .menu2-control-strip {
+  gap: 5px !important;
+}
+
+.menu2-mode-compact .menu2-brand-pill {
+  font-size: 0.68rem !important;
+  letter-spacing: 0.04em !important;
+}
+
+.menu2-mode-compact .menu2-round-pill {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+}
+
+.menu2-mode-compact .menu2-pane {
+  height: calc(100% - 104px) !important;
+}
+
+.menu2-mode-compact #menu2NowPane.menu2-pane-active {
+  overflow: hidden !important;
+}
+
+.menu2-mode-compact .menu2-now-card {
+  grid-template-columns: 74px minmax(0, 1fr) !important;
+  grid-template-rows: auto auto auto auto !important;
+  gap: 7px 9px !important;
+}
+
+.menu2-mode-compact .menu2-album-art {
+  width: 74px !important;
+  max-height: 74px !important;
+}
+
+.menu2-mode-compact .menu2-track-title {
+  font-size: 0.86rem !important;
+  line-height: 1.1 !important;
+}
+
+.menu2-mode-compact .menu2-track-artist {
+  font-size: 0.72rem !important;
+}
+
+.menu2-mode-compact .menu2-progress-row,
+.menu2-mode-compact .menu2-volume-row {
+  font-size: 0.68rem !important;
+}
+
+.menu2-mode-compact .menu2-controls {
+  gap: 4px !important;
+  justify-content: center !important;
+}
+
+.menu2-mode-compact .menu2-control {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.menu2-mode-compact .menu2-play {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.menu2-mode-compact .menu2-playback-context {
+  display: none !important;
+}
+
+.menu2-bubble {
+  left: var(--menu2-room-left, 0px) !important;
+  top: auto !important;
+  bottom: calc(var(--menu2-room-bottom, 0px) + max(16px, calc(var(--menu2-room-height, 760px) * 0.23))) !important;
+  transform: translate3d(-110%, 0, 0) !important;
+  border-radius: 0 20px 20px 0 !important;
+  padding: 8px 8px 8px 4px !important;
+  border-left: 0 !important;
+}
+
+:root.menu2-bubble-ready .menu2-bubble {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-bubble-grab {
+  width: 42px;
+  height: 36px;
+  min-width: 42px;
+  border-radius: 0 18px 18px 0;
+  border: 1px solid var(--menu2-accent-border, rgba(216,155,69,0.42));
+  border-left: 0;
+  background: rgba(255,255,255,0.055);
+  color: var(--menu2-accent-strong, #ffd38a);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.menu2-bubble-grab .menu2-svg-icon {
+  width: 23px;
+  height: 23px;
+}
+
+.menu2-bubble-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.menu2-bubble-button {
+  width: 42px !important;
+  height: 42px !important;
+  color: var(--menu2-accent-strong, #ffd38a) !important;
+  border-color: var(--menu2-accent-border, rgba(216,155,69,0.42)) !important;
+}
+
+.menu2-bubble-button.menu2-bubble-active,
+.menu2-bubble-play {
+  background: var(--menu2-accent, #d89b45) !important;
+  color: #090603 !important;
+  border-color: var(--menu2-accent, #d89b45) !important;
+}
+
+.menu2-bubble-button .menu2-svg-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.menu2-volume-popover {
+  position: absolute;
+  left: calc(100% + 8px);
+  bottom: 10px;
+  width: 150px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--menu2-accent-border, rgba(216,155,69,0.42));
+  background: rgba(9, 7, 5, 0.96);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.52);
+  opacity: 0;
+  transform: translateX(-8px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.menu2-volume-popover-open {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.menu2-volume-popover input {
+  width: 100%;
+  accent-color: var(--menu2-accent, #d89b45);
+}
+
+#menu2PlaylistsPane .menu2-row,
+.menu2-playlist-track-list .menu2-row,
+#menu2SearchResults .menu2-row {
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) 40px 40px !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 68px !important;
+  padding: 10px 12px !important;
+}
+
+#menu2PlaylistsPane .menu2-row-index,
+.menu2-playlist-track-list .menu2-row-index,
+#menu2SearchResults .menu2-row-index {
+  display: none !important;
+}
+
+#menu2PlaylistsPane .menu2-row-art,
+.menu2-playlist-track-list .menu2-row-art,
+#menu2SearchResults .menu2-row-art {
+  grid-column: 1 !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+}
+
+#menu2PlaylistsPane .menu2-row-copy,
+.menu2-playlist-track-list .menu2-row-copy,
+#menu2SearchResults .menu2-row-copy {
+  grid-column: 2 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  padding-left: 0 !important;
+}
+
+#menu2PlaylistsPane .menu2-row-copy strong,
+#menu2PlaylistsPane .menu2-row-copy span,
+#menu2PlaylistsPane .menu2-row-title-button,
+.menu2-playlist-track-list .menu2-row-copy strong,
+.menu2-playlist-track-list .menu2-row-copy span,
+#menu2SearchResults .menu2-row-copy strong,
+#menu2SearchResults .menu2-row-copy span,
+#menu2SearchResults .menu2-row-title-button {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#menu2PlaylistsPane .menu2-row .menu2-mini-action:nth-of-type(1),
+.menu2-playlist-track-list .menu2-row .menu2-mini-action:nth-of-type(1),
+#menu2SearchResults .menu2-row .menu2-mini-action:nth-of-type(1) {
+  grid-column: 3 !important;
+}
+
+#menu2PlaylistsPane .menu2-row .menu2-mini-action:nth-of-type(2),
+.menu2-playlist-track-list .menu2-row .menu2-mini-action:nth-of-type(2),
+#menu2SearchResults .menu2-row .menu2-mini-action:nth-of-type(2) {
+  grid-column: 4 !important;
+}
+
+.menu2-playback-context {
+  min-height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 5px 9px !important;
+}
+
+.menu2-context-link {
+  line-height: 1.2 !important;
+}
+
+@media (max-width: 640px) {
+  .menu2-panel {
+    left: var(--menu2-room-safe-left, 8px) !important;
+    width: min(492px, calc(100vw - var(--menu2-room-safe-left, 8px) - 8px)) !important;
+  }
+}
+:root.menu2-style-pocket,
+.menu2-bubble.menu2-style-pocket {
+  --menu2-accent: #d89b45;
+  --menu2-accent-strong: #ffd38a;
+  --menu2-accent-border: rgba(216, 155, 69, 0.42);
+}
+:root.menu2-style-spotify,
+:root.menu2-style-web,
+.menu2-bubble.menu2-style-spotify,
+.menu2-bubble.menu2-style-web {
+  --menu2-accent: #1ed760;
+  --menu2-accent-strong: #7cf7a5;
+  --menu2-accent-border: rgba(30, 215, 96, 0.46);
+}

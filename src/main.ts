@@ -81,6 +81,7 @@ let menu2LockClickCount = 0;
 let menu2LockClickTimer: number | null = null;
 let menu2BubbleHoverTimer: number | null = null;
 let menu2AutoCollapseTimer: number | null = null;
+let menu2BubbleVolumeTimer: number | null = null;
 let menu2PointerInside = false;
 let menu2NowRenderKey = "";
 let menu2QueueDragIndex: number | null = null;
@@ -3526,7 +3527,24 @@ function setMenu2Status(message: string, busy = false): void {
   status.classList.toggle("menu2-status-busy", busy);
 }
 
+
+function updateMenu2RoomAnchor(): void {
+  const room = document.querySelector<HTMLElement>(".room");
+  if (!room) return;
+  const rect = room.getBoundingClientRect();
+  const root = document.documentElement;
+  const roomLeft = Math.max(0, rect.left);
+  const roomBottom = Math.max(0, window.innerHeight - rect.bottom);
+  const roomHeight = Math.max(320, rect.height);
+  root.style.setProperty("--menu2-room-left", `${roomLeft}px`);
+  root.style.setProperty("--menu2-room-bottom", `${roomBottom}px`);
+  root.style.setProperty("--menu2-room-height", `${roomHeight}px`);
+  root.style.setProperty("--menu2-room-safe-left", `${roomLeft + 6}px`);
+  root.style.setProperty("--menu2-room-safe-bottom", `${roomBottom + 8}px`);
+}
+
 function applyMenu2Settings(): void {
+  updateMenu2RoomAnchor();
   const panel = document.querySelector<HTMLElement>("#menu2Panel");
   if (!panel) return;
   panel.classList.toggle("menu2-closed", !menu2Open);
@@ -3640,7 +3658,7 @@ async function refreshMenu2ActiveTab(): Promise<void> {
 }
 
 
-function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "shuffle" | "repeat" | "queue" | "connect"): string {
+function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "shuffle" | "repeat" | "queue" | "connect" | "broadcast"): string {
   const paths: Record<typeof name, string> = {
     lyrics: '<path d="M10 18V7l8-1.7v10.2"/><circle cx="8" cy="18" r="2.1"/><circle cx="18" cy="15.5" r="2.1"/>',
     play: '<path d="M8.2 5.2v13.6L18.8 12z" fill="currentColor" stroke="none"/>',
@@ -3656,6 +3674,7 @@ function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume
     repeat: '<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
     queue: '<path d="M5 7h14M5 12h14M5 17h9"/>',
     connect: '<path d="M12 18.5v-3.2"/><circle cx="12" cy="20" r="1.6" fill="currentColor" stroke="none"/><path d="M7.1 14.7a7 7 0 0 1 9.8 0M4.2 11.8a11 11 0 0 1 15.6 0M1.8 8.9a14.5 14.5 0 0 1 20.4 0"/>',
+    broadcast: '<path d="M12 19v-5"/><circle cx="12" cy="20" r="2" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r="2.2"/><path d="M7.3 15.8a7 7 0 1 1 9.4 0M4.5 18.2a11 11 0 1 1 15 0"/>',
   };
   return `<svg class="menu2-svg-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths[name]}</svg>`;
 }
@@ -3792,10 +3811,7 @@ function renderMenu2NowPlaying(): void {
     if (playlist) {
       context.innerHTML = `<button class="menu2-context-link" type="button" data-menu2-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Playing from &quot;${escapeHtmlInline(playlist.name)}&quot; Playlist</button>`;
     } else if (track.playbackContextType === "playlist" && track.playbackContextUri) {
-      const playlistId = menu2PlaylistIdFromUri(track.playbackContextUri);
-      context.textContent = menu2ContextResolutionFailures.has(playlistId) || menu2ContextResolutionFailures.has(track.playbackContextUri)
-        ? "Playing from current playlist"
-        : "Playing from current playlist";
+      context.textContent = "Playing from Spotify";
       void resolveMenu2ContextPlaylistName(track.playbackContextUri);
     } else if (track.playbackContextType && track.playbackContextUri) {
       context.textContent = `Playing from ${track.playbackContextType}`;
@@ -3925,6 +3941,8 @@ function syncMenu2Bubble(): void {
   if (play) play.innerHTML = state.playback.isPlaying ? menu2Icon("pause") : menu2Icon("play");
   if (next) next.innerHTML = menu2Icon("next");
   if (volume) volume.innerHTML = menu2Icon("volume");
+  const bubbleVolumeInput = document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput");
+  if (bubbleVolumeInput) bubbleVolumeInput.value = String(phase2Volume);
 }
 
 async function loadMenu2Queue(): Promise<void> {
@@ -3958,6 +3976,7 @@ async function loadMenu2Playlists(force = false): Promise<void> {
     setMenu2Status("Loading playlists...", true);
     try {
       menu2PlaylistCache = await getUserPlaylists(state.spotifyClientId, 300);
+      menu2PlaylistCache.forEach(cacheMenu2ContextPlaylist);
       setMenu2Status("Playlists loaded.", false);
     } catch (error) {
       container.innerHTML = `<div class="menu2-empty">${escapeHtmlInline(error instanceof Error ? error.message : String(error))}</div>`;
@@ -4303,6 +4322,31 @@ function runMenu2PlayPause(): void {
   });
 }
 
+function scheduleMenu2BubbleVolumeHide(): void {
+  if (menu2BubbleVolumeTimer) window.clearTimeout(menu2BubbleVolumeTimer);
+  menu2BubbleVolumeTimer = window.setTimeout(() => {
+    menu2BubbleVolumeTimer = null;
+    document.querySelector<HTMLElement>("#menu2BubbleVolumePopover")?.classList.remove("menu2-volume-popover-open");
+  }, 2500);
+}
+
+function toggleMenu2BubbleVolumePopover(force?: boolean): void {
+  const popover = document.querySelector<HTMLElement>("#menu2BubbleVolumePopover");
+  const input = document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput");
+  if (!popover) return;
+  const open = typeof force === "boolean" ? force : !popover.classList.contains("menu2-volume-popover-open");
+  popover.classList.toggle("menu2-volume-popover-open", open);
+  if (open) {
+    if (input) input.value = String(phase2Volume);
+    input?.focus();
+    scheduleMenu2BubbleVolumeHide();
+  } else if (menu2BubbleVolumeTimer) {
+    window.clearTimeout(menu2BubbleVolumeTimer);
+    menu2BubbleVolumeTimer = null;
+  }
+}
+
+
 function bindMenu2Controls(): void {
   document.querySelector<HTMLButtonElement>("#menu2BrandPill")?.addEventListener("click", () => setMenu2Open(false));
   document.querySelectorAll<HTMLButtonElement>(".menu2-tab").forEach((button) => {
@@ -4478,10 +4522,21 @@ function bindMenu2Controls(): void {
   document.querySelector<HTMLButtonElement>("#menu2BubblePrev")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPrevButton")?.click());
   document.querySelector<HTMLButtonElement>("#menu2BubblePlay")?.addEventListener("click", runMenu2PlayPause);
   document.querySelector<HTMLButtonElement>("#menu2BubbleNext")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelNextButton")?.click());
-  document.querySelector<HTMLButtonElement>("#menu2BubbleVolume")?.addEventListener("click", () => {
-    setMenu2Tab("now");
-    setMenu2Open(true);
-    window.setTimeout(() => document.querySelector<HTMLInputElement>("#menu2Volume")?.focus(), 120);
+  document.querySelector<HTMLButtonElement>("#menu2BubbleVolume")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleMenu2BubbleVolumePopover();
+  });
+  document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput")?.addEventListener("input", (event) => {
+    const value = Number((event.target as HTMLInputElement).value || 70);
+    const panelVolume = document.querySelector<HTMLInputElement>("#spotifyVolume");
+    const menuVolume = document.querySelector<HTMLInputElement>("#menu2Volume");
+    if (menuVolume) menuVolume.value = String(value);
+    if (panelVolume) {
+      panelVolume.value = String(value);
+      panelVolume.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    scheduleMenu2BubbleVolumeHide();
   });
   applyMenu2Settings();
 }
@@ -4494,6 +4549,7 @@ function bindControls(): void {
   qs<HTMLButtonElement>("#fullscreenToggle").addEventListener("click", () => void toggleAppFullscreen());
   document.addEventListener("fullscreenchange", handleFullscreenChange);
   document.addEventListener("visibilitychange", handleVisibilityChange);
+  window.addEventListener("resize", updateMenu2RoomAnchor);
   bindMenu2Controls();
 
   qs<HTMLButtonElement>("#panelToggle").addEventListener("click", () => {
