@@ -28,6 +28,7 @@ type CurrentlyPlayingResponse = {
   is_playing?: boolean;
   progress_ms?: number;
   item?: SpotifyTrackItem | null;
+  context?: { type?: string; uri?: string } | null;
 };
 
 export function getDefaultRedirectUri(): string {
@@ -211,7 +212,9 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
       albumArtUrl: null,
       progressMs: 0,
       durationMs: 0,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      playbackContextUri: null,
+      playbackContextType: null
     };
   }
 
@@ -231,7 +234,9 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
       albumArtUrl: null,
       progressMs: 0,
       durationMs: 0,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      playbackContextUri: null,
+      playbackContextType: null
     };
   }
 
@@ -264,7 +269,9 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
       albumArtUrl: null,
       progressMs: 0,
       durationMs: 0,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      playbackContextUri: null,
+      playbackContextType: null
     };
   }
 
@@ -279,7 +286,9 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
     albumArtUrl: item.album?.images?.[0]?.url || null,
     progressMs: Number(json.progress_ms || 0),
     durationMs: Number(item.duration_ms || 0),
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
+    playbackContextUri: json.context?.uri || null,
+    playbackContextType: json.context?.type || null
   };
 }
 

@@ -13,6 +13,8 @@ export type NormalizedTrack = {
   durationMs: number;
   updatedAt: number;
   tempoBpm?: number | null;
+  playbackContextUri?: string | null;
+  playbackContextType?: string | null;
 };
 
 export type DjMode = "idle" | "playing" | "burst" | "paused" | "empty" | "demo";
@@ -37,5 +39,7 @@ export const emptyTrack = (): NormalizedTrack => ({
   progressMs: 0,
   durationMs: 0,
   updatedAt: Date.now(),
-  tempoBpm: null
+  tempoBpm: null,
+  playbackContextUri: null,
+  playbackContextType: null
 });

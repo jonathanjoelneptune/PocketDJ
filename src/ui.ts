@@ -1247,11 +1247,11 @@ export function renderShell(state: AppState): void {
         <div class="menu2-shell">
           <div class="menu2-topbar menu2-control-strip" aria-label="PocketDJ status controls">
             <button id="menu2BrandPill" class="menu2-brand-pill" type="button" aria-label="PocketDJ">PocketDJ</button>
-            <button id="menu2LyricsPill" class="menu2-pill menu2-round-pill menu2-lyrics-pill" type="button" aria-label="Toggle lyrics" title="Lyrics">♫</button>
-            <button id="menu2ConnectPill" class="menu2-pill menu2-round-pill menu2-connect-pill" type="button" aria-label="Connect Spotify" title="Connected">●</button>
-            <button id="menu2CompactPill" class="menu2-pill menu2-round-pill menu2-panel-pill" type="button" aria-label="Toggle full panel or compact panel" title="Full Panel">▣</button>
+            <button id="menu2LyricsPill" class="menu2-pill menu2-round-pill menu2-lyrics-pill" type="button" aria-label="Toggle lyrics" title="Lyrics"></button>
+            <button id="menu2ConnectPill" class="menu2-pill menu2-round-pill menu2-connect-pill" type="button" aria-label="Connect Spotify" title="Connected"></button>
+            <button id="menu2CompactPill" class="menu2-pill menu2-round-pill menu2-panel-pill" type="button" aria-label="Toggle Menu 2.0 full or compact" title="Full Panel"></button>
             <button id="menu2FullscreenPill" class="menu2-pill menu2-round-pill menu2-icon-pill" type="button" aria-label="Toggle fullscreen" title="Fullscreen"></button>
-            <button id="menu2LockPill" class="menu2-pill menu2-round-pill menu2-lock-pill" type="button" aria-label="Lock Menu 2.0 open" title="Lock menu open">🔒</button>
+            <button id="menu2LockPill" class="menu2-pill menu2-round-pill menu2-lock-pill" type="button" aria-label="Lock Menu 2.0 open" title="Lock menu open"></button>
           </div>
 
           <nav class="menu2-tabs" aria-label="Menu 2.0 tabs">
@@ -1259,7 +1259,6 @@ export function renderShell(state: AppState): void {
             <button class="menu2-tab" type="button" data-menu2-tab="queue">Queue</button>
             <button class="menu2-tab" type="button" data-menu2-tab="playlists">My Playlists</button>
             <button class="menu2-tab" type="button" data-menu2-tab="search">Search</button>
-            <button class="menu2-tab" type="button" data-menu2-tab="discover">Discover</button>
             <button class="menu2-tab" type="button" data-menu2-tab="devices">Devices</button>
             <button id="menu2DevTab" class="menu2-tab menu2-dev-tab" type="button" data-menu2-tab="dev" hidden>Dev</button>
           </nav>
@@ -1274,6 +1273,7 @@ export function renderShell(state: AppState): void {
                 <div id="menu2TrackArtist" class="menu2-track-artist">${escapeHtml(state.playback.artist)}</div>
                 <div id="menu2TrackAlbum" class="menu2-track-album">${escapeHtml(state.playback.album || "")}</div>
               </div>
+              <div id="menu2PlaybackContext" class="menu2-playback-context">Playing from Spotify</div>
               <div class="menu2-progress-row">
                 <span id="menu2ProgressNow">0:00</span>
                 <div id="menu2SeekBar" class="menu2-progress seek-surface" role="slider" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="menu2ProgressFill"></div></div>
@@ -1320,11 +1320,6 @@ export function renderShell(state: AppState): void {
             <div id="menu2SearchResults" class="menu2-list menu2-empty">Search results will show here.</div>
           </section>
 
-          <section id="menu2DiscoverPane" class="menu2-pane">
-            <div class="menu2-section-head"><h3>Discover</h3><span>Start a vibe</span></div>
-            <div id="menu2DiscoverGrid" class="menu2-discover-grid"></div>
-          </section>
-
           <section id="menu2DevicesPane" class="menu2-pane">
             <div class="menu2-section-head"><h3>Devices</h3><button id="menu2RefreshDevices" class="menu2-action" type="button">Refresh</button></div>
             <button id="menu2PlayHere" class="menu2-action menu2-wide-action" type="button">Play through Pocket DJ</button>
@@ -1335,8 +1330,15 @@ export function renderShell(state: AppState): void {
             <div class="menu2-section-head"><h3>Menu 2.0 Dev</h3><span>Hidden until 5 lock clicks</span></div>
             <label class="menu2-setting">Style mode
               <select id="menu2StyleMode" class="menu2-select">
-                <option value="pocket">Pocket DJ polished</option>
-                <option value="spotify">Spotify web inspired</option>
+                <option value="pocket">PocketDJ room theme</option>
+                <option value="spotify">Spotify inspired</option>
+                <option value="web">Spotify web inspired</option>
+              </select>
+            </label>
+            <label class="menu2-setting">Panel mode
+              <select id="menu2PanelMode" class="menu2-select">
+                <option value="full">Full Panel</option>
+                <option value="compact">Compact</option>
               </select>
             </label>
             <label class="menu2-setting">Album art size
@@ -1353,11 +1355,11 @@ export function renderShell(state: AppState): void {
       </aside>
 
       <div id="menu2Bubble" class="menu2-bubble" aria-label="PocketDJ quick controls. Hover or tap the rail to open Menu 2.0." aria-hidden="true" role="button" tabindex="0">
-        <button id="menu2BubbleLyrics" class="menu2-bubble-button" type="button" aria-label="Toggle lyrics" title="Lyrics">♫</button>
-        <button id="menu2BubblePrev" class="menu2-bubble-button" type="button" aria-label="Previous track" title="Previous">⏮</button>
-        <button id="menu2BubblePlay" class="menu2-bubble-button menu2-bubble-play" type="button" aria-label="Play or pause" title="Play/Pause">▶</button>
-        <button id="menu2BubbleNext" class="menu2-bubble-button" type="button" aria-label="Next track" title="Next">⏭</button>
-        <button id="menu2BubbleVolume" class="menu2-bubble-button" type="button" aria-label="Volume" title="Volume">🔊</button>
+        <button id="menu2BubbleLyrics" class="menu2-bubble-button menu2-bubble-lyrics" type="button" aria-label="Toggle lyrics" title="Lyrics"></button>
+        <button id="menu2BubblePrev" class="menu2-bubble-button menu2-bubble-prev" type="button" aria-label="Previous track" title="Previous"></button>
+        <button id="menu2BubblePlay" class="menu2-bubble-button menu2-bubble-play" type="button" aria-label="Play or pause" title="Play/Pause"></button>
+        <button id="menu2BubbleNext" class="menu2-bubble-button menu2-bubble-next" type="button" aria-label="Next track" title="Next"></button>
+        <button id="menu2BubbleVolume" class="menu2-bubble-button menu2-bubble-volume" type="button" aria-label="Volume" title="Volume"></button>
       </div>
 
 

@@ -75,13 +75,21 @@ let aspectPocketClickTimer: number | null = null;
 let menu2Open = false;
 let menu2Locked = true;
 let menu2HasOpened = localStorage.getItem("pocketdj-menu2-has-opened") === "true";
-let menu2ActiveTab: "now" | "queue" | "playlists" | "search" | "discover" | "devices" | "dev" = "now";
+let menu2ActiveTab: "now" | "queue" | "playlists" | "search" | "devices" | "dev" = "now";
 let menu2DevUnlocked = false;
 let menu2LockClickCount = 0;
 let menu2LockClickTimer: number | null = null;
 let menu2BubbleHoverTimer: number | null = null;
-let menu2StyleMode: "pocket" | "spotify" = (localStorage.getItem("pocketdj-menu2-style") as "pocket" | "spotify") || "pocket";
+let menu2StyleMode: "pocket" | "spotify" | "web" = (localStorage.getItem("pocketdj-menu2-style") as "pocket" | "spotify" | "web") || "pocket";
 let menu2ArtSize: "large" | "medium" | "small" = (localStorage.getItem("pocketdj-menu2-art-size") as "large" | "medium" | "small") || "large";
+let menu2PanelMode: "full" | "compact" = (localStorage.getItem("pocketdj-menu2-panel-mode") as "full" | "compact") || "full";
+let menu2SearchResultTab: "tracks" | "artists" | "playlists" | "albums" = "tracks";
+let menu2SearchTracks: SpotifyCatalogTrack[] = [];
+let menu2SearchArtists: SpotifyCatalogArtist[] = [];
+let menu2SearchPlaylists: SpotifyCatalogPlaylist[] = [];
+let menu2SearchAlbums: SpotifyCatalogAlbum[] = [];
+let menu2SelectedPlaylist: SpotifyCatalogPlaylist | null = null;
+let menu2SelectedPlaylistTracks: SpotifyCatalogTrack[] = [];
 let menu2QueueTracks: SpotifyCatalogTrack[] = [];
 let menu2PlaylistCache: SpotifyCatalogPlaylist[] = [];
 let sidePanelLocked = false;
@@ -3519,6 +3527,9 @@ function applyMenu2Settings(): void {
   panel.classList.toggle("menu2-locked", menu2Locked);
   panel.classList.toggle("menu2-style-pocket", menu2StyleMode === "pocket");
   panel.classList.toggle("menu2-style-spotify", menu2StyleMode === "spotify");
+  panel.classList.toggle("menu2-style-web", menu2StyleMode === "web");
+  panel.classList.toggle("menu2-mode-compact", menu2PanelMode === "compact");
+  panel.classList.toggle("menu2-mode-full", menu2PanelMode === "full");
   panel.classList.toggle("menu2-art-large", menu2ArtSize === "large");
   panel.classList.toggle("menu2-art-medium", menu2ArtSize === "medium");
   panel.classList.toggle("menu2-art-small", menu2ArtSize === "small");
@@ -3537,8 +3548,10 @@ function applyMenu2Settings(): void {
 
   const styleSelect = document.querySelector<HTMLSelectElement>("#menu2StyleMode");
   const artSelect = document.querySelector<HTMLSelectElement>("#menu2ArtSize");
+  const panelModeSelect = document.querySelector<HTMLSelectElement>("#menu2PanelMode");
   if (styleSelect) styleSelect.value = menu2StyleMode;
   if (artSelect) artSelect.value = menu2ArtSize;
+  if (panelModeSelect) panelModeSelect.value = menu2PanelMode;
 
   const devTab = document.querySelector<HTMLButtonElement>("#menu2DevTab");
   if (devTab) devTab.hidden = !menu2DevUnlocked;
@@ -3560,7 +3573,6 @@ function setMenu2Open(open: boolean): void {
   applyMenu2Settings();
   if (open) {
     renderMenu2NowPlaying();
-    renderMenu2Discover();
     void refreshMenu2ActiveTab();
   }
 }
@@ -3577,33 +3589,85 @@ async function refreshMenu2ActiveTab(): Promise<void> {
   if (menu2ActiveTab === "queue") await loadMenu2Queue();
   if (menu2ActiveTab === "playlists") await loadMenu2Playlists(false);
   if (menu2ActiveTab === "devices") await loadMenu2Devices();
-  if (menu2ActiveTab === "discover") renderMenu2Discover();
 }
 
-function menu2TrackRow(track: SpotifyCatalogTrack, index?: number): string {
+
+function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "shuffle" | "repeat" | "queue"): string {
+  const paths: Record<typeof name, string> = {
+    lyrics: '<path d="M9 18V6l10-2v11"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="15" r="2"/>',
+    play: '<path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/>',
+    pause: '<path d="M8 5h3v14H8zM14 5h3v14h-3z" fill="currentColor" stroke="none"/>',
+    prev: '<path d="M6 5v14M18 6l-9 6 9 6z" fill="currentColor" stroke="none"/>',
+    next: '<path d="M18 5v14M6 6l9 6-9 6z" fill="currentColor" stroke="none"/>',
+    volume: '<path d="M4 10v4h4l5 4V6l-5 4H4z"/><path d="M16 9c1 1 1 5 0 6M19 7c2 3 2 7 0 10"/>',
+    lock: '<rect x="6" y="10" width="12" height="10" rx="2"/><path d="M8 10V8a4 4 0 0 1 8 0v2"/>',
+    unlock: '<rect x="6" y="10" width="12" height="10" rx="2"/><path d="M8 10V8a4 4 0 0 1 7-2.6"/>',
+    compact: '<rect x="5" y="5" width="14" height="14" rx="2"/><path d="M8 9h8M8 12h8M8 15h5"/>',
+    fullscreen: '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
+    shuffle: '<path d="M4 7h3l10 10h3M17 7h3M17 7l3-3M17 7l3 3M4 17h3l3-3"/>',
+    repeat: '<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
+    queue: '<path d="M5 7h14M5 12h14M5 17h9"/>',
+  };
+  return `<svg class="menu2-svg-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths[name]}</svg>`;
+}
+
+function menu2PlaylistIdFromUri(uri: string | null | undefined): string {
+  const clean = uri || "";
+  const match = clean.match(/spotify:playlist:([^:]+)/);
+  return match?.[1] || "";
+}
+
+function menu2ContextPlaylist(): SpotifyCatalogPlaylist | null {
+  const contextUri = state.playback.playbackContextUri || "";
+  if (menu2SelectedPlaylist && menu2SelectedPlaylist.uri === contextUri) return menu2SelectedPlaylist;
+  const id = menu2PlaylistIdFromUri(contextUri);
+  return menu2PlaylistCache.find((playlist) => playlist.id === id || playlist.uri === contextUri) || null;
+}
+
+function menu2TrackRow(track: SpotifyCatalogTrack, index?: number, contextUri?: string): string {
+  const playAction = contextUri ? "play-context-track" : "play-uri";
   return `
-    <article class="menu2-row" data-uri="${escapeHtmlInline(track.uri)}">
+    <article class="menu2-row menu2-track-result-row" data-uri="${escapeHtmlInline(track.uri)}">
       <div class="menu2-row-index">${typeof index === "number" ? index + 1 : "♪"}</div>
       <div class="menu2-row-art">${track.albumArtUrl ? `<img src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : "♪"}</div>
       <div class="menu2-row-copy">
         <strong>${escapeHtmlInline(track.name)}</strong>
         <span>${escapeHtmlInline(track.artists)}${track.album ? ` • ${escapeHtmlInline(track.album)}` : ""}</span>
       </div>
-      <button class="menu2-mini-action" type="button" data-menu2-action="play-uri" data-uri="${escapeHtmlInline(track.uri)}">Play</button>
-      <button class="menu2-mini-action secondary" type="button" data-menu2-action="queue-uri" data-uri="${escapeHtmlInline(track.uri)}">Queue</button>
+      <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="${playAction}" data-uri="${escapeHtmlInline(track.uri)}" ${contextUri ? `data-context-uri="${escapeHtmlInline(contextUri)}"` : ""} aria-label="Play track" title="Play">${menu2Icon("play")}</button>
+      <button class="menu2-mini-action secondary menu2-icon-action" type="button" data-menu2-action="queue-uri" data-uri="${escapeHtmlInline(track.uri)}" aria-label="Add to queue" title="Queue">${menu2Icon("queue")}</button>
     </article>`;
 }
 
 function menu2PlaylistRow(playlist: SpotifyCatalogPlaylist): string {
   return `
-    <article class="menu2-row" data-uri="${escapeHtmlInline(playlist.uri)}">
+    <article class="menu2-row menu2-playlist-row" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}">
       <div class="menu2-row-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "▦"}</div>
       <div class="menu2-row-copy">
-        <strong>${escapeHtmlInline(playlist.name)}</strong>
+        <button class="menu2-row-title-button" type="button" data-menu2-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">${escapeHtmlInline(playlist.name)}</button>
         <span>${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</span>
       </div>
-      <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="play-context" data-uri="${escapeHtmlInline(playlist.uri)}" aria-label="Play playlist" title="Play">▶</button>
-      <button class="menu2-mini-action secondary menu2-icon-action" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(playlist.uri)}" aria-label="Shuffle playlist" title="Shuffle">⤨</button>
+      <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="play-context-order" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Play playlist in order" title="Play in order">${menu2Icon("play")}</button>
+      <button class="menu2-mini-action secondary menu2-icon-action" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Shuffle playlist" title="Shuffle">${menu2Icon("shuffle")}</button>
+    </article>`;
+}
+
+function menu2AlbumRow(album: SpotifyCatalogAlbum): string {
+  return `
+    <article class="menu2-row menu2-album-row" data-uri="${escapeHtmlInline(album.uri)}">
+      <div class="menu2-row-art">${album.imageUrl ? `<img src="${escapeHtmlInline(album.imageUrl)}" alt="" />` : "▧"}</div>
+      <div class="menu2-row-copy"><strong>${escapeHtmlInline(album.name)}</strong><span>${escapeHtmlInline(album.artists)}${album.releaseYear ? ` • ${escapeHtmlInline(album.releaseYear)}` : ""}</span></div>
+      <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="play-context-order" data-uri="${escapeHtmlInline(album.uri)}" aria-label="Play album" title="Play">${menu2Icon("play")}</button>
+      <button class="menu2-mini-action secondary menu2-icon-action" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(album.uri)}" aria-label="Shuffle album" title="Shuffle">${menu2Icon("shuffle")}</button>
+    </article>`;
+}
+
+function menu2ArtistRow(artist: SpotifyCatalogArtist): string {
+  return `
+    <article class="menu2-row menu2-artist-row">
+      <div class="menu2-row-art menu2-row-art-round">${artist.imageUrl ? `<img src="${escapeHtmlInline(artist.imageUrl)}" alt="" />` : "◎"}</div>
+      <div class="menu2-row-copy"><strong>${escapeHtmlInline(artist.name)}</strong><span>Artist</span></div>
+      <button class="menu2-mini-action" type="button" data-menu2-action="artist-top" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}">Top tracks</button>
     </article>`;
 }
 
@@ -3614,9 +3678,20 @@ function renderMenu2NowPlaying(): void {
   const title = document.querySelector<HTMLElement>("#menu2TrackTitle");
   const artist = document.querySelector<HTMLElement>("#menu2TrackArtist");
   const album = document.querySelector<HTMLElement>("#menu2TrackAlbum");
+  const context = document.querySelector<HTMLElement>("#menu2PlaybackContext");
   if (title) title.textContent = track.title;
   if (artist) artist.textContent = track.artist;
   if (album) album.textContent = track.album ? `Album • ${track.album}` : "";
+  if (context) {
+    const playlist = menu2ContextPlaylist();
+    if (playlist) {
+      context.innerHTML = `<button class="menu2-context-link" type="button" data-menu2-action="open-playlist" data-playlist-id="${escapeHtmlInline(playlist.id)}">Playing from ${escapeHtmlInline(playlist.name)}</button>`;
+    } else if (track.playbackContextType && track.playbackContextUri) {
+      context.textContent = `Playing from ${track.playbackContextType}`;
+    } else {
+      context.textContent = "Playing from Spotify";
+    }
+  }
 
   const progressMs = getEstimatedPlaybackProgress(track);
   const percent = track.durationMs > 0 ? Math.min(100, (progressMs / track.durationMs) * 100) : 0;
@@ -3629,7 +3704,15 @@ function renderMenu2NowPlaying(): void {
   if (end) end.textContent = formatDurationMs(track.durationMs) || "0:00";
   if (seek) seek.setAttribute("aria-valuenow", String(Math.round(percent)));
   const playIcon = document.querySelector<HTMLElement>("#menu2PlayIcon");
-  if (playIcon) playIcon.textContent = track.isPlaying ? "❚❚" : "▶";
+  if (playIcon) playIcon.innerHTML = track.isPlaying ? menu2Icon("pause") : menu2Icon("play");
+  const shuffle = document.querySelector<HTMLElement>("#menu2Shuffle");
+  const prev = document.querySelector<HTMLElement>("#menu2Prev");
+  const next = document.querySelector<HTMLElement>("#menu2Next");
+  const repeat = document.querySelector<HTMLElement>("#menu2Repeat");
+  if (shuffle) shuffle.innerHTML = menu2Icon("shuffle");
+  if (prev) prev.innerHTML = menu2Icon("prev");
+  if (next) next.innerHTML = menu2Icon("next");
+  if (repeat) repeat.innerHTML = menu2Icon("repeat");
   syncMenu2Pills();
 }
 
@@ -3639,18 +3722,27 @@ function syncMenu2Pills(): void {
   const compact = document.querySelector<HTMLButtonElement>("#menu2CompactPill");
   const fullscreen = document.querySelector<HTMLButtonElement>("#menu2FullscreenPill");
   if (lyrics) {
+    lyrics.innerHTML = menu2Icon("lyrics");
     lyrics.classList.toggle("menu2-pill-active", lyricsEnabled);
     lyrics.title = lyricsEnabled ? "Lyrics on" : "Lyrics off";
   }
   if (connect) {
+    connect.textContent = "";
     connect.classList.toggle("menu2-pill-active", state.playback.isAuthenticated);
     connect.title = state.playback.isAuthenticated ? "Connected" : "Connect Spotify";
   }
   if (compact) {
-    compact.classList.toggle("menu2-pill-active", compactPanelEnabled);
-    compact.title = compactPanelEnabled ? "Compact" : "Full Panel";
+    compact.innerHTML = menu2Icon("compact");
+    compact.classList.toggle("menu2-pill-active", menu2PanelMode === "compact");
+    compact.title = menu2PanelMode === "compact" ? "Switch Menu 2.0 to full panel" : "Switch Menu 2.0 to compact";
+    compact.setAttribute("aria-pressed", String(menu2PanelMode === "compact"));
   }
-  if (fullscreen) fullscreen.classList.toggle("menu2-pill-active", isAppFullscreen());
+  if (fullscreen) {
+    fullscreen.innerHTML = menu2Icon("fullscreen");
+    fullscreen.classList.toggle("menu2-pill-active", isAppFullscreen());
+  }
+  const lock = document.querySelector<HTMLButtonElement>("#menu2LockPill");
+  if (lock) lock.innerHTML = menu2Icon(menu2Locked ? "lock" : "unlock");
   syncMenu2Bubble();
 }
 
@@ -3658,15 +3750,18 @@ function syncMenu2Bubble(): void {
   const bubble = document.querySelector<HTMLElement>("#menu2Bubble");
   if (bubble) bubble.setAttribute("aria-hidden", String(!(menu2HasOpened && !menu2Open)));
   const lyrics = document.querySelector<HTMLButtonElement>("#menu2BubbleLyrics");
-  const connect = document.querySelector<HTMLButtonElement>("#menu2BubbleConnect");
-  const compact = document.querySelector<HTMLButtonElement>("#menu2BubbleCompact");
-  const fullscreen = document.querySelector<HTMLButtonElement>("#menu2BubbleFullscreen");
   const play = document.querySelector<HTMLButtonElement>("#menu2BubblePlay");
-  lyrics?.classList.toggle("menu2-bubble-active", lyricsEnabled);
-  connect?.classList.toggle("menu2-bubble-active", state.playback.isAuthenticated);
-  compact?.classList.toggle("menu2-bubble-active", compactPanelEnabled);
-  fullscreen?.classList.toggle("menu2-bubble-active", isAppFullscreen());
-  if (play) play.textContent = state.playback.isPlaying ? "❚❚" : "▶";
+  if (lyrics) {
+    lyrics.innerHTML = menu2Icon("lyrics");
+    lyrics.classList.toggle("menu2-bubble-active", lyricsEnabled);
+  }
+  const prev = document.querySelector<HTMLButtonElement>("#menu2BubblePrev");
+  const next = document.querySelector<HTMLButtonElement>("#menu2BubbleNext");
+  const volume = document.querySelector<HTMLButtonElement>("#menu2BubbleVolume");
+  if (prev) prev.innerHTML = menu2Icon("prev");
+  if (play) play.innerHTML = state.playback.isPlaying ? menu2Icon("pause") : menu2Icon("play");
+  if (next) next.innerHTML = menu2Icon("next");
+  if (volume) volume.innerHTML = menu2Icon("volume");
 }
 
 async function loadMenu2Queue(): Promise<void> {
@@ -3714,9 +3809,90 @@ function renderMenu2Playlists(): void {
   const container = document.querySelector<HTMLElement>("#menu2PlaylistsResults");
   const input = document.querySelector<HTMLInputElement>("#menu2PlaylistFilter");
   if (!container) return;
+  if (menu2SelectedPlaylist) {
+    renderMenu2PlaylistDetail();
+    return;
+  }
   const filter = (input?.value || "").trim().toLowerCase();
   const items = menu2PlaylistCache.filter((playlist) => !filter || playlist.name.toLowerCase().includes(filter) || playlist.owner.toLowerCase().includes(filter));
   container.innerHTML = items.length ? items.map(menu2PlaylistRow).join("") : `<div class="menu2-empty">No playlists match that filter.</div>`;
+}
+
+async function openMenu2Playlist(playlistId: string): Promise<void> {
+  const playlist = menu2PlaylistCache.find((item) => item.id === playlistId)
+    || menu2SearchPlaylists.find((item) => item.id === playlistId);
+  if (!playlist) {
+    setMenu2Status("Playlist not found in loaded library.", false);
+    return;
+  }
+  menu2SelectedPlaylist = playlist;
+  menu2ActiveTab = "playlists";
+  applyMenu2Settings();
+  const container = document.querySelector<HTMLElement>("#menu2PlaylistsResults");
+  if (container) container.innerHTML = `<div class="menu2-empty">Loading ${escapeHtmlInline(playlist.name)}...</div>`;
+  setMenu2Status("Loading playlist tracks...", true);
+  try {
+    menu2SelectedPlaylistTracks = await getPlaylistTracks(state.spotifyClientId, playlist.id, 100);
+    renderMenu2PlaylistDetail();
+    setMenu2Status(`${playlist.name} loaded.`, false);
+  } catch (error) {
+    menu2SelectedPlaylistTracks = [];
+    if (container) container.innerHTML = `<div class="menu2-empty">${escapeHtmlInline(error instanceof Error ? error.message : String(error))}</div>`;
+    setMenu2Status("Playlist tracks unavailable.", false);
+  }
+}
+
+function closeMenu2PlaylistDetail(): void {
+  menu2SelectedPlaylist = null;
+  menu2SelectedPlaylistTracks = [];
+  renderMenu2Playlists();
+}
+
+function renderMenu2PlaylistDetail(): void {
+  const container = document.querySelector<HTMLElement>("#menu2PlaylistsResults");
+  const playlist = menu2SelectedPlaylist;
+  if (!container || !playlist) return;
+  container.innerHTML = `
+    <div class="menu2-playlist-detail-head">
+      <button class="menu2-action secondary" type="button" data-menu2-action="playlist-back">‹ Playlists</button>
+      <div class="menu2-playlist-detail-title">
+        <div class="menu2-row-art">${playlist.imageUrl ? `<img src="${escapeHtmlInline(playlist.imageUrl)}" alt="" />` : "▦"}</div>
+        <div><strong>${escapeHtmlInline(playlist.name)}</strong><span>${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</span></div>
+      </div>
+      <div class="menu2-playlist-detail-actions">
+        <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="play-context-order" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Play playlist in order" title="Play in order">${menu2Icon("play")}</button>
+        <button class="menu2-mini-action secondary menu2-icon-action" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(playlist.uri)}" data-playlist-id="${escapeHtmlInline(playlist.id)}" aria-label="Shuffle playlist" title="Shuffle">${menu2Icon("shuffle")}</button>
+      </div>
+    </div>
+    <div class="menu2-playlist-track-list">
+      ${menu2SelectedPlaylistTracks.length ? menu2SelectedPlaylistTracks.map((track, index) => menu2TrackRow(track, index, playlist.uri)).join("") : `<div class="menu2-empty">No tracks returned for this playlist.</div>`}
+    </div>`;
+}
+
+function menu2SearchTabLabel(tab: typeof menu2SearchResultTab, label: string, count: number): string {
+  return `<button class="menu2-result-tab${menu2SearchResultTab === tab ? " menu2-result-tab-active" : ""}" type="button" data-menu2-search-tab="${tab}">${label} <span>${count}</span></button>`;
+}
+
+function renderMenu2SearchResults(): void {
+  const container = document.querySelector<HTMLElement>("#menu2SearchResults");
+  if (!container) return;
+  const total = menu2SearchTracks.length + menu2SearchArtists.length + menu2SearchPlaylists.length + menu2SearchAlbums.length;
+  if (!total) {
+    container.innerHTML = `<div class="menu2-empty">Search results will show here.</div>`;
+    return;
+  }
+  const tabs = `<div class="menu2-result-tabs">
+    ${menu2SearchTabLabel("tracks", "Tracks", menu2SearchTracks.length)}
+    ${menu2SearchTabLabel("artists", "Artists", menu2SearchArtists.length)}
+    ${menu2SearchTabLabel("playlists", "Playlists", menu2SearchPlaylists.length)}
+    ${menu2SearchTabLabel("albums", "Albums", menu2SearchAlbums.length)}
+  </div>`;
+  let body = "";
+  if (menu2SearchResultTab === "tracks") body = menu2SearchTracks.map((track) => menu2TrackRow(track)).join("");
+  if (menu2SearchResultTab === "artists") body = menu2SearchArtists.map(menu2ArtistRow).join("");
+  if (menu2SearchResultTab === "playlists") body = menu2SearchPlaylists.map(menu2PlaylistRow).join("");
+  if (menu2SearchResultTab === "albums") body = menu2SearchAlbums.map(menu2AlbumRow).join("");
+  container.innerHTML = tabs + (body || `<div class="menu2-empty menu2-result-tab-empty">No ${menu2SearchResultTab} found.</div>`);
 }
 
 async function performMenu2Search(): Promise<void> {
@@ -3726,29 +3902,22 @@ async function performMenu2Search(): Promise<void> {
   if (!input || !container) return;
   const query = input.value.trim();
   if (!query) {
-    container.innerHTML = `<div class="menu2-empty">Type something to search Spotify.</div>`;
+    menu2SearchTracks = [];
+    menu2SearchArtists = [];
+    menu2SearchPlaylists = [];
+    menu2SearchAlbums = [];
+    renderMenu2SearchResults();
     return;
   }
   setMenu2Status(`Searching Spotify for "${query}"...`, true);
   try {
-    const results = await searchSpotifyCatalog(state.spotifyClientId, query, type || "all", 12, 0);
-    const rows = [
-      ...results.tracks.map((track) => menu2TrackRow(track)),
-      ...results.playlists.map(menu2PlaylistRow),
-      ...results.albums.map((album) => `
-        <article class="menu2-row" data-uri="${escapeHtmlInline(album.uri)}">
-          <div class="menu2-row-art">${album.imageUrl ? `<img src="${escapeHtmlInline(album.imageUrl)}" alt="" />` : "▧"}</div>
-          <div class="menu2-row-copy"><strong>${escapeHtmlInline(album.name)}</strong><span>${escapeHtmlInline(album.artists)} • ${album.releaseYear}</span></div>
-          <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="play-context" data-uri="${escapeHtmlInline(album.uri)}" aria-label="Play album" title="Play">▶</button>
-        </article>`),
-      ...results.artists.map((artist) => `
-        <article class="menu2-row">
-          <div class="menu2-row-art">${artist.imageUrl ? `<img src="${escapeHtmlInline(artist.imageUrl)}" alt="" />` : "◎"}</div>
-          <div class="menu2-row-copy"><strong>${escapeHtmlInline(artist.name)}</strong><span>Artist</span></div>
-          <button class="menu2-mini-action" type="button" data-menu2-action="artist-top" data-artist-id="${escapeHtmlInline(artist.id)}" data-artist-name="${escapeHtmlInline(artist.name)}">Top tracks</button>
-        </article>`),
-    ];
-    container.innerHTML = rows.length ? rows.join("") : `<div class="menu2-empty">No results found.</div>`;
+    const results = await searchSpotifyCatalog(state.spotifyClientId, query, type || "all", 10, 0);
+    menu2SearchTracks = results.tracks;
+    menu2SearchArtists = results.artists;
+    menu2SearchPlaylists = results.playlists;
+    menu2SearchAlbums = results.albums;
+    menu2SearchResultTab = menu2SearchTracks.length ? "tracks" : menu2SearchArtists.length ? "artists" : menu2SearchPlaylists.length ? "playlists" : "albums";
+    renderMenu2SearchResults();
     setMenu2Status("Search complete.", false);
   } catch (error) {
     container.innerHTML = `<div class="menu2-empty">${escapeHtmlInline(error instanceof Error ? error.message : String(error))}</div>`;
@@ -3756,15 +3925,7 @@ async function performMenu2Search(): Promise<void> {
   }
 }
 
-function renderMenu2Discover(): void {
-  const grid = document.querySelector<HTMLElement>("#menu2DiscoverGrid");
-  if (!grid) return;
-  grid.innerHTML = VIBE_PRESETS.map((vibe) => `
-    <button class="menu2-discover-card" type="button" data-menu2-action="play-vibe" data-vibe-query="${escapeHtmlInline(vibe.query)}">
-      <strong>${escapeHtmlInline(vibe.label)}</strong>
-      <span>Start a ${escapeHtmlInline(vibe.label.toLowerCase())} pocket session</span>
-    </button>`).join("");
-}
+function renderMenu2Discover(): void {}
 
 async function loadMenu2Devices(): Promise<void> {
   const container = document.querySelector<HTMLElement>("#menu2DeviceResults");
@@ -3833,12 +3994,19 @@ function bindMenu2Controls(): void {
   });
   document.querySelector<HTMLButtonElement>("#menu2LyricsPill")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#lyricsToggle")?.click());
   document.querySelector<HTMLButtonElement>("#menu2ConnectPill")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#connectSpotify")?.click());
-  document.querySelector<HTMLButtonElement>("#menu2CompactPill")?.addEventListener("click", () => setCompactPanelEnabled(!compactPanelEnabled));
+  document.querySelector<HTMLButtonElement>("#menu2CompactPill")?.addEventListener("click", () => {
+    menu2PanelMode = menu2PanelMode === "compact" ? "full" : "compact";
+    localStorage.setItem("pocketdj-menu2-panel-mode", menu2PanelMode);
+    applyMenu2Settings();
+  });
   document.querySelector<HTMLButtonElement>("#menu2FullscreenPill")?.addEventListener("click", () => void toggleAppFullscreen());
   document.querySelector<HTMLButtonElement>("#menu2LockPill")?.addEventListener("click", handleMenu2LockClick);
   document.querySelector<HTMLButtonElement>("#menu2RefreshQueue")?.addEventListener("click", () => void loadMenu2Queue());
   document.querySelector<HTMLButtonElement>("#menu2RefreshPlaylists")?.addEventListener("click", () => void loadMenu2Playlists(true));
-  document.querySelector<HTMLInputElement>("#menu2PlaylistFilter")?.addEventListener("input", renderMenu2Playlists);
+  document.querySelector<HTMLInputElement>("#menu2PlaylistFilter")?.addEventListener("input", () => {
+    if (menu2SelectedPlaylist) closeMenu2PlaylistDetail();
+    else renderMenu2Playlists();
+  });
   document.querySelector<HTMLButtonElement>("#menu2SearchButton")?.addEventListener("click", () => void performMenu2Search());
   document.querySelector<HTMLInputElement>("#menu2SearchInput")?.addEventListener("keydown", (event) => {
     if (event.key === "Enter") void performMenu2Search();
@@ -3855,7 +4023,18 @@ function bindMenu2Controls(): void {
     localStorage.setItem("pocketdj-menu2-art-size", menu2ArtSize);
     applyMenu2Settings();
   });
+  document.querySelector<HTMLSelectElement>("#menu2PanelMode")?.addEventListener("change", (event) => {
+    menu2PanelMode = (event.target as HTMLSelectElement).value as typeof menu2PanelMode;
+    localStorage.setItem("pocketdj-menu2-panel-mode", menu2PanelMode);
+    applyMenu2Settings();
+  });
   document.querySelector<HTMLButtonElement>("#menu2OpenCurrentUtility")?.addEventListener("click", () => openSidePanel(true));
+  document.querySelector<HTMLElement>("#menu2SearchResults")?.addEventListener("click", (event) => {
+    const tab = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-menu2-search-tab]");
+    if (!tab) return;
+    menu2SearchResultTab = tab.dataset.menu2SearchTab as typeof menu2SearchResultTab;
+    renderMenu2SearchResults();
+  });
   document.querySelector<HTMLElement>("#menu2Panel")?.addEventListener("click", (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-menu2-action]");
     if (!button) return;
@@ -3863,6 +4042,19 @@ function bindMenu2Controls(): void {
     const uri = button.dataset.uri || "";
     if (action === "play-uri" && uri) void runSpotifyBrowserAction(async () => { await playTrackWithContinuation(uri); await pollSpotifyNow(); });
     if (action === "queue-uri" && uri) void runSpotifyBrowserAction(async () => { await addSpotifyUriToQueue(state.spotifyClientId, uri); setMenu2Status("Added to queue.", false); });
+    if (action === "open-playlist") void openMenu2Playlist(button.dataset.playlistId || "");
+    if (action === "playlist-back") closeMenu2PlaylistDetail();
+    if (action === "play-context-order" && uri) void runSpotifyBrowserAction(async () => {
+      await setSpotifyShuffle(state.spotifyClientId, false);
+      await playSpotifyContext(state.spotifyClientId, uri);
+      await pollSpotifyNow();
+    });
+    if (action === "play-context-track" && uri) void runSpotifyBrowserAction(async () => {
+      const contextUri = button.dataset.contextUri || "";
+      await setSpotifyShuffle(state.spotifyClientId, false);
+      await playSpotifyContext(state.spotifyClientId, contextUri, uri);
+      await pollSpotifyNow();
+    });
     if (action === "play-context" && uri) void runSpotifyBrowserAction(async () => { await playSpotifyContext(state.spotifyClientId, uri); await pollSpotifyNow(); });
     if (action === "shuffle-context" && uri) void runSpotifyBrowserAction(async () => { await playSpotifyContextShuffled(state.spotifyClientId, uri); await pollSpotifyNow(); });
     if (action === "play-vibe") void playVibe(button.dataset.vibeQuery || "");
@@ -3909,7 +4101,6 @@ function bindMenu2Controls(): void {
     window.setTimeout(() => document.querySelector<HTMLInputElement>("#menu2Volume")?.focus(), 120);
   });
   applyMenu2Settings();
-  renderMenu2Discover();
 }
 
 
