@@ -505,8 +505,8 @@ export function renderShell(state: AppState): void {
               <label>Drop shadow <span id="placedAlbumShadowValue">1</span>
                 <input id="placedAlbumShadow" type="range" min="0" max="1.5" step="0.01" value="1" />
               </label>
-              <label>Album opacity <span id="placedAlbumOpacityValue">1</span>
-                <input id="placedAlbumOpacity" type="range" min="0" max="1" step="0.01" value="1" />
+              <label>Album opacity <span id="placedAlbumOpacityValue">0.82</span>
+                <input id="placedAlbumOpacity" type="range" min="0" max="1" step="0.01" value="0.82" />
               </label>
             </div>
           </details>

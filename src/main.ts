@@ -140,6 +140,8 @@ let placedAlbumCommittedTrackKey = "";
 let placedAlbumCommittedUrl = "";
 let placedAlbumPendingTrackKey = "";
 let placedAlbumPendingUrl = "";
+let placedAlbumPendingRequiresReveal = false;
+let placedAlbumPendingRevealSeen = false;
 let vinylClockTimer: number | null = null;
 let speakerTempoTrackKey = "";
 let speakerTempoFetchKey = "";
@@ -573,7 +575,7 @@ const DEFAULT_ROOM_UTILITY: RoomUtilitySettings = {
   placedAlbumRotateZ: 0,
   placedAlbumDepth: 0,
   placedAlbumShadow: 1,
-  placedAlbumOpacity: 1,
+  placedAlbumOpacity: 0.82,
   panelStartY: 39,
   panelHeightAdjustEnabled: false,
   roomFillStretchMode: false,
@@ -891,6 +893,8 @@ const TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-final-16x9-lyric-offsets-
 const FINAL_TALL_LYRIC_CALIBRATION_MIGRATION_KEY = "pocketdj-final-full-tall-lyric-offsets-effects-disabled-2026-06-02";
 const PLACED_ACTIVE_ALBUM_TUNING_MIGRATION_KEY = "pocketdj-v66b-placed-active-album-tuned-2026-06-03";
 const AMBIENT_TWINKLE_VISIBILITY_MIGRATION_KEY = "pocketdj-v66b-ambient-twinkles-visibility-2026-06-03";
+const PLACED_ACTIVE_ALBUM_DIM_MIGRATION_KEY = "pocketdj-v66c-placed-active-album-dim-shelf-2026-06-03";
+const AMBIENT_TWINKLE_USER_EDIT_MIGRATION_KEY = "pocketdj-v66c-ambient-twinkles-user-edit-2026-06-03";
 let roomUtility = loadRoomUtilitySettings();
 
 function setUtilityLabel(id: string, value: number): void {
@@ -1294,6 +1298,44 @@ function applyAmbientTwinkleVisibilityMigration(): void {
   }
 }
 
+function applyPlacedActiveAlbumDimMigration(): void {
+  try {
+    if (window.localStorage.getItem(PLACED_ACTIVE_ALBUM_DIM_MIGRATION_KEY)) return;
+    roomUtility = {
+      ...roomUtility,
+      placedAlbumEnabled: true,
+      placedAlbumX: 44,
+      placedAlbumY: 60,
+      placedAlbumSize: 4,
+      placedAlbumRotateX: 33,
+      placedAlbumRotateY: 0,
+      placedAlbumRotateZ: 0,
+      placedAlbumDepth: 0,
+      placedAlbumShadow: 1,
+      placedAlbumOpacity: 0.82,
+      panelStartY: 39,
+    };
+    saveRoomUtilitySettings();
+    window.localStorage.setItem(PLACED_ACTIVE_ALBUM_DIM_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply placed active album dim migration", error);
+  }
+}
+
+function applyAmbientTwinkleUserEditMigration(): void {
+  try {
+    if (window.localStorage.getItem(AMBIENT_TWINKLE_USER_EDIT_MIGRATION_KEY)) return;
+    ambientTwinkleSettings = {
+      ...DEFAULT_AMBIENT_TWINKLE_SETTINGS,
+      points: DEFAULT_AMBIENT_TWINKLE_POINTS.map((point) => ({ ...point })),
+    };
+    saveAmbientTwinkleSettings();
+    window.localStorage.setItem(AMBIENT_TWINKLE_USER_EDIT_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply ambient twinkle user edit migration", error);
+  }
+}
+
 type StringLightPoint = {
   id: number;
   x: number;
@@ -1383,21 +1425,21 @@ const DEFAULT_AMBIENT_TWINKLE_POINTS: AmbientTwinklePoint[] = [
   { id: 2, kind: "star", x: 754, y: 392, size: 2.4, intensity: 0.58, phase: 0.22 },
   { id: 3, kind: "star", x: 829, y: 371, size: 1.9, intensity: 0.64, phase: 0.41 },
   { id: 4, kind: "star", x: 906, y: 386, size: 1.5, intensity: 0.52, phase: 0.73 },
-  { id: 5, kind: "star", x: 982, y: 369, size: 1.8, intensity: 0.60, phase: 0.31 },
+  { id: 5, kind: "star", x: 982, y: 369, size: 1.8, intensity: 0.6, phase: 0.31 },
   { id: 6, kind: "star", x: 1056, y: 393, size: 1.6, intensity: 0.55, phase: 0.62 },
   { id: 7, kind: "star", x: 1130, y: 377, size: 1.9, intensity: 0.62, phase: 0.88 },
   { id: 8, kind: "star", x: 744, y: 430, size: 1.4, intensity: 0.48, phase: 0.54 },
-  { id: 9, kind: "star", x: 1018, y: 431, size: 1.5, intensity: 0.50, phase: 0.13 },
-  { id: 10, kind: "city", x: 689, y: 514, size: 2.1, intensity: 0.72, phase: 0.10 },
+  { id: 9, kind: "star", x: 947.0289877374792, y: 411.88594297148575, size: 1.5, intensity: 0.5, phase: 0.13 },
+  { id: 10, kind: "city", x: 689, y: 514, size: 2.1, intensity: 0.72, phase: 0.1 },
   { id: 11, kind: "city", x: 722, y: 496, size: 2.4, intensity: 0.82, phase: 0.27 },
   { id: 12, kind: "city", x: 751, y: 530, size: 1.8, intensity: 0.62, phase: 0.46 },
   { id: 13, kind: "city", x: 790, y: 502, size: 2.2, intensity: 0.76, phase: 0.67 },
   { id: 14, kind: "city", x: 833, y: 535, size: 1.9, intensity: 0.66, phase: 0.38 },
   { id: 15, kind: "city", x: 868, y: 483, size: 2.5, intensity: 0.88, phase: 0.84 },
   { id: 16, kind: "city", x: 910, y: 517, size: 2.1, intensity: 0.75, phase: 0.06 },
-  { id: 17, kind: "city", x: 948, y: 492, size: 2.4, intensity: 0.80, phase: 0.57 },
+  { id: 17, kind: "city", x: 948, y: 492, size: 2.4, intensity: 0.8, phase: 0.57 },
   { id: 18, kind: "city", x: 986, y: 529, size: 1.8, intensity: 0.64, phase: 0.24 },
-  { id: 19, kind: "city", x: 1024, y: 505, size: 2.3, intensity: 0.78, phase: 0.74 },
+  { id: 19, kind: "city", x: 1039.851091052185, y: 554.8054027013507, size: 2.3, intensity: 0.78, phase: 0.74 },
   { id: 20, kind: "city", x: 1068, y: 532, size: 1.9, intensity: 0.68, phase: 0.44 },
   { id: 21, kind: "city", x: 1108, y: 498, size: 2.2, intensity: 0.74, phase: 0.91 },
   { id: 22, kind: "city", x: 1150, y: 521, size: 1.8, intensity: 0.62, phase: 0.19 },
@@ -1405,9 +1447,18 @@ const DEFAULT_AMBIENT_TWINKLE_POINTS: AmbientTwinklePoint[] = [
   { id: 24, kind: "star", x: 893, y: 410, size: 1.6, intensity: 0.56, phase: 0.95 },
   { id: 25, kind: "star", x: 1092, y: 421, size: 1.5, intensity: 0.53, phase: 0.36 },
   { id: 26, kind: "city", x: 705, y: 545, size: 1.8, intensity: 0.64, phase: 0.32 },
-  { id: 27, kind: "city", x: 821, y: 486, size: 1.7, intensity: 0.60, phase: 0.58 },
+  { id: 27, kind: "city", x: 821, y: 486, size: 1.7, intensity: 0.6, phase: 0.58 },
   { id: 28, kind: "city", x: 965, y: 474, size: 1.9, intensity: 0.66, phase: 0.05 },
   { id: 29, kind: "city", x: 1086, y: 485, size: 1.8, intensity: 0.62, phase: 0.72 },
+  { id: 30, kind: "city", x: 801, y: 507, size: 2.4, intensity: 0.39, phase: 0.11000000000000032 },
+  { id: 31, kind: "city", x: 798.1165225267213, y: 421.81090545272633, size: 2.2, intensity: 0.74, phase: 0.2469999999999999 },
+  { id: 32, kind: "city", x: 665.0880536051108, y: 460.51825912956474, size: 1.2, intensity: 0.74, phase: 0.38400000000000034 },
+  { id: 33, kind: "city", x: 735, y: 409.40470235117556, size: 1.9, intensity: 0.74, phase: 0.5210000000000008 },
+  { id: 34, kind: "city", x: 836.3373885974825, y: 448.11205602801397, size: 2.2, intensity: 1.09, phase: 0.6580000000000004 },
+  { id: 35, kind: "city", x: 1037, y: 427.76588294147075, size: 2.2, intensity: 0.74, phase: 0.7949999999999999 },
+  { id: 36, kind: "city", x: 984, y: 409.9009504752376, size: 2.2, intensity: 0.74, phase: 0.9320000000000004 },
+  { id: 37, kind: "city", x: 1066.6553347901213, y: 439.1795897948975, size: 2.2, intensity: 0.74, phase: 0.06900000000000084 },
+  { id: 38, kind: "city", x: 1109.8399497012413, y: 439.6758379189595, size: 2.2, intensity: 0.74, phase: 0.2060000000000004 },
 ];
 
 const DEFAULT_AMBIENT_TWINKLE_SETTINGS: AmbientTwinkleSettings = {
@@ -1417,8 +1468,8 @@ const DEFAULT_AMBIENT_TWINKLE_SETTINGS: AmbientTwinkleSettings = {
   starOpacity: 0.88,
   cityOpacity: 1.06,
   twinkle: 0.55,
-  selectedId: 3,
-  nextId: 30,
+  selectedId: 36,
+  nextId: 39,
   points: DEFAULT_AMBIENT_TWINKLE_POINTS.map((point) => ({ ...point })),
 };
 
@@ -3099,6 +3150,8 @@ async function boot(): Promise<void> {
   applyFinalTallLyricCalibrationMigration();
   applyPlacedActiveAlbumTuningMigration();
   applyAmbientTwinkleVisibilityMigration();
+  applyPlacedActiveAlbumDimMigration();
+  applyAmbientTwinkleUserEditMigration();
   applyRoomUtilitySettings();
 
   if (state.spotifyClientId) {
@@ -6846,6 +6899,8 @@ function commitPlacedActiveAlbum(trackKey: string, url: string): void {
   placedAlbumCommittedUrl = url;
   placedAlbumPendingTrackKey = "";
   placedAlbumPendingUrl = "";
+  placedAlbumPendingRequiresReveal = false;
+  placedAlbumPendingRevealSeen = false;
 }
 
 function updatePlacedActiveAlbum(track: AppState["playback"]): void {
@@ -6858,18 +6913,32 @@ function updatePlacedActiveAlbum(track: AppState["playback"]): void {
   const readyUrl = albumArtUrl && albumRevealLoadedUrl === albumArtUrl ? albumArtUrl : "";
   const revealActive = isSongChangeRevealActive();
 
+  if (placedAlbumPendingTrackKey && revealActive) {
+    placedAlbumPendingRevealSeen = true;
+  }
+
   if (trackKey && readyUrl) {
     const alreadyCommitted = placedAlbumCommittedTrackKey === trackKey && placedAlbumCommittedUrl === readyUrl;
-    if (!alreadyCommitted) {
+    const alreadyPending = placedAlbumPendingTrackKey === trackKey && placedAlbumPendingUrl === readyUrl;
+
+    if (!alreadyCommitted && !alreadyPending) {
       placedAlbumPendingTrackKey = trackKey;
       placedAlbumPendingUrl = readyUrl;
-      if (!revealActive) {
-        commitPlacedActiveAlbum(trackKey, readyUrl);
-      }
+      placedAlbumPendingRequiresReveal = Boolean(placedAlbumCommittedUrl && placedAlbumCommittedTrackKey && trackKey !== placedAlbumCommittedTrackKey);
+      placedAlbumPendingRevealSeen = revealActive;
     }
   }
 
-  if (!revealActive && placedAlbumPendingTrackKey && placedAlbumPendingUrl) {
+  const pendingCanCommit = Boolean(
+    placedAlbumPendingTrackKey &&
+    placedAlbumPendingUrl &&
+    (
+      !placedAlbumPendingRequiresReveal ||
+      (placedAlbumPendingRevealSeen && !revealActive)
+    )
+  );
+
+  if (pendingCanCommit) {
     commitPlacedActiveAlbum(placedAlbumPendingTrackKey, placedAlbumPendingUrl);
   }
 
