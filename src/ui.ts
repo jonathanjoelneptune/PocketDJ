@@ -125,6 +125,7 @@ export function renderShell(state: AppState): void {
             <div class="floor-progress-fill" id="floorProgressFill"></div>
           </div>
           <button id="floorControlsLock" class="floor-controls-lock" type="button" aria-label="Lock floor controls open" aria-pressed="false" title="Lock floor controls open"></button>
+          <button id="floorFullscreenToggle" class="floor-controls-fullscreen" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen"></button>
         </div>
         </div>
       </section>
@@ -147,6 +148,7 @@ export function renderShell(state: AppState): void {
             </div>
             <button id="aspectModeToggle" class="aspect-pill" type="button" aria-pressed="false" title="Toggle Wide / Fill scene">WIDE</button>
             <button id="compactPanelToggle" class="compact-pill" type="button" aria-pressed="false" title="Show compact panel">COMPACT</button>
+            <button id="fullscreenToggle" class="fullscreen-pill" type="button" aria-pressed="false" title="Enter fullscreen">FULL</button>
             <button id="panelLockToggle" class="panel-lock-toggle" type="button" aria-label="Lock side panel open" title="Lock side panel open">🔒</button>
           </div>
         </div>

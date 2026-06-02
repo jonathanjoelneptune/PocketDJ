@@ -3327,6 +3327,50 @@ function setCompactPanelEnabled(enabled: boolean): void {
   }
 }
 
+function isAppFullscreen(): boolean {
+  return document.fullscreenElement === document.documentElement;
+}
+
+function updateFullscreenUi(): void {
+  const active = isAppFullscreen();
+  const sideButton = document.querySelector<HTMLButtonElement>("#fullscreenToggle");
+  const floorButton = document.querySelector<HTMLButtonElement>("#floorFullscreenToggle");
+  document.documentElement.classList.toggle("pocketdj-fullscreen-active", active);
+
+  if (sideButton) {
+    sideButton.classList.toggle("fullscreen-pill-active", active);
+    sideButton.setAttribute("aria-pressed", String(active));
+    sideButton.textContent = active ? "EXIT" : "FULL";
+    sideButton.title = active ? "Exit fullscreen" : "Enter fullscreen";
+    sideButton.setAttribute("aria-label", active ? "Exit fullscreen" : "Enter fullscreen");
+  }
+
+  if (floorButton) {
+    floorButton.classList.toggle("floor-controls-fullscreen-active", active);
+    floorButton.setAttribute("aria-pressed", String(active));
+    floorButton.title = active ? "Exit fullscreen" : "Enter fullscreen";
+    floorButton.setAttribute("aria-label", active ? "Exit fullscreen" : "Enter fullscreen");
+  }
+}
+
+async function toggleAppFullscreen(): Promise<void> {
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else if (document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen();
+    } else {
+      lastPollError = "Fullscreen is not available in this browser.";
+      console.warn(lastPollError);
+    }
+  } catch (error) {
+    lastPollError = error instanceof Error ? error.message : String(error);
+    console.warn("Could not toggle fullscreen", error);
+  } finally {
+    updateFullscreenUi();
+  }
+}
+
 function revealDevToolsByTripleClick(): void {
   devToolsClickCount += 1;
   if (devToolsClickTimer) window.clearTimeout(devToolsClickTimer);
@@ -3380,6 +3424,8 @@ function bindControls(): void {
   qs<HTMLButtonElement>("#aspectModeToggle").addEventListener("click", () => setRoomFillStretchMode(!roomUtility.roomFillStretchMode));
   qs<HTMLElement>(".pocket-title-pill").addEventListener("click", toggleAspectModeFromPocketClicks);
   qs<HTMLButtonElement>("#compactPanelToggle").addEventListener("click", () => setCompactPanelEnabled(!compactPanelEnabled));
+  qs<HTMLButtonElement>("#fullscreenToggle").addEventListener("click", () => void toggleAppFullscreen());
+  document.addEventListener("fullscreenchange", updateFullscreenUi);
 
   qs<HTMLButtonElement>("#panelToggle").addEventListener("click", () => {
     openSidePanel(true);
@@ -3810,6 +3856,7 @@ function updateFloorControlsLockUi(): void {
 
 function bindFloorControlsLock(): void {
   const lockButton = document.querySelector<HTMLButtonElement>("#floorControlsLock");
+  const fullscreenButton = document.querySelector<HTMLButtonElement>("#floorFullscreenToggle");
   lockButton?.addEventListener("click", (event) => {
     event.stopPropagation();
     floorControlsLocked = !floorControlsLocked;
@@ -3817,6 +3864,12 @@ function bindFloorControlsLock(): void {
     setFloorControlsOpen(true, !floorControlsLocked);
     updateFloorControlsLockUi();
   });
+  fullscreenButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    setFloorControlsOpen(true, !floorControlsLocked);
+    void toggleAppFullscreen();
+  });
+  updateFullscreenUi();
 }
 
 function setFloorControlsOpen(open: boolean, autoHide = true): void {
