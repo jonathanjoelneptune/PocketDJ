@@ -17,7 +17,7 @@ import { renderShell, setControlPanelOpen, updateLyricsCeiling, updateLyricsTogg
 
 const STANDARD_SPOTIFY_CLIENT_ID = "37da51db24384ad3a07c222f71b1525e";
 const SPOTIFY_WEB_PLAYBACK_SDK_URL = "https://sdk.scdn.co/spotify-player.js";
-const POCKET_DJ_DEVICE_NAME = "Pocket DJ";
+const POCKET_DJ_DEVICE_NAME = "PocketDJ";
 const PREFERRED_SPOTIFY_SOURCE_KEY = "pocketdj-preferred-spotify-source-v1";
 const FLOOR_CONTROLS_LOCK_KEY = "pocketdj-floor-controls-locked-v1";
 const GETSONGBPM_BROWSER_API_KEY = "adb657bcac29228727d5af3455947f33";
@@ -73,6 +73,8 @@ let devToolsLockClickTimer: number | null = null;
 let aspectPocketClickCount = 0;
 let aspectPocketClickTimer: number | null = null;
 let menu2Open = false;
+let menu2Locked = true;
+let menu2HasOpened = localStorage.getItem("pocketdj-menu2-has-opened") === "true";
 let menu2ActiveTab: "now" | "queue" | "playlists" | "search" | "discover" | "devices" | "dev" = "now";
 let menu2DevUnlocked = false;
 let menu2LockClickCount = 0;
@@ -934,7 +936,7 @@ function loadRoomUtilitySettings(): RoomUtilitySettings {
       return { ...DEFAULT_ROOM_UTILITY, ...parsed };
     }
   } catch (error) {
-    console.warn("Could not load Pocket DJ room utility settings", error);
+    console.warn("Could not load PocketDJ room utility settings", error);
   }
 
   return { ...DEFAULT_ROOM_UTILITY };
@@ -3331,8 +3333,9 @@ function setCompactPanelEnabled(enabled: boolean): void {
   button?.classList.toggle("compact-pill-active", enabled);
   if (button) {
     button.setAttribute("aria-pressed", String(enabled));
-    button.textContent = "COMPACT";
+    button.textContent = enabled ? "FULL" : "COMPACT";
   }
+  syncMenu2Pills();
 }
 
 type ScreenWakeLockSentinelLike = EventTarget & {
@@ -3512,6 +3515,7 @@ function applyMenu2Settings(): void {
   if (!panel) return;
   panel.classList.toggle("menu2-closed", !menu2Open);
   panel.classList.toggle("menu2-open", menu2Open);
+  panel.classList.toggle("menu2-locked", menu2Locked);
   panel.classList.toggle("menu2-style-pocket", menu2StyleMode === "pocket");
   panel.classList.toggle("menu2-style-spotify", menu2StyleMode === "spotify");
   panel.classList.toggle("menu2-art-large", menu2ArtSize === "large");
@@ -3519,6 +3523,16 @@ function applyMenu2Settings(): void {
   panel.classList.toggle("menu2-art-small", menu2ArtSize === "small");
   panel.setAttribute("aria-hidden", String(!menu2Open));
   document.documentElement.classList.toggle("menu2-open", menu2Open);
+  document.documentElement.classList.toggle("menu2-bubble-ready", menu2HasOpened && !menu2Open);
+  document.documentElement.classList.toggle("menu2-locked", menu2Locked);
+
+  const lockPill = document.querySelector<HTMLButtonElement>("#menu2LockPill");
+  if (lockPill) {
+    lockPill.classList.toggle("menu2-pill-active", menu2Locked);
+    lockPill.setAttribute("aria-pressed", String(menu2Locked));
+    lockPill.title = menu2Locked ? "Menu locked open" : "Menu unlocked";
+  }
+  syncMenu2Bubble();
 
   const styleSelect = document.querySelector<HTMLSelectElement>("#menu2StyleMode");
   const artSelect = document.querySelector<HTMLSelectElement>("#menu2ArtSize");
@@ -3538,6 +3552,10 @@ function applyMenu2Settings(): void {
 
 function setMenu2Open(open: boolean): void {
   menu2Open = open;
+  if (open) {
+    menu2HasOpened = true;
+    localStorage.setItem("pocketdj-menu2-has-opened", "true");
+  }
   applyMenu2Settings();
   if (open) {
     renderMenu2NowPlaying();
@@ -3583,8 +3601,8 @@ function menu2PlaylistRow(playlist: SpotifyCatalogPlaylist): string {
         <strong>${escapeHtmlInline(playlist.name)}</strong>
         <span>${escapeHtmlInline(playlist.owner)} • ${playlist.trackCount} tracks</span>
       </div>
-      <button class="menu2-mini-action" type="button" data-menu2-action="play-context" data-uri="${escapeHtmlInline(playlist.uri)}">Play</button>
-      <button class="menu2-mini-action secondary" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(playlist.uri)}">Shuffle</button>
+      <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="play-context" data-uri="${escapeHtmlInline(playlist.uri)}" aria-label="Play playlist" title="Play">▶</button>
+      <button class="menu2-mini-action secondary menu2-icon-action" type="button" data-menu2-action="shuffle-context" data-uri="${escapeHtmlInline(playlist.uri)}" aria-label="Shuffle playlist" title="Shuffle">⤨</button>
     </article>`;
 }
 
@@ -3621,17 +3639,33 @@ function syncMenu2Pills(): void {
   const fullscreen = document.querySelector<HTMLButtonElement>("#menu2FullscreenPill");
   if (lyrics) {
     lyrics.classList.toggle("menu2-pill-active", lyricsEnabled);
-    lyrics.textContent = lyricsEnabled ? "Lyrics" : "Lyrics Off";
+    lyrics.title = lyricsEnabled ? "Lyrics on" : "Lyrics off";
   }
   if (connect) {
     connect.classList.toggle("menu2-pill-active", state.playback.isAuthenticated);
-    connect.textContent = state.playback.isAuthenticated ? "Connected" : "Connect";
+    connect.title = state.playback.isAuthenticated ? "Connected" : "Connect Spotify";
   }
   if (compact) {
     compact.classList.toggle("menu2-pill-active", compactPanelEnabled);
-    compact.textContent = compactPanelEnabled ? "Compact" : "Full Panel";
+    compact.title = compactPanelEnabled ? "Compact" : "Full Panel";
   }
   if (fullscreen) fullscreen.classList.toggle("menu2-pill-active", isAppFullscreen());
+  syncMenu2Bubble();
+}
+
+function syncMenu2Bubble(): void {
+  const bubble = document.querySelector<HTMLElement>("#menu2Bubble");
+  if (bubble) bubble.setAttribute("aria-hidden", String(!(menu2HasOpened && !menu2Open)));
+  const lyrics = document.querySelector<HTMLButtonElement>("#menu2BubbleLyrics");
+  const connect = document.querySelector<HTMLButtonElement>("#menu2BubbleConnect");
+  const compact = document.querySelector<HTMLButtonElement>("#menu2BubbleCompact");
+  const fullscreen = document.querySelector<HTMLButtonElement>("#menu2BubbleFullscreen");
+  const play = document.querySelector<HTMLButtonElement>("#menu2BubblePlay");
+  lyrics?.classList.toggle("menu2-bubble-active", lyricsEnabled);
+  connect?.classList.toggle("menu2-bubble-active", state.playback.isAuthenticated);
+  compact?.classList.toggle("menu2-bubble-active", compactPanelEnabled);
+  fullscreen?.classList.toggle("menu2-bubble-active", isAppFullscreen());
+  if (play) play.textContent = state.playback.isPlaying ? "❚❚" : "▶";
 }
 
 async function loadMenu2Queue(): Promise<void> {
@@ -3704,7 +3738,7 @@ async function performMenu2Search(): Promise<void> {
         <article class="menu2-row" data-uri="${escapeHtmlInline(album.uri)}">
           <div class="menu2-row-art">${album.imageUrl ? `<img src="${escapeHtmlInline(album.imageUrl)}" alt="" />` : "▧"}</div>
           <div class="menu2-row-copy"><strong>${escapeHtmlInline(album.name)}</strong><span>${escapeHtmlInline(album.artists)} • ${album.releaseYear}</span></div>
-          <button class="menu2-mini-action" type="button" data-menu2-action="play-context" data-uri="${escapeHtmlInline(album.uri)}">Play</button>
+          <button class="menu2-mini-action menu2-icon-action" type="button" data-menu2-action="play-context" data-uri="${escapeHtmlInline(album.uri)}" aria-label="Play album" title="Play">▶</button>
         </article>`),
       ...results.artists.map((artist) => `
         <article class="menu2-row">
@@ -3737,7 +3771,7 @@ async function loadMenu2Devices(): Promise<void> {
   await refreshSpotifyDevices();
   const devices = [...lastSpotifyDevices];
   if (pocketDjDeviceId && !devices.some((device) => device.id === pocketDjDeviceId)) {
-    devices.unshift({ id: pocketDjDeviceId, is_active: pocketDjDeviceActive, is_private_session: false, is_restricted: false, name: "Pocket DJ Browser", type: "Computer", volume_percent: null });
+    devices.unshift({ id: pocketDjDeviceId, is_active: pocketDjDeviceActive, is_private_session: false, is_restricted: false, name: "PocketDJ Browser", type: "Computer", volume_percent: null });
   }
   container.innerHTML = devices.length ? devices.map((device) => `
     <button class="menu2-device-row${device.is_active ? " menu2-device-active" : ""}" type="button" data-menu2-action="device" data-device-id="${escapeHtmlInline(device.id || "")}" ${device.id ? "" : "disabled"}>
@@ -3746,33 +3780,41 @@ async function loadMenu2Devices(): Promise<void> {
     </button>`).join("") : `<div class="menu2-empty">No Spotify Connect devices found.</div>`;
 }
 
-function revealMenu2DevByLockClicks(): void {
+function handleMenu2LockClick(): void {
   menu2LockClickCount += 1;
   if (menu2LockClickTimer) window.clearTimeout(menu2LockClickTimer);
-  menu2LockClickTimer = window.setTimeout(() => {
-    menu2LockClickCount = 0;
-    menu2LockClickTimer = null;
-  }, 1100);
+
   if (menu2LockClickCount >= 5) {
     menu2LockClickCount = 0;
-    if (menu2LockClickTimer) window.clearTimeout(menu2LockClickTimer);
+    menu2LockClickTimer = null;
     menu2DevUnlocked = !menu2DevUnlocked;
     if (menu2DevUnlocked) menu2ActiveTab = "dev";
     applyMenu2Settings();
-    setMenu2Status(menu2DevUnlocked ? "Menu 2.0 Dev unlocked." : "Menu 2.0 Dev hidden.", false);
+    setMenu2Status(menu2DevUnlocked ? "Dev unlocked." : "Dev hidden.", false);
+    return;
   }
+
+  menu2LockClickTimer = window.setTimeout(() => {
+    const shouldToggleLock = menu2LockClickCount > 0 && menu2LockClickCount < 5;
+    menu2LockClickCount = 0;
+    menu2LockClickTimer = null;
+    if (!shouldToggleLock) return;
+    menu2Locked = !menu2Locked;
+    applyMenu2Settings();
+    if (!menu2Locked) setMenu2Open(false);
+  }, 430);
 }
 
 function bindMenu2Controls(): void {
-  document.querySelector<HTMLButtonElement>("#menu2Close")?.addEventListener("click", () => setMenu2Open(false));
+  document.querySelector<HTMLButtonElement>("#menu2BrandPill")?.addEventListener("click", () => setMenu2Open(false));
   document.querySelectorAll<HTMLButtonElement>(".menu2-tab").forEach((button) => {
     button.addEventListener("click", () => setMenu2Tab(button.dataset.menu2Tab as typeof menu2ActiveTab));
   });
   document.querySelector<HTMLButtonElement>("#menu2LyricsPill")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#lyricsToggle")?.click());
   document.querySelector<HTMLButtonElement>("#menu2ConnectPill")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#connectSpotify")?.click());
-  document.querySelector<HTMLButtonElement>("#menu2CompactPill")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#compactPanelToggle")?.click());
+  document.querySelector<HTMLButtonElement>("#menu2CompactPill")?.addEventListener("click", () => setCompactPanelEnabled(!compactPanelEnabled));
   document.querySelector<HTMLButtonElement>("#menu2FullscreenPill")?.addEventListener("click", () => void toggleAppFullscreen());
-  document.querySelector<HTMLButtonElement>("#menu2LockPill")?.addEventListener("click", revealMenu2DevByLockClicks);
+  document.querySelector<HTMLButtonElement>("#menu2LockPill")?.addEventListener("click", handleMenu2LockClick);
   document.querySelector<HTMLButtonElement>("#menu2RefreshQueue")?.addEventListener("click", () => void loadMenu2Queue());
   document.querySelector<HTMLButtonElement>("#menu2RefreshPlaylists")?.addEventListener("click", () => void loadMenu2Playlists(true));
   document.querySelector<HTMLInputElement>("#menu2PlaylistFilter")?.addEventListener("input", renderMenu2Playlists);
@@ -3819,6 +3861,13 @@ function bindMenu2Controls(): void {
       panelVolume.dispatchEvent(new Event("input", { bubbles: true }));
     }
   });
+  document.querySelector<HTMLButtonElement>("#menu2BubbleLyrics")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#lyricsToggle")?.click());
+  document.querySelector<HTMLButtonElement>("#menu2BubbleConnect")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#connectSpotify")?.click());
+  document.querySelector<HTMLButtonElement>("#menu2BubbleCompact")?.addEventListener("click", () => setCompactPanelEnabled(!compactPanelEnabled));
+  document.querySelector<HTMLButtonElement>("#menu2BubbleFullscreen")?.addEventListener("click", () => void toggleAppFullscreen());
+  document.querySelector<HTMLButtonElement>("#menu2BubblePrev")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPrevButton")?.click());
+  document.querySelector<HTMLButtonElement>("#menu2BubblePlay")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPlayButton")?.click());
+  document.querySelector<HTMLButtonElement>("#menu2BubbleNext")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelNextButton")?.click());
   applyMenu2Settings();
   renderMenu2Discover();
 }
@@ -3912,7 +3961,7 @@ function bindControls(): void {
     state.playback = emptyTrack();
     panelAutoHiddenAfterConnect = false;
     openSidePanel(true);
-    setPocketDjSourceStatus("Spotify disconnected. Connect again to use Pocket DJ.");
+    setPocketDjSourceStatus("Spotify disconnected. Connect again to use PocketDJ.");
     renderSpotifySourcePanel();
     updatePlaybackUi(state.playback, state.debugOpen);
     qs<HTMLElement>("#connectDropdown").classList.remove("connect-dropdown-open");
@@ -4395,7 +4444,7 @@ function renderSpotifySourcePanel(): void {
 
   playHereButton.disabled = !loadTokens();
   activeLabel.textContent = pocketDjDeviceActive
-    ? "Audio output: Pocket DJ"
+    ? "Audio output: PocketDJ"
     : "Audio output: Spotify Connect";
 
   const devices = [...lastSpotifyDevices];
@@ -4413,7 +4462,7 @@ function renderSpotifySourcePanel(): void {
   }
 
   if (!devices.length) {
-    deviceList.innerHTML = `<div class="spotify-browser-empty">No Spotify Connect devices found yet. Open Spotify or activate Pocket DJ.</div>`;
+    deviceList.innerHTML = `<div class="spotify-browser-empty">No Spotify Connect devices found yet. Open Spotify or activate PocketDJ.</div>`;
     return;
   }
 
@@ -4461,7 +4510,7 @@ function loadSpotifyWebPlaybackSdk(): Promise<void> {
 
 async function initializePocketDjBrowserDevice(): Promise<void> {
   if (!state.spotifyClientId || !loadTokens()) {
-    setPocketDjSourceStatus("Connect Spotify before activating Pocket DJ.");
+    setPocketDjSourceStatus("Connect Spotify before activating PocketDJ.");
     renderSpotifySourcePanel();
     return;
   }
@@ -4488,7 +4537,7 @@ async function initializePocketDjBrowserDevice(): Promise<void> {
     pocketDjPlayer.addListener("ready", ({ device_id }: { device_id: string }) => {
       pocketDjDeviceId = device_id;
       pocketDjDeviceReady = true;
-      setPocketDjSourceStatus("Pocket DJ is ready as a Spotify Connect device.");
+      setPocketDjSourceStatus("PocketDJ is ready as a Spotify Connect device.");
       void refreshSpotifyDevices();
     });
 
@@ -4497,7 +4546,7 @@ async function initializePocketDjBrowserDevice(): Promise<void> {
         pocketDjDeviceReady = false;
         pocketDjDeviceActive = false;
       }
-      setPocketDjSourceStatus("Pocket DJ device went offline. Refresh or reconnect Spotify.");
+      setPocketDjSourceStatus("PocketDJ device went offline. Refresh or reconnect Spotify.");
       renderSpotifySourcePanel();
     });
 
@@ -4514,9 +4563,9 @@ async function initializePocketDjBrowserDevice(): Promise<void> {
     });
   }
 
-  setPocketDjSourceStatus("Activating Pocket DJ device...");
+  setPocketDjSourceStatus("Activating PocketDJ device...");
   const connected = await pocketDjPlayer.connect();
-  if (!connected) throw new Error("Spotify could not activate Pocket DJ. Confirm this Spotify account has Premium.");
+  if (!connected) throw new Error("Spotify could not activate PocketDJ. Confirm this Spotify account has Premium.");
   renderSpotifySourcePanel();
 }
 
@@ -4540,7 +4589,7 @@ async function refreshSpotifyDevices(): Promise<void> {
 async function transferToPocketDjBrowser(play = true): Promise<void> {
   await initializePocketDjBrowserDevice();
   if (!pocketDjPlayer || !pocketDjDeviceId) {
-    throw new Error("Pocket DJ is not ready yet.");
+    throw new Error("PocketDJ is not ready yet.");
   }
 
   await pocketDjPlayer.activateElement?.();
@@ -4548,7 +4597,7 @@ async function transferToPocketDjBrowser(play = true): Promise<void> {
   preferredSpotifySource = "pocket-dj-browser";
   localStorage.setItem(PREFERRED_SPOTIFY_SOURCE_KEY, preferredSpotifySource);
   pocketDjDeviceActive = true;
-  setPocketDjSourceStatus("Playing through Pocket DJ.");
+  setPocketDjSourceStatus("Playing through PocketDJ.");
   await refreshSpotifyDevices();
   await pollSpotifyNow();
 }

@@ -9736,3 +9736,276 @@ body.lyrics-marquee-unavailable .marquee::after {
   .menu2-row { grid-template-columns: 26px 44px 1fr; }
   .menu2-row .menu2-mini-action { grid-column: auto; }
 }
+
+/* v68 Menu 2.0 polish pass */
+.menu2-panel {
+  width: min(448px, calc(100vw - 36px));
+  max-height: min(900px, calc(100vh - 36px));
+}
+
+.menu2-shell {
+  height: min(858px, calc(100vh - 36px));
+  gap: 13px;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, rgba(10, 10, 11, 0.985), rgba(0, 0, 0, 0.965));
+  border-color: rgba(30, 215, 96, 0.22);
+}
+
+.menu2-style-spotify .menu2-shell {
+  border-radius: 8px;
+  background: #000;
+  border-color: rgba(40, 40, 40, 0.95);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.72), inset 0 0 0 1px rgba(255,255,255,0.035);
+}
+
+.menu2-style-spotify .menu2-tab,
+.menu2-style-spotify .menu2-pill,
+.menu2-style-spotify .menu2-action,
+.menu2-style-spotify .menu2-mini-action,
+.menu2-style-spotify .menu2-row,
+.menu2-style-spotify .menu2-input,
+.menu2-style-spotify .menu2-select {
+  border-radius: 6px;
+  background-color: #181818;
+  border-color: rgba(255,255,255,0.06);
+}
+
+.menu2-style-spotify .menu2-tab-active,
+.menu2-style-spotify .menu2-pill-active {
+  background: #1ed760;
+  color: #000;
+}
+
+.menu2-style-spotify .menu2-row:hover,
+.menu2-style-spotify .menu2-device-row:hover {
+  background: #282828;
+}
+
+.menu2-control-strip {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.menu2-brand-pill {
+  border: 0;
+  background: transparent;
+  color: #1ed760;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0 4px 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.menu2-title,
+.menu2-kicker,
+.menu2-close {
+  display: none !important;
+}
+
+.menu2-round-pill {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 0 !important;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px !important;
+  font-size: 0.82rem;
+}
+
+.menu2-connect-pill { color: rgba(255,255,255,0.62); }
+.menu2-connect-pill.menu2-pill-active { color: #031108; }
+
+.menu2-panel .menu2-tabs {
+  gap: 9px;
+}
+
+.menu2-panel .menu2-tab {
+  padding: 8px 13px;
+}
+
+.menu2-status {
+  min-height: 20px;
+}
+
+.menu2-pane {
+  height: calc(100% - 142px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 5px;
+  scrollbar-width: thin;
+  scrollbar-color: #111 #050505;
+}
+
+.menu2-pane::-webkit-scrollbar,
+.menu2-list::-webkit-scrollbar,
+.menu2-shell::-webkit-scrollbar {
+  width: 9px;
+}
+
+.menu2-pane::-webkit-scrollbar-track,
+.menu2-list::-webkit-scrollbar-track,
+.menu2-shell::-webkit-scrollbar-track {
+  background: #050505;
+  border-radius: 999px;
+}
+
+.menu2-pane::-webkit-scrollbar-thumb,
+.menu2-list::-webkit-scrollbar-thumb,
+.menu2-shell::-webkit-scrollbar-thumb {
+  background: #141414;
+  border-radius: 999px;
+  border: 2px solid #050505;
+}
+
+.menu2-pane::-webkit-scrollbar-thumb:hover,
+.menu2-list::-webkit-scrollbar-thumb:hover,
+.menu2-shell::-webkit-scrollbar-thumb:hover {
+  background: #202020;
+}
+
+.menu2-row,
+.menu2-device-row {
+  grid-template-columns: auto 54px minmax(0, 1fr) auto auto;
+  gap: 12px;
+  padding: 11px;
+  border-radius: 16px;
+}
+
+#menu2PlaylistsPane .menu2-row {
+  grid-template-columns: 58px minmax(0, 1fr) 38px 38px;
+  gap: 13px;
+  padding: 12px;
+}
+
+#menu2PlaylistsPane .menu2-row-index {
+  display: none;
+}
+
+#menu2PlaylistsPane .menu2-list {
+  gap: 10px;
+  margin-top: 14px;
+}
+
+#menu2PlaylistsPane .menu2-input {
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+.menu2-icon-action {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.95rem;
+}
+
+.menu2-play {
+  background: #fff !important;
+  color: #000 !important;
+  border: 0 !important;
+  box-shadow: 0 10px 26px rgba(255,255,255,0.14);
+}
+
+.menu2-control:hover,
+.menu2-play:hover,
+.menu2-mini-action:hover,
+.menu2-action:hover,
+.menu2-pill:hover,
+.menu2-tab:hover {
+  transform: translateY(-1px);
+}
+
+.menu2-volume-row input,
+#menu2Volume {
+  accent-color: #1ed760;
+}
+
+.menu2-volume-row input::-webkit-slider-thumb,
+#menu2Volume::-webkit-slider-thumb {
+  accent-color: #1ed760;
+}
+
+.menu2-volume-row input::-webkit-slider-runnable-track,
+#menu2Volume::-webkit-slider-runnable-track {
+  accent-color: #1ed760;
+}
+
+.menu2-bubble {
+  position: fixed;
+  left: 18px;
+  top: 50%;
+  transform: translate3d(-120%, -50%, 0);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 79;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.78);
+  border: 1px solid rgba(30,215,96,0.22);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px);
+  transition: transform 240ms ease, opacity 240ms ease;
+}
+
+:root.menu2-bubble-ready .menu2-bubble {
+  transform: translate3d(0, -50%, 0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu2-bubble-button {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.88);
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.menu2-bubble-button.menu2-bubble-active,
+.menu2-bubble-play {
+  background: #1ed760;
+  color: #031108;
+  border-color: rgba(30,215,96,0.95);
+}
+
+.menu2-bubble-fullscreen::before,
+.menu2-icon-pill::before {
+  content: "";
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  display: block;
+  margin: 0 auto;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,0.18);
+}
+
+.menu2-panel .menu2-icon-pill::before {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .menu2-panel { width: calc(100vw - 20px); }
+  .menu2-shell { height: calc(100vh - 24px); padding: 16px; }
+  .menu2-control-strip { gap: 6px; }
+  .menu2-round-pill { width: 34px; height: 34px; min-width: 34px; }
+  .menu2-brand-pill { font-size: 0.74rem; }
+}

@@ -27,7 +27,7 @@ let marqueeSupportingShowingAlbum = false;
 export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
     <main class="stage">
-      <section class="room" aria-label="Pocket DJ room">
+      <section class="room" aria-label="PocketDJ room">
         <div class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\')" aria-hidden="true"></div>
         <div class="album-wash" id="albumWash"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
@@ -71,7 +71,7 @@ export function renderShell(state: AppState): void {
         <div class="marquee marquee-empty" aria-live="polite">
           <div class="marquee-viewport">
             <div class="marquee-content" id="marqueeContent">
-              <div class="marquee-title" id="marqueeTitle">POCKET DJ</div>
+              <div class="marquee-title" id="marqueeTitle">PocketDJ</div>
               <div class="marquee-artist" id="marqueeArtist">Listening lounge ready</div>
             </div>
           </div>
@@ -82,7 +82,7 @@ export function renderShell(state: AppState): void {
             id="djSprite"
             class="dj-frame-img"
             src="./assets/poses/final/i1.png"
-            alt="Pocket DJ"
+            alt="PocketDJ"
             draggable="false"
           />
           <div id="songChangeAlbumLayer" class="song-change-album-layer" aria-hidden="true">
@@ -130,7 +130,7 @@ export function renderShell(state: AppState): void {
         </div>
       </section>
 
-      <button id="panelToggle" class="panel-toggle" type="button" aria-label="Show Pocket DJ controls" title="Show controls">♪</button>
+      <button id="panelToggle" class="panel-toggle" type="button" aria-label="Show PocketDJ controls" title="Show controls">♪</button>
 
       <pre id="animationDebugPanel" class="animation-debug-panel" hidden>frame: loading</pre>
 
@@ -1243,22 +1243,15 @@ export function renderShell(state: AppState): void {
         </div>
       </aside>
 
-      <aside id="menu2Panel" class="menu2-panel menu2-closed menu2-style-pocket menu2-art-large" aria-label="Pocket DJ Menu 2.0" aria-hidden="true">
+      <aside id="menu2Panel" class="menu2-panel menu2-closed menu2-style-pocket menu2-art-large" aria-label="PocketDJ menu" aria-hidden="true">
         <div class="menu2-shell">
-          <div class="menu2-topbar">
-            <div>
-              <div class="menu2-kicker">Pocket DJ</div>
-              <div class="menu2-title">Menu 2.0</div>
-            </div>
-            <button id="menu2Close" class="menu2-close" type="button" aria-label="Close Menu 2.0">×</button>
-          </div>
-
-          <div class="menu2-pill-row" aria-label="Pocket DJ status controls">
-            <button id="menu2LyricsPill" class="menu2-pill" type="button">Lyrics</button>
-            <button id="menu2ConnectPill" class="menu2-pill" type="button">Connect</button>
-            <button id="menu2CompactPill" class="menu2-pill" type="button">Compact</button>
-            <button id="menu2FullscreenPill" class="menu2-pill menu2-icon-pill" type="button" aria-label="Toggle fullscreen"></button>
-            <button id="menu2LockPill" class="menu2-pill menu2-lock-pill" type="button" aria-label="Reveal Menu 2.0 dev tools">🔒</button>
+          <div class="menu2-topbar menu2-control-strip" aria-label="PocketDJ status controls">
+            <button id="menu2BrandPill" class="menu2-brand-pill" type="button" aria-label="PocketDJ">PocketDJ</button>
+            <button id="menu2LyricsPill" class="menu2-pill menu2-round-pill menu2-lyrics-pill" type="button" aria-label="Toggle lyrics" title="Lyrics">♫</button>
+            <button id="menu2ConnectPill" class="menu2-pill menu2-round-pill menu2-connect-pill" type="button" aria-label="Connect Spotify" title="Connected">●</button>
+            <button id="menu2CompactPill" class="menu2-pill menu2-round-pill menu2-panel-pill" type="button" aria-label="Toggle full panel or compact panel" title="Full Panel">▣</button>
+            <button id="menu2FullscreenPill" class="menu2-pill menu2-round-pill menu2-icon-pill" type="button" aria-label="Toggle fullscreen" title="Fullscreen"></button>
+            <button id="menu2LockPill" class="menu2-pill menu2-round-pill menu2-lock-pill" type="button" aria-label="Lock Menu 2.0 open" title="Lock menu open">🔒</button>
           </div>
 
           <nav class="menu2-tabs" aria-label="Menu 2.0 tabs">
@@ -1359,8 +1352,18 @@ export function renderShell(state: AppState): void {
         </div>
       </aside>
 
+      <div id="menu2Bubble" class="menu2-bubble" aria-label="PocketDJ quick controls" aria-hidden="true">
+        <button id="menu2BubbleLyrics" class="menu2-bubble-button" type="button" aria-label="Toggle lyrics" title="Lyrics">♫</button>
+        <button id="menu2BubbleConnect" class="menu2-bubble-button" type="button" aria-label="Connect Spotify" title="Connected">●</button>
+        <button id="menu2BubbleCompact" class="menu2-bubble-button" type="button" aria-label="Toggle full panel or compact panel" title="Full Panel">▣</button>
+        <button id="menu2BubbleFullscreen" class="menu2-bubble-button menu2-bubble-fullscreen" type="button" aria-label="Toggle fullscreen" title="Fullscreen"></button>
+        <button id="menu2BubblePrev" class="menu2-bubble-button" type="button" aria-label="Previous track" title="Previous">⏮</button>
+        <button id="menu2BubblePlay" class="menu2-bubble-button menu2-bubble-play" type="button" aria-label="Play or pause" title="Play/Pause">▶</button>
+        <button id="menu2BubbleNext" class="menu2-bubble-button" type="button" aria-label="Next track" title="Next">⏭</button>
+      </div>
 
-      <button id="sidePanelTab" class="side-panel-tab" type="button" aria-label="Open Pocket DJ panel" title="Open Pocket DJ panel">
+
+      <button id="sidePanelTab" class="side-panel-tab" type="button" aria-label="Open PocketDJ panel" title="Open PocketDJ panel">
         <span class="side-panel-tab-note">♫</span>
         <span class="side-panel-tab-arrow">‹</span>
       </button>
@@ -1863,7 +1866,7 @@ function cleanMarqueeText(value: string): string {
 function idleMarqueePhrase(): string {
   const phrases = [
     "Listening lounge ready",
-    "Start Spotify and Pocket DJ will wake up",
+    "Start Spotify and PocketDJ will wake up",
     "Late night session standby",
     "Vinyl dreams loading",
     "Connect Spotify to begin"
