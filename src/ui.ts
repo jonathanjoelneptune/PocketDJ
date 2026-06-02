@@ -13,6 +13,7 @@ type MarqueeState = "empty" | "paused" | "playing";
 type MarqueePayload = {
   title: string;
   artist: string;
+  albumLine: string;
   state: MarqueeState;
   key: string;
   titleLong: boolean;
@@ -22,6 +23,9 @@ type MarqueePayload = {
 let lastMarqueeKey = "";
 let marqueeSwapTimer: number | null = null;
 let marqueeTitleScrollTimer: number | null = null;
+let marqueeSupportingSwapTimer: number | null = null;
+let marqueeSupportingFadeTimer: number | null = null;
+let marqueeSupportingShowingAlbum = false;
 
 export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
@@ -1448,6 +1452,7 @@ function updateMarquee(track: NormalizedTrack): void {
 
   // Always transition song changes using the single clean title, not the duplicated scroll train.
   clearTitleScrollLoop();
+  clearSupportingLineLoop();
   titleEl.style.transition = "none";
   titleEl.style.transform = "translateX(0)";
   titleEl.textContent = titleEl.dataset.marqueeOriginal || titleEl.textContent || "";
@@ -1461,6 +1466,8 @@ function updateMarquee(track: NormalizedTrack): void {
   marqueeSwapTimer = window.setTimeout(() => {
     titleEl.dataset.marqueeOriginal = payload.title;
     artistEl.dataset.marqueeOriginal = payload.artist;
+    artistEl.dataset.marqueeArtistLine = payload.artist;
+    artistEl.dataset.marqueeAlbumLine = payload.albumLine;
     titleEl.textContent = payload.title;
     artistEl.textContent = payload.artist;
     prepareMarqueeRowsForEntry(marquee, titleEl, artistEl);
@@ -1481,6 +1488,7 @@ function updateMarquee(track: NormalizedTrack): void {
       content.classList.remove("marquee-entering");
       marquee.classList.remove("marquee-swap");
       updateMarqueeRowPan(marquee, titleEl, artistEl);
+      startSupportingLineLoop(marquee, artistEl, payload);
     }, 5200);
   }, 2300);
 }
@@ -1600,6 +1608,65 @@ function clearTitleScrollLoop(): void {
   }
 }
 
+function clearSupportingLineLoop(): void {
+  if (marqueeSupportingSwapTimer) {
+    window.clearTimeout(marqueeSupportingSwapTimer);
+    marqueeSupportingSwapTimer = null;
+  }
+  if (marqueeSupportingFadeTimer) {
+    window.clearTimeout(marqueeSupportingFadeTimer);
+    marqueeSupportingFadeTimer = null;
+  }
+  marqueeSupportingShowingAlbum = false;
+}
+
+function startSupportingLineLoop(marquee: HTMLElement, artistEl: HTMLElement, payload: MarqueePayload): void {
+  clearSupportingLineLoop();
+  artistEl.dataset.marqueeArtistLine = payload.artist;
+  artistEl.dataset.marqueeAlbumLine = payload.albumLine;
+
+  const canShowAlbum =
+    payload.state !== "empty" &&
+    Boolean(payload.albumLine) &&
+    payload.albumLine.toUpperCase() !== payload.artist.toUpperCase();
+
+  if (!canShowAlbum) return;
+
+  const showAlbumAfterMs = 7_500;
+  const showArtistAfterMs = 5_000;
+
+  const flip = () => {
+    marqueeSupportingShowingAlbum = !marqueeSupportingShowingAlbum;
+    const nextText = marqueeSupportingShowingAlbum
+      ? artistEl.dataset.marqueeAlbumLine || payload.albumLine
+      : artistEl.dataset.marqueeArtistLine || payload.artist;
+    fadeSupportingLineTo(marquee, artistEl, nextText);
+    marqueeSupportingSwapTimer = window.setTimeout(flip, marqueeSupportingShowingAlbum ? showArtistAfterMs : showAlbumAfterMs);
+  };
+
+  marqueeSupportingSwapTimer = window.setTimeout(flip, showAlbumAfterMs);
+}
+
+function fadeSupportingLineTo(marquee: HTMLElement, artistEl: HTMLElement, nextText: string): void {
+  const viewport = marquee.querySelector<HTMLElement>(".marquee-viewport");
+  const availableWidth = Math.max(0, (viewport?.clientWidth || marquee.clientWidth) - 10);
+
+  if (marqueeSupportingFadeTimer) window.clearTimeout(marqueeSupportingFadeTimer);
+  artistEl.style.transition = "";
+  artistEl.classList.add("marquee-support-fading");
+  marqueeSupportingFadeTimer = window.setTimeout(() => {
+    configureStaticArtistRow({
+      marquee,
+      element: artistEl,
+      originalText: nextText,
+      availableWidth
+    });
+    artistEl.style.transition = "";
+    artistEl.classList.remove("marquee-support-fading");
+    marqueeSupportingFadeTimer = null;
+  }, 520);
+}
+
 function configureStaticArtistRow(options: {
   marquee: HTMLElement;
   element: HTMLElement;
@@ -1627,9 +1694,12 @@ function configureStaticArtistRow(options: {
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
   let title: string;
   let artist: string;
+  let albumLine: string;
   let state: MarqueeState;
 
   const artistRaw = cleanMarqueeText(track.artist || "Spotify");
+  const albumRaw = cleanMarqueeText(track.album || "");
+  albumLine = albumRaw ? `ALBUM: ${albumRaw}` : "";
   const hasMultipleArtists =
     artistRaw.includes(",") ||
     artistRaw.includes("&") ||
@@ -1649,6 +1719,7 @@ function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
     state = "empty";
     title = "POCKET DJ";
     artist = idleMarqueePhrase();
+    albumLine = "";
   } else if (!track.isPlaying) {
     state = "paused";
     title = `PAUSED: ${cleanMarqueeText(track.title)}`;
@@ -1662,10 +1733,11 @@ function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
   return {
     title,
     artist,
+    albumLine,
     state,
     titleLong: title.length > 24,
     artistLong: artist.length > 34,
-    key: `${state}::${title.toUpperCase()}::${artist.toUpperCase()}`
+    key: `${state}::${title.toUpperCase()}::${artist.toUpperCase()}::${albumLine.toUpperCase()}`
   };
 }
 

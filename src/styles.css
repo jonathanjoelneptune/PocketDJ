@@ -242,6 +242,11 @@ button {
     1px 1px 0 #7c2d12,
     0 0 4px rgba(253, 230, 138, 0.64),
     0 0 14px rgba(251, 191, 36, 0.30);
+  transition: opacity 520ms ease, filter 520ms ease;
+}
+
+.marquee-artist.marquee-support-fading {
+  opacity: 0 !important;
 }
 
 .marquee-playing .marquee-title,
@@ -5909,11 +5914,28 @@ html[data-dj-mode="cinematic"] .dj-wrap {
     inset 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
-.song-change-album-cover {
-  filter:
-    drop-shadow(0 5px 8px rgba(0, 0, 0, 0.32))
-    saturate(1.03);
+.song-change-album-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: #4a2412;
+  opacity: 0.54;
+  mix-blend-mode: multiply;
 }
+
+.song-change-album-cover {
+  position: relative;
+  z-index: 1;
+  filter:
+    saturate(0.86)
+    contrast(0.98)
+    brightness(0.90)
+    sepia(0.14)
+    drop-shadow(0 5px 8px rgba(0, 0, 0, 0.32));
+}
+
 
 
 /* v62 album-ready cinematic gate: hide album art layer until the current album image has loaded. */
