@@ -9338,3 +9338,67 @@ body.lyrics-marquee-unavailable .marquee::after {
   max-width: none;
   max-height: none;
 }
+
+
+/* v66j: make utility fullscreen match the floor fullscreen icon and keep lock/fullscreen as circular buttons. */
+.brand-actions .panel-lock-toggle,
+.brand-actions .fullscreen-pill.fullscreen-icon-button {
+  width: calc(var(--room-h) * 0.036) !important;
+  height: calc(var(--room-h) * 0.036) !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  flex: 0 0 auto !important;
+  position: relative !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+  color: rgba(255, 218, 138, 0.78) !important;
+  border: 1px solid rgba(255, 191, 71, 0.18) !important;
+  background: rgba(255,255,255,0.045) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.brand-actions .fullscreen-pill.fullscreen-icon-button::before,
+.brand-actions .fullscreen-pill.fullscreen-icon-button::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 31% !important;
+  border: 2px solid rgba(255, 214, 136, 0.76) !important;
+  border-radius: 2px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  width: auto !important;
+  height: auto !important;
+  left: 31% !important;
+  top: 31% !important;
+}
+
+.brand-actions .fullscreen-pill.fullscreen-icon-button::before {
+  clip-path: polygon(0 0, 46% 0, 46% 16%, 16% 16%, 16% 46%, 0 46%, 0 0, 54% 0, 100% 0, 100% 46%, 84% 46%, 84% 16%, 54% 16%) !important;
+}
+
+.brand-actions .fullscreen-pill.fullscreen-icon-button::after {
+  clip-path: polygon(0 54%, 16% 54%, 16% 84%, 46% 84%, 46% 100%, 0 100%, 0 54%, 54% 84%, 84% 84%, 84% 54%, 100% 54%, 100% 100%, 54% 100%) !important;
+}
+
+.brand-actions .fullscreen-pill.fullscreen-icon-button:hover,
+.brand-actions .fullscreen-pill.fullscreen-icon-button.fullscreen-pill-active,
+.brand-actions .panel-lock-toggle:hover,
+.brand-actions .panel-lock-toggle.panel-lock-active {
+  color: #ffd98a !important;
+  border-color: rgba(255, 191, 71, 0.48) !important;
+  background: rgba(92, 59, 12, 0.26) !important;
+  box-shadow: 0 0 14px rgba(255,191,71,0.14), inset 0 0 12px rgba(255,191,71,0.06) !important;
+}
+
+.brand-actions .fullscreen-pill.fullscreen-icon-button.fullscreen-pill-active::before,
+.brand-actions .fullscreen-pill.fullscreen-icon-button.fullscreen-pill-active::after {
+  border-color: #ffd98a !important;
+}

@@ -148,7 +148,7 @@ export function renderShell(state: AppState): void {
             </div>
             <button id="aspectModeToggle" class="aspect-pill" type="button" aria-pressed="false" title="Toggle Wide / Fill scene">WIDE</button>
             <button id="compactPanelToggle" class="compact-pill" type="button" aria-pressed="false" title="Show compact panel">COMPACT</button>
-            <button id="fullscreenToggle" class="fullscreen-pill" type="button" aria-pressed="false" title="Enter fullscreen">FULL</button>
+            <button id="fullscreenToggle" class="fullscreen-pill fullscreen-icon-button" type="button" aria-pressed="false" aria-label="Enter fullscreen" title="Enter fullscreen"></button>
             <button id="panelLockToggle" class="panel-lock-toggle" type="button" aria-label="Lock side panel open" title="Lock side panel open">🔒</button>
           </div>
         </div>
