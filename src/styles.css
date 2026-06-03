@@ -13204,3 +13204,31 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* v95: Keep viewport letterbox/border areas pure black.
+   Album-reactive color washes and glows must stay clipped inside .room only. */
+:root,
+html,
+body,
+#app,
+.stage {
+  background: #000000 !important;
+  background-color: #000000 !important;
+}
+
+:root.room-fill-stretch .stage,
+:root:not(.room-fill-stretch) .stage {
+  background: #000000 !important;
+  background-color: #000000 !important;
+}
+
+body::before,
+body::after,
+.stage::before,
+.stage::after {
+  background: transparent !important;
+}
+
+.room {
+  background-color: #000000;
+}
