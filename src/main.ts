@@ -117,6 +117,8 @@ if (!Number.isFinite(menu2Transparency)) menu2Transparency = 0.45;
 menu2Transparency = Math.max(0.45, Math.min(1, menu2Transparency));
 let menu2Side: "left" | "right" = (localStorage.getItem("pocketdj-menu2-side") as "left" | "right") || "right";
 if (menu2Side !== "left" && menu2Side !== "right") menu2Side = "right";
+let menu2FoldDockMode: "auto" | "off" | "force" = (localStorage.getItem("pocketdj-menu2-fold-dock-mode") as "auto" | "off" | "force") || "auto";
+if (!["auto", "off", "force"].includes(menu2FoldDockMode)) menu2FoldDockMode = "auto";
 let menu2AdvancedUtilityVisible = false;
 let menu2ShowFloorControls = localStorage.getItem("pocketdj-menu2-show-floor-controls") === "1";
 let menu2SearchResultTab: "tracks" | "artists" | "playlists" | "albums" = "tracks";
@@ -3452,6 +3454,7 @@ function syncScreenWakeLockForFullscreen(): void {
 function handleFullscreenChange(): void {
   updateFullscreenUi();
   syncScreenWakeLockForFullscreen();
+  applyMenu2Settings();
 }
 
 function handleVisibilityChange(): void {
@@ -3570,14 +3573,26 @@ function updateMenu2RoomAnchor(): void {
   const roomRightInset = Math.max(0, window.innerWidth - rect.right);
   const roomBottom = Math.max(0, window.innerHeight - rect.bottom);
   const roomHeight = Math.max(320, rect.height);
+  const roomWidth = Math.max(320, rect.width);
   root.style.setProperty("--menu2-room-left", `${roomLeft}px`);
   root.style.setProperty("--menu2-room-right", `${roomRight}px`);
+  root.style.setProperty("--menu2-room-width", `${roomWidth}px`);
   root.style.setProperty("--menu2-room-right-inset", `${roomRightInset}px`);
   root.style.setProperty("--menu2-room-bottom", `${roomBottom}px`);
   root.style.setProperty("--menu2-room-height", `${roomHeight}px`);
   root.style.setProperty("--menu2-room-safe-left", `${roomLeft + inset}px`);
   root.style.setProperty("--menu2-room-safe-right", `${roomRightInset + inset}px`);
   root.style.setProperty("--menu2-room-safe-bottom", `${roomBottom + inset}px`);
+}
+
+function isMenu2FoldDockActive(): boolean {
+  if (menu2FoldDockMode === "off") return false;
+  if (menu2Open) return false;
+  const room = document.querySelector<HTMLElement>(".room-base-layer") || document.querySelector<HTMLElement>(".room");
+  const rect = room?.getBoundingClientRect();
+  const bottomSpace = rect ? window.innerHeight - rect.bottom : 0;
+  if (menu2FoldDockMode === "force") return bottomSpace >= 32;
+  return isAppFullscreen() && window.innerWidth >= 900 && window.innerHeight >= 650 && bottomSpace >= 72;
 }
 
 function applyMenu2Settings(): void {
@@ -3610,6 +3625,8 @@ function applyMenu2Settings(): void {
   document.documentElement.classList.toggle("menu2-side-right", menu2Side === "right");
   document.documentElement.classList.toggle("menu2-advanced-utility-visible", menu2AdvancedUtilityVisible);
   document.documentElement.classList.toggle("menu2-show-floor-controls", menu2ShowFloorControls);
+  document.documentElement.classList.toggle("menu2-fold-dock-active", isMenu2FoldDockActive());
+  document.documentElement.classList.toggle("menu2-fold-dock-force", menu2FoldDockMode === "force");
   document.documentElement.classList.toggle("dj-nova-off", djNovaMode === "off");
   document.documentElement.classList.toggle("dj-nova-only", djNovaMode === "nova-only");
   document.documentElement.classList.toggle("dj-nova-both-front", djNovaMode === "both-front");
@@ -3629,7 +3646,15 @@ function applyMenu2Settings(): void {
     bubble.classList.toggle("menu2-side-left", menu2Side === "left");
     bubble.classList.toggle("menu2-side-right", menu2Side === "right");
   }
+  const foldDock = document.querySelector<HTMLElement>("#menu2FoldDock");
+  if (foldDock) {
+    foldDock.classList.toggle("menu2-style-pocket", menu2StyleMode === "pocket");
+    foldDock.classList.toggle("menu2-style-spotify", menu2StyleMode === "spotify");
+    foldDock.classList.toggle("menu2-style-web", menu2StyleMode === "web");
+    foldDock.setAttribute("aria-hidden", String(!isMenu2FoldDockActive()));
+  }
   syncMenu2Bubble();
+  syncMenu2Dock();
   scheduleMenu2AutoCollapse();
 
   const styleSelect = document.querySelector<HTMLSelectElement>("#menu2StyleMode");
@@ -3638,11 +3663,13 @@ function applyMenu2Settings(): void {
   const transparencyInput = document.querySelector<HTMLInputElement>("#menu2Transparency");
   const transparencyValue = document.querySelector<HTMLElement>("#menu2TransparencyValue");
   const sideSelect = document.querySelector<HTMLSelectElement>("#menu2Side");
+  const foldDockSelect = document.querySelector<HTMLSelectElement>("#menu2FoldDockMode");
   const novaSelect = document.querySelector<HTMLSelectElement>("#menu2DjNovaMode");
   if (styleSelect) styleSelect.value = menu2StyleMode;
   if (artSelect) artSelect.value = menu2ArtSize;
   if (panelModeSelect) panelModeSelect.value = menu2PanelMode;
   if (sideSelect) sideSelect.value = menu2Side;
+  if (foldDockSelect) foldDockSelect.value = menu2FoldDockMode;
   if (novaSelect) novaSelect.value = djNovaMode;
   if (transparencyInput) transparencyInput.value = menu2Transparency.toFixed(2);
   if (transparencyValue) transparencyValue.textContent = menu2Transparency.toFixed(2);
@@ -4054,6 +4081,40 @@ function syncMenu2Bubble(): void {
   if (grab) grab.innerHTML = menu2Icon(menu2Side === "left" ? "openPanelLeft" : "openPanelRight");
   const bubbleVolumeInput = document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput");
   if (bubbleVolumeInput) bubbleVolumeInput.value = String(phase2Volume);
+}
+
+
+function syncMenu2Dock(): void {
+  const dock = document.querySelector<HTMLElement>("#menu2FoldDock");
+  if (!dock) return;
+  const active = isMenu2FoldDockActive();
+  dock.classList.toggle("menu2-fold-dock-visible", active);
+  dock.setAttribute("aria-hidden", String(!active));
+  const open = document.querySelector<HTMLButtonElement>("#menu2FoldDockOpen");
+  const lyrics = document.querySelector<HTMLButtonElement>("#menu2FoldDockLyrics");
+  const prev = document.querySelector<HTMLButtonElement>("#menu2FoldDockPrev");
+  const play = document.querySelector<HTMLButtonElement>("#menu2FoldDockPlay");
+  const next = document.querySelector<HTMLButtonElement>("#menu2FoldDockNext");
+  const fullscreen = document.querySelector<HTMLButtonElement>("#menu2FoldDockFullscreen");
+  const volume = document.querySelector<HTMLInputElement>("#menu2FoldDockVolume");
+  const progress = document.querySelector<HTMLElement>("#menu2FoldDockProgressFill");
+  if (open) open.innerHTML = menu2Icon(menu2Side === "right" ? "openPanelRight" : "openPanelLeft");
+  if (lyrics) {
+    lyrics.innerHTML = menu2Icon("lyrics");
+    lyrics.classList.toggle("menu2-fold-dock-active", lyricsEnabled);
+  }
+  if (prev) prev.innerHTML = menu2Icon("prev");
+  if (play) play.innerHTML = state.playback.isPlaying ? menu2Icon("pause") : menu2Icon("play");
+  if (next) next.innerHTML = menu2Icon("next");
+  if (fullscreen) {
+    fullscreen.innerHTML = menu2Icon("fullscreen");
+    fullscreen.classList.toggle("menu2-fold-dock-active", isAppFullscreen());
+  }
+  if (volume && document.activeElement !== volume) volume.value = String(phase2Volume);
+  if (progress) {
+    const percent = state.playback.durationMs > 0 ? Math.min(100, (getEstimatedPlaybackProgress(state.playback) / state.playback.durationMs) * 100) : 0;
+    progress.style.width = `${percent}%`;
+  }
 }
 
 async function loadMenu2Queue(): Promise<void> {
@@ -4533,6 +4594,12 @@ function bindMenu2Controls(): void {
     localStorage.setItem("pocketdj-menu2-side", menu2Side);
     applyMenu2Settings();
   });
+  document.querySelector<HTMLSelectElement>("#menu2FoldDockMode")?.addEventListener("change", (event) => {
+    menu2FoldDockMode = (event.target as HTMLSelectElement).value as typeof menu2FoldDockMode;
+    if (!["auto", "off", "force"].includes(menu2FoldDockMode)) menu2FoldDockMode = "auto";
+    localStorage.setItem("pocketdj-menu2-fold-dock-mode", menu2FoldDockMode);
+    applyMenu2Settings();
+  });
   document.querySelector<HTMLSelectElement>("#menu2DjNovaMode")?.addEventListener("change", (event) => {
     djNovaMode = (event.target as HTMLSelectElement).value as DjNovaMode;
     if (!["off", "nova-only", "both-front", "both-back"].includes(djNovaMode)) djNovaMode = "off";
@@ -4699,6 +4766,28 @@ function bindMenu2Controls(): void {
     }
     scheduleMenu2BubbleVolumeHide();
   });
+  document.querySelector<HTMLButtonElement>("#menu2FoldDockOpen")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    openMenu2FromBubbleRail();
+  });
+  document.querySelector<HTMLButtonElement>("#menu2FoldDockLyrics")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#lyricsToggle")?.click());
+  document.querySelector<HTMLButtonElement>("#menu2FoldDockPrev")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPrevButton")?.click());
+  document.querySelector<HTMLButtonElement>("#menu2FoldDockPlay")?.addEventListener("click", runMenu2PlayPause);
+  document.querySelector<HTMLButtonElement>("#menu2FoldDockNext")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelNextButton")?.click());
+  document.querySelector<HTMLButtonElement>("#menu2FoldDockFullscreen")?.addEventListener("click", () => void toggleAppFullscreen());
+  document.querySelector<HTMLInputElement>("#menu2FoldDockVolume")?.addEventListener("input", (event) => {
+    const value = Number((event.target as HTMLInputElement).value || 70);
+    const panelVolume = document.querySelector<HTMLInputElement>("#spotifyVolume");
+    const menuVolume = document.querySelector<HTMLInputElement>("#menu2Volume");
+    const bubbleVolume = document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput");
+    if (menuVolume) menuVolume.value = String(value);
+    if (bubbleVolume) bubbleVolume.value = String(value);
+    if (panelVolume) {
+      panelVolume.value = String(value);
+      panelVolume.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  });
   applyMenu2Settings();
 }
 
@@ -4710,7 +4799,7 @@ function bindControls(): void {
   qs<HTMLButtonElement>("#fullscreenToggle").addEventListener("click", () => void toggleAppFullscreen());
   document.addEventListener("fullscreenchange", handleFullscreenChange);
   document.addEventListener("visibilitychange", handleVisibilityChange);
-  window.addEventListener("resize", updateMenu2RoomAnchor);
+  window.addEventListener("resize", applyMenu2Settings);
   bindMenu2Controls();
 
   qs<HTMLButtonElement>("#panelToggle").addEventListener("click", () => {
@@ -8577,6 +8666,7 @@ function tick(): void {
   updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
   updatePlaybackUi(state.playback, state.debugOpen);
   refreshMenu2NowPlayingIfNeeded();
+  syncMenu2Dock();
 
   const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);

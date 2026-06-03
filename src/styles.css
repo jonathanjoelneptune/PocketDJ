@@ -12929,3 +12929,176 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
   width: 15px !important;
   height: 15px !important;
 }
+
+/* v91: Fold fullscreen desktop dock.
+   Auto mode turns the unused bottom letterbox into a premium glass control shelf.
+   Menu 2.0 itself still opens from the selected side. */
+.menu2-fold-dock {
+  position: fixed;
+  left: var(--menu2-room-left, 0px);
+  right: var(--menu2-room-right-inset, 0px);
+  bottom: 0;
+  height: max(76px, min(150px, var(--menu2-room-bottom, 0px)));
+  z-index: 66;
+  display: none;
+  align-items: stretch;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity 220ms ease, transform 220ms ease;
+  color: var(--menu2-accent, #e5a83e);
+}
+
+:root.menu2-fold-dock-active:not(.menu2-open) .menu2-fold-dock {
+  display: flex;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+:root.menu2-fold-dock-active:not(.menu2-open) .menu2-bubble {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translate3d(0, 18px, 0) !important;
+}
+
+.menu2-fold-dock::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-top: 1px solid rgba(229, 168, 62, 0.28);
+  background:
+    linear-gradient(180deg, rgba(12, 10, 9, 0.76), rgba(6, 8, 13, 0.86)),
+    radial-gradient(circle at 50% 0%, rgba(229, 168, 62, 0.12), transparent 58%);
+  box-shadow:
+    0 -16px 40px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 235, 189, 0.08);
+  backdrop-filter: blur(16px) saturate(1.14);
+  -webkit-backdrop-filter: blur(16px) saturate(1.14);
+}
+
+.menu2-style-spotify .menu2-fold-dock::before,
+.menu2-style-web .menu2-fold-dock::before,
+.menu2-fold-dock.menu2-style-spotify::before,
+.menu2-fold-dock.menu2-style-web::before {
+  border-top-color: rgba(30, 215, 96, 0.32);
+  background:
+    linear-gradient(180deg, rgba(6, 10, 8, 0.76), rgba(0, 0, 0, 0.88)),
+    radial-gradient(circle at 50% 0%, rgba(30, 215, 96, 0.13), transparent 58%);
+}
+
+.menu2-fold-dock-progress {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 0;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.13);
+  overflow: hidden;
+  z-index: 1;
+}
+
+#menu2FoldDockProgressFill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--menu2-accent, #e5a83e);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--menu2-accent, #e5a83e) 70%, transparent);
+}
+
+.menu2-fold-dock-inner {
+  position: relative;
+  z-index: 1;
+  width: min(980px, calc(100% - 34px));
+  height: 100%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 54px 46px 46px 64px 46px minmax(170px, 1fr) 46px;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.6vw, 18px);
+}
+
+.menu2-fold-dock-button {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--menu2-accent, #e5a83e) 40%, rgba(255,255,255,0.18));
+  background: rgba(18, 18, 18, 0.62);
+  color: var(--menu2-accent, #e5a83e);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 20px rgba(0,0,0,0.22);
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease, color 150ms ease;
+}
+
+.menu2-fold-dock-button:hover,
+.menu2-fold-dock-button.menu2-fold-dock-active {
+  background: var(--menu2-accent, #e5a83e);
+  color: #070707;
+  transform: translateY(-1px);
+}
+
+.menu2-fold-dock-play {
+  width: 62px;
+  height: 62px;
+  background: var(--menu2-accent, #e5a83e);
+  color: #070707;
+  border-color: rgba(255, 239, 198, 0.50);
+}
+
+.menu2-fold-dock-button .menu2-svg-icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.15;
+}
+
+.menu2-fold-dock-play .menu2-svg-icon {
+  width: 25px;
+  height: 25px;
+}
+
+.menu2-fold-dock-volume {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  color: rgba(255,255,255,0.86);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.menu2-fold-dock-volume input {
+  width: 100%;
+  accent-color: var(--menu2-accent, #e5a83e);
+}
+
+@media (max-width: 900px) {
+  .menu2-fold-dock-inner {
+    grid-template-columns: 44px 40px 40px 56px 40px minmax(90px, 1fr) 40px;
+    gap: 7px;
+    width: calc(100% - 18px);
+  }
+  .menu2-fold-dock-button {
+    width: 38px;
+    height: 38px;
+  }
+  .menu2-fold-dock-play {
+    width: 54px;
+    height: 54px;
+  }
+  .menu2-fold-dock-volume span {
+    display: none;
+  }
+  .menu2-fold-dock-volume {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1372,6 +1372,13 @@ export function renderShell(state: AppState): void {
                 <option value="left">Left side</option>
               </select>
             </label>
+            <label class="menu2-setting">Fold fullscreen dock
+              <select id="menu2FoldDockMode" class="menu2-select">
+                <option value="auto">Auto</option>
+                <option value="off">Off</option>
+                <option value="force">Force On</option>
+              </select>
+            </label>
             <label class="menu2-setting">Album art size
               <select id="menu2ArtSize" class="menu2-select">
                 <option value="large">Large</option>
@@ -1410,6 +1417,22 @@ export function renderShell(state: AppState): void {
         </div>
         <div id="menu2BubbleVolumePopover" class="menu2-volume-popover" aria-label="Quick volume control">
           <input id="menu2BubbleVolumeInput" type="range" min="0" max="100" step="1" value="70" aria-label="Volume" />
+        </div>
+      </div>
+
+      <div id="menu2FoldDock" class="menu2-fold-dock" aria-label="PocketDJ Fold fullscreen dock" aria-hidden="true">
+        <div class="menu2-fold-dock-progress"><div id="menu2FoldDockProgressFill"></div></div>
+        <div class="menu2-fold-dock-inner">
+          <button id="menu2FoldDockOpen" class="menu2-fold-dock-button menu2-fold-dock-open" type="button" aria-label="Open PocketDJ menu" title="Open Menu"></button>
+          <button id="menu2FoldDockLyrics" class="menu2-fold-dock-button" type="button" aria-label="Toggle lyrics" title="Lyrics"></button>
+          <button id="menu2FoldDockPrev" class="menu2-fold-dock-button" type="button" aria-label="Previous track" title="Previous"></button>
+          <button id="menu2FoldDockPlay" class="menu2-fold-dock-button menu2-fold-dock-play" type="button" aria-label="Play or pause" title="Play/Pause"></button>
+          <button id="menu2FoldDockNext" class="menu2-fold-dock-button" type="button" aria-label="Next track" title="Next"></button>
+          <label class="menu2-fold-dock-volume" aria-label="Volume">
+            <span>Volume</span>
+            <input id="menu2FoldDockVolume" type="range" min="0" max="100" step="1" value="70" />
+          </label>
+          <button id="menu2FoldDockFullscreen" class="menu2-fold-dock-button" type="button" aria-label="Toggle fullscreen" title="Fullscreen"></button>
         </div>
       </div>
 
