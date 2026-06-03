@@ -12284,3 +12284,201 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
 :root.utility-panel-left-side .control-card:not(.control-card-open) {
   transform: translateX(-115%) !important;
 }
+
+
+/* v83 Menu 2.0 side selector: animate from the active side and point the grab arrow inward. */
+:root.menu2-side-right .menu2-panel,
+.menu2-panel.menu2-side-right {
+  left: auto !important;
+  right: var(--menu2-room-safe-right, 8px) !important;
+  bottom: var(--menu2-room-safe-bottom, 8px) !important;
+  top: auto !important;
+  transform: translate3d(112%, 0, 0) !important;
+}
+
+:root.menu2-side-right .menu2-panel.menu2-open,
+.menu2-panel.menu2-side-right.menu2-open {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+:root.menu2-side-left .menu2-panel,
+.menu2-panel.menu2-side-left {
+  left: var(--menu2-room-safe-left, 8px) !important;
+  right: auto !important;
+  bottom: var(--menu2-room-safe-bottom, 8px) !important;
+  top: auto !important;
+  transform: translate3d(-112%, 0, 0) !important;
+}
+
+:root.menu2-side-left .menu2-panel.menu2-open,
+.menu2-panel.menu2-side-left.menu2-open {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+:root.menu2-side-right .menu2-bubble,
+.menu2-bubble.menu2-side-right {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+  transform: translate3d(110%, 0, 0) !important;
+  border-radius: 20px 0 0 20px !important;
+  padding: 8px 4px 8px 8px !important;
+  border-left: 1px solid var(--menu2-bubble-border, rgba(216,155,69,0.42)) !important;
+  border-right: 0 !important;
+}
+
+:root.menu2-side-left .menu2-bubble,
+.menu2-bubble.menu2-side-left {
+  left: var(--menu2-room-left, 0px) !important;
+  right: auto !important;
+  transform: translate3d(-110%, 0, 0) !important;
+  border-radius: 0 20px 20px 0 !important;
+  padding: 8px 8px 8px 4px !important;
+  border-right: 1px solid var(--menu2-bubble-border, rgba(216,155,69,0.42)) !important;
+  border-left: 0 !important;
+}
+
+:root.menu2-bubble-ready.menu2-side-right .menu2-bubble,
+:root.menu2-bubble-ready.menu2-side-left .menu2-bubble,
+.menu2-bubble.menu2-side-right,
+.menu2-bubble.menu2-side-left {
+  bottom: calc(var(--menu2-room-bottom, 0px) + max(16px, calc(var(--menu2-room-height, 760px) * 0.23))) !important;
+}
+
+:root.menu2-bubble-ready.menu2-side-right .menu2-bubble,
+:root.menu2-bubble-ready.menu2-side-left .menu2-bubble {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+:root.menu2-side-right .menu2-bubble-grab,
+.menu2-bubble.menu2-side-right .menu2-bubble-grab {
+  border-radius: 18px 0 0 18px !important;
+  border-left: 1px solid var(--menu2-bubble-border, rgba(216,155,69,0.42)) !important;
+  border-right: 0 !important;
+}
+
+:root.menu2-side-left .menu2-bubble-grab,
+.menu2-bubble.menu2-side-left .menu2-bubble-grab {
+  border-radius: 0 18px 18px 0 !important;
+  border-right: 1px solid var(--menu2-bubble-border, rgba(216,155,69,0.42)) !important;
+  border-left: 0 !important;
+}
+
+:root.menu2-side-right .menu2-volume-popover,
+.menu2-bubble.menu2-side-right .menu2-volume-popover {
+  left: auto !important;
+  right: calc(100% + 8px) !important;
+  transform-origin: center right !important;
+}
+
+:root.menu2-side-left .menu2-volume-popover,
+.menu2-bubble.menu2-side-left .menu2-volume-popover {
+  left: calc(100% + 8px) !important;
+  right: auto !important;
+  transform-origin: center left !important;
+}
+
+/* v84: selected-side bottom-corner anchoring.
+   Right-side Menu 2.0 must belong to the visible room's bottom-right corner,
+   while left-side Menu 2.0 remains bottom-left. This final layer intentionally
+   overrides older left/default positioning rules from prior layout passes. */
+.menu2-panel {
+  top: auto !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  max-height: min(calc(var(--menu2-room-height, 760px) * 0.75), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+}
+
+.menu2-panel.menu2-side-left,
+:root.menu2-side-left .menu2-panel {
+  left: var(--menu2-room-left, 0px) !important;
+  right: auto !important;
+  transform: translate3d(-108%, 0, 0) !important;
+  width: min(492px, calc(var(--menu2-room-right, 100vw) - var(--menu2-room-left, 0px))) !important;
+}
+
+.menu2-panel.menu2-side-right,
+:root.menu2-side-right .menu2-panel {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+  transform: translate3d(108%, 0, 0) !important;
+  width: min(492px, calc(var(--menu2-room-right, 100vw) - var(--menu2-room-left, 0px))) !important;
+}
+
+.menu2-panel.menu2-open,
+:root.menu2-open .menu2-panel.menu2-open {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-panel.menu2-mode-compact,
+:root .menu2-panel.menu2-mode-compact {
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  top: auto !important;
+  width: min(292px, calc(var(--menu2-room-right, 100vw) - var(--menu2-room-left, 0px))) !important;
+  max-height: min(405px, calc(var(--menu2-room-height, 760px) * 0.55), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+}
+
+.menu2-panel.menu2-mode-compact.menu2-side-left,
+:root.menu2-side-left .menu2-panel.menu2-mode-compact {
+  left: var(--menu2-room-left, 0px) !important;
+  right: auto !important;
+}
+
+.menu2-panel.menu2-mode-compact.menu2-side-right,
+:root.menu2-side-right .menu2-panel.menu2-mode-compact {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+}
+
+.menu2-bubble {
+  top: auto !important;
+  bottom: calc(var(--menu2-room-bottom, 0px) + 12px) !important;
+}
+
+.menu2-bubble.menu2-side-left,
+:root.menu2-side-left .menu2-bubble {
+  left: var(--menu2-room-left, 0px) !important;
+  right: auto !important;
+  transform: translate3d(-112%, 0, 0) !important;
+  border-radius: 0 20px 20px 0 !important;
+  padding: 8px 8px 8px 0 !important;
+  border-left: 0 !important;
+  border-right-width: 1px !important;
+}
+
+.menu2-bubble.menu2-side-right,
+:root.menu2-side-right .menu2-bubble {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+  transform: translate3d(112%, 0, 0) !important;
+  border-radius: 20px 0 0 20px !important;
+  padding: 8px 0 8px 8px !important;
+  border-right: 0 !important;
+  border-left-width: 1px !important;
+}
+
+:root.menu2-bubble-ready .menu2-bubble,
+:root.menu2-bubble-ready.menu2-side-left .menu2-bubble,
+:root.menu2-bubble-ready.menu2-side-right .menu2-bubble {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+:root.menu2-side-left .menu2-bubble-grab,
+.menu2-bubble.menu2-side-left .menu2-bubble-grab {
+  border-radius: 0 16px 16px 0 !important;
+}
+
+:root.menu2-side-right .menu2-bubble-grab,
+.menu2-bubble.menu2-side-right .menu2-bubble-grab {
+  border-radius: 16px 0 0 16px !important;
+}
+
+:root.menu2-side-right .menu2-volume-popover,
+.menu2-bubble.menu2-side-right .menu2-volume-popover {
+  left: auto !important;
+  right: calc(100% + 8px) !important;
+}
+
+:root.menu2-side-left .menu2-volume-popover,
+.menu2-bubble.menu2-side-left .menu2-volume-popover {
+  right: auto !important;
+  left: calc(100% + 8px) !important;
+}
