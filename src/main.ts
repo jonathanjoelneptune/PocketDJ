@@ -92,6 +92,8 @@ const menu2ContextLabels = new Map<string, string>();
 let menu2StyleMode: "pocket" | "spotify" | "web" = (localStorage.getItem("pocketdj-menu2-style") as "pocket" | "spotify" | "web") || "pocket";
 let menu2ArtSize: "large" | "medium" | "small" = (localStorage.getItem("pocketdj-menu2-art-size") as "large" | "medium" | "small") || "large";
 let menu2PanelMode: "full" | "compact" = (localStorage.getItem("pocketdj-menu2-panel-mode") as "full" | "compact") || "full";
+let menu2AdvancedUtilityVisible = false;
+let menu2ShowFloorControls = localStorage.getItem("pocketdj-menu2-show-floor-controls") === "1";
 let menu2SearchResultTab: "tracks" | "artists" | "playlists" | "albums" = "tracks";
 let menu2SearchTracks: SpotifyCatalogTrack[] = [];
 let menu2SearchArtists: SpotifyCatalogArtist[] = [];
@@ -3569,6 +3571,8 @@ function applyMenu2Settings(): void {
   document.documentElement.classList.toggle("menu2-style-pocket", menu2StyleMode === "pocket");
   document.documentElement.classList.toggle("menu2-style-spotify", menu2StyleMode === "spotify");
   document.documentElement.classList.toggle("menu2-style-web", menu2StyleMode === "web");
+  document.documentElement.classList.toggle("menu2-advanced-utility-visible", menu2AdvancedUtilityVisible);
+  document.documentElement.classList.toggle("menu2-show-floor-controls", menu2ShowFloorControls);
 
   const lockPill = document.querySelector<HTMLButtonElement>("#menu2LockPill");
   if (lockPill) {
@@ -3592,9 +3596,18 @@ function applyMenu2Settings(): void {
   if (artSelect) artSelect.value = menu2ArtSize;
   if (panelModeSelect) panelModeSelect.value = menu2PanelMode;
 
+  const devVisible = menu2DevUnlocked && menu2PanelMode === "full";
   const devTab = document.querySelector<HTMLButtonElement>("#menu2DevTab");
-  if (devTab) devTab.hidden = !menu2DevUnlocked;
-  if (!menu2DevUnlocked && menu2ActiveTab === "dev") menu2ActiveTab = "now";
+  if (devTab) devTab.hidden = !devVisible;
+  if (!devVisible && menu2ActiveTab === "dev") menu2ActiveTab = "now";
+
+  const advancedButton = document.querySelector<HTMLButtonElement>("#menu2OpenCurrentUtility");
+  if (advancedButton) {
+    advancedButton.textContent = menu2AdvancedUtilityVisible ? "Hide Advanced Utility Panel" : "Open Advanced Utility Panel";
+    advancedButton.setAttribute("aria-pressed", String(menu2AdvancedUtilityVisible));
+  }
+  const floorToggle = document.querySelector<HTMLInputElement>("#menu2ShowFloorControls");
+  if (floorToggle) floorToggle.checked = menu2ShowFloorControls;
 
   const tabLabels: Record<string, string> = { now: "Now Playing", playlists: "My Playlists", search: "Search", devices: "Devices", dev: "Dev" };
   document.querySelectorAll<HTMLButtonElement>(".menu2-tab").forEach((tab) => {
@@ -3659,7 +3672,7 @@ function setMenu2Open(open: boolean): void {
 }
 
 function setMenu2Tab(tab: typeof menu2ActiveTab): void {
-  if (tab === "dev" && !menu2DevUnlocked) return;
+  if (tab === "dev" && (!menu2DevUnlocked || menu2PanelMode === "compact")) return;
   menu2ActiveTab = tab;
   applyMenu2Settings();
   void refreshMenu2ActiveTab();
@@ -4237,7 +4250,7 @@ function handleMenu2LockClick(event?: Event): void {
     menu2LockClickCount = 0;
     menu2DevUnlocked = !menu2DevUnlocked;
     devToggled = true;
-    if (menu2DevUnlocked) menu2ActiveTab = "dev";
+    if (menu2DevUnlocked && menu2PanelMode === "full") menu2ActiveTab = "dev";
     else if (menu2ActiveTab === "dev") menu2ActiveTab = "now";
   }
 
@@ -4410,6 +4423,7 @@ function bindMenu2Controls(): void {
     event.preventDefault();
     event.stopPropagation();
     menu2PanelMode = menu2PanelMode === "compact" ? "full" : "compact";
+    if (menu2PanelMode === "compact" && menu2ActiveTab === "dev") menu2ActiveTab = "now";
     localStorage.setItem("pocketdj-menu2-panel-mode", menu2PanelMode);
     applyMenu2Settings();
     menu2NowRenderKey = "";
@@ -4448,10 +4462,23 @@ function bindMenu2Controls(): void {
   });
   document.querySelector<HTMLSelectElement>("#menu2PanelMode")?.addEventListener("change", (event) => {
     menu2PanelMode = (event.target as HTMLSelectElement).value as typeof menu2PanelMode;
+    if (menu2PanelMode === "compact" && menu2ActiveTab === "dev") menu2ActiveTab = "now";
     localStorage.setItem("pocketdj-menu2-panel-mode", menu2PanelMode);
     applyMenu2Settings();
   });
-  document.querySelector<HTMLButtonElement>("#menu2OpenCurrentUtility")?.addEventListener("click", () => openSidePanel(true));
+  document.querySelector<HTMLButtonElement>("#menu2OpenCurrentUtility")?.addEventListener("click", () => {
+    menu2AdvancedUtilityVisible = !menu2AdvancedUtilityVisible;
+    applyMenu2Settings();
+    if (menu2AdvancedUtilityVisible) openSidePanel(true);
+    else closeSidePanel();
+  });
+  document.querySelector<HTMLInputElement>("#menu2ShowFloorControls")?.addEventListener("change", (event) => {
+    menu2ShowFloorControls = (event.target as HTMLInputElement).checked;
+    localStorage.setItem("pocketdj-menu2-show-floor-controls", menu2ShowFloorControls ? "1" : "0");
+    applyMenu2Settings();
+    if (menu2ShowFloorControls) setFloorControlsOpen(true, true);
+    else setFloorControlsOpen(false, false);
+  });
   document.querySelector<HTMLElement>("#menu2SearchResults")?.addEventListener("click", (event) => {
     const tab = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-menu2-search-tab]");
     if (!tab) return;

@@ -12151,3 +12151,44 @@ body.lyrics-marquee-unavailable .marquee::after {
   height: 25px !important;
   stroke-width: 2.15 !important;
 }
+
+
+/* v81: Menu 2.0 becomes the normal interface. Legacy utility/floor controls stay available from full-mode Dev only. */
+html:not(.menu2-advanced-utility-visible) #controlCard,
+html:not(.menu2-advanced-utility-visible) #panelToggle,
+html:not(.menu2-advanced-utility-visible) #sidePanelTab,
+html:not(.menu2-advanced-utility-visible) #panelAdjustDone {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+html:not(.menu2-show-floor-controls) #floorPlayer,
+html:not(.menu2-show-floor-controls) #floorToggleCluster {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.menu2-mode-compact .menu2-dev-tab,
+.menu2-mode-compact #menu2DevPane {
+  display: none !important;
+}
+
+.menu2-toggle-setting {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  cursor: pointer;
+}
+
+.menu2-toggle-setting input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--menu2-accent);
+}
+
+.menu2-dev-pane .menu2-wide-action[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--menu2-accent) 28%, rgba(255,255,255,0.08));
+  border-color: color-mix(in srgb, var(--menu2-accent) 62%, rgba(255,255,255,0.16));
+  color: var(--menu2-accent-text, #0a0906);
+}
