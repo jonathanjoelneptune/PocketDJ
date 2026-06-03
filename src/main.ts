@@ -3596,10 +3596,21 @@ function isMenu2FoldDockActive(): boolean {
   const roomWidth = rect?.width ?? window.innerWidth;
   const roomHeight = rect?.height ?? window.innerHeight;
   const bottomRatio = window.innerHeight > 0 ? bottomSpace / window.innerHeight : 0;
+  const viewportAspect = window.innerHeight > 0 ? window.innerWidth / window.innerHeight : 999;
+  const rootStyles = getComputedStyle(document.documentElement);
+  const revealRatioValue = Number.parseFloat(rootStyles.getPropertyValue("--dynamic-ceiling-reveal-ratio"));
+  const revealRatio = Number.isFinite(revealRatioValue) ? revealRatioValue : 0;
+  const isInFillStretchMode = document.documentElement.classList.contains("room-fill-stretch");
   const hasUsefulBottomDockSpace = bottomSpace >= 44 || bottomRatio >= 0.055;
   const hasFoldLikeFullscreenCanvas = window.innerWidth >= 720 && window.innerHeight >= 520 && roomWidth >= 680 && roomHeight >= 360;
+
+  // Fold Dock Auto is only for tall/fold-style fullscreen layouts. A normal 16:9 or
+  // mild-tall desktop fullscreen should keep the side rail. Require the room to be
+  // beyond the mid-tall ceiling reveal range so 16:9 desktop fullscreen cannot trigger it.
+  const beyondMidTallRange = revealRatio >= 0.55 && viewportAspect <= 1.35 && !isInFillStretchMode;
+
   if (menu2FoldDockMode === "force") return bottomSpace >= 24 || window.innerHeight >= 520;
-  return isAppFullscreen() && hasFoldLikeFullscreenCanvas && hasUsefulBottomDockSpace;
+  return isAppFullscreen() && hasFoldLikeFullscreenCanvas && hasUsefulBottomDockSpace && beyondMidTallRange;
 }
 
 function applyMenu2Settings(): void {
