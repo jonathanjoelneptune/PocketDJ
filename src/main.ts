@@ -4080,10 +4080,17 @@ function syncMenu2Bubble(): void {
   const prev = document.querySelector<HTMLButtonElement>("#menu2BubblePrev");
   const next = document.querySelector<HTMLButtonElement>("#menu2BubbleNext");
   const volume = document.querySelector<HTMLButtonElement>("#menu2BubbleVolume");
+  const fullscreen = document.querySelector<HTMLButtonElement>("#menu2BubbleFullscreen");
   if (prev) prev.innerHTML = menu2Icon("prev");
   if (play) play.innerHTML = state.playback.isPlaying ? menu2Icon("pause") : menu2Icon("play");
   if (next) next.innerHTML = menu2Icon("next");
   if (volume) volume.innerHTML = menu2Icon("volume");
+  if (fullscreen) {
+    fullscreen.innerHTML = menu2Icon("fullscreen");
+    fullscreen.classList.toggle("menu2-bubble-active", isAppFullscreen());
+    fullscreen.title = isAppFullscreen() ? "Exit fullscreen" : "Enter fullscreen";
+    fullscreen.setAttribute("aria-label", isAppFullscreen() ? "Exit fullscreen" : "Enter fullscreen");
+  }
   const grab = document.querySelector<HTMLButtonElement>("#menu2BubbleGrab");
   if (grab) grab.innerHTML = menu2Icon(menu2Side === "left" ? "openPanelLeft" : "openPanelRight");
   const bubbleVolumeInput = document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput");
@@ -4788,6 +4795,11 @@ function bindMenu2Controls(): void {
     event.preventDefault();
     event.stopPropagation();
     toggleMenu2BubbleVolumePopover();
+  });
+  document.querySelector<HTMLButtonElement>("#menu2BubbleFullscreen")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    void toggleAppFullscreen();
   });
   document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput")?.addEventListener("input", (event) => {
     const value = Number((event.target as HTMLInputElement).value || 70);

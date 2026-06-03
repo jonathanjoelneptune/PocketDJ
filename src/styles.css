@@ -13203,3 +13203,15 @@ body::after,
 .room {
   background-color: #000000;
 }
+
+
+/* v99: collapsed Menu 2.0 rail fullscreen button. Keep it as the bottom quick-control action. */
+.menu2-bubble-fullscreen.menu2-bubble-active {
+  background: var(--menu2-bubble-accent, #1ed760) !important;
+  color: #070707 !important;
+  border-color: var(--menu2-bubble-accent, #1ed760) !important;
+}
+
+.menu2-bubble-fullscreen.menu2-bubble-active .menu2-svg-icon {
+  stroke: #070707 !important;
+}
