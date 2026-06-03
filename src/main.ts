@@ -88,6 +88,7 @@ let menu2LockClickTimer: number | null = null;
 let menu2BubbleHoverTimer: number | null = null;
 let menu2AutoCollapseTimer: number | null = null;
 let menu2BubbleVolumeTimer: number | null = null;
+let menu2FoldDockVolumeTimer: number | null = null;
 let menu2PointerInside = false;
 let menu2NowRenderKey = "";
 let menu2QueueDragIndex: number | null = null;
@@ -3591,8 +3592,13 @@ function isMenu2FoldDockActive(): boolean {
   const room = document.querySelector<HTMLElement>(".room-base-layer") || document.querySelector<HTMLElement>(".room");
   const rect = room?.getBoundingClientRect();
   const bottomSpace = rect ? window.innerHeight - rect.bottom : 0;
-  if (menu2FoldDockMode === "force") return bottomSpace >= 32;
-  return isAppFullscreen() && window.innerWidth >= 900 && window.innerHeight >= 650 && bottomSpace >= 72;
+  const roomWidth = rect?.width ?? window.innerWidth;
+  const roomHeight = rect?.height ?? window.innerHeight;
+  const bottomRatio = window.innerHeight > 0 ? bottomSpace / window.innerHeight : 0;
+  const hasUsefulBottomDockSpace = bottomSpace >= 44 || bottomRatio >= 0.055;
+  const hasFoldLikeFullscreenCanvas = window.innerWidth >= 720 && window.innerHeight >= 520 && roomWidth >= 680 && roomHeight >= 360;
+  if (menu2FoldDockMode === "force") return bottomSpace >= 24 || window.innerHeight >= 520;
+  return isAppFullscreen() && hasFoldLikeFullscreenCanvas && hasUsefulBottomDockSpace;
 }
 
 function applyMenu2Settings(): void {
@@ -4096,6 +4102,7 @@ function syncMenu2Dock(): void {
   const play = document.querySelector<HTMLButtonElement>("#menu2FoldDockPlay");
   const next = document.querySelector<HTMLButtonElement>("#menu2FoldDockNext");
   const fullscreen = document.querySelector<HTMLButtonElement>("#menu2FoldDockFullscreen");
+  const volumeButton = document.querySelector<HTMLButtonElement>("#menu2FoldDockVolumeButton");
   const volume = document.querySelector<HTMLInputElement>("#menu2FoldDockVolume");
   const progress = document.querySelector<HTMLElement>("#menu2FoldDockProgressFill");
   if (open) open.innerHTML = menu2Icon(menu2Side === "right" ? "openPanelRight" : "openPanelLeft");
@@ -4110,6 +4117,7 @@ function syncMenu2Dock(): void {
     fullscreen.innerHTML = menu2Icon("fullscreen");
     fullscreen.classList.toggle("menu2-fold-dock-active", isAppFullscreen());
   }
+  if (volumeButton) volumeButton.innerHTML = menu2Icon("volume");
   if (volume && document.activeElement !== volume) volume.value = String(phase2Volume);
   if (progress) {
     const percent = state.playback.durationMs > 0 ? Math.min(100, (getEstimatedPlaybackProgress(state.playback) / state.playback.durationMs) * 100) : 0;
@@ -4523,6 +4531,30 @@ function toggleMenu2BubbleVolumePopover(force?: boolean): void {
   }
 }
 
+function scheduleMenu2FoldDockVolumeHide(): void {
+  if (menu2FoldDockVolumeTimer) window.clearTimeout(menu2FoldDockVolumeTimer);
+  menu2FoldDockVolumeTimer = window.setTimeout(() => {
+    menu2FoldDockVolumeTimer = null;
+    document.querySelector<HTMLElement>("#menu2FoldDockVolumePopover")?.classList.remove("menu2-fold-dock-volume-popover-open");
+  }, 2500);
+}
+
+function toggleMenu2FoldDockVolumePopover(force?: boolean): void {
+  const popover = document.querySelector<HTMLElement>("#menu2FoldDockVolumePopover");
+  const input = document.querySelector<HTMLInputElement>("#menu2FoldDockVolume");
+  if (!popover) return;
+  const open = typeof force === "boolean" ? force : !popover.classList.contains("menu2-fold-dock-volume-popover-open");
+  popover.classList.toggle("menu2-fold-dock-volume-popover-open", open);
+  if (open) {
+    if (input) input.value = String(phase2Volume);
+    input?.focus();
+    scheduleMenu2FoldDockVolumeHide();
+  } else if (menu2FoldDockVolumeTimer) {
+    window.clearTimeout(menu2FoldDockVolumeTimer);
+    menu2FoldDockVolumeTimer = null;
+  }
+}
+
 
 function bindMenu2Controls(): void {
   document.querySelector<HTMLButtonElement>("#menu2BrandPill")?.addEventListener("click", () => setMenu2Open(false));
@@ -4721,6 +4753,7 @@ function bindMenu2Controls(): void {
       panelVolume.value = String(value);
       panelVolume.dispatchEvent(new Event("input", { bubbles: true }));
     }
+    scheduleMenu2FoldDockVolumeHide();
   });
   const bubble = document.querySelector<HTMLElement>("#menu2Bubble");
   const bubbleGrab = document.querySelector<HTMLButtonElement>("#menu2BubbleGrab");
@@ -4776,6 +4809,11 @@ function bindMenu2Controls(): void {
   document.querySelector<HTMLButtonElement>("#menu2FoldDockPlay")?.addEventListener("click", runMenu2PlayPause);
   document.querySelector<HTMLButtonElement>("#menu2FoldDockNext")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelNextButton")?.click());
   document.querySelector<HTMLButtonElement>("#menu2FoldDockFullscreen")?.addEventListener("click", () => void toggleAppFullscreen());
+  document.querySelector<HTMLButtonElement>("#menu2FoldDockVolumeButton")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleMenu2FoldDockVolumePopover();
+  });
   document.querySelector<HTMLInputElement>("#menu2FoldDockVolume")?.addEventListener("input", (event) => {
     const value = Number((event.target as HTMLInputElement).value || 70);
     const panelVolume = document.querySelector<HTMLInputElement>("#spotifyVolume");
@@ -4787,6 +4825,7 @@ function bindMenu2Controls(): void {
       panelVolume.value = String(value);
       panelVolume.dispatchEvent(new Event("input", { bubbles: true }));
     }
+    scheduleMenu2FoldDockVolumeHide();
   });
   applyMenu2Settings();
 }

@@ -12930,15 +12930,15 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
   height: 15px !important;
 }
 
-/* v91: Fold fullscreen desktop dock.
-   Auto mode turns the unused bottom letterbox into a premium glass control shelf.
+/* v92: Fold fullscreen desktop dock, relaxed Auto detection and premium bottom shelf.
+   Auto mode turns the unused bottom letterbox into a full-width glass control dock.
    Menu 2.0 itself still opens from the selected side. */
 .menu2-fold-dock {
   position: fixed;
   left: var(--menu2-room-left, 0px);
   right: var(--menu2-room-right-inset, 0px);
   bottom: 0;
-  height: max(76px, min(150px, var(--menu2-room-bottom, 0px)));
+  height: max(86px, min(170px, var(--menu2-room-bottom, 0px)));
   z-index: 66;
   display: none;
   align-items: stretch;
@@ -12967,138 +12967,172 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
   content: "";
   position: absolute;
   inset: 0;
-  border-top: 1px solid rgba(229, 168, 62, 0.28);
+  border-top: 1px solid color-mix(in srgb, var(--menu2-accent, #e5a83e) 45%, rgba(255,255,255,0.12));
   background:
-    linear-gradient(180deg, rgba(12, 10, 9, 0.76), rgba(6, 8, 13, 0.86)),
-    radial-gradient(circle at 50% 0%, rgba(229, 168, 62, 0.12), transparent 58%);
+    linear-gradient(180deg, rgba(12, 10, 9, 0.70), rgba(6, 8, 13, 0.88)),
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--menu2-accent, #e5a83e) 18%, transparent), transparent 60%);
   box-shadow:
-    0 -16px 40px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 235, 189, 0.08);
-  backdrop-filter: blur(16px) saturate(1.14);
-  -webkit-backdrop-filter: blur(16px) saturate(1.14);
-}
-
-.menu2-style-spotify .menu2-fold-dock::before,
-.menu2-style-web .menu2-fold-dock::before,
-.menu2-fold-dock.menu2-style-spotify::before,
-.menu2-fold-dock.menu2-style-web::before {
-  border-top-color: rgba(30, 215, 96, 0.32);
-  background:
-    linear-gradient(180deg, rgba(6, 10, 8, 0.76), rgba(0, 0, 0, 0.88)),
-    radial-gradient(circle at 50% 0%, rgba(30, 215, 96, 0.13), transparent 58%);
+    0 -16px 40px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 235, 189, 0.10);
+  backdrop-filter: blur(18px) saturate(1.16);
+  -webkit-backdrop-filter: blur(18px) saturate(1.16);
 }
 
 .menu2-fold-dock-progress {
   position: absolute;
-  left: 6%;
-  right: 6%;
+  left: 0;
+  right: 0;
   top: 0;
-  height: 3px;
-  border-radius: 99px;
+  height: 4px;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.13);
   overflow: hidden;
-  z-index: 1;
+  z-index: 2;
 }
 
 #menu2FoldDockProgressFill {
   width: 0%;
   height: 100%;
-  border-radius: inherit;
   background: var(--menu2-accent, #e5a83e);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--menu2-accent, #e5a83e) 70%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--menu2-accent, #e5a83e) 75%, transparent);
 }
 
 .menu2-fold-dock-inner {
   position: relative;
   z-index: 1;
-  width: min(980px, calc(100% - 34px));
+  width: min(1200px, calc(100% - 28px));
   height: 100%;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 54px 46px 46px 64px 46px minmax(170px, 1fr) 46px;
+  grid-template-columns: minmax(150px, 1fr) auto minmax(150px, 1fr);
   align-items: center;
+  gap: clamp(12px, 2.4vw, 36px);
+}
+
+.menu2-fold-dock-side,
+.menu2-fold-dock-transport {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(10px, 1.6vw, 18px);
+}
+
+.menu2-fold-dock-side-left {
+  justify-content: flex-start;
+}
+
+.menu2-fold-dock-side-right {
+  justify-content: flex-end;
+}
+
+.menu2-fold-dock-transport {
   justify-content: center;
-  gap: clamp(8px, 1.6vw, 18px);
 }
 
 .menu2-fold-dock-button {
-  width: 44px;
-  height: 44px;
+  width: clamp(54px, 5.2vw, 68px);
+  height: clamp(54px, 5.2vw, 68px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--menu2-accent, #e5a83e) 40%, rgba(255,255,255,0.18));
-  background: rgba(18, 18, 18, 0.62);
+  border: 1px solid color-mix(in srgb, var(--menu2-accent, #e5a83e) 42%, rgba(255,255,255,0.18));
+  background: rgba(13, 13, 13, 0.60);
   color: var(--menu2-accent, #e5a83e);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 20px rgba(0,0,0,0.22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 9px 24px rgba(0,0,0,0.24);
   cursor: pointer;
-  transition: transform 150ms ease, background 150ms ease, color 150ms ease;
+  transition: transform 150ms ease, background 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 
 .menu2-fold-dock-button:hover,
 .menu2-fold-dock-button.menu2-fold-dock-active {
   background: var(--menu2-accent, #e5a83e);
   color: #070707;
+  border-color: color-mix(in srgb, var(--menu2-accent, #e5a83e) 65%, rgba(255,255,255,0.25));
   transform: translateY(-1px);
 }
 
+.menu2-fold-dock-transport-button {
+  width: clamp(62px, 6.2vw, 82px);
+  height: clamp(62px, 6.2vw, 82px);
+}
+
 .menu2-fold-dock-play {
-  width: 62px;
-  height: 62px;
+  width: clamp(78px, 7.4vw, 98px);
+  height: clamp(78px, 7.4vw, 98px);
   background: var(--menu2-accent, #e5a83e);
   color: #070707;
-  border-color: rgba(255, 239, 198, 0.50);
+  border-color: rgba(255, 239, 198, 0.54);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--menu2-accent, #e5a83e) 22%, transparent), 0 14px 28px rgba(0,0,0,0.28);
 }
 
 .menu2-fold-dock-button .menu2-svg-icon {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2.15;
+  width: clamp(23px, 2.4vw, 30px);
+  height: clamp(23px, 2.4vw, 30px);
+  stroke-width: 2.2;
 }
 
 .menu2-fold-dock-play .menu2-svg-icon {
-  width: 25px;
-  height: 25px;
+  width: clamp(31px, 3vw, 39px);
+  height: clamp(31px, 3vw, 39px);
 }
 
-.menu2-fold-dock-volume {
-  display: grid;
-  grid-template-columns: auto minmax(120px, 1fr);
+.menu2-fold-dock-volume-wrap {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  min-width: 0;
-  color: rgba(255,255,255,0.86);
-  font-family: inherit;
-  font-size: 12px;
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  justify-content: center;
 }
 
-.menu2-fold-dock-volume input {
+.menu2-fold-dock-volume-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  width: min(240px, 56vw);
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--menu2-accent, #e5a83e) 40%, rgba(255,255,255,0.13));
+  background: rgba(9, 9, 10, 0.86);
+  box-shadow: 0 14px 32px rgba(0,0,0,0.34);
+  backdrop-filter: blur(14px) saturate(1.12);
+  -webkit-backdrop-filter: blur(14px) saturate(1.12);
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.menu2-fold-dock-volume-popover.menu2-fold-dock-volume-popover-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.menu2-fold-dock-volume-popover input {
   width: 100%;
   accent-color: var(--menu2-accent, #e5a83e);
 }
 
 @media (max-width: 900px) {
   .menu2-fold-dock-inner {
-    grid-template-columns: 44px 40px 40px 56px 40px minmax(90px, 1fr) 40px;
-    gap: 7px;
     width: calc(100% - 18px);
+    grid-template-columns: minmax(96px, 1fr) auto minmax(96px, 1fr);
+    gap: 10px;
+  }
+  .menu2-fold-dock-side,
+  .menu2-fold-dock-transport {
+    gap: 8px;
   }
   .menu2-fold-dock-button {
-    width: 38px;
-    height: 38px;
+    width: 48px;
+    height: 48px;
   }
-  .menu2-fold-dock-play {
+  .menu2-fold-dock-transport-button {
     width: 54px;
     height: 54px;
   }
-  .menu2-fold-dock-volume span {
-    display: none;
-  }
-  .menu2-fold-dock-volume {
-    grid-template-columns: 1fr;
+  .menu2-fold-dock-play {
+    width: 66px;
+    height: 66px;
   }
 }
+
