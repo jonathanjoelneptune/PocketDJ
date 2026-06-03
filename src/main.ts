@@ -129,6 +129,8 @@ type ExtendedRoomSettings = {
   x: number;
   y: number;
   zoom: number;
+  backgroundX: number;
+  backgroundY: number;
   compareEnabled: boolean;
   compareX: number;
   compareY: number;
@@ -136,14 +138,17 @@ type ExtendedRoomSettings = {
 };
 
 const EXTENDED_ROOM_SETTINGS_KEY = "pocketdj-extended-room-settings-v1";
+const EXTENDED_BACKGROUND_DEFAULT_MIGRATION_KEY = "pocketdj-v96-extended-background-default-applied";
 const DEFAULT_EXTENDED_ROOM_SETTINGS: ExtendedRoomSettings = {
-  enabled: false,
+  enabled: true,
   x: 0,
   y: 0,
   zoom: 1,
+  backgroundX: 0,
+  backgroundY: -403,
   compareEnabled: false,
   compareX: 0,
-  compareY: 0,
+  compareY: -403,
   compareOpacity: 0.5,
 };
 
@@ -3249,6 +3254,8 @@ async function boot(): Promise<void> {
   bindStringLightControls();
   bindAmbientTwinkleControls();
   bindSessionWallAlbumControls();
+  applyExtendedBackgroundDefaultMigration();
+  applyExtendedRoomSettings();
   applyClockDisabledDefaultMigration();
   applyMixerLedTuningMigration();
   applyTallLyricCalibrationMigration();
@@ -3602,9 +3609,11 @@ function loadExtendedRoomSettings(): ExtendedRoomSettings {
         x: clamp(Number(parsed.x) || 0, -600, 600),
         y: clamp(Number(parsed.y) || 0, -600, 600),
         zoom: clamp(Number(parsed.zoom) || 1, 0.7, 1.6),
+        backgroundX: clamp(Number(parsed.backgroundX ?? DEFAULT_EXTENDED_ROOM_SETTINGS.backgroundX) || 0, -600, 600),
+        backgroundY: clamp(Number(parsed.backgroundY ?? DEFAULT_EXTENDED_ROOM_SETTINGS.backgroundY) || 0, -900, 600),
         compareEnabled: Boolean(parsed.compareEnabled),
-        compareX: clamp(Number(parsed.compareX) || 0, -600, 600),
-        compareY: clamp(Number(parsed.compareY) || 0, -600, 600),
+        compareX: clamp(Number(parsed.compareX ?? DEFAULT_EXTENDED_ROOM_SETTINGS.compareX) || 0, -600, 600),
+        compareY: clamp(Number(parsed.compareY ?? DEFAULT_EXTENDED_ROOM_SETTINGS.compareY) || 0, -900, 600),
         compareOpacity: clamp01(Number(parsed.compareOpacity ?? 0.5)),
       };
     }
@@ -3618,6 +3627,24 @@ function saveExtendedRoomSettings(): void {
   window.localStorage.setItem(EXTENDED_ROOM_SETTINGS_KEY, JSON.stringify(extendedRoomSettings));
 }
 
+function applyExtendedBackgroundDefaultMigration(): void {
+  try {
+    if (window.localStorage.getItem(EXTENDED_BACKGROUND_DEFAULT_MIGRATION_KEY)) return;
+    extendedRoomSettings = {
+      ...extendedRoomSettings,
+      enabled: true,
+      backgroundX: 0,
+      backgroundY: -403,
+      compareX: 0,
+      compareY: -403,
+    };
+    saveExtendedRoomSettings();
+    window.localStorage.setItem(EXTENDED_BACKGROUND_DEFAULT_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply extended background default migration", error);
+  }
+}
+
 function applyExtendedRoomSettings(): void {
   const root = document.documentElement;
   root.classList.toggle("extended-room-mode", extendedRoomSettings.enabled);
@@ -3625,6 +3652,8 @@ function applyExtendedRoomSettings(): void {
   root.style.setProperty("--extended-room-x", `${extendedRoomSettings.x}px`);
   root.style.setProperty("--extended-room-y", `${extendedRoomSettings.y}px`);
   root.style.setProperty("--extended-room-zoom", String(extendedRoomSettings.zoom));
+  root.style.setProperty("--extended-bg-x", `${extendedRoomSettings.backgroundX}px`);
+  root.style.setProperty("--extended-bg-y", `${extendedRoomSettings.backgroundY}px`);
   root.style.setProperty("--compare-bg-x", `${extendedRoomSettings.compareX}px`);
   root.style.setProperty("--compare-bg-y", `${extendedRoomSettings.compareY}px`);
   root.style.setProperty("--compare-bg-opacity", String(extendedRoomSettings.compareOpacity));
@@ -3634,6 +3663,9 @@ function applyExtendedRoomSettings(): void {
     bg.style.backgroundImage = extendedRoomSettings.enabled
       ? "url('./assets/room/pocket-dj-room-offline-v1_EXTENDED.png')"
       : "url('./assets/room/pocket-dj-room-offline-v1.png')";
+    bg.style.backgroundPosition = extendedRoomSettings.enabled
+      ? `calc(var(--room-bg-x, 50%) + ${extendedRoomSettings.backgroundX}px) calc(var(--room-bg-y, 43.1%) + ${extendedRoomSettings.backgroundY}px)`
+      : "var(--room-bg-x, 50%) var(--room-bg-y, 43.1%)";
   }
 
   const ids: Array<[string, string | number | boolean]> = [
@@ -3641,6 +3673,8 @@ function applyExtendedRoomSettings(): void {
     ["menu2ExtendedX", extendedRoomSettings.x],
     ["menu2ExtendedY", extendedRoomSettings.y],
     ["menu2ExtendedZoom", extendedRoomSettings.zoom],
+    ["menu2ExtendedBgX", extendedRoomSettings.backgroundX],
+    ["menu2ExtendedBgY", extendedRoomSettings.backgroundY],
     ["menu2CompareMode", extendedRoomSettings.compareEnabled],
     ["menu2CompareX", extendedRoomSettings.compareX],
     ["menu2CompareY", extendedRoomSettings.compareY],
@@ -3658,6 +3692,8 @@ function applyExtendedRoomSettings(): void {
     ["menu2ExtendedXValue", String(Math.round(extendedRoomSettings.x))],
     ["menu2ExtendedYValue", String(Math.round(extendedRoomSettings.y))],
     ["menu2ExtendedZoomValue", extendedRoomSettings.zoom.toFixed(2)],
+    ["menu2ExtendedBgXValue", String(Math.round(extendedRoomSettings.backgroundX))],
+    ["menu2ExtendedBgYValue", String(Math.round(extendedRoomSettings.backgroundY))],
     ["menu2CompareXValue", String(Math.round(extendedRoomSettings.compareX))],
     ["menu2CompareYValue", String(Math.round(extendedRoomSettings.compareY))],
     ["menu2CompareOpacityValue", extendedRoomSettings.compareOpacity.toFixed(2)],
@@ -4767,6 +4803,8 @@ function bindMenu2Controls(): void {
     ["menu2ExtendedX", "x"],
     ["menu2ExtendedY", "y"],
     ["menu2ExtendedZoom", "zoom"],
+    ["menu2ExtendedBgX", "backgroundX"],
+    ["menu2ExtendedBgY", "backgroundY"],
     ["menu2CompareX", "compareX"],
     ["menu2CompareY", "compareY"],
     ["menu2CompareOpacity", "compareOpacity"],
@@ -4777,7 +4815,9 @@ function bindMenu2Controls(): void {
         ? clamp(raw || 1, 0.7, 1.6)
         : key === "compareOpacity"
           ? clamp01(raw)
-          : clamp(raw || 0, -600, 600);
+          : key === "backgroundY" || key === "compareY"
+            ? clamp(raw || 0, -900, 600)
+            : clamp(raw || 0, -600, 600);
       extendedRoomSettings = { ...extendedRoomSettings, [key]: value };
       saveExtendedRoomSettings();
       applyExtendedRoomSettings();
@@ -4794,15 +4834,16 @@ function bindMenu2Controls(): void {
     applyExtendedRoomSettings();
   });
   document.querySelector<HTMLButtonElement>("#menu2CompareReset")?.addEventListener("click", () => {
-    extendedRoomSettings = { ...extendedRoomSettings, compareX: 0, compareY: 0, compareOpacity: 0.5 };
+    extendedRoomSettings = { ...extendedRoomSettings, compareX: 0, compareY: -403, compareOpacity: 0.5 };
     saveExtendedRoomSettings();
     applyExtendedRoomSettings();
   });
   document.querySelector<HTMLButtonElement>("#menu2CompareApplyToExtended")?.addEventListener("click", () => {
     extendedRoomSettings = {
       ...extendedRoomSettings,
-      x: extendedRoomSettings.compareX,
-      y: extendedRoomSettings.compareY,
+      enabled: true,
+      backgroundX: extendedRoomSettings.compareX,
+      backgroundY: extendedRoomSettings.compareY,
     };
     saveExtendedRoomSettings();
     applyExtendedRoomSettings();

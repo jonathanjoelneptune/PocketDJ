@@ -13157,7 +13157,7 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
   pointer-events: none;
   opacity: 0;
   background-repeat: no-repeat;
-  background-position: calc(var(--room-bg-x, 50%) + var(--compare-bg-x, 0px)) calc(var(--room-bg-y, 43.1%) + var(--compare-bg-y, 0px));
+  background-position: calc(var(--room-bg-x, 50%) + var(--compare-bg-x, 0px)) calc(var(--room-bg-y, 43.1%) + var(--compare-bg-y, -403px));
   background-size: calc(var(--room-bg-scale, 1.13) * 100%) auto;
   mix-blend-mode: normal;
 }
