@@ -12192,3 +12192,95 @@ html:not(.menu2-show-floor-controls) #floorToggleCluster {
   border-color: color-mix(in srgb, var(--menu2-accent) 62%, rgba(255,255,255,0.16));
   color: var(--menu2-accent-text, #0a0906);
 }
+
+/* v82 Menu 2.0: right-side default, glass transparency, left advanced utility fallback. */
+.menu2-panel {
+  left: auto !important;
+  right: var(--menu2-room-safe-right, 8px) !important;
+  bottom: var(--menu2-room-safe-bottom, 8px) !important;
+  top: auto !important;
+  transform: translate3d(112%, 0, 0) !important;
+  width: min(492px, calc(100vw - var(--menu2-room-safe-right, 8px) - 12px)) !important;
+}
+
+.menu2-panel.menu2-open {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-mode-compact.menu2-panel {
+  left: auto !important;
+  right: var(--menu2-room-safe-right, 8px) !important;
+  bottom: var(--menu2-room-safe-bottom, 8px) !important;
+  top: auto !important;
+  transform: translate3d(112%, 0, 0) !important;
+}
+
+.menu2-mode-compact.menu2-panel.menu2-open {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-shell {
+  background:
+    linear-gradient(180deg, rgba(18, 14, 12, var(--menu2-panel-alpha, 0.82)), rgba(4, 4, 6, var(--menu2-panel-alpha-soft, 0.70))) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.15) brightness(0.92) !important;
+  backdrop-filter: blur(24px) saturate(1.15) brightness(0.92) !important;
+  box-shadow:
+    0 30px 90px rgba(0,0,0,0.62),
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 0 60px rgba(255,255,255,0.035) !important;
+}
+
+.menu2-style-spotify .menu2-shell,
+.menu2-style-web .menu2-shell {
+  background:
+    linear-gradient(180deg, rgba(10, 12, 11, var(--menu2-panel-alpha, 0.82)), rgba(0, 0, 0, var(--menu2-panel-alpha-soft, 0.70))) !important;
+}
+
+.menu2-bubble {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+  bottom: calc(var(--menu2-room-bottom, 0px) + max(16px, calc(var(--menu2-room-height, 760px) * 0.23))) !important;
+  transform: translate3d(110%, 0, 0) !important;
+  border-radius: 20px 0 0 20px !important;
+  padding: 8px 4px 8px 8px !important;
+  border-left: 1px solid var(--menu2-bubble-border, rgba(216,155,69,0.42)) !important;
+  border-right: 0 !important;
+}
+
+:root.menu2-bubble-ready .menu2-bubble {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-bubble-grab {
+  border-radius: 18px 0 0 18px !important;
+  border-left: 1px solid var(--menu2-bubble-border, rgba(216,155,69,0.42)) !important;
+  border-right: 0 !important;
+}
+
+.menu2-volume-popover {
+  left: auto !important;
+  right: calc(100% + 8px) !important;
+  transform: translateX(8px) scale(0.97) !important;
+}
+
+.menu2-volume-popover-open {
+  transform: translateX(0) scale(1) !important;
+}
+
+.menu2-slider-setting input[type="range"] {
+  width: 100%;
+  accent-color: var(--menu2-accent, #d89b45);
+}
+
+html.utility-panel-left-side .control-card,
+:root.utility-panel-left-side .control-card {
+  left: 18px !important;
+  right: auto !important;
+}
+
+html.utility-panel-left-side .control-card-hidden,
+html.utility-panel-left-side .control-card:not(.control-card-open),
+:root.utility-panel-left-side .control-card-hidden,
+:root.utility-panel-left-side .control-card:not(.control-card-open) {
+  transform: translateX(-115%) !important;
+}

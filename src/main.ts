@@ -91,7 +91,16 @@ const menu2ContextResolutionFailures = new Set<string>();
 const menu2ContextLabels = new Map<string, string>();
 let menu2StyleMode: "pocket" | "spotify" | "web" = (localStorage.getItem("pocketdj-menu2-style") as "pocket" | "spotify" | "web") || "pocket";
 let menu2ArtSize: "large" | "medium" | "small" = (localStorage.getItem("pocketdj-menu2-art-size") as "large" | "medium" | "small") || "large";
+const MENU2_FORCE_FULL_DEFAULT_KEY = "pocketdj-v82-force-full-default";
 let menu2PanelMode: "full" | "compact" = (localStorage.getItem("pocketdj-menu2-panel-mode") as "full" | "compact") || "full";
+if (localStorage.getItem(MENU2_FORCE_FULL_DEFAULT_KEY) !== "1") {
+  menu2PanelMode = "full";
+  localStorage.setItem("pocketdj-menu2-panel-mode", "full");
+  localStorage.setItem(MENU2_FORCE_FULL_DEFAULT_KEY, "1");
+}
+let menu2Transparency = Number(localStorage.getItem("pocketdj-menu2-transparency") || "0.82");
+if (!Number.isFinite(menu2Transparency)) menu2Transparency = 0.82;
+menu2Transparency = Math.max(0.45, Math.min(1, menu2Transparency));
 let menu2AdvancedUtilityVisible = false;
 let menu2ShowFloorControls = localStorage.getItem("pocketdj-menu2-show-floor-controls") === "1";
 let menu2SearchResultTab: "tracks" | "artists" | "playlists" | "albums" = "tracks";
@@ -3539,13 +3548,16 @@ function updateMenu2RoomAnchor(): void {
   const inset = 6;
   const roomLeft = Math.max(0, rect.left);
   const roomRight = Math.max(roomLeft, rect.right);
+  const roomRightInset = Math.max(0, window.innerWidth - rect.right);
   const roomBottom = Math.max(0, window.innerHeight - rect.bottom);
   const roomHeight = Math.max(320, rect.height);
   root.style.setProperty("--menu2-room-left", `${roomLeft}px`);
   root.style.setProperty("--menu2-room-right", `${roomRight}px`);
+  root.style.setProperty("--menu2-room-right-inset", `${roomRightInset}px`);
   root.style.setProperty("--menu2-room-bottom", `${roomBottom}px`);
   root.style.setProperty("--menu2-room-height", `${roomHeight}px`);
   root.style.setProperty("--menu2-room-safe-left", `${roomLeft + inset}px`);
+  root.style.setProperty("--menu2-room-safe-right", `${roomRightInset + inset}px`);
   root.style.setProperty("--menu2-room-safe-bottom", `${roomBottom + inset}px`);
 }
 
@@ -3564,6 +3576,8 @@ function applyMenu2Settings(): void {
   panel.classList.toggle("menu2-art-large", menu2ArtSize === "large");
   panel.classList.toggle("menu2-art-medium", menu2ArtSize === "medium");
   panel.classList.toggle("menu2-art-small", menu2ArtSize === "small");
+  document.documentElement.style.setProperty("--menu2-panel-alpha", menu2Transparency.toFixed(2));
+  document.documentElement.style.setProperty("--menu2-panel-alpha-soft", Math.max(0.32, menu2Transparency - 0.12).toFixed(2));
   panel.setAttribute("aria-hidden", String(!menu2Open));
   document.documentElement.classList.toggle("menu2-open", menu2Open);
   document.documentElement.classList.toggle("menu2-bubble-ready", menu2HasOpened && !menu2Open);
@@ -3592,9 +3606,13 @@ function applyMenu2Settings(): void {
   const styleSelect = document.querySelector<HTMLSelectElement>("#menu2StyleMode");
   const artSelect = document.querySelector<HTMLSelectElement>("#menu2ArtSize");
   const panelModeSelect = document.querySelector<HTMLSelectElement>("#menu2PanelMode");
+  const transparencyInput = document.querySelector<HTMLInputElement>("#menu2Transparency");
+  const transparencyValue = document.querySelector<HTMLElement>("#menu2TransparencyValue");
   if (styleSelect) styleSelect.value = menu2StyleMode;
   if (artSelect) artSelect.value = menu2ArtSize;
   if (panelModeSelect) panelModeSelect.value = menu2PanelMode;
+  if (transparencyInput) transparencyInput.value = menu2Transparency.toFixed(2);
+  if (transparencyValue) transparencyValue.textContent = menu2Transparency.toFixed(2);
 
   const devVisible = menu2DevUnlocked && menu2PanelMode === "full";
   const devTab = document.querySelector<HTMLButtonElement>("#menu2DevTab");
@@ -3686,7 +3704,7 @@ async function refreshMenu2ActiveTab(): Promise<void> {
 }
 
 
-function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "shuffle" | "repeat" | "queue" | "connect" | "broadcast" | "now" | "playlists" | "search" | "devices"): string {
+function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "shuffle" | "repeat" | "queue" | "connect" | "openPanel" | "broadcast" | "now" | "playlists" | "search" | "devices"): string {
   const paths: Record<typeof name, string> = {
     lyrics: '<path d="M10 18V7l8-1.7v10.2"/><circle cx="8" cy="18" r="2.1"/><circle cx="18" cy="15.5" r="2.1"/>',
     play: '<path d="M8.2 5.2v13.6L18.8 12z" fill="currentColor" stroke="none"/>',
@@ -3702,7 +3720,8 @@ function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume
     repeat: '<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
     queue: '<path d="M5 7h14M5 12h14M5 17h9"/>',
     connect: '<circle cx="12" cy="16.8" r="2.2" fill="currentColor" stroke="none"/><path d="M12 14.5V20"/><path d="M7.1 12.8a6.8 6.8 0 0 1 9.8 0"/><path d="M4.1 9.7a11.2 11.2 0 0 1 15.8 0"/><path d="M1.9 6.8a14.6 14.6 0 0 1 20.2 0"/>',
-    broadcast: '<rect x="4.5" y="5" width="9.2" height="14" rx="2"/><path d="M8 9h3.2M8 12h3.2M8 15h2.4"/><path d="M13.5 12h6.5"/><path d="M17 8.7l3.3 3.3-3.3 3.3"/>',
+    openPanel: '<rect x="4.5" y="5" width="10" height="14" rx="2"/><path d="M8 9h3M8 12h3M8 15h2"/><path d="M20 12H12.5"/><path d="M16 8l-4 4 4 4"/>',
+    broadcast: '<path d="M12 19v-7"/><circle cx="12" cy="9" r="2.3"/><path d="M7.8 12.2a6 6 0 0 1 8.4 0M5 15a9.8 9.8 0 0 1 14 0"/>',
     now: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/>',
     playlists: '<path d="M6 7h12M6 12h12M6 17h8"/><rect x="3" y="5" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="10" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="15" width="1.5" height="1.5" fill="currentColor" stroke="none"/>',
     search: '<circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l5 5"/>',
@@ -3990,7 +4009,7 @@ function syncMenu2Bubble(): void {
   if (next) next.innerHTML = menu2Icon("next");
   if (volume) volume.innerHTML = menu2Icon("volume");
   const grab = document.querySelector<HTMLButtonElement>("#menu2BubbleGrab");
-  if (grab) grab.innerHTML = menu2Icon("broadcast");
+  if (grab) grab.innerHTML = menu2Icon("openPanel");
   const bubbleVolumeInput = document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput");
   if (bubbleVolumeInput) bubbleVolumeInput.value = String(phase2Volume);
 }
@@ -4466,11 +4485,20 @@ function bindMenu2Controls(): void {
     localStorage.setItem("pocketdj-menu2-panel-mode", menu2PanelMode);
     applyMenu2Settings();
   });
+  document.querySelector<HTMLInputElement>("#menu2Transparency")?.addEventListener("input", (event) => {
+    menu2Transparency = Math.max(0.45, Math.min(1, Number((event.target as HTMLInputElement).value) || 0.82));
+    localStorage.setItem("pocketdj-menu2-transparency", menu2Transparency.toFixed(2));
+    applyMenu2Settings();
+  });
   document.querySelector<HTMLButtonElement>("#menu2OpenCurrentUtility")?.addEventListener("click", () => {
     menu2AdvancedUtilityVisible = !menu2AdvancedUtilityVisible;
     applyMenu2Settings();
-    if (menu2AdvancedUtilityVisible) openSidePanel(true);
-    else closeSidePanel();
+    if (menu2AdvancedUtilityVisible) {
+      roomUtility = { ...roomUtility, utilityPanelLeftSide: true };
+      saveRoomUtilitySettings();
+      applyRoomUtilitySettings();
+      openSidePanel(true);
+    } else closeSidePanel();
   });
   document.querySelector<HTMLInputElement>("#menu2ShowFloorControls")?.addEventListener("change", (event) => {
     menu2ShowFloorControls = (event.target as HTMLInputElement).checked;

@@ -1364,6 +1364,9 @@ export function renderShell(state: AppState): void {
                 <option value="small">Small</option>
               </select>
             </label>
+            <label class="menu2-setting menu2-slider-setting">Menu transparency <span id="menu2TransparencyValue">0.82</span>
+              <input id="menu2Transparency" type="range" min="0.45" max="1" step="0.01" value="0.82" />
+            </label>
             <button id="menu2OpenCurrentUtility" class="menu2-action menu2-wide-action" type="button" aria-pressed="false">Open Advanced Utility Panel</button>
             <label class="menu2-setting menu2-toggle-setting"><input id="menu2ShowFloorControls" type="checkbox" /> Show legacy floor controls</label>
             <p class="menu2-dev-note">Advanced utility and legacy floor controls are hidden from the normal UI but kept available here for tuning and rollback.</p>
