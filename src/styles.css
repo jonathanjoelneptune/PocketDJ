@@ -12583,3 +12583,140 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
   right: auto !important;
   left: var(--menu2-room-left, 0px) !important;
 }
+
+/* v87: canonical Menu 2.0 positioning and top-bar order cleanup.
+   This is intentionally the final Menu 2.0 layout authority. It removes the
+   old midpoint / top / translated Y positioning paths by pinning every menu
+   state to the selected visible-room bottom corner. */
+:root {
+  --menu2-panel-gap: 0px;
+  --menu2-slide-distance: calc(100% + 18px);
+}
+
+.menu2-panel,
+.menu2-panel.menu2-mode-full,
+.menu2-panel.menu2-mode-compact {
+  position: fixed !important;
+  top: auto !important;
+  bottom: calc(var(--menu2-room-bottom, 0px) + var(--menu2-panel-gap)) !important;
+  margin: 0 !important;
+  transform-origin: bottom center !important;
+  will-change: transform, opacity !important;
+}
+
+.menu2-panel.menu2-side-right,
+.menu2-panel.menu2-side-right.menu2-mode-full,
+.menu2-panel.menu2-side-right.menu2-mode-compact,
+:root.menu2-side-right .menu2-panel,
+:root.menu2-side-right .menu2-panel.menu2-mode-full,
+:root.menu2-side-right .menu2-panel.menu2-mode-compact {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+  top: auto !important;
+  bottom: calc(var(--menu2-room-bottom, 0px) + var(--menu2-panel-gap)) !important;
+  transform: translate3d(var(--menu2-slide-distance), 0, 0) !important;
+}
+
+.menu2-panel.menu2-side-left,
+.menu2-panel.menu2-side-left.menu2-mode-full,
+.menu2-panel.menu2-side-left.menu2-mode-compact,
+:root.menu2-side-left .menu2-panel,
+:root.menu2-side-left .menu2-panel.menu2-mode-full,
+:root.menu2-side-left .menu2-panel.menu2-mode-compact {
+  right: auto !important;
+  left: var(--menu2-room-left, 0px) !important;
+  top: auto !important;
+  bottom: calc(var(--menu2-room-bottom, 0px) + var(--menu2-panel-gap)) !important;
+  transform: translate3d(calc(-1 * var(--menu2-slide-distance)), 0, 0) !important;
+}
+
+.menu2-panel.menu2-open,
+.menu2-panel.menu2-mode-full.menu2-open,
+.menu2-panel.menu2-mode-compact.menu2-open,
+:root.menu2-open .menu2-panel,
+:root.menu2-side-right .menu2-panel.menu2-open,
+:root.menu2-side-left .menu2-panel.menu2-open,
+:root.menu2-open.menu2-side-right .menu2-panel,
+:root.menu2-open.menu2-side-left .menu2-panel {
+  top: auto !important;
+  bottom: calc(var(--menu2-room-bottom, 0px) + var(--menu2-panel-gap)) !important;
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-panel.menu2-mode-compact,
+:root .menu2-panel.menu2-mode-compact {
+  max-height: min(405px, calc(var(--menu2-room-height, 760px) * 0.55), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+}
+
+.menu2-bubble {
+  position: fixed !important;
+  top: auto !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.menu2-bubble.menu2-side-right,
+:root.menu2-side-right .menu2-bubble {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+}
+
+.menu2-bubble.menu2-side-left,
+:root.menu2-side-left .menu2-bubble {
+  right: auto !important;
+  left: var(--menu2-room-left, 0px) !important;
+}
+
+:root.menu2-bubble-ready .menu2-bubble,
+:root.menu2-bubble-ready.menu2-side-right .menu2-bubble,
+:root.menu2-bubble-ready.menu2-side-left .menu2-bubble {
+  top: auto !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  transform: none !important;
+}
+
+.menu2-topbar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.menu2-brand-pill {
+  order: 0 !important;
+  margin-right: auto !important;
+}
+
+#menu2TopLyricsPill {
+  order: 10 !important;
+  display: none !important;
+}
+
+.menu2-connect-wrap {
+  order: 20 !important;
+}
+
+#menu2CompactPill {
+  order: 30 !important;
+}
+
+#menu2FullscreenPill {
+  order: 40 !important;
+}
+
+#menu2LockPill {
+  order: 50 !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2TopLyricsPill {
+  display: inline-flex !important;
+}
+
+.menu2-panel.menu2-mode-full #menu2TopLyricsPill {
+  display: none !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2LyricsControl,
+.menu2-panel.menu2-mode-compact #menu2QueueControl {
+  display: none !important;
+}
