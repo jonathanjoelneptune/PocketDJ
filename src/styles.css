@@ -12950,14 +12950,14 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
   color: var(--menu2-accent, #e5a83e);
 }
 
-:root.menu2-fold-dock-active:not(.menu2-open) .menu2-fold-dock {
+:root.menu2-fold-dock-active .menu2-fold-dock {
   display: flex;
   opacity: 1;
   transform: translate3d(0, 0, 0);
   pointer-events: auto;
 }
 
-:root.menu2-fold-dock-active:not(.menu2-open) .menu2-bubble {
+:root.menu2-fold-dock-active .menu2-bubble {
   opacity: 0 !important;
   pointer-events: none !important;
   transform: translate3d(0, 18px, 0) !important;
