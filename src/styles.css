@@ -12482,3 +12482,104 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
   right: auto !important;
   left: calc(100% + 8px) !important;
 }
+
+
+/* v86: definitive selected-side bottom-corner anchoring and compact control cleanup.
+   This final layer intentionally wins over every earlier Menu 2.0 positioning pass. */
+.menu2-panel {
+  position: fixed !important;
+  top: auto !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  margin: 0 !important;
+  transform-origin: bottom center !important;
+}
+
+.menu2-panel.menu2-side-right,
+:root.menu2-side-right .menu2-panel {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  transform: translate3d(calc(100% + 16px), 0, 0) !important;
+}
+
+.menu2-panel.menu2-side-right.menu2-open,
+:root.menu2-side-right .menu2-panel.menu2-open,
+:root.menu2-open.menu2-side-right .menu2-panel {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-panel.menu2-side-left,
+:root.menu2-side-left .menu2-panel {
+  right: auto !important;
+  left: var(--menu2-room-left, 0px) !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  transform: translate3d(calc(-100% - 16px), 0, 0) !important;
+}
+
+.menu2-panel.menu2-side-left.menu2-open,
+:root.menu2-side-left .menu2-panel.menu2-open,
+:root.menu2-open.menu2-side-left .menu2-panel {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.menu2-panel.menu2-mode-compact {
+  top: auto !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  max-height: min(405px, calc(var(--menu2-room-height, 760px) * 0.55), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+}
+
+.menu2-panel.menu2-mode-compact.menu2-side-right,
+:root.menu2-side-right .menu2-panel.menu2-mode-compact {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+}
+
+.menu2-panel.menu2-mode-compact.menu2-side-left,
+:root.menu2-side-left .menu2-panel.menu2-mode-compact {
+  right: auto !important;
+  left: var(--menu2-room-left, 0px) !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+}
+
+.menu2-top-lyrics-pill {
+  display: none !important;
+}
+
+.menu2-panel.menu2-mode-compact .menu2-top-lyrics-pill {
+  display: inline-flex !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2LyricsControl,
+.menu2-panel.menu2-mode-compact #menu2QueueControl {
+  display: none !important;
+}
+
+.menu2-panel.menu2-mode-compact .menu2-topbar {
+  align-items: center !important;
+}
+
+.menu2-panel.menu2-mode-compact .menu2-connect-wrap {
+  order: 20;
+}
+.menu2-panel.menu2-mode-compact #menu2TopLyricsPill {
+  order: 19;
+}
+
+.menu2-bubble {
+  position: fixed !important;
+  top: auto !important;
+  bottom: calc(var(--menu2-room-bottom, 0px) + 12px) !important;
+}
+
+.menu2-bubble.menu2-side-right,
+:root.menu2-side-right .menu2-bubble {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+}
+
+.menu2-bubble.menu2-side-left,
+:root.menu2-side-left .menu2-bubble {
+  right: auto !important;
+  left: var(--menu2-room-left, 0px) !important;
+}

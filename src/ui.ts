@@ -1247,6 +1247,7 @@ export function renderShell(state: AppState): void {
         <div class="menu2-shell">
           <div class="menu2-topbar menu2-control-strip" aria-label="PocketDJ status controls">
             <button id="menu2BrandPill" class="menu2-brand-pill" type="button" aria-label="PocketDJ">PocketDJ</button>
+            <button id="menu2TopLyricsPill" class="menu2-pill menu2-round-pill menu2-top-lyrics-pill" type="button" aria-label="Toggle lyrics" title="Lyrics"></button>
             <div class="menu2-connect-wrap">
               <button id="menu2ConnectPill" class="menu2-pill menu2-round-pill menu2-connect-pill" type="button" aria-label="Connect Spotify" aria-haspopup="true" aria-expanded="false" title="Connect Spotify"></button>
               <div id="menu2ConnectMenu" class="menu2-connect-menu" role="menu" aria-hidden="true">
@@ -1355,6 +1356,12 @@ export function renderShell(state: AppState): void {
               <select id="menu2PanelMode" class="menu2-select">
                 <option value="full">Full Panel</option>
                 <option value="compact">Compact</option>
+              </select>
+            </label>
+            <label class="menu2-setting">Menu side
+              <select id="menu2Side" class="menu2-select">
+                <option value="right">Right side</option>
+                <option value="left">Left side</option>
               </select>
             </label>
             <label class="menu2-setting">Album art size

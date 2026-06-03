@@ -3981,8 +3981,15 @@ function refreshMenu2NowPlayingIfNeeded(): void {
 
 function syncMenu2Pills(): void {
   const connect = document.querySelector<HTMLButtonElement>("#menu2ConnectPill");
+  const topLyrics = document.querySelector<HTMLButtonElement>("#menu2TopLyricsPill");
   const compact = document.querySelector<HTMLButtonElement>("#menu2CompactPill");
   const fullscreen = document.querySelector<HTMLButtonElement>("#menu2FullscreenPill");
+  if (topLyrics) {
+    topLyrics.innerHTML = menu2Icon("lyrics");
+    topLyrics.classList.toggle("menu2-pill-active", lyricsEnabled);
+    topLyrics.setAttribute("aria-pressed", String(lyricsEnabled));
+    topLyrics.title = lyricsEnabled ? "Hide lyrics" : "Show lyrics";
+  }
   if (connect) {
     connect.innerHTML = menu2Icon("connect");
     connect.classList.toggle("menu2-pill-active", state.playback.isAuthenticated);
@@ -4606,6 +4613,7 @@ function bindMenu2Controls(): void {
     if (action === "device") void runSpotifyBrowserAction(async () => { await transferToSpotifyDevice(button.dataset.deviceId || ""); await loadMenu2Devices(); });
     if (action === "artist-top") void openArtistTopTracks(button.dataset.artistId || "", button.dataset.artistName || "artist");
   });
+  document.querySelector<HTMLButtonElement>("#menu2TopLyricsPill")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#lyricsToggle")?.click());
   document.querySelector<HTMLButtonElement>("#menu2LyricsControl")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#lyricsToggle")?.click());
   document.querySelector<HTMLButtonElement>("#menu2QueueControl")?.addEventListener("click", () => {
     setMenu2Tab("queue");
