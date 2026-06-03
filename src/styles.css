@@ -13136,3 +13136,71 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
   }
 }
 
+
+/* v94 Extended Mode and background compare: one transform wrapper owns the room visuals only. */
+.room-scene-transform {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  transform: translate3d(0, 0, 0) scale(1);
+  will-change: transform;
+}
+
+:root.extended-room-mode .room-scene-transform {
+  transform: translate3d(var(--extended-room-x, 0px), var(--extended-room-y, 0px), 0) scale(var(--extended-room-zoom, 1));
+}
+
+.room-compare-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background-repeat: no-repeat;
+  background-position: calc(var(--room-bg-x, 50%) + var(--compare-bg-x, 0px)) calc(var(--room-bg-y, 43.1%) + var(--compare-bg-y, 0px));
+  background-size: calc(var(--room-bg-scale, 1.13) * 100%) auto;
+  mix-blend-mode: normal;
+}
+
+:root.background-compare-mode .room-compare-bg {
+  opacity: var(--compare-bg-opacity, 0.5);
+}
+
+.menu2-dev-group {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--menu2-accent-border, rgba(216, 155, 69, 0.34));
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.menu2-dev-group-title {
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--menu2-accent-strong, #ffd38a);
+}
+
+.menu2-dev-button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.menu2-dev-group input[type="range"] {
+  width: 100%;
+  accent-color: var(--menu2-accent, #d89b45);
+}
+
+/* Fold dock should replace the side rail for the whole Fold Dock mode, including while Menu 2.0 is open. */
+:root.menu2-fold-dock-active .menu2-bubble,
+:root.menu2-fold-dock-active.menu2-open .menu2-bubble,
+:root.menu2-fold-dock-active.menu2-bubble-ready .menu2-bubble,
+:root.menu2-fold-dock-active.menu2-open.menu2-bubble-ready .menu2-bubble {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
