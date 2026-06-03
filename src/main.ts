@@ -74,7 +74,13 @@ let aspectPocketClickCount = 0;
 let aspectPocketClickTimer: number | null = null;
 let menu2Open = false;
 let menu2Locked = false;
-let menu2HasOpened = localStorage.getItem("pocketdj-menu2-has-opened") === "true";
+// Menu 2.0 is now the normal entry point. The collapsed rail must be visible
+// on a clean browser/incognito session, otherwise a new user has no way to open
+// the menu after the legacy utility button was hidden.
+let menu2HasOpened = localStorage.getItem("pocketdj-menu2-has-opened") !== "false";
+if (localStorage.getItem("pocketdj-menu2-has-opened") !== "true") {
+  localStorage.setItem("pocketdj-menu2-has-opened", "true");
+}
 let menu2ActiveTab: "now" | "queue" | "playlists" | "search" | "devices" | "dev" = "now";
 let menu2DevUnlocked = false;
 let menu2LockClickCount = 0;
@@ -101,6 +107,8 @@ if (localStorage.getItem(MENU2_FORCE_FULL_DEFAULT_KEY) !== "1") {
 let menu2Transparency = Number(localStorage.getItem("pocketdj-menu2-transparency") || "0.82");
 if (!Number.isFinite(menu2Transparency)) menu2Transparency = 0.82;
 menu2Transparency = Math.max(0.45, Math.min(1, menu2Transparency));
+let menu2Side: "left" | "right" = (localStorage.getItem("pocketdj-menu2-side") as "left" | "right") || "right";
+if (menu2Side !== "left" && menu2Side !== "right") menu2Side = "right";
 let menu2AdvancedUtilityVisible = false;
 let menu2ShowFloorControls = localStorage.getItem("pocketdj-menu2-show-floor-controls") === "1";
 let menu2SearchResultTab: "tracks" | "artists" | "playlists" | "albums" = "tracks";
@@ -3571,6 +3579,8 @@ function applyMenu2Settings(): void {
   panel.classList.toggle("menu2-style-pocket", menu2StyleMode === "pocket");
   panel.classList.toggle("menu2-style-spotify", menu2StyleMode === "spotify");
   panel.classList.toggle("menu2-style-web", menu2StyleMode === "web");
+  panel.classList.toggle("menu2-side-left", menu2Side === "left");
+  panel.classList.toggle("menu2-side-right", menu2Side === "right");
   panel.classList.toggle("menu2-mode-compact", menu2PanelMode === "compact");
   panel.classList.toggle("menu2-mode-full", menu2PanelMode === "full");
   panel.classList.toggle("menu2-art-large", menu2ArtSize === "large");
@@ -3585,6 +3595,8 @@ function applyMenu2Settings(): void {
   document.documentElement.classList.toggle("menu2-style-pocket", menu2StyleMode === "pocket");
   document.documentElement.classList.toggle("menu2-style-spotify", menu2StyleMode === "spotify");
   document.documentElement.classList.toggle("menu2-style-web", menu2StyleMode === "web");
+  document.documentElement.classList.toggle("menu2-side-left", menu2Side === "left");
+  document.documentElement.classList.toggle("menu2-side-right", menu2Side === "right");
   document.documentElement.classList.toggle("menu2-advanced-utility-visible", menu2AdvancedUtilityVisible);
   document.documentElement.classList.toggle("menu2-show-floor-controls", menu2ShowFloorControls);
 
@@ -3599,6 +3611,8 @@ function applyMenu2Settings(): void {
     bubble.classList.toggle("menu2-style-pocket", menu2StyleMode === "pocket");
     bubble.classList.toggle("menu2-style-spotify", menu2StyleMode === "spotify");
     bubble.classList.toggle("menu2-style-web", menu2StyleMode === "web");
+    bubble.classList.toggle("menu2-side-left", menu2Side === "left");
+    bubble.classList.toggle("menu2-side-right", menu2Side === "right");
   }
   syncMenu2Bubble();
   scheduleMenu2AutoCollapse();
@@ -3608,9 +3622,11 @@ function applyMenu2Settings(): void {
   const panelModeSelect = document.querySelector<HTMLSelectElement>("#menu2PanelMode");
   const transparencyInput = document.querySelector<HTMLInputElement>("#menu2Transparency");
   const transparencyValue = document.querySelector<HTMLElement>("#menu2TransparencyValue");
+  const sideSelect = document.querySelector<HTMLSelectElement>("#menu2Side");
   if (styleSelect) styleSelect.value = menu2StyleMode;
   if (artSelect) artSelect.value = menu2ArtSize;
   if (panelModeSelect) panelModeSelect.value = menu2PanelMode;
+  if (sideSelect) sideSelect.value = menu2Side;
   if (transparencyInput) transparencyInput.value = menu2Transparency.toFixed(2);
   if (transparencyValue) transparencyValue.textContent = menu2Transparency.toFixed(2);
 
@@ -3704,7 +3720,7 @@ async function refreshMenu2ActiveTab(): Promise<void> {
 }
 
 
-function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "shuffle" | "repeat" | "queue" | "connect" | "openPanel" | "broadcast" | "now" | "playlists" | "search" | "devices"): string {
+function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "shuffle" | "repeat" | "queue" | "connect" | "openPanel" | "openPanelLeft" | "openPanelRight" | "broadcast" | "now" | "playlists" | "search" | "devices"): string {
   const paths: Record<typeof name, string> = {
     lyrics: '<path d="M10 18V7l8-1.7v10.2"/><circle cx="8" cy="18" r="2.1"/><circle cx="18" cy="15.5" r="2.1"/>',
     play: '<path d="M8.2 5.2v13.6L18.8 12z" fill="currentColor" stroke="none"/>',
@@ -3721,6 +3737,8 @@ function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume
     queue: '<path d="M5 7h14M5 12h14M5 17h9"/>',
     connect: '<circle cx="12" cy="16.8" r="2.2" fill="currentColor" stroke="none"/><path d="M12 14.5V20"/><path d="M7.1 12.8a6.8 6.8 0 0 1 9.8 0"/><path d="M4.1 9.7a11.2 11.2 0 0 1 15.8 0"/><path d="M1.9 6.8a14.6 14.6 0 0 1 20.2 0"/>',
     openPanel: '<rect x="4.5" y="5" width="10" height="14" rx="2"/><path d="M8 9h3M8 12h3M8 15h2"/><path d="M20 12H12.5"/><path d="M16 8l-4 4 4 4"/>',
+    openPanelLeft: '<rect x="9.5" y="5" width="10" height="14" rx="2"/><path d="M13 9h3M13 12h3M13 15h2"/><path d="M4 12h7.5"/><path d="M8 8l4 4-4 4"/>',
+    openPanelRight: '<rect x="4.5" y="5" width="10" height="14" rx="2"/><path d="M8 9h3M8 12h3M8 15h2"/><path d="M20 12H12.5"/><path d="M16 8l-4 4 4 4"/>',
     broadcast: '<path d="M12 19v-7"/><circle cx="12" cy="9" r="2.3"/><path d="M7.8 12.2a6 6 0 0 1 8.4 0M5 15a9.8 9.8 0 0 1 14 0"/>',
     now: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/>',
     playlists: '<path d="M6 7h12M6 12h12M6 17h8"/><rect x="3" y="5" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="10" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="15" width="1.5" height="1.5" fill="currentColor" stroke="none"/>',
@@ -4009,7 +4027,7 @@ function syncMenu2Bubble(): void {
   if (next) next.innerHTML = menu2Icon("next");
   if (volume) volume.innerHTML = menu2Icon("volume");
   const grab = document.querySelector<HTMLButtonElement>("#menu2BubbleGrab");
-  if (grab) grab.innerHTML = menu2Icon("openPanel");
+  if (grab) grab.innerHTML = menu2Icon(menu2Side === "left" ? "openPanelLeft" : "openPanelRight");
   const bubbleVolumeInput = document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput");
   if (bubbleVolumeInput) bubbleVolumeInput.value = String(phase2Volume);
 }
@@ -4483,6 +4501,12 @@ function bindMenu2Controls(): void {
     menu2PanelMode = (event.target as HTMLSelectElement).value as typeof menu2PanelMode;
     if (menu2PanelMode === "compact" && menu2ActiveTab === "dev") menu2ActiveTab = "now";
     localStorage.setItem("pocketdj-menu2-panel-mode", menu2PanelMode);
+    applyMenu2Settings();
+  });
+  document.querySelector<HTMLSelectElement>("#menu2Side")?.addEventListener("change", (event) => {
+    menu2Side = (event.target as HTMLSelectElement).value as typeof menu2Side;
+    if (menu2Side !== "left" && menu2Side !== "right") menu2Side = "right";
+    localStorage.setItem("pocketdj-menu2-side", menu2Side);
     applyMenu2Settings();
   });
   document.querySelector<HTMLInputElement>("#menu2Transparency")?.addEventListener("input", (event) => {
