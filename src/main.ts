@@ -124,38 +124,6 @@ let menu2AdvancedUtilityVisible = false;
 let menu2ShowFloorControls = localStorage.getItem("pocketdj-menu2-show-floor-controls") === "1";
 let menu2SearchResultTab: "tracks" | "artists" | "playlists" | "albums" = "tracks";
 
-type ExtendedRoomSettings = {
-  enabled: boolean;
-  x: number;
-  y: number;
-  zoom: number;
-  backgroundX: number;
-  backgroundY: number;
-  compareEnabled: boolean;
-  compareX: number;
-  compareY: number;
-  compareOpacity: number;
-};
-
-const EXTENDED_ROOM_SETTINGS_KEY = "pocketdj-extended-room-settings-v1";
-const EXTENDED_BACKGROUND_DEFAULT_MIGRATION_KEY = "pocketdj-v96-extended-background-default-applied";
-const EXTENDED_MODE_OFF_DEFAULT_MIGRATION_KEY = "pocketdj-v97-extended-compare-off-default-applied";
-const DEFAULT_EXTENDED_ROOM_SETTINGS: ExtendedRoomSettings = {
-  enabled: false,
-  x: 0,
-  y: 0,
-  zoom: 1,
-  // Extended Mode must start from the exact normal locked background alignment.
-  // These values are only for manual background calibration after Extended Mode is enabled.
-  backgroundX: 0,
-  backgroundY: 0,
-  compareEnabled: false,
-  compareX: 0,
-  compareY: -403,
-  compareOpacity: 0.5,
-};
-
-let extendedRoomSettings = loadExtendedRoomSettings();
 
 let menu2SearchTracks: SpotifyCatalogTrack[] = [];
 let menu2SearchArtists: SpotifyCatalogArtist[] = [];
@@ -3244,7 +3212,6 @@ async function boot(): Promise<void> {
   updateDynamicCeilingReveal();
   window.addEventListener("resize", updateDynamicCeilingReveal, { passive: true });
   renderShell(state);
-  applyExtendedRoomSettings();
   setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
   bindControls();
@@ -3257,9 +3224,6 @@ async function boot(): Promise<void> {
   bindStringLightControls();
   bindAmbientTwinkleControls();
   bindSessionWallAlbumControls();
-  applyExtendedBackgroundDefaultMigration();
-  applyExtendedModeOffDefaultMigration();
-  applyExtendedRoomSettings();
   applyClockDisabledDefaultMigration();
   applyMixerLedTuningMigration();
   applyTallLyricCalibrationMigration();
@@ -3601,140 +3565,6 @@ function setMenu2Status(message: string, busy = false): void {
 }
 
 
-function loadExtendedRoomSettings(): ExtendedRoomSettings {
-  try {
-    const raw = window.localStorage.getItem(EXTENDED_ROOM_SETTINGS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<ExtendedRoomSettings>;
-      return {
-        ...DEFAULT_EXTENDED_ROOM_SETTINGS,
-        ...parsed,
-        enabled: Boolean(parsed.enabled),
-        x: clamp(Number(parsed.x) || 0, -600, 600),
-        y: clamp(Number(parsed.y) || 0, -600, 600),
-        zoom: clamp(Number(parsed.zoom) || 1, 0.7, 1.6),
-        backgroundX: clamp(Number(parsed.backgroundX ?? DEFAULT_EXTENDED_ROOM_SETTINGS.backgroundX) || 0, -600, 600),
-        backgroundY: clamp(Number(parsed.backgroundY ?? DEFAULT_EXTENDED_ROOM_SETTINGS.backgroundY) || 0, -900, 600),
-        compareEnabled: Boolean(parsed.compareEnabled),
-        compareX: clamp(Number(parsed.compareX ?? DEFAULT_EXTENDED_ROOM_SETTINGS.compareX) || 0, -600, 600),
-        compareY: clamp(Number(parsed.compareY ?? DEFAULT_EXTENDED_ROOM_SETTINGS.compareY) || 0, -900, 600),
-        compareOpacity: clamp01(Number(parsed.compareOpacity ?? 0.5)),
-      };
-    }
-  } catch (error) {
-    console.warn("Could not load extended room settings", error);
-  }
-  return { ...DEFAULT_EXTENDED_ROOM_SETTINGS };
-}
-
-function saveExtendedRoomSettings(): void {
-  window.localStorage.setItem(EXTENDED_ROOM_SETTINGS_KEY, JSON.stringify(extendedRoomSettings));
-}
-
-function applyExtendedBackgroundDefaultMigration(): void {
-  try {
-    if (window.localStorage.getItem(EXTENDED_BACKGROUND_DEFAULT_MIGRATION_KEY)) return;
-    extendedRoomSettings = {
-      ...extendedRoomSettings,
-      // Keep the calibrated compare overlay available, but do not turn Extended Mode on by default.
-      enabled: false,
-      compareEnabled: false,
-      backgroundX: 0,
-      backgroundY: 0,
-      compareX: 0,
-      compareY: -403,
-    };
-    saveExtendedRoomSettings();
-    window.localStorage.setItem(EXTENDED_BACKGROUND_DEFAULT_MIGRATION_KEY, "true");
-  } catch (error) {
-    console.warn("Could not apply extended background default migration", error);
-  }
-}
-
-function applyExtendedModeOffDefaultMigration(): void {
-  try {
-    if (window.localStorage.getItem(EXTENDED_MODE_OFF_DEFAULT_MIGRATION_KEY)) return;
-    extendedRoomSettings = {
-      ...extendedRoomSettings,
-      enabled: false,
-      compareEnabled: false,
-      backgroundX: 0,
-      backgroundY: 0,
-    };
-    saveExtendedRoomSettings();
-    window.localStorage.setItem(EXTENDED_MODE_OFF_DEFAULT_MIGRATION_KEY, "true");
-  } catch (error) {
-    console.warn("Could not apply Extended/Compare off-by-default migration", error);
-  }
-}
-
-function applyExtendedRoomSettings(): void {
-  const root = document.documentElement;
-  root.classList.toggle("extended-room-mode", extendedRoomSettings.enabled);
-  root.classList.toggle("background-compare-mode", extendedRoomSettings.compareEnabled);
-  root.style.setProperty("--extended-room-x", `${extendedRoomSettings.x}px`);
-  root.style.setProperty("--extended-room-y", `${extendedRoomSettings.y}px`);
-  root.style.setProperty("--extended-room-zoom", String(extendedRoomSettings.zoom));
-  root.style.setProperty("--extended-bg-x", `${extendedRoomSettings.backgroundX}px`);
-  root.style.setProperty("--extended-bg-y", `${extendedRoomSettings.backgroundY}px`);
-  root.style.setProperty("--compare-bg-x", `${extendedRoomSettings.compareX}px`);
-  root.style.setProperty("--compare-bg-y", `${extendedRoomSettings.compareY}px`);
-  root.style.setProperty("--compare-bg-opacity", String(extendedRoomSettings.compareOpacity));
-
-  const bg = document.querySelector<HTMLElement>("#roomBg");
-  if (bg) {
-    bg.style.setProperty(
-      "background-image",
-      extendedRoomSettings.enabled
-        ? "url('./assets/room/pocket-dj-room-offline-v1_EXTENDED.png')"
-        : "url('./assets/room/pocket-dj-room-offline-v1.png')"
-    );
-    bg.style.setProperty(
-      "background-position",
-      extendedRoomSettings.enabled
-        ? `calc(var(--room-bg-x, 50%) + ${extendedRoomSettings.backgroundX}px) calc(var(--room-bg-y, 43.1%) + ${extendedRoomSettings.backgroundY}px)`
-        : "var(--room-bg-x, 50%) var(--room-bg-y, 43.1%)",
-      "important"
-    );
-    bg.style.setProperty("background-size", "calc(var(--room-bg-scale, 1.13) * 100%) auto", "important");
-  }
-
-  const ids: Array<[string, string | number | boolean]> = [
-    ["menu2ExtendedMode", extendedRoomSettings.enabled],
-    ["menu2ExtendedX", extendedRoomSettings.x],
-    ["menu2ExtendedY", extendedRoomSettings.y],
-    ["menu2ExtendedZoom", extendedRoomSettings.zoom],
-    ["menu2ExtendedBgX", extendedRoomSettings.backgroundX],
-    ["menu2ExtendedBgY", extendedRoomSettings.backgroundY],
-    ["menu2CompareMode", extendedRoomSettings.compareEnabled],
-    ["menu2CompareX", extendedRoomSettings.compareX],
-    ["menu2CompareY", extendedRoomSettings.compareY],
-    ["menu2CompareOpacity", extendedRoomSettings.compareOpacity],
-  ];
-
-  ids.forEach(([id, value]) => {
-    const input = document.querySelector<HTMLInputElement>(`#${id}`);
-    if (!input) return;
-    if (input.type === "checkbox") input.checked = Boolean(value);
-    else input.value = String(value);
-  });
-
-  const labels: Array<[string, string]> = [
-    ["menu2ExtendedXValue", String(Math.round(extendedRoomSettings.x))],
-    ["menu2ExtendedYValue", String(Math.round(extendedRoomSettings.y))],
-    ["menu2ExtendedZoomValue", extendedRoomSettings.zoom.toFixed(2)],
-    ["menu2ExtendedBgXValue", String(Math.round(extendedRoomSettings.backgroundX))],
-    ["menu2ExtendedBgYValue", String(Math.round(extendedRoomSettings.backgroundY))],
-    ["menu2CompareXValue", String(Math.round(extendedRoomSettings.compareX))],
-    ["menu2CompareYValue", String(Math.round(extendedRoomSettings.compareY))],
-    ["menu2CompareOpacityValue", extendedRoomSettings.compareOpacity.toFixed(2)],
-  ];
-  labels.forEach(([id, value]) => {
-    const label = document.querySelector<HTMLElement>(`#${id}`);
-    if (label) label.textContent = value;
-  });
-}
-
 function updateMenu2RoomAnchor(): void {
   const room = document.querySelector<HTMLElement>(".room-base-layer") || document.querySelector<HTMLElement>(".room");
   if (!room) return;
@@ -3774,7 +3604,6 @@ function isMenu2FoldDockActive(): boolean {
 
 function applyMenu2Settings(): void {
   updateMenu2RoomAnchor();
-  applyExtendedRoomSettings();
   const panel = document.querySelector<HTMLElement>("#menu2Panel");
   if (!panel) return;
   panel.classList.toggle("menu2-closed", !menu2Open);
@@ -4825,60 +4654,6 @@ function bindMenu2Controls(): void {
       openSidePanel(true);
     } else closeSidePanel();
   });
-  document.querySelector<HTMLInputElement>("#menu2ExtendedMode")?.addEventListener("change", (event) => {
-    extendedRoomSettings = { ...extendedRoomSettings, enabled: (event.target as HTMLInputElement).checked };
-    saveExtendedRoomSettings();
-    applyMenu2Settings();
-  });
-  ([
-    ["menu2ExtendedX", "x"],
-    ["menu2ExtendedY", "y"],
-    ["menu2ExtendedZoom", "zoom"],
-    ["menu2ExtendedBgX", "backgroundX"],
-    ["menu2ExtendedBgY", "backgroundY"],
-    ["menu2CompareX", "compareX"],
-    ["menu2CompareY", "compareY"],
-    ["menu2CompareOpacity", "compareOpacity"],
-  ] as const).forEach(([id, key]) => {
-    document.querySelector<HTMLInputElement>(`#${id}`)?.addEventListener("input", (event) => {
-      const raw = Number((event.target as HTMLInputElement).value);
-      const value = key === "zoom"
-        ? clamp(raw || 1, 0.7, 1.6)
-        : key === "compareOpacity"
-          ? clamp01(raw)
-          : key === "backgroundY" || key === "compareY"
-            ? clamp(raw || 0, -900, 600)
-            : clamp(raw || 0, -600, 600);
-      extendedRoomSettings = { ...extendedRoomSettings, [key]: value };
-      saveExtendedRoomSettings();
-      applyExtendedRoomSettings();
-    });
-  });
-  document.querySelector<HTMLInputElement>("#menu2CompareMode")?.addEventListener("change", (event) => {
-    extendedRoomSettings = { ...extendedRoomSettings, compareEnabled: (event.target as HTMLInputElement).checked };
-    saveExtendedRoomSettings();
-    applyExtendedRoomSettings();
-  });
-  document.querySelector<HTMLButtonElement>("#menu2ExtendedReset")?.addEventListener("click", () => {
-    extendedRoomSettings = { ...extendedRoomSettings, x: 0, y: 0, zoom: 1 };
-    saveExtendedRoomSettings();
-    applyExtendedRoomSettings();
-  });
-  document.querySelector<HTMLButtonElement>("#menu2CompareReset")?.addEventListener("click", () => {
-    extendedRoomSettings = { ...extendedRoomSettings, compareX: 0, compareY: -403, compareOpacity: 0.5 };
-    saveExtendedRoomSettings();
-    applyExtendedRoomSettings();
-  });
-  document.querySelector<HTMLButtonElement>("#menu2CompareApplyToExtended")?.addEventListener("click", () => {
-    extendedRoomSettings = {
-      ...extendedRoomSettings,
-      backgroundX: extendedRoomSettings.compareX,
-      backgroundY: extendedRoomSettings.compareY,
-    };
-    saveExtendedRoomSettings();
-    applyExtendedRoomSettings();
-  });
-
   document.querySelector<HTMLInputElement>("#menu2ShowFloorControls")?.addEventListener("change", (event) => {
     menu2ShowFloorControls = (event.target as HTMLInputElement).checked;
     localStorage.setItem("pocketdj-menu2-show-floor-controls", menu2ShowFloorControls ? "1" : "0");

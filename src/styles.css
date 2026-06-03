@@ -6747,12 +6747,12 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 
-/* v64K / v97 Wide/Fill aspect mode
-   WIDE = normal 16:9. FILL = stretch within a safe 1.10 to 2.25 aspect-ratio window.
-   The lower 1.10 bound supports open Fold-style nearly-square landscape layouts while keeping the scene bottom anchored. */
+/* v64K Wide/Fill aspect mode
+   WIDE = normal 16:9. FILL = stretch within a safe 1.25 to 2.25 aspect-ratio window.
+   The scene remains one consistent coordinate system; extreme skinny/wide screens get subtle borders back. */
 :root.room-fill-stretch {
   --room-w: min(100vw, 225vh);
-  --room-h: min(100vh, calc(100vw / 1.10));
+  --room-h: min(100vh, 80vw);
 }
 
 :root.room-fill-stretch .stage {
@@ -13137,35 +13137,6 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
 }
 
 
-/* v94 Extended Mode and background compare: one transform wrapper owns the room visuals only. */
-.room-scene-transform {
-  position: absolute;
-  inset: 0;
-  transform-origin: 50% 100%;
-  transform: translate3d(0, 0, 0) scale(1);
-  will-change: transform;
-}
-
-:root.extended-room-mode .room-scene-transform {
-  transform: translate3d(var(--extended-room-x, 0px), var(--extended-room-y, 0px), 0) scale(var(--extended-room-zoom, 1));
-}
-
-.room-compare-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0;
-  background-repeat: no-repeat;
-  background-position: calc(var(--room-bg-x, 50%) + var(--compare-bg-x, 0px)) calc(var(--room-bg-y, 43.1%) + var(--compare-bg-y, -403px));
-  background-size: calc(var(--room-bg-scale, 1.13) * 100%) auto;
-  mix-blend-mode: normal;
-}
-
-:root.background-compare-mode .room-compare-bg {
-  opacity: var(--compare-bg-opacity, 0.5);
-}
-
 .menu2-dev-group {
   display: grid;
   gap: 8px;
@@ -13231,23 +13202,4 @@ body::after,
 
 .room {
   background-color: #000000;
-}
-
-
-/* v97: Extended Mode default/off behavior and Fold-tall aspect support.
-   The active extended background alignment must remain tunable even in Fill/Tall mode. */
-:root.extended-room-mode .room-bg {
-  background-image: url("./assets/room/pocket-dj-room-offline-v1_EXTENDED.png") !important;
-  background-position: calc(var(--room-bg-x, 50%) + var(--extended-bg-x, 0px)) calc(var(--room-bg-y, 43.1%) + var(--extended-bg-y, 0px)) !important;
-  background-size: calc(var(--room-bg-scale, 1.13) * 100%) auto !important;
-}
-
-:root:not(.extended-room-mode) .room-bg {
-  background-image: url("./assets/room/pocket-dj-room-offline-v1.png") !important;
-  background-position: var(--room-bg-x, 50%) var(--room-bg-y, 43.1%) !important;
-  background-size: calc(var(--room-bg-scale, 1.13) * 100%) auto !important;
-}
-
-:root.background-compare-mode .room-compare-bg {
-  background-position: calc(var(--room-bg-x, 50%) + var(--compare-bg-x, 0px)) calc(var(--room-bg-y, 43.1%) + var(--compare-bg-y, -403px)) !important;
 }

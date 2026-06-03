@@ -29,8 +29,7 @@ export function renderShell(state: AppState): void {
     <main class="stage">
       <section class="room" aria-label="PocketDJ room">
         <div id="roomSceneTransform" class="room-scene-transform" aria-hidden="false">
-        <div id="roomBg" class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\'); background-position:var(--room-bg-x, 50%) var(--room-bg-y, 43.1%)" aria-hidden="true"></div>
-        <div id="roomCompareBg" class="room-compare-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1_EXTENDED.png\')" aria-hidden="true"></div>
+        <div id="roomBg" class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\')" aria-hidden="true"></div>
         <div class="album-wash" id="albumWash"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
         <div class="room-base-layer" aria-hidden="false">
@@ -1400,46 +1399,6 @@ export function renderShell(state: AppState): void {
                 <option value="both-back">Display Both - DJ Nova in back</option>
               </select>
             </label>
-
-            <div class="menu2-dev-group menu2-extended-dev-group">
-              <div class="menu2-dev-group-title">Extended Mode</div>
-              <label class="menu2-setting menu2-toggle-setting"><span>Enable Extended Mode</span><input id="menu2ExtendedMode" type="checkbox" /></label>
-              <label class="menu2-setting menu2-slider-setting">Room X <span id="menu2ExtendedXValue">0</span>
-                <input id="menu2ExtendedX" type="range" min="-600" max="600" step="1" value="0" />
-              </label>
-              <label class="menu2-setting menu2-slider-setting">Room Y <span id="menu2ExtendedYValue">0</span>
-                <input id="menu2ExtendedY" type="range" min="-600" max="600" step="1" value="0" />
-              </label>
-              <label class="menu2-setting menu2-slider-setting">Room Zoom <span id="menu2ExtendedZoomValue">1.00</span>
-                <input id="menu2ExtendedZoom" type="range" min="0.70" max="1.60" step="0.01" value="1" />
-              </label>
-              <label class="menu2-setting menu2-slider-setting">Extended BG X <span id="menu2ExtendedBgXValue">0</span>
-                <input id="menu2ExtendedBgX" type="range" min="-600" max="600" step="1" value="0" />
-              </label>
-              <label class="menu2-setting menu2-slider-setting">Extended BG Y <span id="menu2ExtendedBgYValue">0</span>
-                <input id="menu2ExtendedBgY" type="range" min="-900" max="600" step="1" value="0" />
-              </label>
-              <button id="menu2ExtendedReset" class="menu2-action menu2-wide-action" type="button">Reset Extended Transform</button>
-            </div>
-
-            <div class="menu2-dev-group menu2-compare-dev-group">
-              <div class="menu2-dev-group-title">Background Compare</div>
-              <label class="menu2-setting menu2-toggle-setting"><span>Enable Compare Overlay</span><input id="menu2CompareMode" type="checkbox" /></label>
-              <label class="menu2-setting menu2-slider-setting">Overlay X <span id="menu2CompareXValue">0</span>
-                <input id="menu2CompareX" type="range" min="-600" max="600" step="1" value="0" />
-              </label>
-              <label class="menu2-setting menu2-slider-setting">Overlay Y <span id="menu2CompareYValue">-403</span>
-                <input id="menu2CompareY" type="range" min="-900" max="600" step="1" value="-403" />
-              </label>
-              <label class="menu2-setting menu2-slider-setting">Overlay opacity <span id="menu2CompareOpacityValue">0.50</span>
-                <input id="menu2CompareOpacity" type="range" min="0" max="1" step="0.01" value="0.5" />
-              </label>
-              <div class="menu2-dev-button-row">
-                <button id="menu2CompareReset" class="menu2-action" type="button">Reset Compare</button>
-                <button id="menu2CompareApplyToExtended" class="menu2-action" type="button">Apply Compare Offset</button>
-              </div>
-            </div>
-
             <button id="menu2OpenCurrentUtility" class="menu2-action menu2-wide-action" type="button" aria-pressed="false">Open Advanced Utility Panel</button>
             <label class="menu2-setting menu2-toggle-setting"><input id="menu2ShowFloorControls" type="checkbox" /> Show legacy floor controls</label>
             <p class="menu2-dev-note">Advanced utility and legacy floor controls are hidden from the normal UI but kept available here for tuning and rollback.</p>
