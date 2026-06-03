@@ -29,7 +29,7 @@ export function renderShell(state: AppState): void {
     <main class="stage">
       <section class="room" aria-label="PocketDJ room">
         <div id="roomSceneTransform" class="room-scene-transform" aria-hidden="false">
-        <div id="roomBg" class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1_EXTENDED.png\'); background-position:calc(var(--room-bg-x, 50%) + 0px) calc(var(--room-bg-y, 43.1%) - 403px)" aria-hidden="true"></div>
+        <div id="roomBg" class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\'); background-position:var(--room-bg-x, 50%) var(--room-bg-y, 43.1%)" aria-hidden="true"></div>
         <div id="roomCompareBg" class="room-compare-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1_EXTENDED.png\')" aria-hidden="true"></div>
         <div class="album-wash" id="albumWash"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
@@ -1416,8 +1416,8 @@ export function renderShell(state: AppState): void {
               <label class="menu2-setting menu2-slider-setting">Extended BG X <span id="menu2ExtendedBgXValue">0</span>
                 <input id="menu2ExtendedBgX" type="range" min="-600" max="600" step="1" value="0" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Extended BG Y <span id="menu2ExtendedBgYValue">-403</span>
-                <input id="menu2ExtendedBgY" type="range" min="-900" max="600" step="1" value="-403" />
+              <label class="menu2-setting menu2-slider-setting">Extended BG Y <span id="menu2ExtendedBgYValue">0</span>
+                <input id="menu2ExtendedBgY" type="range" min="-900" max="600" step="1" value="0" />
               </label>
               <button id="menu2ExtendedReset" class="menu2-action menu2-wide-action" type="button">Reset Extended Transform</button>
             </div>

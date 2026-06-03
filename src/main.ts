@@ -139,13 +139,16 @@ type ExtendedRoomSettings = {
 
 const EXTENDED_ROOM_SETTINGS_KEY = "pocketdj-extended-room-settings-v1";
 const EXTENDED_BACKGROUND_DEFAULT_MIGRATION_KEY = "pocketdj-v96-extended-background-default-applied";
+const EXTENDED_MODE_OFF_DEFAULT_MIGRATION_KEY = "pocketdj-v97-extended-compare-off-default-applied";
 const DEFAULT_EXTENDED_ROOM_SETTINGS: ExtendedRoomSettings = {
-  enabled: true,
+  enabled: false,
   x: 0,
   y: 0,
   zoom: 1,
+  // Extended Mode must start from the exact normal locked background alignment.
+  // These values are only for manual background calibration after Extended Mode is enabled.
   backgroundX: 0,
-  backgroundY: -403,
+  backgroundY: 0,
   compareEnabled: false,
   compareX: 0,
   compareY: -403,
@@ -3255,6 +3258,7 @@ async function boot(): Promise<void> {
   bindAmbientTwinkleControls();
   bindSessionWallAlbumControls();
   applyExtendedBackgroundDefaultMigration();
+  applyExtendedModeOffDefaultMigration();
   applyExtendedRoomSettings();
   applyClockDisabledDefaultMigration();
   applyMixerLedTuningMigration();
@@ -3632,9 +3636,11 @@ function applyExtendedBackgroundDefaultMigration(): void {
     if (window.localStorage.getItem(EXTENDED_BACKGROUND_DEFAULT_MIGRATION_KEY)) return;
     extendedRoomSettings = {
       ...extendedRoomSettings,
-      enabled: true,
+      // Keep the calibrated compare overlay available, but do not turn Extended Mode on by default.
+      enabled: false,
+      compareEnabled: false,
       backgroundX: 0,
-      backgroundY: -403,
+      backgroundY: 0,
       compareX: 0,
       compareY: -403,
     };
@@ -3642,6 +3648,23 @@ function applyExtendedBackgroundDefaultMigration(): void {
     window.localStorage.setItem(EXTENDED_BACKGROUND_DEFAULT_MIGRATION_KEY, "true");
   } catch (error) {
     console.warn("Could not apply extended background default migration", error);
+  }
+}
+
+function applyExtendedModeOffDefaultMigration(): void {
+  try {
+    if (window.localStorage.getItem(EXTENDED_MODE_OFF_DEFAULT_MIGRATION_KEY)) return;
+    extendedRoomSettings = {
+      ...extendedRoomSettings,
+      enabled: false,
+      compareEnabled: false,
+      backgroundX: 0,
+      backgroundY: 0,
+    };
+    saveExtendedRoomSettings();
+    window.localStorage.setItem(EXTENDED_MODE_OFF_DEFAULT_MIGRATION_KEY, "true");
+  } catch (error) {
+    console.warn("Could not apply Extended/Compare off-by-default migration", error);
   }
 }
 
@@ -3660,12 +3683,20 @@ function applyExtendedRoomSettings(): void {
 
   const bg = document.querySelector<HTMLElement>("#roomBg");
   if (bg) {
-    bg.style.backgroundImage = extendedRoomSettings.enabled
-      ? "url('./assets/room/pocket-dj-room-offline-v1_EXTENDED.png')"
-      : "url('./assets/room/pocket-dj-room-offline-v1.png')";
-    bg.style.backgroundPosition = extendedRoomSettings.enabled
-      ? `calc(var(--room-bg-x, 50%) + ${extendedRoomSettings.backgroundX}px) calc(var(--room-bg-y, 43.1%) + ${extendedRoomSettings.backgroundY}px)`
-      : "var(--room-bg-x, 50%) var(--room-bg-y, 43.1%)";
+    bg.style.setProperty(
+      "background-image",
+      extendedRoomSettings.enabled
+        ? "url('./assets/room/pocket-dj-room-offline-v1_EXTENDED.png')"
+        : "url('./assets/room/pocket-dj-room-offline-v1.png')"
+    );
+    bg.style.setProperty(
+      "background-position",
+      extendedRoomSettings.enabled
+        ? `calc(var(--room-bg-x, 50%) + ${extendedRoomSettings.backgroundX}px) calc(var(--room-bg-y, 43.1%) + ${extendedRoomSettings.backgroundY}px)`
+        : "var(--room-bg-x, 50%) var(--room-bg-y, 43.1%)",
+      "important"
+    );
+    bg.style.setProperty("background-size", "calc(var(--room-bg-scale, 1.13) * 100%) auto", "important");
   }
 
   const ids: Array<[string, string | number | boolean]> = [
@@ -4841,7 +4872,6 @@ function bindMenu2Controls(): void {
   document.querySelector<HTMLButtonElement>("#menu2CompareApplyToExtended")?.addEventListener("click", () => {
     extendedRoomSettings = {
       ...extendedRoomSettings,
-      enabled: true,
       backgroundX: extendedRoomSettings.compareX,
       backgroundY: extendedRoomSettings.compareY,
     };
