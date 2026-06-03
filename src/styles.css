@@ -12720,3 +12720,74 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
 .menu2-panel.menu2-mode-compact #menu2QueueControl {
   display: none !important;
 }
+
+/* v88: collapsed rail transition anchor fix.
+   The rail was correctly resting at the selected bottom corner, but during the
+   open/close transition older side-specific rules with higher specificity could
+   briefly reapply the historic 23%-above-bottom anchor. This section is the final
+   authority for the rail in every side/open/closed state: bottom is always the
+   visible room bottom, and the animation only translates horizontally. */
+.menu2-bubble,
+.menu2-bubble.menu2-side-right,
+.menu2-bubble.menu2-side-left,
+:root.menu2-side-right .menu2-bubble,
+:root.menu2-side-left .menu2-bubble,
+:root.menu2-bubble-ready .menu2-bubble,
+:root.menu2-bubble-ready.menu2-side-right .menu2-bubble,
+:root.menu2-bubble-ready.menu2-side-left .menu2-bubble,
+:root.menu2-open .menu2-bubble,
+:root.menu2-open.menu2-side-right .menu2-bubble,
+:root.menu2-open.menu2-side-left .menu2-bubble {
+  position: fixed !important;
+  top: auto !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  margin: 0 !important;
+  transition: transform 240ms ease, opacity 240ms ease !important;
+  will-change: transform, opacity !important;
+}
+
+.menu2-bubble.menu2-side-right,
+:root.menu2-side-right .menu2-bubble,
+:root.menu2-open.menu2-side-right .menu2-bubble {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+  transform: translate3d(calc(100% + 18px), 0, 0) !important;
+  border-radius: 20px 0 0 20px !important;
+  padding: 8px 0 8px 8px !important;
+  border-right: 0 !important;
+  border-left-width: 1px !important;
+}
+
+.menu2-bubble.menu2-side-left,
+:root.menu2-side-left .menu2-bubble,
+:root.menu2-open.menu2-side-left .menu2-bubble {
+  right: auto !important;
+  left: var(--menu2-room-left, 0px) !important;
+  transform: translate3d(calc(-100% - 18px), 0, 0) !important;
+  border-radius: 0 20px 20px 0 !important;
+  padding: 8px 8px 8px 0 !important;
+  border-left: 0 !important;
+  border-right-width: 1px !important;
+}
+
+:root.menu2-bubble-ready.menu2-side-right .menu2-bubble,
+:root.menu2-bubble-ready .menu2-bubble.menu2-side-right {
+  left: auto !important;
+  right: var(--menu2-room-right-inset, 0px) !important;
+  top: auto !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  transform: translate3d(0, 0, 0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+:root.menu2-bubble-ready.menu2-side-left .menu2-bubble,
+:root.menu2-bubble-ready .menu2-bubble.menu2-side-left {
+  right: auto !important;
+  left: var(--menu2-room-left, 0px) !important;
+  top: auto !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  transform: translate3d(0, 0, 0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
