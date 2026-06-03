@@ -3689,7 +3689,7 @@ function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume
     repeat: '<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
     queue: '<path d="M5 7h14M5 12h14M5 17h9"/>',
     connect: '<circle cx="12" cy="16.8" r="2.2" fill="currentColor" stroke="none"/><path d="M12 14.5V20"/><path d="M7.1 12.8a6.8 6.8 0 0 1 9.8 0"/><path d="M4.1 9.7a11.2 11.2 0 0 1 15.8 0"/><path d="M1.9 6.8a14.6 14.6 0 0 1 20.2 0"/>',
-    broadcast: '<path d="M12 9.4v8.2" stroke-width="2.2"/><path d="M7.3 16.9h9.4" stroke-width="2.2"/><circle cx="12" cy="8.1" r="2.4" fill="currentColor" stroke="none"/><path d="M8 11.9a5.8 5.8 0 0 1 8 0" stroke-width="2.2"/><path d="M5 8.9a9.9 9.9 0 0 1 14 0" stroke-width="2.2"/><path d="M2.5 5.8a13.6 13.6 0 0 1 19 0" stroke-width="2.2"/>',
+    broadcast: '<rect x="4.5" y="5" width="9.2" height="14" rx="2"/><path d="M8 9h3.2M8 12h3.2M8 15h2.4"/><path d="M13.5 12h6.5"/><path d="M17 8.7l3.3 3.3-3.3 3.3"/>',
     now: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/>',
     playlists: '<path d="M6 7h12M6 12h12M6 17h8"/><rect x="3" y="5" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="10" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="15" width="1.5" height="1.5" fill="currentColor" stroke="none"/>',
     search: '<circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l5 5"/>',

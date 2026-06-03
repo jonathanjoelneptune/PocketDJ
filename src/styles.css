@@ -12100,3 +12100,54 @@ body.lyrics-marquee-unavailable .marquee::after {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
+
+
+/* v80: compact menu uses the same true bottom-left room anchor as the collapsed rail,
+   and the rail grab uses a clear open-panel affordance instead of the radio glyph. */
+.menu2-panel,
+.menu2-panel.menu2-mode-compact {
+  position: fixed !important;
+  left: var(--menu2-room-left, 0px) !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  top: auto !important;
+  right: auto !important;
+  transform-origin: left bottom !important;
+}
+
+.menu2-panel:not(.menu2-open),
+.menu2-panel.menu2-mode-compact:not(.menu2-open) {
+  transform: translate3d(-112%, 0, 0) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.menu2-panel.menu2-open,
+.menu2-panel.menu2-mode-compact.menu2-open {
+  transform: translate3d(0, 0, 0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.menu2-panel.menu2-mode-compact {
+  width: min(292px, calc(var(--menu2-room-right, 100vw) - var(--menu2-room-left, 0px))) !important;
+  max-height: min(332px, calc(var(--menu2-room-height, 760px) * 0.46), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+}
+
+.menu2-panel.menu2-mode-compact .menu2-shell {
+  height: min(332px, calc(var(--menu2-room-height, 760px) * 0.46), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+  max-height: min(332px, calc(var(--menu2-room-height, 760px) * 0.46), calc(100vh - var(--menu2-room-bottom, 0px))) !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+.menu2-bubble {
+  left: var(--menu2-room-left, 0px) !important;
+  bottom: var(--menu2-room-bottom, 0px) !important;
+  top: auto !important;
+  transform-origin: left bottom !important;
+}
+
+.menu2-bubble-grab .menu2-svg-icon {
+  width: 25px !important;
+  height: 25px !important;
+  stroke-width: 2.15 !important;
+}
