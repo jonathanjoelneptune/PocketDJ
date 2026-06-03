@@ -12791,3 +12791,109 @@ html.utility-panel-left-side .control-card:not(.control-card-open),
   opacity: 1 !important;
   pointer-events: auto !important;
 }
+
+/* v89: compact playlist rows should preserve line-item readability.
+   The previous compact override changed the column count without redefining areas,
+   which squeezed the playlist title/sub-info column. This final compact grid keeps
+   art fixed, copy flexible, and actions compact on the right. */
+.menu2-panel.menu2-mode-compact #menu2PlaylistsPane .menu2-row,
+.menu2-panel.menu2-mode-compact #menu2SearchResults .menu2-row,
+.menu2-panel.menu2-mode-compact .menu2-playlist-track-list .menu2-row {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) 32px 32px !important;
+  grid-template-areas: "art copy act1 act2" !important;
+  align-items: center !important;
+  gap: 7px !important;
+  min-height: 58px !important;
+  padding: 8px 9px !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2PlaylistsPane .menu2-row-index,
+.menu2-panel.menu2-mode-compact #menu2SearchResults .menu2-row-index,
+.menu2-panel.menu2-mode-compact .menu2-playlist-track-list .menu2-row-index {
+  display: none !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2PlaylistsPane .menu2-row-art,
+.menu2-panel.menu2-mode-compact #menu2SearchResults .menu2-row-art,
+.menu2-panel.menu2-mode-compact .menu2-playlist-track-list .menu2-row-art {
+  grid-area: art !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  justify-self: center !important;
+  align-self: center !important;
+  margin: 0 !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2PlaylistsPane .menu2-row-copy,
+.menu2-panel.menu2-mode-compact #menu2SearchResults .menu2-row-copy,
+.menu2-panel.menu2-mode-compact .menu2-playlist-track-list .menu2-row-copy {
+  grid-area: copy !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-align: left !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2PlaylistsPane .menu2-row-title-button,
+.menu2-panel.menu2-mode-compact #menu2SearchResults .menu2-row-title-button,
+.menu2-panel.menu2-mode-compact #menu2PlaylistsPane .menu2-row-copy strong,
+.menu2-panel.menu2-mode-compact #menu2SearchResults .menu2-row-copy strong,
+.menu2-panel.menu2-mode-compact .menu2-playlist-track-list .menu2-row-copy strong {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+  font-size: 0.68rem !important;
+  line-height: 1.15 !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2PlaylistsPane .menu2-row-copy span,
+.menu2-panel.menu2-mode-compact #menu2SearchResults .menu2-row-copy span,
+.menu2-panel.menu2-mode-compact .menu2-playlist-track-list .menu2-row-copy span {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+  font-size: 0.58rem !important;
+  line-height: 1.15 !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2PlaylistsPane .menu2-row .menu2-row-action-primary,
+.menu2-panel.menu2-mode-compact #menu2SearchResults .menu2-row .menu2-row-action-primary,
+.menu2-panel.menu2-mode-compact .menu2-playlist-track-list .menu2-row .menu2-row-action-primary {
+  grid-area: act1 !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  justify-self: center !important;
+  align-self: center !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2PlaylistsPane .menu2-row .menu2-row-action-secondary,
+.menu2-panel.menu2-mode-compact #menu2SearchResults .menu2-row .menu2-row-action-secondary,
+.menu2-panel.menu2-mode-compact .menu2-playlist-track-list .menu2-row .menu2-row-action-secondary {
+  grid-area: act2 !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  justify-self: center !important;
+  align-self: center !important;
+}
+
+.menu2-panel.menu2-mode-compact #menu2PlaylistsPane .menu2-row .menu2-svg-icon,
+.menu2-panel.menu2-mode-compact #menu2SearchResults .menu2-row .menu2-svg-icon,
+.menu2-panel.menu2-mode-compact .menu2-playlist-track-list .menu2-row .menu2-svg-icon {
+  width: 15px !important;
+  height: 15px !important;
+}
