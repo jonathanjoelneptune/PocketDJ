@@ -79,8 +79,16 @@ export function renderShell(state: AppState): void {
 
         <div class="dj-wrap">
           <img
+            id="djNovaSprite"
+            class="dj-frame-img dj-nova-frame-img"
+            src="https://raw.githubusercontent.com/jonathanjoelneptune/PocketDJ/main/public/assets/DJ%20Nova%20Pose%20Library/DJ%20Nova%20Base.png"
+            alt="DJ Nova"
+            draggable="false"
+            aria-hidden="true"
+          />
+          <img
             id="djSprite"
-            class="dj-frame-img"
+            class="dj-frame-img dj-nes-frame-img"
             src="./assets/poses/final/i1.png"
             alt="PocketDJ"
             draggable="false"
@@ -1371,8 +1379,16 @@ export function renderShell(state: AppState): void {
                 <option value="small">Small</option>
               </select>
             </label>
-            <label class="menu2-setting menu2-slider-setting">Menu transparency <span id="menu2TransparencyValue">0.82</span>
-              <input id="menu2Transparency" type="range" min="0.45" max="1" step="0.01" value="0.82" />
+            <label class="menu2-setting menu2-slider-setting">Menu transparency <span id="menu2TransparencyValue">0.45</span>
+              <input id="menu2Transparency" type="range" min="0.45" max="1" step="0.01" value="0.45" />
+            </label>
+            <label class="menu2-setting">DJ Nova display
+              <select id="menu2DjNovaMode" class="menu2-select">
+                <option value="off">Display DJ NES only</option>
+                <option value="nova-only">Display DJ Nova only</option>
+                <option value="both-front">Display Both - DJ Nova in front</option>
+                <option value="both-back">Display Both - DJ Nova in back</option>
+              </select>
             </label>
             <button id="menu2OpenCurrentUtility" class="menu2-action menu2-wide-action" type="button" aria-pressed="false">Open Advanced Utility Panel</button>
             <label class="menu2-setting menu2-toggle-setting"><input id="menu2ShowFloorControls" type="checkbox" /> Show legacy floor controls</label>

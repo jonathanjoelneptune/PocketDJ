@@ -104,8 +104,16 @@ if (localStorage.getItem(MENU2_FORCE_FULL_DEFAULT_KEY) !== "1") {
   localStorage.setItem("pocketdj-menu2-panel-mode", "full");
   localStorage.setItem(MENU2_FORCE_FULL_DEFAULT_KEY, "1");
 }
-let menu2Transparency = Number(localStorage.getItem("pocketdj-menu2-transparency") || "0.82");
-if (!Number.isFinite(menu2Transparency)) menu2Transparency = 0.82;
+const MENU2_TRANSPARENCY_DEFAULT_KEY = "pocketdj-v90-menu2-transparency-default-045";
+if (localStorage.getItem(MENU2_TRANSPARENCY_DEFAULT_KEY) !== "1") {
+  const savedTransparency = localStorage.getItem("pocketdj-menu2-transparency");
+  if (!savedTransparency || savedTransparency === "0.82") {
+    localStorage.setItem("pocketdj-menu2-transparency", "0.45");
+  }
+  localStorage.setItem(MENU2_TRANSPARENCY_DEFAULT_KEY, "1");
+}
+let menu2Transparency = Number(localStorage.getItem("pocketdj-menu2-transparency") || "0.45");
+if (!Number.isFinite(menu2Transparency)) menu2Transparency = 0.45;
 menu2Transparency = Math.max(0.45, Math.min(1, menu2Transparency));
 let menu2Side: "left" | "right" = (localStorage.getItem("pocketdj-menu2-side") as "left" | "right") || "right";
 if (menu2Side !== "left" && menu2Side !== "right") menu2Side = "right";
@@ -120,6 +128,9 @@ let menu2SelectedPlaylist: SpotifyCatalogPlaylist | null = null;
 let menu2SelectedPlaylistTracks: SpotifyCatalogTrack[] = [];
 let menu2QueueTracks: SpotifyCatalogTrack[] = [];
 let menu2PlaylistCache: SpotifyCatalogPlaylist[] = [];
+type DjNovaMode = "off" | "nova-only" | "both-front" | "both-back";
+let djNovaMode: DjNovaMode = (localStorage.getItem("pocketdj-dj-nova-mode") as DjNovaMode) || "off";
+if (!["off", "nova-only", "both-front", "both-back"].includes(djNovaMode)) djNovaMode = "off";
 let sidePanelLocked = false;
 let sidePanelHideTimer: number | null = null;
 let floorControlsOpen = false;
@@ -3599,6 +3610,10 @@ function applyMenu2Settings(): void {
   document.documentElement.classList.toggle("menu2-side-right", menu2Side === "right");
   document.documentElement.classList.toggle("menu2-advanced-utility-visible", menu2AdvancedUtilityVisible);
   document.documentElement.classList.toggle("menu2-show-floor-controls", menu2ShowFloorControls);
+  document.documentElement.classList.toggle("dj-nova-off", djNovaMode === "off");
+  document.documentElement.classList.toggle("dj-nova-only", djNovaMode === "nova-only");
+  document.documentElement.classList.toggle("dj-nova-both-front", djNovaMode === "both-front");
+  document.documentElement.classList.toggle("dj-nova-both-back", djNovaMode === "both-back");
 
   const lockPill = document.querySelector<HTMLButtonElement>("#menu2LockPill");
   if (lockPill) {
@@ -3623,10 +3638,12 @@ function applyMenu2Settings(): void {
   const transparencyInput = document.querySelector<HTMLInputElement>("#menu2Transparency");
   const transparencyValue = document.querySelector<HTMLElement>("#menu2TransparencyValue");
   const sideSelect = document.querySelector<HTMLSelectElement>("#menu2Side");
+  const novaSelect = document.querySelector<HTMLSelectElement>("#menu2DjNovaMode");
   if (styleSelect) styleSelect.value = menu2StyleMode;
   if (artSelect) artSelect.value = menu2ArtSize;
   if (panelModeSelect) panelModeSelect.value = menu2PanelMode;
   if (sideSelect) sideSelect.value = menu2Side;
+  if (novaSelect) novaSelect.value = djNovaMode;
   if (transparencyInput) transparencyInput.value = menu2Transparency.toFixed(2);
   if (transparencyValue) transparencyValue.textContent = menu2Transparency.toFixed(2);
 
@@ -4516,8 +4533,14 @@ function bindMenu2Controls(): void {
     localStorage.setItem("pocketdj-menu2-side", menu2Side);
     applyMenu2Settings();
   });
+  document.querySelector<HTMLSelectElement>("#menu2DjNovaMode")?.addEventListener("change", (event) => {
+    djNovaMode = (event.target as HTMLSelectElement).value as DjNovaMode;
+    if (!["off", "nova-only", "both-front", "both-back"].includes(djNovaMode)) djNovaMode = "off";
+    localStorage.setItem("pocketdj-dj-nova-mode", djNovaMode);
+    applyMenu2Settings();
+  });
   document.querySelector<HTMLInputElement>("#menu2Transparency")?.addEventListener("input", (event) => {
-    menu2Transparency = Math.max(0.45, Math.min(1, Number((event.target as HTMLInputElement).value) || 0.82));
+    menu2Transparency = Math.max(0.45, Math.min(1, Number((event.target as HTMLInputElement).value) || 0.45));
     localStorage.setItem("pocketdj-menu2-transparency", menu2Transparency.toFixed(2));
     applyMenu2Settings();
   });
