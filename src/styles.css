@@ -10018,7 +10018,6 @@ body.lyrics-marquee-unavailable .marquee::after {
   border-color: rgba(30,215,96,0.95);
 }
 
-.menu2-bubble-fullscreen::before,
 .menu2-icon-pill::before {
   content: "";
   width: 13px;
@@ -13214,4 +13213,12 @@ body::after,
 
 .menu2-bubble-fullscreen.menu2-bubble-active .menu2-svg-icon {
   stroke: #070707 !important;
+}
+
+
+/* v100: collapsed rail fullscreen cleanup. The rail fullscreen button should only show
+   the actual fullscreen SVG icon, not the older generic square pseudo icon. */
+.menu2-bubble-fullscreen::before {
+  content: none !important;
+  display: none !important;
 }
