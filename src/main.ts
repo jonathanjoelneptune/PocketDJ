@@ -125,6 +125,91 @@ let menu2ShowFloorControls = localStorage.getItem("pocketdj-menu2-show-floor-con
 let menu2SearchResultTab: "tracks" | "artists" | "playlists" | "albums" = "tracks";
 
 
+
+type NoLyricsFocusSettings = {
+  enabled: boolean;
+  ceilingDim: number;
+  spotlight: number;
+  cone: number;
+  x: number;
+  y: number;
+  size: number;
+  fadeMs: number;
+};
+
+const DEFAULT_NO_LYRICS_FOCUS: NoLyricsFocusSettings = {
+  enabled: true,
+  ceilingDim: 0.25,
+  spotlight: 0.35,
+  cone: 0.22,
+  x: 50,
+  y: 70,
+  size: 34,
+  fadeMs: 2000,
+};
+
+const NO_LYRICS_FOCUS_KEY = "pocketdj-no-lyrics-focus-v1";
+let noLyricsFocus = loadNoLyricsFocusSettings();
+
+function clampNoLyricsFocus(settings: Partial<NoLyricsFocusSettings>): NoLyricsFocusSettings {
+  return {
+    enabled: settings.enabled ?? DEFAULT_NO_LYRICS_FOCUS.enabled,
+    ceilingDim: Math.max(0, Math.min(0.75, Number(settings.ceilingDim ?? DEFAULT_NO_LYRICS_FOCUS.ceilingDim))),
+    spotlight: Math.max(0, Math.min(0.9, Number(settings.spotlight ?? DEFAULT_NO_LYRICS_FOCUS.spotlight))),
+    cone: Math.max(0, Math.min(0.7, Number(settings.cone ?? DEFAULT_NO_LYRICS_FOCUS.cone))),
+    x: Math.max(0, Math.min(100, Number(settings.x ?? DEFAULT_NO_LYRICS_FOCUS.x))),
+    y: Math.max(35, Math.min(95, Number(settings.y ?? DEFAULT_NO_LYRICS_FOCUS.y))),
+    size: Math.max(12, Math.min(80, Number(settings.size ?? DEFAULT_NO_LYRICS_FOCUS.size))),
+    fadeMs: Math.max(250, Math.min(5000, Number(settings.fadeMs ?? DEFAULT_NO_LYRICS_FOCUS.fadeMs))),
+  };
+}
+
+function loadNoLyricsFocusSettings(): NoLyricsFocusSettings {
+  try {
+    const raw = localStorage.getItem(NO_LYRICS_FOCUS_KEY);
+    if (raw) return clampNoLyricsFocus(JSON.parse(raw) as Partial<NoLyricsFocusSettings>);
+  } catch (error) {
+    console.warn("Could not load no-lyrics focus settings", error);
+  }
+  return { ...DEFAULT_NO_LYRICS_FOCUS };
+}
+
+function saveNoLyricsFocusSettings(): void {
+  localStorage.setItem(NO_LYRICS_FOCUS_KEY, JSON.stringify(noLyricsFocus));
+}
+
+function applyNoLyricsFocusSettings(): void {
+  const root = document.documentElement;
+  root.classList.toggle("no-lyrics-focus-enabled", noLyricsFocus.enabled);
+  if (!noLyricsFocus.enabled) root.classList.remove("no-lyrics-focus-active");
+  root.style.setProperty("--no-lyrics-ceiling-dim", String(noLyricsFocus.ceilingDim));
+  root.style.setProperty("--no-lyrics-spotlight", String(noLyricsFocus.spotlight));
+  root.style.setProperty("--no-lyrics-cone", String(noLyricsFocus.cone));
+  root.style.setProperty("--no-lyrics-spotlight-x", `${noLyricsFocus.x}%`);
+  root.style.setProperty("--no-lyrics-spotlight-y", `${noLyricsFocus.y}%`);
+  root.style.setProperty("--no-lyrics-spotlight-size", `${noLyricsFocus.size}%`);
+  root.style.setProperty("--no-lyrics-focus-fade", `${noLyricsFocus.fadeMs}ms`);
+
+  const enabled = document.querySelector<HTMLInputElement>("#menu2NoLyricsFocusEnabled");
+  const fields: Array<[keyof NoLyricsFocusSettings, string, string, number]> = [
+    ["ceilingDim", "menu2NoLyricsCeilingDim", "menu2NoLyricsCeilingDimValue", 2],
+    ["spotlight", "menu2NoLyricsSpotlight", "menu2NoLyricsSpotlightValue", 2],
+    ["cone", "menu2NoLyricsCone", "menu2NoLyricsConeValue", 2],
+    ["x", "menu2NoLyricsSpotlightX", "menu2NoLyricsSpotlightXValue", 1],
+    ["y", "menu2NoLyricsSpotlightY", "menu2NoLyricsSpotlightYValue", 1],
+    ["size", "menu2NoLyricsSpotlightSize", "menu2NoLyricsSpotlightSizeValue", 1],
+    ["fadeMs", "menu2NoLyricsFade", "menu2NoLyricsFadeValue", 0],
+  ];
+  if (enabled) enabled.checked = noLyricsFocus.enabled;
+  fields.forEach(([key, inputId, valueId, decimals]) => {
+    const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+    const label = document.querySelector<HTMLElement>(`#${valueId}`);
+    const value = Number(noLyricsFocus[key]);
+    if (input) input.value = String(value);
+    if (label) label.textContent = value.toFixed(decimals);
+  });
+}
+
 let menu2SearchTracks: SpotifyCatalogTrack[] = [];
 let menu2SearchArtists: SpotifyCatalogArtist[] = [];
 let menu2SearchPlaylists: SpotifyCatalogPlaylist[] = [];
@@ -3660,6 +3745,7 @@ function applyMenu2Settings(): void {
   document.documentElement.classList.toggle("dj-nova-only", djNovaMode === "nova-only");
   document.documentElement.classList.toggle("dj-nova-both-front", djNovaMode === "both-front");
   document.documentElement.classList.toggle("dj-nova-both-back", djNovaMode === "both-back");
+  applyNoLyricsFocusSettings();
 
   const lockPill = document.querySelector<HTMLButtonElement>("#menu2LockPill");
   if (lockPill) {
@@ -4672,6 +4758,30 @@ function bindMenu2Controls(): void {
     menu2Transparency = Math.max(0.45, Math.min(1, Number((event.target as HTMLInputElement).value) || 0.45));
     localStorage.setItem("pocketdj-menu2-transparency", menu2Transparency.toFixed(2));
     applyMenu2Settings();
+  });
+  document.querySelector<HTMLInputElement>("#menu2NoLyricsFocusEnabled")?.addEventListener("change", (event) => {
+    noLyricsFocus = { ...noLyricsFocus, enabled: (event.target as HTMLInputElement).checked };
+    saveNoLyricsFocusSettings();
+    applyNoLyricsFocusSettings();
+  });
+  const bindNoLyricsSlider = (selector: string, key: keyof NoLyricsFocusSettings) => {
+    document.querySelector<HTMLInputElement>(selector)?.addEventListener("input", (event) => {
+      noLyricsFocus = clampNoLyricsFocus({ ...noLyricsFocus, [key]: Number((event.target as HTMLInputElement).value) });
+      saveNoLyricsFocusSettings();
+      applyNoLyricsFocusSettings();
+    });
+  };
+  bindNoLyricsSlider("#menu2NoLyricsCeilingDim", "ceilingDim");
+  bindNoLyricsSlider("#menu2NoLyricsSpotlight", "spotlight");
+  bindNoLyricsSlider("#menu2NoLyricsCone", "cone");
+  bindNoLyricsSlider("#menu2NoLyricsSpotlightX", "x");
+  bindNoLyricsSlider("#menu2NoLyricsSpotlightY", "y");
+  bindNoLyricsSlider("#menu2NoLyricsSpotlightSize", "size");
+  bindNoLyricsSlider("#menu2NoLyricsFade", "fadeMs");
+  document.querySelector<HTMLButtonElement>("#menu2NoLyricsFocusReset")?.addEventListener("click", () => {
+    noLyricsFocus = { ...DEFAULT_NO_LYRICS_FOCUS };
+    saveNoLyricsFocusSettings();
+    applyNoLyricsFocusSettings();
   });
   document.querySelector<HTMLButtonElement>("#menu2OpenCurrentUtility")?.addEventListener("click", () => {
     menu2AdvancedUtilityVisible = !menu2AdvancedUtilityVisible;

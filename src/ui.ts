@@ -47,6 +47,11 @@ export function renderShell(state: AppState): void {
           <div id="activeLyricsBlock" class="active-lyrics-block lyric-poster-line" aria-hidden="true"></div>
         </div>
         <svg id="tallLyricGuideOverlay" class="tall-lyric-guide-overlay" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div id="noLyricsFocusLayer" class="no-lyrics-focus-layer" aria-hidden="true">
+          <div class="no-lyrics-ceiling-dim"></div>
+          <div class="no-lyrics-spotlight-cone"></div>
+          <div class="no-lyrics-spotlight-pool"></div>
+        </div>
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
           <img class="speaker-image" src="./assets/Speaker.png" alt="" draggable="false" />
@@ -1399,6 +1404,32 @@ export function renderShell(state: AppState): void {
                 <option value="both-back">Display Both - DJ Nova in back</option>
               </select>
             </label>
+            <div class="menu2-dev-subsection">
+              <div class="menu2-section-head menu2-subsection-head"><h3>No Lyrics Focus</h3><span>Blank-ceiling fallback</span></div>
+              <label class="menu2-setting menu2-toggle-setting"><input id="menu2NoLyricsFocusEnabled" type="checkbox" /> Enable no-lyrics focus mode</label>
+              <label class="menu2-setting menu2-slider-setting">Ceiling dim <span id="menu2NoLyricsCeilingDimValue">0.25</span>
+                <input id="menu2NoLyricsCeilingDim" type="range" min="0" max="0.75" step="0.01" value="0.25" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Spotlight strength <span id="menu2NoLyricsSpotlightValue">0.35</span>
+                <input id="menu2NoLyricsSpotlight" type="range" min="0" max="0.9" step="0.01" value="0.35" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Cone strength <span id="menu2NoLyricsConeValue">0.22</span>
+                <input id="menu2NoLyricsCone" type="range" min="0" max="0.7" step="0.01" value="0.22" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Spotlight X % <span id="menu2NoLyricsSpotlightXValue">50</span>
+                <input id="menu2NoLyricsSpotlightX" type="range" min="0" max="100" step="0.1" value="50" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Spotlight Y % <span id="menu2NoLyricsSpotlightYValue">70</span>
+                <input id="menu2NoLyricsSpotlightY" type="range" min="35" max="95" step="0.1" value="70" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Spotlight size % <span id="menu2NoLyricsSpotlightSizeValue">34</span>
+                <input id="menu2NoLyricsSpotlightSize" type="range" min="12" max="80" step="0.1" value="34" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Fade ms <span id="menu2NoLyricsFadeValue">2000</span>
+                <input id="menu2NoLyricsFade" type="range" min="250" max="5000" step="50" value="2000" />
+              </label>
+              <button id="menu2NoLyricsFocusReset" class="menu2-action menu2-wide-action" type="button">Reset No Lyrics Focus</button>
+            </div>
             <button id="menu2OpenCurrentUtility" class="menu2-action menu2-wide-action" type="button" aria-pressed="false">Open Advanced Utility Panel</button>
             <label class="menu2-setting menu2-toggle-setting"><input id="menu2ShowFloorControls" type="checkbox" /> Show legacy floor controls</label>
             <p class="menu2-dev-note">Advanced utility and legacy floor controls are hidden from the normal UI but kept available here for tuning and rollback.</p>
@@ -2041,28 +2072,39 @@ export function updateLyricsCeiling(
 
   const available = lyrics.status === "found" && lyrics.syncedLyrics.length > 0;
   const shouldShow = lyricTest.active || (enabled && available);
+  const canUseNoLyricsFocus =
+    !lyricTest.active &&
+    enabled &&
+    playbackActive &&
+    lyrics.status !== "idle" &&
+    lyrics.status !== "loading" &&
+    document.documentElement.classList.contains("no-lyrics-focus-enabled");
+  const setNoLyricsFocusActive = (active: boolean) => {
+    document.documentElement.classList.toggle("no-lyrics-focus-active", canUseNoLyricsFocus && active);
+  };
   ceiling.classList.toggle("lyrics-ceiling-hidden", !shouldShow);
   ceiling.classList.toggle("lyrics-ceiling-visible", shouldShow);
 
-  const clearLyrics = () => {
+  const clearLyrics = (focusFallback = false) => {
     lastLyricsRenderSignature = "";
     updateLyricGeometryMonitor(null, null, null);
     activeBlock.style.setProperty("--lyric-line-visibility", "1");
     activeBlock.innerHTML = "";
+    setNoLyricsFocusActive(focusFallback);
   };
 
   if (!shouldShow) {
-    clearLyrics();
+    clearLyrics(canUseNoLyricsFocus);
     return;
   }
 
   if (!lyricTest.active && !playbackActive) {
-    clearLyrics();
+    clearLyrics(false);
     return;
   }
 
   if (!lyricTest.active && activeIndex < 0) {
-    clearLyrics();
+    clearLyrics(canUseNoLyricsFocus);
     return;
   }
 
@@ -2071,7 +2113,7 @@ export function updateLyricsCeiling(
     ? { timeMs: playbackMs, text: lyricTest.text }
     : lyrics.syncedLyrics[centerIndex];
   if (!activeLine?.text?.trim() || (!lyricTest.active && !isLyricLineCurrentlyVisible(lyrics.syncedLyrics, centerIndex, playbackMs))) {
-    clearLyrics();
+    clearLyrics(canUseNoLyricsFocus);
     return;
   }
 
@@ -2096,6 +2138,7 @@ export function updateLyricsCeiling(
     return;
   }
 
+  setNoLyricsFocusActive(false);
   lastLyricsRenderSignature = renderSignature;
   activeBlock.style.setProperty("--lyric-line-visibility", "1");
 
