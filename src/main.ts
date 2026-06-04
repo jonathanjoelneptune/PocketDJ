@@ -155,15 +155,15 @@ const DEFAULT_NO_LYRICS_FOCUS: NoLyricsFocusSettings = {
   coneStartX: 50,
   coneStartY: 0,
   coneStartSize: 8,
-  coneFade: 0.54,
-  coneFeather: 18,
+  coneFade: 0,
+  coneFeather: 84.1,
   floorDim: 0,
   vignette: 0,
   fadeMs: 2000,
 };
 
 const NO_LYRICS_FOCUS_KEY = "pocketdj-no-lyrics-focus-v1";
-const NO_LYRICS_FOCUS_TUNING_MIGRATION_KEY = "pocketdj-v106-no-lyrics-focus-tuned-defaults";
+const NO_LYRICS_FOCUS_TUNING_MIGRATION_KEY = "pocketdj-v108-no-lyrics-focus-final-no-cone";
 let noLyricsFocus = loadNoLyricsFocusSettings();
 
 type DjCrateNextUpSettings = {
@@ -193,21 +193,21 @@ type DjCrateNextUpSettings = {
 const DEFAULT_DJ_CRATE_NEXT_UP: DjCrateNextUpSettings = {
   crateEnabled: true,
   crateX: 64.0,
-  crateY: 72.1,
+  crateY: 68.8,
   crateScale: 0.42,
   crateRotate: 0,
   crateOpacity: 1,
-  crateBrightness: 1,
+  crateBrightness: 0.99,
   crateSaturation: 1,
   crateContrast: 1,
-  crateHue: 0,
+  crateHue: -14,
   nextEnabled: true,
-  nextX: 61.7,
-  nextY: 73.8,
+  nextX: 61.5,
+  nextY: 70.3,
   nextSize: 4.3,
   nextRotateX: 21,
   nextRotateY: 52,
-  nextRotateZ: -5,
+  nextRotateZ: -3,
   nextDepth: 0.07,
   nextShadow: 0,
   nextOpacity: 1,
@@ -215,12 +215,15 @@ const DEFAULT_DJ_CRATE_NEXT_UP: DjCrateNextUpSettings = {
 };
 
 const DJ_CRATE_NEXT_UP_KEY = "pocketdj-dj-crate-next-up-v1";
-const DJ_CRATE_NEXT_UP_TUNING_MIGRATION_KEY = "pocketdj-v107-crate-next-up-layer-filter-defaults";
+const DJ_CRATE_NEXT_UP_TUNING_MIGRATION_KEY = "pocketdj-v108-crate-next-up-final-staging-defaults";
 let djCrateNextUp = loadDjCrateNextUpSettings();
 let nextUpQueueTracks: SpotifyCatalogTrack[] = [];
+let nextUpQueuePlaybackKey = "";
 let nextUpQueueLastFetchAt = 0;
 let nextUpQueueFetchInFlight = false;
 let nextUpPlaybackKey = "";
+let nextUpCinematicStartedAt = 0;
+const NEXT_UP_CRATE_SWAP_DELAY_MS = 50;
 const preloadedNextUpAlbumUrls = new Set<string>();
 
 function clampDjCrateNextUpSettings(settings: Partial<DjCrateNextUpSettings>): DjCrateNextUpSettings {
@@ -396,6 +399,8 @@ function applyNoLyricsFocusSettings(): void {
   root.style.setProperty("--no-lyrics-floor-dim", String(noLyricsFocus.floorDim));
   root.style.setProperty("--no-lyrics-vignette", String(noLyricsFocus.vignette));
   root.style.setProperty("--no-lyrics-focus-fade", `${noLyricsFocus.fadeMs}ms`);
+  root.style.setProperty("--no-lyrics-focus-runtime-fade", `${noLyricsFocus.fadeMs}ms`);
+  root.style.setProperty("--no-lyrics-focus-fade-out", "500ms");
 
   const enabled = document.querySelector<HTMLInputElement>("#menu2NoLyricsFocusEnabled");
   const fields: Array<[keyof NoLyricsFocusSettings, string, string, number]> = [
@@ -8963,15 +8968,37 @@ function updateNextUpQueueForPlaybackChange(playback: AppState["playback"]): voi
   const key = playbackAlbumTrackKey(playback);
   if (!key || key === nextUpPlaybackKey) return;
   nextUpPlaybackKey = key;
-  nextUpQueueTracks = filterNextUpQueue(nextUpQueueTracks, playback);
-  nextUpQueueTracks.slice(0, 3).forEach(preloadNextUpAlbumArt);
+  nextUpCinematicStartedAt = 0;
+  // Prevent stale queue art from a previous song from lingering in the crate while Spotify refreshes.
+  if (nextUpQueuePlaybackKey !== key) {
+    nextUpQueueTracks = [];
+  } else {
+    nextUpQueueTracks = filterNextUpQueue(nextUpQueueTracks, playback);
+    nextUpQueueTracks.slice(0, 3).forEach(preloadNextUpAlbumArt);
+  }
   updateNextUpAlbumVisual();
   void refreshNextUpQueue(true);
 }
 
+function songChangeCinematicHasStarted(): boolean {
+  const layer = document.querySelector<HTMLElement>("#songChangeAlbumLayer");
+  return Boolean(isSongChangeRevealActive() && layer?.classList.contains("song-change-album-has-art"));
+}
+
+function shouldShowNextNextInCrate(now = Date.now()): boolean {
+  if (!songChangeCinematicHasStarted()) {
+    nextUpCinematicStartedAt = 0;
+    return false;
+  }
+  if (!nextUpCinematicStartedAt) nextUpCinematicStartedAt = now;
+  return now - nextUpCinematicStartedAt >= NEXT_UP_CRATE_SWAP_DELAY_MS;
+}
+
 function activeNextUpCrateTrack(): SpotifyCatalogTrack | null {
-  // While the actual A41 held-album frame is on screen, show the next-next sleeve in the crate.
-  const index = songChangeAlbumIsInHands() ? 1 : 0;
+  const currentKey = playbackAlbumTrackKey(state.playback);
+  if (nextUpQueuePlaybackKey && currentKey && nextUpQueuePlaybackKey !== currentKey) return null;
+  // 0.05s after the song-change cinematic starts, the crate advances to the next-next sleeve.
+  const index = shouldShowNextNextInCrate() ? 1 : 0;
   return nextUpQueueTracks[index] || null;
 }
 
@@ -8997,6 +9024,7 @@ async function refreshNextUpQueue(force = false): Promise<void> {
   nextUpQueueLastFetchAt = now;
   try {
     const queue = await getSpotifyQueue(state.spotifyClientId, 6);
+    nextUpQueuePlaybackKey = playbackAlbumTrackKey(state.playback);
     nextUpQueueTracks = filterNextUpQueue(queue, state.playback).slice(0, 4);
     nextUpQueueTracks.slice(0, 3).forEach(preloadNextUpAlbumArt);
     updateNextUpAlbumVisual();
@@ -9270,6 +9298,7 @@ function tick(): void {
   }
 
   updateSongChangeAlbumOverlay(state.playback);
+  updateNextUpAlbumVisual();
   updateNextUpQueueForPlaybackChange(state.playback);
   void refreshNextUpQueue(false);
   applySpeakerPulseTempo(state.playback);

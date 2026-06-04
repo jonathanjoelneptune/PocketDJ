@@ -13229,20 +13229,20 @@ body::after,
 /* v105: DJ record crate and next-up album staged behind the DJ. */
 :root {
   --dj-crate-x: 64.0%;
-  --dj-crate-y: 72.1%;
+  --dj-crate-y: 68.8%;
   --dj-crate-scale: 0.42;
   --dj-crate-rotate: 0deg;
   --dj-crate-opacity: 1;
-  --dj-crate-brightness: 1;
+  --dj-crate-brightness: 0.99;
   --dj-crate-saturation: 1;
   --dj-crate-contrast: 1;
-  --dj-crate-hue: 0deg;
-  --next-up-album-x: 61.7%;
-  --next-up-album-y: 73.8%;
+  --dj-crate-hue: -14deg;
+  --next-up-album-x: 61.5%;
+  --next-up-album-y: 70.3%;
   --next-up-album-size: 4.3%;
   --next-up-album-rotate-x: 21deg;
   --next-up-album-rotate-y: 52deg;
-  --next-up-album-rotate-z: -5deg;
+  --next-up-album-rotate-z: -3deg;
   --next-up-album-depth: 0.07;
   --next-up-album-shadow: 0;
   --next-up-album-opacity: 1;
@@ -13359,12 +13359,14 @@ body::after,
   --no-lyrics-cone-start-x: 50%;
   --no-lyrics-cone-start-y: 0%;
   --no-lyrics-cone-start-size: 8%;
-  --no-lyrics-cone-fade: 0.54;
-  --no-lyrics-cone-feather: 18;
+  --no-lyrics-cone-fade: 0;
+  --no-lyrics-cone-feather: 84.1;
   --no-lyrics-cone-feather-px: calc(var(--room-unit) * var(--no-lyrics-cone-feather));
   --no-lyrics-floor-dim: 0;
   --no-lyrics-vignette: 0;
   --no-lyrics-focus-fade: 2000ms;
+  --no-lyrics-focus-fade-out: 500ms;
+  --no-lyrics-focus-runtime-fade: var(--no-lyrics-focus-fade);
 }
 
 .no-lyrics-focus-layer {
@@ -13376,7 +13378,7 @@ body::after,
   z-index: 83;
   pointer-events: none;
   opacity: 0;
-  transition: opacity var(--no-lyrics-focus-fade) ease-in-out;
+  transition: opacity var(--no-lyrics-focus-runtime-fade, var(--no-lyrics-focus-fade)) ease-in-out;
   overflow: hidden;
   mix-blend-mode: normal;
 }
@@ -13426,6 +13428,7 @@ body::after,
 }
 
 .no-lyrics-spotlight-cone {
+  display: none;
   left: var(--no-lyrics-cone-start-x);
   top: var(--no-lyrics-cone-start-y);
   width: calc(var(--no-lyrics-spotlight-size) * 1.75);
@@ -13497,6 +13500,20 @@ body::after,
 
 .no-lyrics-focus-enabled.no-lyrics-focus-active .lyrics-ceiling-hidden {
   opacity: 0 !important;
+}
+
+.no-lyrics-paused-ceiling-dim .no-lyrics-focus-layer {
+  opacity: 1;
+}
+
+.no-lyrics-paused-ceiling-dim:not(.no-lyrics-focus-active) .no-lyrics-floor-dim,
+.no-lyrics-paused-ceiling-dim:not(.no-lyrics-focus-active) .no-lyrics-room-vignette,
+.no-lyrics-paused-ceiling-dim:not(.no-lyrics-focus-active) .no-lyrics-spotlight-pool {
+  opacity: 0;
+}
+
+.no-lyrics-paused-ceiling-dim:not(.no-lyrics-focus-active) .no-lyrics-ceiling-dim {
+  opacity: 1;
 }
 
 .menu2-dev-subsection {

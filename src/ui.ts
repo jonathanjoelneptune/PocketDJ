@@ -1445,11 +1445,11 @@ export function renderShell(state: AppState): void {
               <label class="menu2-setting menu2-slider-setting">Cone start size % <span id="menu2NoLyricsConeStartSizeValue">8</span>
                 <input id="menu2NoLyricsConeStartSize" type="range" min="0" max="120" step="0.1" value="8" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Cone fade amount <span id="menu2NoLyricsConeFadeValue">0.54</span>
-                <input id="menu2NoLyricsConeFade" type="range" min="0" max="1" step="0.01" value="0.54" />
+              <label class="menu2-setting menu2-slider-setting">Cone fade amount <span id="menu2NoLyricsConeFadeValue">0.00</span>
+                <input id="menu2NoLyricsConeFade" type="range" min="0" max="1" step="0.01" value="0" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Cone feather / blur <span id="menu2NoLyricsConeFeatherValue">18.0</span>
-                <input id="menu2NoLyricsConeFeather" type="range" min="0" max="180" step="0.1" value="18" />
+              <label class="menu2-setting menu2-slider-setting">Cone feather / blur <span id="menu2NoLyricsConeFeatherValue">84.1</span>
+                <input id="menu2NoLyricsConeFeather" type="range" min="0" max="180" step="0.1" value="84.1" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Floor dim <span id="menu2NoLyricsFloorDimValue">0.00</span>
                 <input id="menu2NoLyricsFloorDim" type="range" min="0" max="0.65" step="0.01" value="0" />
@@ -1468,8 +1468,8 @@ export function renderShell(state: AppState): void {
               <label class="menu2-setting menu2-slider-setting">Crate X % <span id="menu2DjCrateXValue">64.0</span>
                 <input id="menu2DjCrateX" type="range" min="0" max="100" step="0.1" value="64" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Crate Y % <span id="menu2DjCrateYValue">72.1</span>
-                <input id="menu2DjCrateY" type="range" min="0" max="100" step="0.1" value="72.1" />
+              <label class="menu2-setting menu2-slider-setting">Crate Y % <span id="menu2DjCrateYValue">68.8</span>
+                <input id="menu2DjCrateY" type="range" min="0" max="100" step="0.1" value="68.8" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Crate scale <span id="menu2DjCrateScaleValue">0.42</span>
                 <input id="menu2DjCrateScale" type="range" min="0.05" max="2" step="0.01" value="0.42" />
@@ -1480,8 +1480,8 @@ export function renderShell(state: AppState): void {
               <label class="menu2-setting menu2-slider-setting">Crate opacity <span id="menu2DjCrateOpacityValue">1.00</span>
                 <input id="menu2DjCrateOpacity" type="range" min="0" max="1" step="0.01" value="1" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Crate brightness <span id="menu2DjCrateBrightnessValue">1.00</span>
-                <input id="menu2DjCrateBrightness" type="range" min="0.25" max="2" step="0.01" value="1" />
+              <label class="menu2-setting menu2-slider-setting">Crate brightness <span id="menu2DjCrateBrightnessValue">0.99</span>
+                <input id="menu2DjCrateBrightness" type="range" min="0.25" max="2" step="0.01" value="0.99" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Crate saturation <span id="menu2DjCrateSaturationValue">1.00</span>
                 <input id="menu2DjCrateSaturation" type="range" min="0" max="2.5" step="0.01" value="1" />
@@ -1489,15 +1489,15 @@ export function renderShell(state: AppState): void {
               <label class="menu2-setting menu2-slider-setting">Crate contrast <span id="menu2DjCrateContrastValue">1.00</span>
                 <input id="menu2DjCrateContrast" type="range" min="0.25" max="2" step="0.01" value="1" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Crate hue deg <span id="menu2DjCrateHueValue">0</span>
-                <input id="menu2DjCrateHue" type="range" min="-180" max="180" step="1" value="0" />
+              <label class="menu2-setting menu2-slider-setting">Crate hue deg <span id="menu2DjCrateHueValue">-14</span>
+                <input id="menu2DjCrateHue" type="range" min="-180" max="180" step="1" value="-14" />
               </label>
               <label class="menu2-setting menu2-toggle-setting"><input id="menu2NextUpAlbumEnabled" type="checkbox" /> Show next-up album in crate</label>
-              <label class="menu2-setting menu2-slider-setting">Next album X % <span id="menu2NextUpAlbumXValue">61.7</span>
-                <input id="menu2NextUpAlbumX" type="range" min="0" max="100" step="0.1" value="61.7" />
+              <label class="menu2-setting menu2-slider-setting">Next album X % <span id="menu2NextUpAlbumXValue">61.5</span>
+                <input id="menu2NextUpAlbumX" type="range" min="0" max="100" step="0.1" value="61.5" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Next album Y % <span id="menu2NextUpAlbumYValue">73.8</span>
-                <input id="menu2NextUpAlbumY" type="range" min="0" max="100" step="0.1" value="73.8" />
+              <label class="menu2-setting menu2-slider-setting">Next album Y % <span id="menu2NextUpAlbumYValue">70.3</span>
+                <input id="menu2NextUpAlbumY" type="range" min="0" max="100" step="0.1" value="70.3" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Next album size % <span id="menu2NextUpAlbumSizeValue">4.3</span>
                 <input id="menu2NextUpAlbumSize" type="range" min="1" max="18" step="0.1" value="4.3" />
@@ -1508,8 +1508,8 @@ export function renderShell(state: AppState): void {
               <label class="menu2-setting menu2-slider-setting">Rotate Y deg <span id="menu2NextUpAlbumRotateYValue">52</span>
                 <input id="menu2NextUpAlbumRotateY" type="range" min="-70" max="70" step="1" value="52" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Rotate Z deg <span id="menu2NextUpAlbumRotateZValue">-5</span>
-                <input id="menu2NextUpAlbumRotateZ" type="range" min="-60" max="60" step="1" value="-5" />
+              <label class="menu2-setting menu2-slider-setting">Rotate Z deg <span id="menu2NextUpAlbumRotateZValue">-3</span>
+                <input id="menu2NextUpAlbumRotateZ" type="range" min="-60" max="60" step="1" value="-3" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Album depth <span id="menu2NextUpAlbumDepthValue">0.07</span>
                 <input id="menu2NextUpAlbumDepth" type="range" min="0" max="0.8" step="0.01" value="0.07" />
@@ -2173,11 +2173,16 @@ export function updateLyricsCeiling(
     enabled &&
     playbackActive &&
     document.documentElement.classList.contains("no-lyrics-focus-enabled");
+  const pausedCeilingDim = !lyricTest.active && enabled && !playbackActive;
+  document.documentElement.classList.toggle("no-lyrics-paused-ceiling-dim", pausedCeilingDim);
   if (focusEnabled && noLyricsResolved) noLyricsFocusLatched = true;
   if (lyrics.status === "found" && lyrics.syncedLyrics.length > 0) noLyricsFocusLatched = false;
   if (!playbackActive || lyricTest.active || !enabled) noLyricsFocusLatched = false;
   const setNoLyricsFocusActive = (active: boolean) => {
-    document.documentElement.classList.toggle("no-lyrics-focus-active", focusEnabled && active);
+    const root = document.documentElement;
+    const shouldActivate = focusEnabled && active;
+    root.style.setProperty("--no-lyrics-focus-runtime-fade", shouldActivate ? "var(--no-lyrics-focus-fade)" : "var(--no-lyrics-focus-fade-out)");
+    root.classList.toggle("no-lyrics-focus-active", shouldActivate);
   };
   ceiling.classList.toggle("lyrics-ceiling-hidden", !shouldShow);
   ceiling.classList.toggle("lyrics-ceiling-visible", shouldShow);
