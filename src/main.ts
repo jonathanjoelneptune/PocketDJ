@@ -237,6 +237,15 @@ const DEFAULT_REACTIVE_ROOM_PALETTE: ReactiveRoomPalette = {
 const reactiveRoomPaletteCache = new Map<string, ReactiveRoomPalette>();
 let reactiveRoomPaletteUrl = "";
 let reactiveRoomPalettePendingUrl = "";
+const REACTIVE_ROOM_CROSSFADE_MS = 3000;
+const REACTIVE_ROOM_DRIFT_MS = 30000;
+let reactiveRoomBasePalette: ReactiveRoomPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
+let reactiveRoomFromPalette: ReactiveRoomPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
+let reactiveRoomToPalette: ReactiveRoomPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
+let reactiveRoomTransitionStartedAt = 0;
+let reactiveRoomTransitionActive = false;
+let reactiveRoomLastTargetKey = "default";
+let reactiveRoomCurrentRenderedPalette: ReactiveRoomPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
 let stringLightResizeTimer: number | null = null;
 let ambientTwinkleResizeTimer: number | null = null;
 
@@ -3212,6 +3221,8 @@ async function boot(): Promise<void> {
   updateDynamicCeilingReveal();
   window.addEventListener("resize", updateDynamicCeilingReveal, { passive: true });
   renderShell(state);
+  reactiveRoomCurrentRenderedPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
+  queueReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE, "default");
   setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
   bindControls();
@@ -6410,6 +6421,46 @@ function mixRgb(a: RgbTriple, b: RgbTriple, amount: number): RgbTriple {
   ];
 }
 
+function easeInOutCubic(t: number): number {
+  const x = clamp(t, 0, 1);
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+
+function interpolatePalette(a: ReactiveRoomPalette, b: ReactiveRoomPalette, amount: number): ReactiveRoomPalette {
+  return {
+    core: mixRgb(a.core, b.core, amount),
+    tint: mixRgb(a.tint, b.tint, amount),
+    ambient: mixRgb(a.ambient, b.ambient, amount),
+    roomGlow: mixRgb(a.roomGlow, b.roomGlow, amount),
+    roomAccent: mixRgb(a.roomAccent, b.roomAccent, amount),
+  };
+}
+
+function reactivePaletteKey(palette: ReactiveRoomPalette): string {
+  return [palette.core, palette.tint, palette.ambient, palette.roomGlow, palette.roomAccent]
+    .map((rgb) => rgb.join(","))
+    .join("|");
+}
+
+function paletteWithSlowDrift(base: ReactiveRoomPalette, playing: boolean, now = performance.now()): ReactiveRoomPalette {
+  if (!playing) return base;
+
+  const phase = (now % REACTIVE_ROOM_DRIFT_MS) / REACTIVE_ROOM_DRIFT_MS;
+  const waveA = (Math.sin(phase * Math.PI * 2) + 1) / 2;
+  const waveB = (Math.sin((phase + 0.33) * Math.PI * 2) + 1) / 2;
+  const waveC = (Math.sin((phase + 0.66) * Math.PI * 2) + 1) / 2;
+
+  // Keep this deliberately subtle: the album palette remains the anchor, while the
+  // room slowly breathes through nearby shades instead of flashing or changing scenes.
+  return {
+    core: mixRgb(base.core, base.tint, 0.035 + waveA * 0.055),
+    tint: mixRgb(base.tint, base.roomAccent, 0.045 + waveB * 0.075),
+    ambient: mixRgb(base.ambient, base.roomGlow, 0.035 + waveC * 0.065),
+    roomGlow: mixRgb(base.roomGlow, base.ambient, 0.030 + waveB * 0.060),
+    roomAccent: mixRgb(base.roomAccent, base.tint, 0.035 + waveA * 0.070),
+  };
+}
+
 function rgbTripleToCss(rgb: RgbTriple): string {
   return `${Math.round(clamp(rgb[0], 0, 255))}, ${Math.round(clamp(rgb[1], 0, 255))}, ${Math.round(clamp(rgb[2], 0, 255))}`;
 }
@@ -6421,6 +6472,40 @@ function setReactiveRoomPalette(palette: ReactiveRoomPalette): void {
   root.style.setProperty("--string-light-ambient-rgb", rgbTripleToCss(palette.ambient));
   root.style.setProperty("--ambient-room-glow-rgb", rgbTripleToCss(palette.roomGlow));
   root.style.setProperty("--ambient-room-accent-rgb", rgbTripleToCss(palette.roomAccent));
+}
+
+function queueReactiveRoomPalette(palette: ReactiveRoomPalette, key: string): void {
+  const paletteKey = `${key}:${reactivePaletteKey(palette)}`;
+  if (reactiveRoomLastTargetKey === paletteKey) return;
+
+  reactiveRoomLastTargetKey = paletteKey;
+  reactiveRoomFromPalette = reactiveRoomCurrentRenderedPalette;
+  reactiveRoomToPalette = palette;
+  reactiveRoomTransitionStartedAt = performance.now();
+  reactiveRoomTransitionActive = true;
+}
+
+function applyReactiveRoomPaletteFrame(track: AppState["playback"]): void {
+  const now = performance.now();
+  let base = reactiveRoomToPalette;
+
+  if (reactiveRoomTransitionActive) {
+    const rawProgress = (now - reactiveRoomTransitionStartedAt) / REACTIVE_ROOM_CROSSFADE_MS;
+    const eased = easeInOutCubic(rawProgress);
+    base = interpolatePalette(reactiveRoomFromPalette, reactiveRoomToPalette, eased);
+
+    if (rawProgress >= 1) {
+      reactiveRoomTransitionActive = false;
+      reactiveRoomBasePalette = reactiveRoomToPalette;
+      base = reactiveRoomBasePalette;
+    }
+  } else {
+    reactiveRoomBasePalette = reactiveRoomToPalette;
+  }
+
+  const playing = track.isPlaying || track.source === "demo";
+  reactiveRoomCurrentRenderedPalette = paletteWithSlowDrift(base, playing, now);
+  setReactiveRoomPalette(reactiveRoomCurrentRenderedPalette);
 }
 
 function paletteFromTrackText(track: AppState["playback"]): ReactiveRoomPalette {
@@ -6518,7 +6603,7 @@ function updateReactiveRoomPalette(track: AppState["playback"]): void {
   const imageUrl = track.albumArtUrl || "";
   if (!imageUrl) {
     reactiveRoomPaletteUrl = "";
-    setReactiveRoomPalette(paletteFromTrackText(track));
+    queueReactiveRoomPalette(paletteFromTrackText(track), `text:${track.title}|${track.artist}|${track.album}`);
     return;
   }
 
@@ -6527,7 +6612,7 @@ function updateReactiveRoomPalette(track: AppState["playback"]): void {
   const cached = reactiveRoomPaletteCache.get(imageUrl);
   if (cached) {
     reactiveRoomPaletteUrl = imageUrl;
-    setReactiveRoomPalette(cached);
+    queueReactiveRoomPalette(cached, `album:${imageUrl}`);
     return;
   }
 
@@ -6539,12 +6624,12 @@ function updateReactiveRoomPalette(track: AppState["playback"]): void {
       reactiveRoomPaletteCache.set(imageUrl, palette);
       if ((state.playback.albumArtUrl || "") !== imageUrl) return;
       reactiveRoomPaletteUrl = imageUrl;
-      setReactiveRoomPalette(palette);
+      queueReactiveRoomPalette(palette, `album:${imageUrl}`);
     })
     .catch(() => {
       if ((state.playback.albumArtUrl || "") !== imageUrl) return;
       reactiveRoomPaletteUrl = imageUrl;
-      setReactiveRoomPalette(paletteFromTrackText(track));
+      queueReactiveRoomPalette(paletteFromTrackText(track), `text:${track.title}|${track.artist}|${track.album}`);
     })
     .finally(() => {
       if (reactiveRoomPalettePendingUrl === imageUrl) reactiveRoomPalettePendingUrl = "";
@@ -8725,6 +8810,7 @@ function tick(): void {
   updateSongChangeAlbumOverlay(state.playback);
   applySpeakerPulseTempo(state.playback);
   updateReactiveRoomPalette(state.playback);
+  applyReactiveRoomPaletteFrame(state.playback);
   syncMusicReactiveEnvironment(state.playback);
   updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
   updatePlaybackUi(state.playback, state.debugOpen);

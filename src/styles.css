@@ -120,7 +120,7 @@ button {
   filter: blur(48px) saturate(1.4);
   transform: scale(1.12);
   mix-blend-mode: screen;
-  transition: background-image 500ms ease, opacity 500ms ease;
+  transition: opacity 3000ms cubic-bezier(0.22, 0.72, 0.18, 1), filter 3000ms cubic-bezier(0.22, 0.72, 0.18, 1);
   pointer-events: none;
 }
 
