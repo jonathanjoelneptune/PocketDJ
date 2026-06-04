@@ -13528,3 +13528,26 @@ body::after,
 .menu2-subsection-head {
   margin-bottom: 0.1rem;
 }
+
+
+/* v109: No Lyrics Focus cleanup and stable layering.
+   Keep the marquee readable above ceiling dimming, remove the DJ spotlight/cone,
+   and preserve pure-black letterbox behavior. */
+.marquee {
+  z-index: 96 !important;
+  filter: brightness(1.12) contrast(1.06);
+}
+.no-lyrics-focus-layer {
+  z-index: 84 !important;
+}
+.no-lyrics-spotlight-cone,
+.no-lyrics-spotlight-pool {
+  display: none !important;
+  opacity: 0 !important;
+}
+/* Paused/focus ceiling dim should not affect marquee readability. */
+.no-lyrics-focus-active .marquee,
+.no-lyrics-paused-ceiling-dim .marquee {
+  opacity: 1 !important;
+  filter: brightness(1.18) contrast(1.08) saturate(1.05);
+}

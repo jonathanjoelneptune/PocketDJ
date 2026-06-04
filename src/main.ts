@@ -224,7 +224,7 @@ let nextUpQueueFetchInFlight = false;
 let nextUpPlaybackKey = "";
 let nextUpCinematicStartedAt = 0;
 const NEXT_UP_CRATE_SWAP_DELAY_MS = 50;
-const preloadedNextUpAlbumUrls = new Set<string>();
+const preloadedNextUpAlbumImages = new Map<string, HTMLImageElement>();
 
 function clampDjCrateNextUpSettings(settings: Partial<DjCrateNextUpSettings>): DjCrateNextUpSettings {
   return {
@@ -8939,11 +8939,17 @@ function songChangeAlbumIsInHands(): boolean {
 
 function preloadNextUpAlbumArt(track: SpotifyCatalogTrack | null | undefined): void {
   const url = track?.albumArtUrl || "";
-  if (!url || preloadedNextUpAlbumUrls.has(url)) return;
-  preloadedNextUpAlbumUrls.add(url);
+  if (!url || preloadedNextUpAlbumImages.has(url)) return;
   const image = new Image();
   image.decoding = "async";
   image.src = url;
+  preloadedNextUpAlbumImages.set(url, image);
+}
+
+function isNextUpAlbumArtReady(url: string): boolean {
+  if (!url) return false;
+  const image = preloadedNextUpAlbumImages.get(url);
+  return Boolean(image && image.complete && image.naturalWidth > 0);
 }
 
 function sameSpotifyTrack(a: SpotifyCatalogTrack | null | undefined, b: AppState["playback"] | SpotifyCatalogTrack | null | undefined): boolean {
@@ -8969,13 +8975,10 @@ function updateNextUpQueueForPlaybackChange(playback: AppState["playback"]): voi
   if (!key || key === nextUpPlaybackKey) return;
   nextUpPlaybackKey = key;
   nextUpCinematicStartedAt = 0;
-  // Prevent stale queue art from a previous song from lingering in the crate while Spotify refreshes.
-  if (nextUpQueuePlaybackKey !== key) {
-    nextUpQueueTracks = [];
-  } else {
-    nextUpQueueTracks = filterNextUpQueue(nextUpQueueTracks, playback);
-    nextUpQueueTracks.slice(0, 3).forEach(preloadNextUpAlbumArt);
-  }
+  // Keep the previous queue art available during the forced Spotify refresh so the crate never flashes empty.
+  // The current track is still filtered out immediately so the crate does not show the album that was just placed.
+  nextUpQueueTracks = filterNextUpQueue(nextUpQueueTracks, playback);
+  nextUpQueueTracks.slice(0, 3).forEach(preloadNextUpAlbumArt);
   updateNextUpAlbumVisual();
   void refreshNextUpQueue(true);
 }
@@ -9009,10 +9012,30 @@ function updateNextUpAlbumVisual(): void {
   const track = activeNextUpCrateTrack();
   const coverUrl = track?.albumArtUrl || "";
   const show = Boolean(djCrateNextUp.nextEnabled && djCrateNextUp.crateEnabled && coverUrl);
+
   layer.classList.toggle("next-up-album-has-art", show);
-  if (show && image.getAttribute("src") !== coverUrl) image.src = coverUrl;
-  if (!show) image.removeAttribute("src");
-  image.alt = show ? "Next up album cover in the record crate" : "";
+  if (!show) {
+    image.removeAttribute("src");
+    image.alt = "";
+    return;
+  }
+
+  if (image.getAttribute("src") !== coverUrl) {
+    // If the next-next cover has not decoded yet, keep the current visible sleeve until it is ready.
+    // This avoids the empty crate flash during the A41 pickup swap.
+    if (isNextUpAlbumArtReady(coverUrl) || !image.getAttribute("src")) {
+      image.src = coverUrl;
+    } else {
+      preloadNextUpAlbumArt(track);
+      const pending = preloadedNextUpAlbumImages.get(coverUrl);
+      pending?.addEventListener("load", () => {
+        const latest = activeNextUpCrateTrack()?.albumArtUrl || "";
+        if (latest === coverUrl) image.src = coverUrl;
+      }, { once: true });
+    }
+  }
+
+  image.alt = "Next up album cover in the record crate";
 }
 
 async function refreshNextUpQueue(force = false): Promise<void> {
@@ -9273,7 +9296,7 @@ async function pollSpotifyNow(): Promise<void> {
     // Keep visible-page polling fast so the DJ state changes quickly when Spotify starts,
     // pauses, stops, or switches tracks. The previous 7s/18s visible intervals made
     // idle-to-active and active-to-idle transitions feel delayed.
-    const interval = document.hidden ? 45_000 : 2_500;
+    const interval = document.hidden ? 5_000 : 2_500;
     scheduleNextPoll(interval);
   }
 }

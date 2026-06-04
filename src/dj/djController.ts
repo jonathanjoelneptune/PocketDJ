@@ -154,9 +154,13 @@ export class DjController {
 
     if (trackId && trackId !== this.lastTrackId) {
       const hadPreviousTrack = Boolean(this.lastTrackId);
+      // If the page was hidden/throttled and we only discover the new track well into playback,
+      // do not play a late song-change cinematic in the middle of the song.
+      const discoveredNearTrackStart = playback.progressMs < 12_000 || playback.source === "demo";
       const shouldQueueSongChangeCinematic =
         hadPreviousTrack &&
         isActive &&
+        discoveredNearTrackStart &&
         this.controlMode === "normal" &&
         !this.cinematicOnce;
 

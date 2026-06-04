@@ -52,8 +52,6 @@ export function renderShell(state: AppState): void {
           <div class="no-lyrics-ceiling-dim"></div>
           <div class="no-lyrics-floor-dim"></div>
           <div class="no-lyrics-room-vignette"></div>
-          <div class="no-lyrics-spotlight-cone"></div>
-          <div class="no-lyrics-spotlight-pool"></div>
         </div>
 
         <div class="room-speaker room-speaker-left" id="leftSpeaker" aria-hidden="true">
