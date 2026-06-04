@@ -1449,7 +1449,7 @@ export function renderShell(state: AppState): void {
                 <input id="menu2NoLyricsConeFade" type="range" min="0" max="1" step="0.01" value="0.54" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Cone feather / blur <span id="menu2NoLyricsConeFeatherValue">18.0</span>
-                <input id="menu2NoLyricsConeFeather" type="range" min="0" max="80" step="0.1" value="18" />
+                <input id="menu2NoLyricsConeFeather" type="range" min="0" max="180" step="0.1" value="18" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Floor dim <span id="menu2NoLyricsFloorDimValue">0.00</span>
                 <input id="menu2NoLyricsFloorDim" type="range" min="0" max="0.65" step="0.01" value="0" />
@@ -1479,6 +1479,18 @@ export function renderShell(state: AppState): void {
               </label>
               <label class="menu2-setting menu2-slider-setting">Crate opacity <span id="menu2DjCrateOpacityValue">1.00</span>
                 <input id="menu2DjCrateOpacity" type="range" min="0" max="1" step="0.01" value="1" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Crate brightness <span id="menu2DjCrateBrightnessValue">1.00</span>
+                <input id="menu2DjCrateBrightness" type="range" min="0.25" max="2" step="0.01" value="1" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Crate saturation <span id="menu2DjCrateSaturationValue">1.00</span>
+                <input id="menu2DjCrateSaturation" type="range" min="0" max="2.5" step="0.01" value="1" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Crate contrast <span id="menu2DjCrateContrastValue">1.00</span>
+                <input id="menu2DjCrateContrast" type="range" min="0.25" max="2" step="0.01" value="1" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Crate hue deg <span id="menu2DjCrateHueValue">0</span>
+                <input id="menu2DjCrateHue" type="range" min="-180" max="180" step="1" value="0" />
               </label>
               <label class="menu2-setting menu2-toggle-setting"><input id="menu2NextUpAlbumEnabled" type="checkbox" /> Show next-up album in crate</label>
               <label class="menu2-setting menu2-slider-setting">Next album X % <span id="menu2NextUpAlbumXValue">61.7</span>

@@ -173,6 +173,10 @@ type DjCrateNextUpSettings = {
   crateScale: number;
   crateRotate: number;
   crateOpacity: number;
+  crateBrightness: number;
+  crateSaturation: number;
+  crateContrast: number;
+  crateHue: number;
   nextEnabled: boolean;
   nextX: number;
   nextY: number;
@@ -193,6 +197,10 @@ const DEFAULT_DJ_CRATE_NEXT_UP: DjCrateNextUpSettings = {
   crateScale: 0.42,
   crateRotate: 0,
   crateOpacity: 1,
+  crateBrightness: 1,
+  crateSaturation: 1,
+  crateContrast: 1,
+  crateHue: 0,
   nextEnabled: true,
   nextX: 61.7,
   nextY: 73.8,
@@ -207,11 +215,12 @@ const DEFAULT_DJ_CRATE_NEXT_UP: DjCrateNextUpSettings = {
 };
 
 const DJ_CRATE_NEXT_UP_KEY = "pocketdj-dj-crate-next-up-v1";
-const DJ_CRATE_NEXT_UP_TUNING_MIGRATION_KEY = "pocketdj-v106-crate-next-up-tuned-defaults";
+const DJ_CRATE_NEXT_UP_TUNING_MIGRATION_KEY = "pocketdj-v107-crate-next-up-layer-filter-defaults";
 let djCrateNextUp = loadDjCrateNextUpSettings();
 let nextUpQueueTracks: SpotifyCatalogTrack[] = [];
 let nextUpQueueLastFetchAt = 0;
 let nextUpQueueFetchInFlight = false;
+let nextUpPlaybackKey = "";
 const preloadedNextUpAlbumUrls = new Set<string>();
 
 function clampDjCrateNextUpSettings(settings: Partial<DjCrateNextUpSettings>): DjCrateNextUpSettings {
@@ -222,6 +231,10 @@ function clampDjCrateNextUpSettings(settings: Partial<DjCrateNextUpSettings>): D
     crateScale: Math.max(0.05, Math.min(2, Number(settings.crateScale ?? DEFAULT_DJ_CRATE_NEXT_UP.crateScale))),
     crateRotate: Math.max(-45, Math.min(45, Number(settings.crateRotate ?? DEFAULT_DJ_CRATE_NEXT_UP.crateRotate))),
     crateOpacity: Math.max(0, Math.min(1, Number(settings.crateOpacity ?? DEFAULT_DJ_CRATE_NEXT_UP.crateOpacity))),
+    crateBrightness: Math.max(0.25, Math.min(2, Number(settings.crateBrightness ?? DEFAULT_DJ_CRATE_NEXT_UP.crateBrightness))),
+    crateSaturation: Math.max(0, Math.min(2.5, Number(settings.crateSaturation ?? DEFAULT_DJ_CRATE_NEXT_UP.crateSaturation))),
+    crateContrast: Math.max(0.25, Math.min(2, Number(settings.crateContrast ?? DEFAULT_DJ_CRATE_NEXT_UP.crateContrast))),
+    crateHue: Math.max(-180, Math.min(180, Number(settings.crateHue ?? DEFAULT_DJ_CRATE_NEXT_UP.crateHue))),
     nextEnabled: settings.nextEnabled ?? DEFAULT_DJ_CRATE_NEXT_UP.nextEnabled,
     nextX: Math.max(0, Math.min(100, Number(settings.nextX ?? DEFAULT_DJ_CRATE_NEXT_UP.nextX))),
     nextY: Math.max(0, Math.min(100, Number(settings.nextY ?? DEFAULT_DJ_CRATE_NEXT_UP.nextY))),
@@ -270,6 +283,10 @@ function applyDjCrateNextUpSettings(): void {
   root.style.setProperty("--dj-crate-scale", String(djCrateNextUp.crateScale));
   root.style.setProperty("--dj-crate-rotate", `${djCrateNextUp.crateRotate}deg`);
   root.style.setProperty("--dj-crate-opacity", String(djCrateNextUp.crateOpacity));
+  root.style.setProperty("--dj-crate-brightness", String(djCrateNextUp.crateBrightness));
+  root.style.setProperty("--dj-crate-saturation", String(djCrateNextUp.crateSaturation));
+  root.style.setProperty("--dj-crate-contrast", String(djCrateNextUp.crateContrast));
+  root.style.setProperty("--dj-crate-hue", `${djCrateNextUp.crateHue}deg`);
   root.style.setProperty("--next-up-album-x", `${djCrateNextUp.nextX}%`);
   root.style.setProperty("--next-up-album-y", `${djCrateNextUp.nextY}%`);
   root.style.setProperty("--next-up-album-size", `${djCrateNextUp.nextSize}%`);
@@ -291,6 +308,10 @@ function applyDjCrateNextUpSettings(): void {
     ["crateScale", "menu2DjCrateScale", "menu2DjCrateScaleValue", 2],
     ["crateRotate", "menu2DjCrateRotate", "menu2DjCrateRotateValue", 0],
     ["crateOpacity", "menu2DjCrateOpacity", "menu2DjCrateOpacityValue", 2],
+    ["crateBrightness", "menu2DjCrateBrightness", "menu2DjCrateBrightnessValue", 2],
+    ["crateSaturation", "menu2DjCrateSaturation", "menu2DjCrateSaturationValue", 2],
+    ["crateContrast", "menu2DjCrateContrast", "menu2DjCrateContrastValue", 2],
+    ["crateHue", "menu2DjCrateHue", "menu2DjCrateHueValue", 0],
     ["nextX", "menu2NextUpAlbumX", "menu2NextUpAlbumXValue", 1],
     ["nextY", "menu2NextUpAlbumY", "menu2NextUpAlbumYValue", 1],
     ["nextSize", "menu2NextUpAlbumSize", "menu2NextUpAlbumSizeValue", 1],
@@ -325,7 +346,7 @@ function clampNoLyricsFocus(settings: Partial<NoLyricsFocusSettings>): NoLyricsF
     coneStartY: Math.max(0, Math.min(35, Number(settings.coneStartY ?? DEFAULT_NO_LYRICS_FOCUS.coneStartY))),
     coneStartSize: Math.max(0, Math.min(120, Number(settings.coneStartSize ?? DEFAULT_NO_LYRICS_FOCUS.coneStartSize))),
     coneFade: Math.max(0, Math.min(1, Number(settings.coneFade ?? DEFAULT_NO_LYRICS_FOCUS.coneFade))),
-    coneFeather: Math.max(0, Math.min(80, Number(settings.coneFeather ?? DEFAULT_NO_LYRICS_FOCUS.coneFeather))),
+    coneFeather: Math.max(0, Math.min(180, Number(settings.coneFeather ?? DEFAULT_NO_LYRICS_FOCUS.coneFeather))),
     floorDim: Math.max(0, Math.min(0.65, Number(settings.floorDim ?? DEFAULT_NO_LYRICS_FOCUS.floorDim))),
     vignette: Math.max(0, Math.min(0.75, Number(settings.vignette ?? DEFAULT_NO_LYRICS_FOCUS.vignette))),
     fadeMs: Math.max(250, Math.min(12000, Number(settings.fadeMs ?? DEFAULT_NO_LYRICS_FOCUS.fadeMs))),
@@ -5009,6 +5030,10 @@ function bindMenu2Controls(): void {
   bindCrateSlider("#menu2DjCrateScale", "crateScale");
   bindCrateSlider("#menu2DjCrateRotate", "crateRotate");
   bindCrateSlider("#menu2DjCrateOpacity", "crateOpacity");
+  bindCrateSlider("#menu2DjCrateBrightness", "crateBrightness");
+  bindCrateSlider("#menu2DjCrateSaturation", "crateSaturation");
+  bindCrateSlider("#menu2DjCrateContrast", "crateContrast");
+  bindCrateSlider("#menu2DjCrateHue", "crateHue");
   bindCrateSlider("#menu2NextUpAlbumX", "nextX");
   bindCrateSlider("#menu2NextUpAlbumY", "nextY");
   bindCrateSlider("#menu2NextUpAlbumSize", "nextSize");
@@ -8902,7 +8927,9 @@ function updatePlacedActiveAlbum(track: AppState["playback"]): void {
 
 function songChangeAlbumIsInHands(): boolean {
   const layer = document.querySelector<HTMLElement>("#songChangeAlbumLayer");
-  return Boolean(layer?.classList.contains("song-change-album-has-art") && isSongChangeRevealActive());
+  const djPose = document.querySelector<HTMLImageElement>("#djSprite")?.dataset.pose || "";
+  const previewHolding = Boolean(roomUtility.songChangeMode && layer?.classList.contains("song-change-album-has-art"));
+  return Boolean(layer?.classList.contains("song-change-album-has-art") && (djPose === "a41.png" || previewHolding));
 }
 
 function preloadNextUpAlbumArt(track: SpotifyCatalogTrack | null | undefined): void {
@@ -8914,8 +8941,36 @@ function preloadNextUpAlbumArt(track: SpotifyCatalogTrack | null | undefined): v
   image.src = url;
 }
 
+function sameSpotifyTrack(a: SpotifyCatalogTrack | null | undefined, b: AppState["playback"] | SpotifyCatalogTrack | null | undefined): boolean {
+  if (!a || !b) return false;
+  const bTrack = "trackId" in b ? b.trackId : "id" in b ? b.id : "";
+  const bUri = "uri" in b ? b.uri : "";
+  return Boolean((a.id && a.id === bTrack) || (a.uri && a.uri === bUri));
+}
+
+function filterNextUpQueue(queue: SpotifyCatalogTrack[], playback: AppState["playback"]): SpotifyCatalogTrack[] {
+  const seen = new Set<string>();
+  return queue.filter((track) => {
+    if (sameSpotifyTrack(track, playback)) return false;
+    const key = track.id || track.uri || `${track.name}|${track.artists}|${track.album}|${track.albumArtUrl}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function updateNextUpQueueForPlaybackChange(playback: AppState["playback"]): void {
+  const key = playbackAlbumTrackKey(playback);
+  if (!key || key === nextUpPlaybackKey) return;
+  nextUpPlaybackKey = key;
+  nextUpQueueTracks = filterNextUpQueue(nextUpQueueTracks, playback);
+  nextUpQueueTracks.slice(0, 3).forEach(preloadNextUpAlbumArt);
+  updateNextUpAlbumVisual();
+  void refreshNextUpQueue(true);
+}
+
 function activeNextUpCrateTrack(): SpotifyCatalogTrack | null {
-  // While the DJ is holding the current next-up sleeve, the crate should already show the next-next sleeve.
+  // While the actual A41 held-album frame is on screen, show the next-next sleeve in the crate.
   const index = songChangeAlbumIsInHands() ? 1 : 0;
   return nextUpQueueTracks[index] || null;
 }
@@ -8941,9 +8996,9 @@ async function refreshNextUpQueue(force = false): Promise<void> {
   nextUpQueueFetchInFlight = true;
   nextUpQueueLastFetchAt = now;
   try {
-    const queue = await getSpotifyQueue(state.spotifyClientId, 4);
-    nextUpQueueTracks = queue.slice(0, 4);
-    nextUpQueueTracks.slice(0, 2).forEach(preloadNextUpAlbumArt);
+    const queue = await getSpotifyQueue(state.spotifyClientId, 6);
+    nextUpQueueTracks = filterNextUpQueue(queue, state.playback).slice(0, 4);
+    nextUpQueueTracks.slice(0, 3).forEach(preloadNextUpAlbumArt);
     updateNextUpAlbumVisual();
   } catch (error) {
     console.warn("Could not refresh next-up queue album", error);
@@ -9215,6 +9270,7 @@ function tick(): void {
   }
 
   updateSongChangeAlbumOverlay(state.playback);
+  updateNextUpQueueForPlaybackChange(state.playback);
   void refreshNextUpQueue(false);
   applySpeakerPulseTempo(state.playback);
   updateReactiveRoomPalette(state.playback);
