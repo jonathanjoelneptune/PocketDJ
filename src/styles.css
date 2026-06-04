@@ -135,13 +135,13 @@ button {
   filter: blur(48px) saturate(1.4);
   transform: scale(1.12);
   mix-blend-mode: screen;
-  transition: opacity var(--room-vibe-transition-ms, 3000ms) cubic-bezier(0.22, 0.72, 0.18, 1), filter var(--room-vibe-transition-ms, 3000ms) cubic-bezier(0.22, 0.72, 0.18, 1);
+  transition: opacity var(--room-vibe-transition-ms, 5000ms) cubic-bezier(0.22, 0.72, 0.18, 1), filter var(--room-vibe-transition-ms, 5000ms) cubic-bezier(0.22, 0.72, 0.18, 1);
   pointer-events: none;
   will-change: opacity, filter;
 }
 
 .album-wash-active {
-  opacity: 0.10;
+  opacity: 0.16;
 }
 
 .marquee {
@@ -7962,7 +7962,7 @@ body.lyrics-marquee-unavailable .marquee::after {
   --ambient-room-glow-rgb: 126, 82, 140;
   --ambient-room-accent-rgb: 255, 186, 108;
   --music-room-energy: 0.3;
-  --room-vibe-transition-ms: 3000ms;
+  --room-vibe-transition-ms: 5000ms;
   --room-unit: calc(var(--room-w) / 1764);
 }
 
@@ -8139,17 +8139,17 @@ body.lyrics-marquee-unavailable .marquee::after {
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: screen;
-  transition: opacity var(--room-vibe-transition-ms, 3000ms) cubic-bezier(0.22, 0.72, 0.18, 1), filter var(--room-vibe-transition-ms, 3000ms) cubic-bezier(0.22, 0.72, 0.18, 1);
+  transition: opacity var(--room-vibe-transition-ms, 5000ms) cubic-bezier(0.22, 0.72, 0.18, 1), filter var(--room-vibe-transition-ms, 5000ms) cubic-bezier(0.22, 0.72, 0.18, 1);
   background:
-    radial-gradient(62% 18% at 50% 34%, rgba(var(--string-light-core-rgb), calc(0.28 + var(--music-room-energy) * 0.06)) 0%, rgba(var(--string-light-tint-rgb), calc(0.16 + var(--music-room-energy) * 0.04)) 38%, rgba(var(--string-light-ambient-rgb), 0) 74%),
-    radial-gradient(70% 42% at 50% 43%, rgba(var(--ambient-room-glow-rgb), calc(0.18 + var(--music-room-energy) * 0.05)) 0%, rgba(var(--ambient-room-glow-rgb), calc(0.08 + var(--music-room-energy) * 0.03)) 52%, rgba(var(--ambient-room-glow-rgb), 0) 80%),
-    radial-gradient(56% 36% at 50% 60%, rgba(var(--ambient-room-accent-rgb), calc(0.10 + var(--music-room-energy) * 0.04)) 0%, rgba(var(--ambient-room-accent-rgb), calc(0.05 + var(--music-room-energy) * 0.03)) 42%, rgba(var(--ambient-room-accent-rgb), 0) 76%);
+    radial-gradient(62% 18% at 50% 34%, rgba(var(--string-light-core-rgb), calc(0.34 + var(--music-room-energy) * 0.08)) 0%, rgba(var(--string-light-tint-rgb), calc(0.20 + var(--music-room-energy) * 0.05)) 38%, rgba(var(--string-light-ambient-rgb), 0) 74%),
+    radial-gradient(70% 42% at 50% 43%, rgba(var(--ambient-room-glow-rgb), calc(0.24 + var(--music-room-energy) * 0.07)) 0%, rgba(var(--ambient-room-glow-rgb), calc(0.11 + var(--music-room-energy) * 0.04)) 52%, rgba(var(--ambient-room-glow-rgb), 0) 80%),
+    radial-gradient(56% 36% at 50% 60%, rgba(var(--ambient-room-accent-rgb), calc(0.14 + var(--music-room-energy) * 0.05)) 0%, rgba(var(--ambient-room-accent-rgb), calc(0.07 + var(--music-room-energy) * 0.04)) 42%, rgba(var(--ambient-room-accent-rgb), 0) 76%);
   filter: blur(26px) saturate(1.02) brightness(1.02);
   will-change: opacity, transform, filter;
 }
 
 .ambient-music-glow.ambient-music-glow-active {
-  opacity: calc(0.44 + var(--music-room-energy) * 0.14);
+  opacity: calc(0.54 + var(--music-room-energy) * 0.18);
   animation: ambientRoomBreathe var(--music-breathe-ms, 7600ms) ease-in-out infinite;
 }
 
@@ -13584,7 +13584,7 @@ body::after,
    JS interpolation/drift. Keep these variables scoped to visual room elements; the
    viewport/letterbox background remains pure black. */
 :root {
-  --room-vibe-transition-ms: 3000ms;
+  --room-vibe-transition-ms: 5000ms;
 }
 html,
 body,

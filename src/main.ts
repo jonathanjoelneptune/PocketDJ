@@ -591,7 +591,7 @@ const DEFAULT_REACTIVE_ROOM_PALETTE: ReactiveRoomPalette = {
 const reactiveRoomPaletteCache = new Map<string, ReactiveRoomPalette>();
 let reactiveRoomPaletteUrl = "";
 let reactiveRoomPalettePendingUrl = "";
-const REACTIVE_ROOM_CROSSFADE_MS = 3000;
+const REACTIVE_ROOM_CROSSFADE_MS = 5000;
 const REACTIVE_ROOM_DRIFT_MS = 30000;
 let reactiveRoomBasePalette: ReactiveRoomPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
 let reactiveRoomFromPalette: ReactiveRoomPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
@@ -6881,6 +6881,46 @@ function mixRgb(a: RgbTriple, b: RgbTriple, amount: number): RgbTriple {
   ];
 }
 
+function rgbSaturation(rgb: RgbTriple): number {
+  const maxChannel = Math.max(rgb[0], rgb[1], rgb[2]);
+  const minChannel = Math.min(rgb[0], rgb[1], rgb[2]);
+  return maxChannel <= 0 ? 0 : (maxChannel - minChannel) / maxChannel;
+}
+
+function rgbBrightness(rgb: RgbTriple): number {
+  return (rgb[0] + rgb[1] + rgb[2]) / (3 * 255);
+}
+
+function seededVibeColor(seed: string): RgbTriple {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) hash = (hash * 33 + seed.charCodeAt(index)) >>> 0;
+  const hue = hash % 360;
+  const chroma = 0.62;
+  const x = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (hue < 60) [r, g, b] = [chroma, x, 0];
+  else if (hue < 120) [r, g, b] = [x, chroma, 0];
+  else if (hue < 180) [r, g, b] = [0, chroma, x];
+  else if (hue < 240) [r, g, b] = [0, x, chroma];
+  else if (hue < 300) [r, g, b] = [x, 0, chroma];
+  else [r, g, b] = [chroma, 0, x];
+  const m = 0.24;
+  return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+}
+
+function makeRoomVibeAnchor(color: RgbTriple, seed: string, fallbackAmount: number): RgbTriple {
+  const saturation = rgbSaturation(color);
+  const brightness = rgbBrightness(color);
+  const needsColorLift = saturation < 0.22 || brightness > 0.82 || brightness < 0.12;
+  const lifted = needsColorLift ? mixRgb(color, seededVibeColor(seed), fallbackAmount) : color;
+  // Keep this as a color-separation lift, not a brute-force saturation pass: push
+  // neutral/white/black covers toward a stable song-derived accent so each track
+  // still gets a distinct room mood, while colorful covers keep their own identity.
+  return mixRgb(lifted, seededVibeColor(`${seed}:accent`), needsColorLift ? 0.14 : 0.04);
+}
+
 function easeInOutCubic(t: number): number {
   const x = clamp(t, 0, 1);
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
@@ -6994,15 +7034,15 @@ function paletteFromTrackText(track: AppState["playback"]): ReactiveRoomPalette 
   const m = 0.28;
   const color: RgbTriple = [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
   return {
-    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, color, 0.24),
-    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, color, 0.48),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, color, 0.34),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, color, 0.26),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, color, 0.28),
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, color, 0.34),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, color, 0.68),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, color, 0.46),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, color, 0.40),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, color, 0.58),
   };
 }
 
-async function extractReactiveRoomPalette(imageUrl: string): Promise<ReactiveRoomPalette> {
+async function extractReactiveRoomPalette(imageUrl: string, seed = imageUrl): Promise<ReactiveRoomPalette> {
   const image = new Image();
   image.crossOrigin = "anonymous";
   image.referrerPolicy = "no-referrer";
@@ -7057,12 +7097,15 @@ async function extractReactiveRoomPalette(imageUrl: string): Promise<ReactiveRoo
     ? [Math.round(weightedR / totalWeight), Math.round(weightedG / totalWeight), Math.round(weightedB / totalWeight)]
     : DEFAULT_REACTIVE_ROOM_PALETTE.tint;
 
+  const averageAnchor = makeRoomVibeAnchor(average, seed, 0.58);
+  const vibrantAnchor = makeRoomVibeAnchor(vibrant, `${seed}:vibrant`, 0.72);
+
   return {
-    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, average, 0.24),
-    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrant, 0.50),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, average, 0.36),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, average, 0.30),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrant, 0.30),
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, averageAnchor, 0.34),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrantAnchor, 0.74),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, averageAnchor, 0.50),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, averageAnchor, 0.44),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrantAnchor, 0.64),
   };
 }
 
@@ -7086,7 +7129,7 @@ function updateReactiveRoomPalette(track: AppState["playback"]): void {
   if (reactiveRoomPalettePendingUrl === imageUrl) return;
   reactiveRoomPalettePendingUrl = imageUrl;
 
-  void extractReactiveRoomPalette(imageUrl)
+  void extractReactiveRoomPalette(imageUrl, `${track.title}|${track.artist}|${track.album}|${imageUrl}`)
     .then((palette) => {
       reactiveRoomPaletteCache.set(imageUrl, palette);
       if ((state.playback.albumArtUrl || "") !== imageUrl) return;

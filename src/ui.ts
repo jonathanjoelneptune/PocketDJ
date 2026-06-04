@@ -1709,7 +1709,7 @@ function updateAlbumWashCrossfade(imageUrl: string): void {
       washA.style.backgroundImage = "";
       washB.style.backgroundImage = "";
       albumWashClearTimer = null;
-    }, 3200);
+    }, 5200);
     return;
   }
 
@@ -1726,7 +1726,7 @@ function updateAlbumWashCrossfade(imageUrl: string): void {
   albumWashClearTimer = window.setTimeout(() => {
     current.style.backgroundImage = "";
     albumWashClearTimer = null;
-  }, 3200);
+  }, 5200);
 }
 
 export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): void {
