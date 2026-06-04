@@ -23,6 +23,7 @@ let marqueeTitleScrollTimer: number | null = null;
 let marqueeSupportingSwapTimer: number | null = null;
 let marqueeSupportingFadeTimer: number | null = null;
 let marqueeSupportingShowingAlbum = false;
+let noLyricsFocusLatched = false;
 
 export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
@@ -1407,26 +1408,38 @@ export function renderShell(state: AppState): void {
             <div class="menu2-dev-subsection">
               <div class="menu2-section-head menu2-subsection-head"><h3>No Lyrics Focus</h3><span>Blank-ceiling fallback</span></div>
               <label class="menu2-setting menu2-toggle-setting"><input id="menu2NoLyricsFocusEnabled" type="checkbox" /> Enable no-lyrics focus mode</label>
-              <label class="menu2-setting menu2-slider-setting">Ceiling dim <span id="menu2NoLyricsCeilingDimValue">0.25</span>
-                <input id="menu2NoLyricsCeilingDim" type="range" min="0" max="0.75" step="0.01" value="0.25" />
+              <label class="menu2-setting menu2-slider-setting">Ceiling dim <span id="menu2NoLyricsCeilingDimValue">0.75</span>
+                <input id="menu2NoLyricsCeilingDim" type="range" min="0" max="0.75" step="0.01" value="0.75" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Spotlight strength <span id="menu2NoLyricsSpotlightValue">0.35</span>
-                <input id="menu2NoLyricsSpotlight" type="range" min="0" max="0.9" step="0.01" value="0.35" />
+              <label class="menu2-setting menu2-slider-setting">Spotlight strength <span id="menu2NoLyricsSpotlightValue">0.33</span>
+                <input id="menu2NoLyricsSpotlight" type="range" min="0" max="0.9" step="0.01" value="0.33" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Cone strength <span id="menu2NoLyricsConeValue">0.22</span>
-                <input id="menu2NoLyricsCone" type="range" min="0" max="0.7" step="0.01" value="0.22" />
+              <label class="menu2-setting menu2-slider-setting">Cone strength <span id="menu2NoLyricsConeValue">0.29</span>
+                <input id="menu2NoLyricsCone" type="range" min="0" max="0.7" step="0.01" value="0.29" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Spotlight X % <span id="menu2NoLyricsSpotlightXValue">50</span>
                 <input id="menu2NoLyricsSpotlightX" type="range" min="0" max="100" step="0.1" value="50" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Spotlight Y % <span id="menu2NoLyricsSpotlightYValue">70</span>
-                <input id="menu2NoLyricsSpotlightY" type="range" min="35" max="95" step="0.1" value="70" />
+              <label class="menu2-setting menu2-slider-setting">Spotlight Y % <span id="menu2NoLyricsSpotlightYValue">75</span>
+                <input id="menu2NoLyricsSpotlightY" type="range" min="35" max="95" step="0.1" value="75" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Spotlight size % <span id="menu2NoLyricsSpotlightSizeValue">34</span>
                 <input id="menu2NoLyricsSpotlightSize" type="range" min="12" max="80" step="0.1" value="34" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Fade ms <span id="menu2NoLyricsFadeValue">2000</span>
-                <input id="menu2NoLyricsFade" type="range" min="250" max="5000" step="50" value="2000" />
+              <label class="menu2-setting menu2-slider-setting">Cone start X % <span id="menu2NoLyricsConeStartXValue">50</span>
+                <input id="menu2NoLyricsConeStartX" type="range" min="0" max="100" step="0.1" value="50" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Cone start Y % <span id="menu2NoLyricsConeStartYValue">0</span>
+                <input id="menu2NoLyricsConeStartY" type="range" min="0" max="35" step="0.1" value="0" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Cone start size % <span id="menu2NoLyricsConeStartSizeValue">8</span>
+                <input id="menu2NoLyricsConeStartSize" type="range" min="0" max="38" step="0.1" value="8" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Cone fade amount <span id="menu2NoLyricsConeFadeValue">0.72</span>
+                <input id="menu2NoLyricsConeFade" type="range" min="0" max="1" step="0.01" value="0.72" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Fade ms <span id="menu2NoLyricsFadeValue">5000</span>
+                <input id="menu2NoLyricsFade" type="range" min="250" max="8000" step="50" value="5000" />
               </label>
               <button id="menu2NoLyricsFocusReset" class="menu2-action menu2-wide-action" type="button">Reset No Lyrics Focus</button>
             </div>
@@ -2072,15 +2085,17 @@ export function updateLyricsCeiling(
 
   const available = lyrics.status === "found" && lyrics.syncedLyrics.length > 0;
   const shouldShow = lyricTest.active || (enabled && available);
-  const canUseNoLyricsFocus =
+  const noLyricsResolved = ["not-found", "instrumental", "error"].includes(lyrics.status);
+  const focusEnabled =
     !lyricTest.active &&
     enabled &&
     playbackActive &&
-    lyrics.status !== "idle" &&
-    lyrics.status !== "loading" &&
     document.documentElement.classList.contains("no-lyrics-focus-enabled");
+  if (focusEnabled && noLyricsResolved) noLyricsFocusLatched = true;
+  if (lyrics.status === "found" && lyrics.syncedLyrics.length > 0) noLyricsFocusLatched = false;
+  if (!playbackActive || lyricTest.active || !enabled) noLyricsFocusLatched = false;
   const setNoLyricsFocusActive = (active: boolean) => {
-    document.documentElement.classList.toggle("no-lyrics-focus-active", canUseNoLyricsFocus && active);
+    document.documentElement.classList.toggle("no-lyrics-focus-active", focusEnabled && active);
   };
   ceiling.classList.toggle("lyrics-ceiling-hidden", !shouldShow);
   ceiling.classList.toggle("lyrics-ceiling-visible", shouldShow);
@@ -2094,7 +2109,7 @@ export function updateLyricsCeiling(
   };
 
   if (!shouldShow) {
-    clearLyrics(canUseNoLyricsFocus);
+    clearLyrics(noLyricsFocusLatched || (focusEnabled && noLyricsResolved));
     return;
   }
 
@@ -2104,7 +2119,8 @@ export function updateLyricsCeiling(
   }
 
   if (!lyricTest.active && activeIndex < 0) {
-    clearLyrics(canUseNoLyricsFocus);
+    // A gap before the first timed lyric is not a no-lyrics song. Keep the ceiling blank without engaging focus mode.
+    clearLyrics(false);
     return;
   }
 
@@ -2113,7 +2129,8 @@ export function updateLyricsCeiling(
     ? { timeMs: playbackMs, text: lyricTest.text }
     : lyrics.syncedLyrics[centerIndex];
   if (!activeLine?.text?.trim() || (!lyricTest.active && !isLyricLineCurrentlyVisible(lyrics.syncedLyrics, centerIndex, playbackMs))) {
-    clearLyrics(canUseNoLyricsFocus);
+    // Lyric breaks inside a song should stay blank, not trigger the no-lyrics fallback.
+    clearLyrics(false);
     return;
   }
 

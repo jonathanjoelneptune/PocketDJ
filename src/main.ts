@@ -134,18 +134,26 @@ type NoLyricsFocusSettings = {
   x: number;
   y: number;
   size: number;
+  coneStartX: number;
+  coneStartY: number;
+  coneStartSize: number;
+  coneFade: number;
   fadeMs: number;
 };
 
 const DEFAULT_NO_LYRICS_FOCUS: NoLyricsFocusSettings = {
   enabled: true,
-  ceilingDim: 0.25,
-  spotlight: 0.35,
-  cone: 0.22,
+  ceilingDim: 0.75,
+  spotlight: 0.33,
+  cone: 0.29,
   x: 50,
-  y: 70,
+  y: 75,
   size: 34,
-  fadeMs: 2000,
+  coneStartX: 50,
+  coneStartY: 0,
+  coneStartSize: 8,
+  coneFade: 0.72,
+  fadeMs: 5000,
 };
 
 const NO_LYRICS_FOCUS_KEY = "pocketdj-no-lyrics-focus-v1";
@@ -160,7 +168,11 @@ function clampNoLyricsFocus(settings: Partial<NoLyricsFocusSettings>): NoLyricsF
     x: Math.max(0, Math.min(100, Number(settings.x ?? DEFAULT_NO_LYRICS_FOCUS.x))),
     y: Math.max(35, Math.min(95, Number(settings.y ?? DEFAULT_NO_LYRICS_FOCUS.y))),
     size: Math.max(12, Math.min(80, Number(settings.size ?? DEFAULT_NO_LYRICS_FOCUS.size))),
-    fadeMs: Math.max(250, Math.min(5000, Number(settings.fadeMs ?? DEFAULT_NO_LYRICS_FOCUS.fadeMs))),
+    coneStartX: Math.max(0, Math.min(100, Number(settings.coneStartX ?? DEFAULT_NO_LYRICS_FOCUS.coneStartX))),
+    coneStartY: Math.max(0, Math.min(35, Number(settings.coneStartY ?? DEFAULT_NO_LYRICS_FOCUS.coneStartY))),
+    coneStartSize: Math.max(0, Math.min(38, Number(settings.coneStartSize ?? DEFAULT_NO_LYRICS_FOCUS.coneStartSize))),
+    coneFade: Math.max(0, Math.min(1, Number(settings.coneFade ?? DEFAULT_NO_LYRICS_FOCUS.coneFade))),
+    fadeMs: Math.max(250, Math.min(8000, Number(settings.fadeMs ?? DEFAULT_NO_LYRICS_FOCUS.fadeMs))),
   };
 }
 
@@ -188,6 +200,10 @@ function applyNoLyricsFocusSettings(): void {
   root.style.setProperty("--no-lyrics-spotlight-x", `${noLyricsFocus.x}%`);
   root.style.setProperty("--no-lyrics-spotlight-y", `${noLyricsFocus.y}%`);
   root.style.setProperty("--no-lyrics-spotlight-size", `${noLyricsFocus.size}%`);
+  root.style.setProperty("--no-lyrics-cone-start-x", `${noLyricsFocus.coneStartX}%`);
+  root.style.setProperty("--no-lyrics-cone-start-y", `${noLyricsFocus.coneStartY}%`);
+  root.style.setProperty("--no-lyrics-cone-start-size", `${noLyricsFocus.coneStartSize}%`);
+  root.style.setProperty("--no-lyrics-cone-fade", String(noLyricsFocus.coneFade));
   root.style.setProperty("--no-lyrics-focus-fade", `${noLyricsFocus.fadeMs}ms`);
 
   const enabled = document.querySelector<HTMLInputElement>("#menu2NoLyricsFocusEnabled");
@@ -198,6 +214,10 @@ function applyNoLyricsFocusSettings(): void {
     ["x", "menu2NoLyricsSpotlightX", "menu2NoLyricsSpotlightXValue", 1],
     ["y", "menu2NoLyricsSpotlightY", "menu2NoLyricsSpotlightYValue", 1],
     ["size", "menu2NoLyricsSpotlightSize", "menu2NoLyricsSpotlightSizeValue", 1],
+    ["coneStartX", "menu2NoLyricsConeStartX", "menu2NoLyricsConeStartXValue", 1],
+    ["coneStartY", "menu2NoLyricsConeStartY", "menu2NoLyricsConeStartYValue", 1],
+    ["coneStartSize", "menu2NoLyricsConeStartSize", "menu2NoLyricsConeStartSizeValue", 1],
+    ["coneFade", "menu2NoLyricsConeFade", "menu2NoLyricsConeFadeValue", 2],
     ["fadeMs", "menu2NoLyricsFade", "menu2NoLyricsFadeValue", 0],
   ];
   if (enabled) enabled.checked = noLyricsFocus.enabled;

@@ -13225,26 +13225,30 @@ body::after,
 
 /* v103: No Lyrics Focus Mode, a subtle blank-ceiling fallback with a soft DJ spotlight. */
 :root {
-  --no-lyrics-ceiling-dim: 0.25;
-  --no-lyrics-spotlight: 0.35;
-  --no-lyrics-cone: 0.22;
+  --no-lyrics-ceiling-dim: 0.75;
+  --no-lyrics-spotlight: 0.33;
+  --no-lyrics-cone: 0.29;
   --no-lyrics-spotlight-x: 50%;
-  --no-lyrics-spotlight-y: 70%;
+  --no-lyrics-spotlight-y: 75%;
   --no-lyrics-spotlight-size: 34%;
-  --no-lyrics-focus-fade: 2000ms;
+  --no-lyrics-cone-start-x: 50%;
+  --no-lyrics-cone-start-y: 0%;
+  --no-lyrics-cone-start-size: 8%;
+  --no-lyrics-cone-fade: 0.72;
+  --no-lyrics-focus-fade: 5000ms;
 }
 
 .no-lyrics-focus-layer {
   position: absolute;
   left: 0;
-  bottom: 0;
+  top: calc(var(--dynamic-ceiling-reveal-px) * -1);
   width: 100%;
-  height: var(--room-base-h);
+  height: calc(var(--room-base-h) + var(--dynamic-ceiling-reveal-px));
   z-index: 83;
   pointer-events: none;
   opacity: 0;
   transition: opacity var(--no-lyrics-focus-fade) ease-in-out;
-  overflow: visible;
+  overflow: hidden;
   mix-blend-mode: normal;
 }
 
@@ -13261,9 +13265,9 @@ body::after,
 
 .no-lyrics-ceiling-dim {
   left: 0;
-  top: calc(var(--dynamic-ceiling-reveal-px) * -1);
+  top: 0;
   width: 100%;
-  height: calc(43% + var(--dynamic-ceiling-reveal-px));
+  height: 47%;
   background:
     linear-gradient(
       180deg,
@@ -13275,21 +13279,26 @@ body::after,
 }
 
 .no-lyrics-spotlight-cone {
-  left: var(--no-lyrics-spotlight-x);
-  top: calc(2% - var(--dynamic-ceiling-reveal-px));
+  left: var(--no-lyrics-cone-start-x);
+  top: var(--no-lyrics-cone-start-y);
   width: var(--no-lyrics-spotlight-size);
-  height: calc(var(--no-lyrics-spotlight-y) + var(--dynamic-ceiling-reveal-px));
+  height: calc(var(--no-lyrics-spotlight-y) - var(--no-lyrics-cone-start-y) + 10%);
   transform: translateX(-50%);
-  clip-path: polygon(46% 0%, 54% 0%, 100% 100%, 0% 100%);
+  clip-path: polygon(
+    calc(50% - var(--no-lyrics-cone-start-size) / 2) 0%,
+    calc(50% + var(--no-lyrics-cone-start-size) / 2) 0%,
+    100% 100%,
+    0% 100%
+  );
   background:
     linear-gradient(
       180deg,
-      rgba(255, 231, 177, calc(var(--no-lyrics-cone) * 0.24)) 0%,
-      rgba(255, 215, 139, calc(var(--no-lyrics-cone) * 0.34)) 48%,
-      rgba(255, 186, 92, calc(var(--no-lyrics-cone) * 0.17)) 78%,
+      rgba(255, 238, 190, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.14)) 0%,
+      rgba(255, 222, 152, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.30)) 48%,
+      rgba(255, 190, 100, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.16)) 78%,
       rgba(255, 186, 92, 0) 100%
     );
-  filter: blur(calc(var(--room-unit) * 2.2));
+  filter: blur(calc(var(--room-unit) * 2.6));
   mix-blend-mode: screen;
 }
 
