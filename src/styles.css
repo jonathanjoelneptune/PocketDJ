@@ -13602,3 +13602,36 @@ body,
 #app {
   background: #000000 !important;
 }
+
+/* v115: Tall/Fold ceiling seam fix.
+   The tall-mode ceiling uses a cloned background strip above the 16:9 base room.
+   Keep the clone and the base room visually continuous by extending the same
+   filters/glows over the combined area, overlapping the clone by a few pixels,
+   and removing the old fill-mode room shadow/border that could draw a horizontal
+   line across the ceiling boundary. */
+.room-bg::before {
+  bottom: calc(100% - 3px) !important;
+  height: calc(var(--dynamic-ceiling-reveal-px) + 4px) !important;
+}
+
+.room-bg::after {
+  top: calc(var(--dynamic-ceiling-reveal-px) * -1) !important;
+  height: calc(100% + var(--dynamic-ceiling-reveal-px)) !important;
+}
+
+.room-filter-overlay,
+.ambient-music-glow {
+  top: calc(var(--dynamic-ceiling-reveal-px) * -1) !important;
+  bottom: auto !important;
+  height: calc(var(--room-base-h) + var(--dynamic-ceiling-reveal-px)) !important;
+}
+
+.album-wash {
+  top: calc(-12% - var(--dynamic-ceiling-reveal-px)) !important;
+  bottom: auto !important;
+  height: calc(124% + var(--dynamic-ceiling-reveal-px)) !important;
+}
+
+:root.room-fill-stretch .room {
+  box-shadow: none !important;
+}
