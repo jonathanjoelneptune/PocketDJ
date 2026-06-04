@@ -135,8 +135,13 @@ button {
   filter: blur(48px) saturate(1.4);
   transform: scale(1.12);
   mix-blend-mode: screen;
-  transition: opacity 3000ms cubic-bezier(0.22, 0.72, 0.18, 1), filter 3000ms cubic-bezier(0.22, 0.72, 0.18, 1);
+  transition: opacity var(--room-vibe-transition-ms, 3000ms) cubic-bezier(0.22, 0.72, 0.18, 1), filter var(--room-vibe-transition-ms, 3000ms) cubic-bezier(0.22, 0.72, 0.18, 1);
   pointer-events: none;
+  will-change: opacity, filter;
+}
+
+.album-wash-active {
+  opacity: 0.10;
 }
 
 .marquee {

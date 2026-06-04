@@ -24,6 +24,9 @@ let marqueeSupportingSwapTimer: number | null = null;
 let marqueeSupportingFadeTimer: number | null = null;
 let marqueeSupportingShowingAlbum = false;
 let noLyricsFocusLatched = false;
+let activeAlbumWashLayer = 0;
+let lastAlbumWashUrl = "";
+let albumWashClearTimer: number | null = null;
 
 export function renderShell(state: AppState): void {
   qs<HTMLDivElement>("#app").innerHTML = `
@@ -31,7 +34,8 @@ export function renderShell(state: AppState): void {
       <section class="room" aria-label="PocketDJ room">
         <div id="roomSceneTransform" class="room-scene-transform" aria-hidden="false">
         <div id="roomBg" class="room-bg" style="background-image:url(\'./assets/room/pocket-dj-room-offline-v1.png\')" aria-hidden="true"></div>
-        <div class="album-wash" id="albumWash"></div>
+        <div class="album-wash album-wash-a" id="albumWashA"></div>
+        <div class="album-wash album-wash-b" id="albumWashB"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
         <div class="room-base-layer" aria-hidden="false">
         <div id="sessionAlbumFrameOverlay" class="session-album-frame-overlay" aria-hidden="true"></div>
@@ -1684,6 +1688,47 @@ function fallbackCopyText(text: string): void {
   }
 }
 
+
+function updateAlbumWashCrossfade(imageUrl: string): void {
+  const washA = document.querySelector<HTMLDivElement>("#albumWashA");
+  const washB = document.querySelector<HTMLDivElement>("#albumWashB");
+  if (!washA || !washB) return;
+
+  if (imageUrl === lastAlbumWashUrl) return;
+  lastAlbumWashUrl = imageUrl;
+
+  if (albumWashClearTimer) {
+    window.clearTimeout(albumWashClearTimer);
+    albumWashClearTimer = null;
+  }
+
+  if (!imageUrl) {
+    washA.classList.remove("album-wash-active");
+    washB.classList.remove("album-wash-active");
+    albumWashClearTimer = window.setTimeout(() => {
+      washA.style.backgroundImage = "";
+      washB.style.backgroundImage = "";
+      albumWashClearTimer = null;
+    }, 3200);
+    return;
+  }
+
+  const current = activeAlbumWashLayer === 0 ? washA : washB;
+  const next = activeAlbumWashLayer === 0 ? washB : washA;
+  activeAlbumWashLayer = activeAlbumWashLayer === 0 ? 1 : 0;
+
+  next.style.backgroundImage = `url(${imageUrl})`;
+  // Force layout so the inactive layer starts at opacity 0 before it fades in.
+  void next.offsetWidth;
+  next.classList.add("album-wash-active");
+  current.classList.remove("album-wash-active");
+
+  albumWashClearTimer = window.setTimeout(() => {
+    current.style.backgroundImage = "";
+    albumWashClearTimer = null;
+  }, 3200);
+}
+
 export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): void {
   setTextIfChanged(qs("#trackTitle"), track.title);
   setTextIfChanged(qs("#trackArtist"), track.artist);
@@ -1699,18 +1744,14 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
   qs<HTMLElement>("#panelSeekBar").setAttribute("aria-valuenow", String(Math.round(percent)));
 
   const art = qs<HTMLDivElement>("#albumArt");
-  const wash = qs<HTMLDivElement>("#albumWash");
   if (track.albumArtUrl) {
     art.style.backgroundImage = `url(${track.albumArtUrl})`;
     art.innerHTML = "";
-    wash.style.backgroundImage = `url(${track.albumArtUrl})`;
-    wash.style.opacity = "0.10";
   } else {
     art.style.backgroundImage = "";
     art.innerHTML = "<span>♪</span>";
-    wash.style.backgroundImage = "";
-    wash.style.opacity = "0";
   }
+  updateAlbumWashCrossfade(track.albumArtUrl || "");
 
   const debug = qs<HTMLPreElement>("#debugPanel");
   debug.hidden = !debugOpen;
