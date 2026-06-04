@@ -9221,7 +9221,8 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 /* v66e: held A41 album and placed shelf album share the exact same cover treatment. */
 .song-change-album-cover,
-.placed-active-album-cover {
+.placed-active-album-cover,
+.next-up-album-cover {
   opacity: 1 !important;
   filter:
     brightness(0.72)
@@ -9231,7 +9232,8 @@ body.lyrics-marquee-unavailable .marquee::after {
 }
 
 .song-change-album-layer::after,
-.placed-active-album-layer::after {
+.placed-active-album-layer::after,
+.next-up-album-layer::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -13226,21 +13228,21 @@ body::after,
 
 /* v105: DJ record crate and next-up album staged behind the DJ. */
 :root {
-  --dj-crate-x: 46.2%;
-  --dj-crate-y: 62.8%;
+  --dj-crate-x: 64.0%;
+  --dj-crate-y: 72.1%;
   --dj-crate-scale: 0.42;
   --dj-crate-rotate: 0deg;
   --dj-crate-opacity: 1;
-  --next-up-album-x: 46.1%;
-  --next-up-album-y: 59.9%;
-  --next-up-album-size: 4.2%;
-  --next-up-album-rotate-x: 22deg;
-  --next-up-album-rotate-y: -8deg;
-  --next-up-album-rotate-z: -4deg;
-  --next-up-album-depth: 0.10;
-  --next-up-album-shadow: 0.72;
+  --next-up-album-x: 61.7%;
+  --next-up-album-y: 73.8%;
+  --next-up-album-size: 4.3%;
+  --next-up-album-rotate-x: 21deg;
+  --next-up-album-rotate-y: 52deg;
+  --next-up-album-rotate-z: -5deg;
+  --next-up-album-depth: 0.07;
+  --next-up-album-shadow: 0;
   --next-up-album-opacity: 1;
-  --next-up-album-crop-bottom: 18%;
+  --next-up-album-crop-bottom: 42.6%;
 }
 
 .dj-record-crate-layer {
@@ -13250,10 +13252,14 @@ body::after,
   width: calc(var(--room-w) * 0.22 * var(--dj-crate-scale));
   transform: translate(-50%, -50%) rotate(var(--dj-crate-rotate));
   transform-origin: 50% 80%;
-  z-index: 77;
+  z-index: 3;
   pointer-events: none;
   opacity: var(--dj-crate-opacity);
-  filter: drop-shadow(0 calc(var(--room-unit) * 7) calc(var(--room-unit) * 10) rgba(0,0,0,0.44));
+  filter:
+    brightness(0.72)
+    saturate(0.86)
+    contrast(0.94)
+    drop-shadow(0 calc(var(--room-unit) * 8) calc(var(--room-unit) * 11) rgba(0,0,0,0.54));
 }
 
 .dj-record-crate-image {
@@ -13261,6 +13267,18 @@ body::after,
   width: 100%;
   height: auto;
   image-rendering: auto;
+  filter: brightness(0.72) saturate(0.86) contrast(0.94);
+}
+
+.dj-record-crate-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(8, 12, 24, 0.18), rgba(3, 4, 8, 0.30)),
+    radial-gradient(circle at 35% 18%, rgba(255, 210, 130, 0.08), rgba(0, 0, 0, 0) 54%);
+  mix-blend-mode: normal;
 }
 
 .next-up-album-layer {
@@ -13269,7 +13287,7 @@ body::after,
   top: var(--next-up-album-y);
   width: var(--next-up-album-size);
   aspect-ratio: 1 / 1;
-  z-index: 78;
+  z-index: 3;
   pointer-events: none;
   opacity: 0;
   transform:
@@ -13304,7 +13322,10 @@ body::after,
   object-fit: cover;
   border-radius: 3%;
   clip-path: inset(0 0 var(--next-up-album-crop-bottom) 0);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12), inset 0 -10px 16px rgba(0,0,0,0.22);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.92),
+    inset 0 0 0 1px rgba(255,255,255,0.10),
+    inset 0 -10px 16px rgba(0,0,0,0.22);
 }
 
 .next-up-album-layer::after {
@@ -13334,11 +13355,11 @@ body::after,
   --no-lyrics-cone-start-x: 50%;
   --no-lyrics-cone-start-y: 0%;
   --no-lyrics-cone-start-size: 8%;
-  --no-lyrics-cone-fade: 0.72;
-  --no-lyrics-cone-feather: 5.2;
-  --no-lyrics-floor-dim: 0.20;
-  --no-lyrics-vignette: 0.22;
-  --no-lyrics-focus-fade: 5000ms;
+  --no-lyrics-cone-fade: 0.54;
+  --no-lyrics-cone-feather: 18;
+  --no-lyrics-floor-dim: 0;
+  --no-lyrics-vignette: 0;
+  --no-lyrics-focus-fade: 2000ms;
 }
 
 .no-lyrics-focus-layer {
@@ -13412,11 +13433,12 @@ body::after,
     0% 100%
   );
   background:
+    radial-gradient(ellipse 68% 96% at 50% 62%, rgba(255, 226, 164, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.34)) 0%, rgba(255, 204, 126, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.18)) 38%, rgba(255, 190, 100, 0) 76%),
     linear-gradient(
       180deg,
-      rgba(255, 238, 190, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.14)) 0%,
-      rgba(255, 222, 152, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.30)) 48%,
-      rgba(255, 190, 100, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.16)) 78%,
+      rgba(255, 238, 190, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.10)) 0%,
+      rgba(255, 222, 152, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.22)) 48%,
+      rgba(255, 190, 100, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.10)) 78%,
       rgba(255, 186, 92, 0) 100%
     );
   filter: blur(calc(var(--room-unit) * var(--no-lyrics-cone-feather)));

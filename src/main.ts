@@ -155,14 +155,15 @@ const DEFAULT_NO_LYRICS_FOCUS: NoLyricsFocusSettings = {
   coneStartX: 50,
   coneStartY: 0,
   coneStartSize: 8,
-  coneFade: 0.72,
-  coneFeather: 5.2,
-  floorDim: 0.20,
-  vignette: 0.22,
-  fadeMs: 5000,
+  coneFade: 0.54,
+  coneFeather: 18,
+  floorDim: 0,
+  vignette: 0,
+  fadeMs: 2000,
 };
 
 const NO_LYRICS_FOCUS_KEY = "pocketdj-no-lyrics-focus-v1";
+const NO_LYRICS_FOCUS_TUNING_MIGRATION_KEY = "pocketdj-v106-no-lyrics-focus-tuned-defaults";
 let noLyricsFocus = loadNoLyricsFocusSettings();
 
 type DjCrateNextUpSettings = {
@@ -187,29 +188,31 @@ type DjCrateNextUpSettings = {
 
 const DEFAULT_DJ_CRATE_NEXT_UP: DjCrateNextUpSettings = {
   crateEnabled: true,
-  crateX: 46.2,
-  crateY: 62.8,
+  crateX: 64.0,
+  crateY: 72.1,
   crateScale: 0.42,
   crateRotate: 0,
   crateOpacity: 1,
   nextEnabled: true,
-  nextX: 46.1,
-  nextY: 59.9,
-  nextSize: 4.2,
-  nextRotateX: 22,
-  nextRotateY: -8,
-  nextRotateZ: -4,
-  nextDepth: 0.10,
-  nextShadow: 0.72,
+  nextX: 61.7,
+  nextY: 73.8,
+  nextSize: 4.3,
+  nextRotateX: 21,
+  nextRotateY: 52,
+  nextRotateZ: -5,
+  nextDepth: 0.07,
+  nextShadow: 0,
   nextOpacity: 1,
-  nextCropBottom: 18,
+  nextCropBottom: 42.6,
 };
 
 const DJ_CRATE_NEXT_UP_KEY = "pocketdj-dj-crate-next-up-v1";
+const DJ_CRATE_NEXT_UP_TUNING_MIGRATION_KEY = "pocketdj-v106-crate-next-up-tuned-defaults";
 let djCrateNextUp = loadDjCrateNextUpSettings();
-let nextUpQueueTrack: SpotifyCatalogTrack | null = null;
+let nextUpQueueTracks: SpotifyCatalogTrack[] = [];
 let nextUpQueueLastFetchAt = 0;
 let nextUpQueueFetchInFlight = false;
+const preloadedNextUpAlbumUrls = new Set<string>();
 
 function clampDjCrateNextUpSettings(settings: Partial<DjCrateNextUpSettings>): DjCrateNextUpSettings {
   return {
@@ -245,6 +248,17 @@ function loadDjCrateNextUpSettings(): DjCrateNextUpSettings {
 
 function saveDjCrateNextUpSettings(): void {
   localStorage.setItem(DJ_CRATE_NEXT_UP_KEY, JSON.stringify(djCrateNextUp));
+}
+
+function applyDjCrateNextUpTuningMigration(): void {
+  try {
+    if (localStorage.getItem(DJ_CRATE_NEXT_UP_TUNING_MIGRATION_KEY) === "1") return;
+    djCrateNextUp = { ...DEFAULT_DJ_CRATE_NEXT_UP };
+    saveDjCrateNextUpSettings();
+    localStorage.setItem(DJ_CRATE_NEXT_UP_TUNING_MIGRATION_KEY, "1");
+  } catch (error) {
+    console.warn("Could not apply DJ crate / next-up tuning migration", error);
+  }
 }
 
 function applyDjCrateNextUpSettings(): void {
@@ -303,18 +317,18 @@ function clampNoLyricsFocus(settings: Partial<NoLyricsFocusSettings>): NoLyricsF
     enabled: settings.enabled ?? DEFAULT_NO_LYRICS_FOCUS.enabled,
     ceilingDim: Math.max(0, Math.min(0.75, Number(settings.ceilingDim ?? DEFAULT_NO_LYRICS_FOCUS.ceilingDim))),
     spotlight: Math.max(0, Math.min(0.9, Number(settings.spotlight ?? DEFAULT_NO_LYRICS_FOCUS.spotlight))),
-    cone: Math.max(0, Math.min(0.7, Number(settings.cone ?? DEFAULT_NO_LYRICS_FOCUS.cone))),
+    cone: Math.max(0, Math.min(1.2, Number(settings.cone ?? DEFAULT_NO_LYRICS_FOCUS.cone))),
     x: Math.max(0, Math.min(100, Number(settings.x ?? DEFAULT_NO_LYRICS_FOCUS.x))),
     y: Math.max(35, Math.min(95, Number(settings.y ?? DEFAULT_NO_LYRICS_FOCUS.y))),
-    size: Math.max(12, Math.min(80, Number(settings.size ?? DEFAULT_NO_LYRICS_FOCUS.size))),
+    size: Math.max(8, Math.min(140, Number(settings.size ?? DEFAULT_NO_LYRICS_FOCUS.size))),
     coneStartX: Math.max(0, Math.min(100, Number(settings.coneStartX ?? DEFAULT_NO_LYRICS_FOCUS.coneStartX))),
     coneStartY: Math.max(0, Math.min(35, Number(settings.coneStartY ?? DEFAULT_NO_LYRICS_FOCUS.coneStartY))),
-    coneStartSize: Math.max(0, Math.min(38, Number(settings.coneStartSize ?? DEFAULT_NO_LYRICS_FOCUS.coneStartSize))),
+    coneStartSize: Math.max(0, Math.min(120, Number(settings.coneStartSize ?? DEFAULT_NO_LYRICS_FOCUS.coneStartSize))),
     coneFade: Math.max(0, Math.min(1, Number(settings.coneFade ?? DEFAULT_NO_LYRICS_FOCUS.coneFade))),
-    coneFeather: Math.max(0, Math.min(18, Number(settings.coneFeather ?? DEFAULT_NO_LYRICS_FOCUS.coneFeather))),
+    coneFeather: Math.max(0, Math.min(80, Number(settings.coneFeather ?? DEFAULT_NO_LYRICS_FOCUS.coneFeather))),
     floorDim: Math.max(0, Math.min(0.65, Number(settings.floorDim ?? DEFAULT_NO_LYRICS_FOCUS.floorDim))),
     vignette: Math.max(0, Math.min(0.75, Number(settings.vignette ?? DEFAULT_NO_LYRICS_FOCUS.vignette))),
-    fadeMs: Math.max(250, Math.min(8000, Number(settings.fadeMs ?? DEFAULT_NO_LYRICS_FOCUS.fadeMs))),
+    fadeMs: Math.max(250, Math.min(12000, Number(settings.fadeMs ?? DEFAULT_NO_LYRICS_FOCUS.fadeMs))),
   };
 }
 
@@ -330,6 +344,17 @@ function loadNoLyricsFocusSettings(): NoLyricsFocusSettings {
 
 function saveNoLyricsFocusSettings(): void {
   localStorage.setItem(NO_LYRICS_FOCUS_KEY, JSON.stringify(noLyricsFocus));
+}
+
+function applyNoLyricsFocusTuningMigration(): void {
+  try {
+    if (localStorage.getItem(NO_LYRICS_FOCUS_TUNING_MIGRATION_KEY) === "1") return;
+    noLyricsFocus = { ...DEFAULT_NO_LYRICS_FOCUS };
+    saveNoLyricsFocusSettings();
+    localStorage.setItem(NO_LYRICS_FOCUS_TUNING_MIGRATION_KEY, "1");
+  } catch (error) {
+    console.warn("Could not apply no-lyrics focus tuning migration", error);
+  }
 }
 
 function applyNoLyricsFocusSettings(): void {
@@ -3497,6 +3522,8 @@ async function boot(): Promise<void> {
   applyPlacedActiveAlbumDimMigration();
   applyPlacedActiveAlbumOpaqueMigration();
   applyAmbientTwinkleUserEditMigration();
+  applyNoLyricsFocusTuningMigration();
+  applyDjCrateNextUpTuningMigration();
   applyRoomUtilitySettings();
   applyDjCrateNextUpSettings();
 
@@ -8878,12 +8905,28 @@ function songChangeAlbumIsInHands(): boolean {
   return Boolean(layer?.classList.contains("song-change-album-has-art") && isSongChangeRevealActive());
 }
 
+function preloadNextUpAlbumArt(track: SpotifyCatalogTrack | null | undefined): void {
+  const url = track?.albumArtUrl || "";
+  if (!url || preloadedNextUpAlbumUrls.has(url)) return;
+  preloadedNextUpAlbumUrls.add(url);
+  const image = new Image();
+  image.decoding = "async";
+  image.src = url;
+}
+
+function activeNextUpCrateTrack(): SpotifyCatalogTrack | null {
+  // While the DJ is holding the current next-up sleeve, the crate should already show the next-next sleeve.
+  const index = songChangeAlbumIsInHands() ? 1 : 0;
+  return nextUpQueueTracks[index] || null;
+}
+
 function updateNextUpAlbumVisual(): void {
   const layer = document.querySelector<HTMLElement>("#nextUpAlbumLayer");
   const image = document.querySelector<HTMLImageElement>("#nextUpAlbumCover");
   if (!layer || !image) return;
-  const coverUrl = nextUpQueueTrack?.albumArtUrl || "";
-  const show = Boolean(djCrateNextUp.nextEnabled && djCrateNextUp.crateEnabled && coverUrl && !songChangeAlbumIsInHands());
+  const track = activeNextUpCrateTrack();
+  const coverUrl = track?.albumArtUrl || "";
+  const show = Boolean(djCrateNextUp.nextEnabled && djCrateNextUp.crateEnabled && coverUrl);
   layer.classList.toggle("next-up-album-has-art", show);
   if (show && image.getAttribute("src") !== coverUrl) image.src = coverUrl;
   if (!show) image.removeAttribute("src");
@@ -8898,8 +8941,9 @@ async function refreshNextUpQueue(force = false): Promise<void> {
   nextUpQueueFetchInFlight = true;
   nextUpQueueLastFetchAt = now;
   try {
-    const queue = await getSpotifyQueue(state.spotifyClientId, 3);
-    nextUpQueueTrack = queue[0] || null;
+    const queue = await getSpotifyQueue(state.spotifyClientId, 4);
+    nextUpQueueTracks = queue.slice(0, 4);
+    nextUpQueueTracks.slice(0, 2).forEach(preloadNextUpAlbumArt);
     updateNextUpAlbumVisual();
   } catch (error) {
     console.warn("Could not refresh next-up queue album", error);

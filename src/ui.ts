@@ -290,7 +290,7 @@ export function renderShell(state: AppState): void {
               Warp albums to frame corners
             </label>
             <label class="session-album-pixel-control">Album pixel effect <span id="sessionAlbumPixelAmountValue">0.72</span>
-              <input id="sessionAlbumPixelAmount" type="range" min="0" max="1" step="0.01" value="0.72" />
+              <input id="sessionAlbumPixelAmount" type="range" min="0" max="1" step="0.01" value="0" />
             </label>
             <label class="session-album-pixel-control">Album warm blend <span id="sessionAlbumWarmBlendValue">0.54</span>
               <input id="sessionAlbumWarmBlend" type="range" min="0" max="1" step="0.01" value="0.54" />
@@ -937,7 +937,7 @@ export function renderShell(state: AppState): void {
                     <input id="lyricPosterTallMidTwoTopTRY" type="range" min="-2500" max="2500" step="1" value="-238" />
                   </label>
                   <label>2-row top BR X offset <span id="lyricPosterTallMidTwoTopBRXValue">-8</span>
-                    <input id="lyricPosterTallMidTwoTopBRX" type="range" min="-2500" max="2500" step="1" value="-8" />
+                    <input id="lyricPosterTallMidTwoTopBRX" type="range" min="-2500" max="2500" step="1" value="52" />
                   </label>
                   <label>2-row top BR Y offset <span id="lyricPosterTallMidTwoTopBRYValue">0</span>
                     <input id="lyricPosterTallMidTwoTopBRY" type="range" min="-2500" max="2500" step="1" value="0" />
@@ -1425,7 +1425,7 @@ export function renderShell(state: AppState): void {
                 <input id="menu2NoLyricsSpotlight" type="range" min="0" max="0.9" step="0.01" value="0.33" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Cone strength <span id="menu2NoLyricsConeValue">0.29</span>
-                <input id="menu2NoLyricsCone" type="range" min="0" max="0.7" step="0.01" value="0.29" />
+                <input id="menu2NoLyricsCone" type="range" min="0" max="1.2" step="0.01" value="0.29" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Spotlight X % <span id="menu2NoLyricsSpotlightXValue">50</span>
                 <input id="menu2NoLyricsSpotlightX" type="range" min="0" max="100" step="0.1" value="50" />
@@ -1434,7 +1434,7 @@ export function renderShell(state: AppState): void {
                 <input id="menu2NoLyricsSpotlightY" type="range" min="35" max="95" step="0.1" value="75" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Spotlight size % <span id="menu2NoLyricsSpotlightSizeValue">34</span>
-                <input id="menu2NoLyricsSpotlightSize" type="range" min="12" max="80" step="0.1" value="34" />
+                <input id="menu2NoLyricsSpotlightSize" type="range" min="8" max="140" step="0.1" value="34" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Cone start X % <span id="menu2NoLyricsConeStartXValue">50</span>
                 <input id="menu2NoLyricsConeStartX" type="range" min="0" max="100" step="0.1" value="50" />
@@ -1443,33 +1443,33 @@ export function renderShell(state: AppState): void {
                 <input id="menu2NoLyricsConeStartY" type="range" min="0" max="35" step="0.1" value="0" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Cone start size % <span id="menu2NoLyricsConeStartSizeValue">8</span>
-                <input id="menu2NoLyricsConeStartSize" type="range" min="0" max="38" step="0.1" value="8" />
+                <input id="menu2NoLyricsConeStartSize" type="range" min="0" max="120" step="0.1" value="8" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Cone fade amount <span id="menu2NoLyricsConeFadeValue">0.72</span>
-                <input id="menu2NoLyricsConeFade" type="range" min="0" max="1" step="0.01" value="0.72" />
+              <label class="menu2-setting menu2-slider-setting">Cone fade amount <span id="menu2NoLyricsConeFadeValue">0.54</span>
+                <input id="menu2NoLyricsConeFade" type="range" min="0" max="1" step="0.01" value="0.54" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Cone feather / blur <span id="menu2NoLyricsConeFeatherValue">5.2</span>
-                <input id="menu2NoLyricsConeFeather" type="range" min="0" max="18" step="0.1" value="5.2" />
+              <label class="menu2-setting menu2-slider-setting">Cone feather / blur <span id="menu2NoLyricsConeFeatherValue">18.0</span>
+                <input id="menu2NoLyricsConeFeather" type="range" min="0" max="80" step="0.1" value="18" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Floor dim <span id="menu2NoLyricsFloorDimValue">0.20</span>
-                <input id="menu2NoLyricsFloorDim" type="range" min="0" max="0.65" step="0.01" value="0.20" />
+              <label class="menu2-setting menu2-slider-setting">Floor dim <span id="menu2NoLyricsFloorDimValue">0.00</span>
+                <input id="menu2NoLyricsFloorDim" type="range" min="0" max="0.65" step="0.01" value="0" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Scene vignette <span id="menu2NoLyricsVignetteValue">0.22</span>
-                <input id="menu2NoLyricsVignette" type="range" min="0" max="0.75" step="0.01" value="0.22" />
+              <label class="menu2-setting menu2-slider-setting">Scene vignette <span id="menu2NoLyricsVignetteValue">0.00</span>
+                <input id="menu2NoLyricsVignette" type="range" min="0" max="0.75" step="0.01" value="0" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Fade ms <span id="menu2NoLyricsFadeValue">5000</span>
-                <input id="menu2NoLyricsFade" type="range" min="250" max="8000" step="50" value="5000" />
+              <label class="menu2-setting menu2-slider-setting">Fade ms <span id="menu2NoLyricsFadeValue">2000</span>
+                <input id="menu2NoLyricsFade" type="range" min="250" max="12000" step="50" value="2000" />
               </label>
               <button id="menu2NoLyricsFocusReset" class="menu2-action menu2-wide-action" type="button">Reset No Lyrics Focus</button>
             </div>
             <div class="menu2-dev-subsection">
               <div class="menu2-section-head menu2-subsection-head"><h3>Record Crate / Next Up</h3><span>Queue album staging</span></div>
               <label class="menu2-setting menu2-toggle-setting"><input id="menu2DjCrateEnabled" type="checkbox" /> Show DJ record crate</label>
-              <label class="menu2-setting menu2-slider-setting">Crate X % <span id="menu2DjCrateXValue">46.2</span>
-                <input id="menu2DjCrateX" type="range" min="0" max="100" step="0.1" value="46.2" />
+              <label class="menu2-setting menu2-slider-setting">Crate X % <span id="menu2DjCrateXValue">64.0</span>
+                <input id="menu2DjCrateX" type="range" min="0" max="100" step="0.1" value="64" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Crate Y % <span id="menu2DjCrateYValue">62.8</span>
-                <input id="menu2DjCrateY" type="range" min="0" max="100" step="0.1" value="62.8" />
+              <label class="menu2-setting menu2-slider-setting">Crate Y % <span id="menu2DjCrateYValue">72.1</span>
+                <input id="menu2DjCrateY" type="range" min="0" max="100" step="0.1" value="72.1" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Crate scale <span id="menu2DjCrateScaleValue">0.42</span>
                 <input id="menu2DjCrateScale" type="range" min="0.05" max="2" step="0.01" value="0.42" />
@@ -1481,35 +1481,35 @@ export function renderShell(state: AppState): void {
                 <input id="menu2DjCrateOpacity" type="range" min="0" max="1" step="0.01" value="1" />
               </label>
               <label class="menu2-setting menu2-toggle-setting"><input id="menu2NextUpAlbumEnabled" type="checkbox" /> Show next-up album in crate</label>
-              <label class="menu2-setting menu2-slider-setting">Next album X % <span id="menu2NextUpAlbumXValue">46.1</span>
-                <input id="menu2NextUpAlbumX" type="range" min="0" max="100" step="0.1" value="46.1" />
+              <label class="menu2-setting menu2-slider-setting">Next album X % <span id="menu2NextUpAlbumXValue">61.7</span>
+                <input id="menu2NextUpAlbumX" type="range" min="0" max="100" step="0.1" value="61.7" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Next album Y % <span id="menu2NextUpAlbumYValue">59.9</span>
-                <input id="menu2NextUpAlbumY" type="range" min="0" max="100" step="0.1" value="59.9" />
+              <label class="menu2-setting menu2-slider-setting">Next album Y % <span id="menu2NextUpAlbumYValue">73.8</span>
+                <input id="menu2NextUpAlbumY" type="range" min="0" max="100" step="0.1" value="73.8" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Next album size % <span id="menu2NextUpAlbumSizeValue">4.2</span>
-                <input id="menu2NextUpAlbumSize" type="range" min="1" max="18" step="0.1" value="4.2" />
+              <label class="menu2-setting menu2-slider-setting">Next album size % <span id="menu2NextUpAlbumSizeValue">4.3</span>
+                <input id="menu2NextUpAlbumSize" type="range" min="1" max="18" step="0.1" value="4.3" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Rotate X deg <span id="menu2NextUpAlbumRotateXValue">22</span>
-                <input id="menu2NextUpAlbumRotateX" type="range" min="-70" max="70" step="1" value="22" />
+              <label class="menu2-setting menu2-slider-setting">Rotate X deg <span id="menu2NextUpAlbumRotateXValue">21</span>
+                <input id="menu2NextUpAlbumRotateX" type="range" min="-70" max="70" step="1" value="21" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Rotate Y deg <span id="menu2NextUpAlbumRotateYValue">-8</span>
-                <input id="menu2NextUpAlbumRotateY" type="range" min="-70" max="70" step="1" value="-8" />
+              <label class="menu2-setting menu2-slider-setting">Rotate Y deg <span id="menu2NextUpAlbumRotateYValue">52</span>
+                <input id="menu2NextUpAlbumRotateY" type="range" min="-70" max="70" step="1" value="52" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Rotate Z deg <span id="menu2NextUpAlbumRotateZValue">-4</span>
-                <input id="menu2NextUpAlbumRotateZ" type="range" min="-60" max="60" step="1" value="-4" />
+              <label class="menu2-setting menu2-slider-setting">Rotate Z deg <span id="menu2NextUpAlbumRotateZValue">-5</span>
+                <input id="menu2NextUpAlbumRotateZ" type="range" min="-60" max="60" step="1" value="-5" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Album depth <span id="menu2NextUpAlbumDepthValue">0.10</span>
-                <input id="menu2NextUpAlbumDepth" type="range" min="0" max="0.8" step="0.01" value="0.10" />
+              <label class="menu2-setting menu2-slider-setting">Album depth <span id="menu2NextUpAlbumDepthValue">0.07</span>
+                <input id="menu2NextUpAlbumDepth" type="range" min="0" max="0.8" step="0.01" value="0.07" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Drop shadow <span id="menu2NextUpAlbumShadowValue">0.72</span>
-                <input id="menu2NextUpAlbumShadow" type="range" min="0" max="1.5" step="0.01" value="0.72" />
+              <label class="menu2-setting menu2-slider-setting">Drop shadow <span id="menu2NextUpAlbumShadowValue">0.00</span>
+                <input id="menu2NextUpAlbumShadow" type="range" min="0" max="1.5" step="0.01" value="0" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Album opacity <span id="menu2NextUpAlbumOpacityValue">1.00</span>
                 <input id="menu2NextUpAlbumOpacity" type="range" min="0" max="1" step="0.01" value="1" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Crop from bottom % <span id="menu2NextUpAlbumCropBottomValue">18.0</span>
-                <input id="menu2NextUpAlbumCropBottom" type="range" min="0" max="70" step="0.1" value="18" />
+              <label class="menu2-setting menu2-slider-setting">Crop from bottom % <span id="menu2NextUpAlbumCropBottomValue">42.6</span>
+                <input id="menu2NextUpAlbumCropBottom" type="range" min="0" max="70" step="0.1" value="42.6" />
               </label>
               <button id="menu2DjCrateReset" class="menu2-action menu2-wide-action" type="button">Reset Crate / Next Up</button>
             </div>
