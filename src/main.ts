@@ -62,6 +62,8 @@ const state: AppState = {
 
 let useDemo = false;
 let pollTimer: number | null = null;
+const PLAYBACK_COMMAND_SETTLE_MS = 4_500;
+let playbackCommandIntent: { isPlaying: boolean; until: number; trackId: string; progressMs: number; updatedAt: number } | null = null;
 let dj: DjController;
 let lastPollError = "";
 let panelAutoHiddenAfterConnect = false;
@@ -4959,25 +4961,79 @@ function toggleMenu2ConnectMenu(force?: boolean): void {
   button.setAttribute("aria-expanded", String(open));
 }
 
-function setMenu2PlaybackOptimistic(isPlaying: boolean): void {
+function setPlaybackCommandIntent(isPlaying: boolean): void {
+  const progressMs = getEstimatedPlaybackProgress(state.playback);
+  const now = Date.now();
+  playbackCommandIntent = {
+    isPlaying,
+    until: now + PLAYBACK_COMMAND_SETTLE_MS,
+    trackId: state.playback.trackId || "",
+    progressMs,
+    updatedAt: now,
+  };
   state.playback = {
     ...state.playback,
     isPlaying,
-    progressMs: getEstimatedPlaybackProgress(state.playback),
-    updatedAt: Date.now(),
+    progressMs,
+    updatedAt: now,
   };
   updatePlaybackUi(state.playback, state.debugOpen);
   renderMenu2NowPlaying();
   syncMenu2Bubble();
+  syncMenu2Dock();
 }
 
-function runMenu2PlayPause(): void {
+function clearPlaybackCommandIntent(): void {
+  playbackCommandIntent = null;
+}
+
+function reconcilePolledPlaybackWithIntent(polled: AppState["playback"]): AppState["playback"] {
+  const intent = playbackCommandIntent;
+  if (!intent) return polled;
+  const now = Date.now();
+  const sameTrack = !intent.trackId || !polled.trackId || polled.trackId === intent.trackId;
+
+  if (!sameTrack) {
+    clearPlaybackCommandIntent();
+    return polled;
+  }
+
+  if (polled.isPlaying === intent.isPlaying) {
+    clearPlaybackCommandIntent();
+    return polled;
+  }
+
+  if (now <= intent.until) {
+    // Spotify Web API can briefly return the pre-command play/pause state after a
+    // successful toggle. Keep the requested state as the source of truth during
+    // this short settling window so the DJ/room do not bounce active -> idle -> active.
+    const optimisticProgress = intent.isPlaying
+      ? Math.max(polled.progressMs || 0, intent.progressMs + (now - intent.updatedAt))
+      : intent.progressMs;
+    return {
+      ...polled,
+      isPlaying: intent.isPlaying,
+      progressMs: Math.min(polled.durationMs || optimisticProgress, optimisticProgress),
+      updatedAt: now,
+    };
+  }
+
+  clearPlaybackCommandIntent();
+  return polled;
+}
+
+function runPlayPauseToggle(): void {
   const wasPlaying = state.playback.isPlaying;
-  setMenu2PlaybackOptimistic(!wasPlaying);
+  const nextPlaying = !wasPlaying;
+  setPlaybackCommandIntent(nextPlaying);
   void runSpotifyPlaybackCommand(async () => {
     if (wasPlaying) await pauseSpotify(state.spotifyClientId);
     else await playSpotify(state.spotifyClientId);
   });
+}
+
+function runMenu2PlayPause(): void {
+  runPlayPauseToggle();
 }
 
 function scheduleMenu2BubbleVolumeHide(): void {
@@ -5711,12 +5767,7 @@ function bindFloorPlaybackControls(): void {
 
   setFloorControlsOpen(true);
 
-  qs<HTMLButtonElement>("#floorPlayButton").addEventListener("click", () => {
-    void runSpotifyPlaybackCommand(async () => {
-      if (state.playback.isPlaying) await pauseSpotify(state.spotifyClientId);
-      else await playSpotify(state.spotifyClientId);
-    });
-  });
+  qs<HTMLButtonElement>("#floorPlayButton").addEventListener("click", runPlayPauseToggle);
 
   qs<HTMLButtonElement>("#floorNextButton").addEventListener("click", () => {
     void runSpotifyPlaybackCommand(async () => {
@@ -5743,12 +5794,7 @@ function bindFloorPlaybackControls(): void {
     setFloorControlsOpen(true, false);
   });
 
-  qs<HTMLButtonElement>("#panelPlayButton").addEventListener("click", () => {
-    void runSpotifyPlaybackCommand(async () => {
-      if (state.playback.isPlaying) await pauseSpotify(state.spotifyClientId);
-      else await playSpotify(state.spotifyClientId);
-    });
-  });
+  qs<HTMLButtonElement>("#panelPlayButton").addEventListener("click", runPlayPauseToggle);
 
   qs<HTMLButtonElement>("#panelNextButton").addEventListener("click", () => {
     void runSpotifyPlaybackCommand(async () => {
@@ -5916,6 +5962,7 @@ async function runSpotifyPlaybackCommand(command: () => Promise<void>): Promise<
     await pollSpotifyNow();
     setFloorControlsOpen(true);
   } catch (error) {
+    clearPlaybackCommandIntent();
     const message = error instanceof Error ? error.message : String(error);
     const lowerMessage = message.toLowerCase();
     const canAutoStartPocketDj =
@@ -9508,7 +9555,8 @@ async function pollSpotifyNow(): Promise<void> {
 
   try {
     lastPollError = "";
-    state.playback = await getCurrentlyPlaying(state.spotifyClientId);
+    const polledPlayback = await getCurrentlyPlaying(state.spotifyClientId);
+    state.playback = reconcilePolledPlaybackWithIntent(polledPlayback);
     updatePlaybackUi(state.playback, state.debugOpen);
     void refreshLyricsForCurrentTrack();
 
