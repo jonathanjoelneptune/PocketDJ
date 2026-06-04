@@ -50,6 +50,8 @@ export function renderShell(state: AppState): void {
         <svg id="tallLyricGuideOverlay" class="tall-lyric-guide-overlay" viewBox="0 0 1764 529" preserveAspectRatio="none" aria-hidden="true"></svg>
         <div id="noLyricsFocusLayer" class="no-lyrics-focus-layer" aria-hidden="true">
           <div class="no-lyrics-ceiling-dim"></div>
+          <div class="no-lyrics-floor-dim"></div>
+          <div class="no-lyrics-room-vignette"></div>
           <div class="no-lyrics-spotlight-cone"></div>
           <div class="no-lyrics-spotlight-pool"></div>
         </div>
@@ -73,6 +75,14 @@ export function renderShell(state: AppState): void {
         <div id="placedActiveAlbumLayer" class="placed-active-album-layer" aria-hidden="true">
           <div class="placed-active-album-depth" aria-hidden="true"></div>
           <img id="placedActiveAlbumCover" class="placed-active-album-cover" src="" alt="" draggable="false" />
+        </div>
+
+        <div id="djRecordCrateLayer" class="dj-record-crate-layer" aria-hidden="true">
+          <img id="djRecordCrateImage" class="dj-record-crate-image" src="https://raw.githubusercontent.com/jonathanjoelneptune/PocketDJ/main/public/assets/DJ%20Record%20Crate.png" alt="" draggable="false" />
+        </div>
+        <div id="nextUpAlbumLayer" class="next-up-album-layer" aria-hidden="true">
+          <div class="next-up-album-depth" aria-hidden="true"></div>
+          <img id="nextUpAlbumCover" class="next-up-album-cover" src="" alt="" draggable="false" />
         </div>
 
         <div class="marquee marquee-empty" aria-live="polite">
@@ -1438,10 +1448,70 @@ export function renderShell(state: AppState): void {
               <label class="menu2-setting menu2-slider-setting">Cone fade amount <span id="menu2NoLyricsConeFadeValue">0.72</span>
                 <input id="menu2NoLyricsConeFade" type="range" min="0" max="1" step="0.01" value="0.72" />
               </label>
+              <label class="menu2-setting menu2-slider-setting">Cone feather / blur <span id="menu2NoLyricsConeFeatherValue">5.2</span>
+                <input id="menu2NoLyricsConeFeather" type="range" min="0" max="18" step="0.1" value="5.2" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Floor dim <span id="menu2NoLyricsFloorDimValue">0.20</span>
+                <input id="menu2NoLyricsFloorDim" type="range" min="0" max="0.65" step="0.01" value="0.20" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Scene vignette <span id="menu2NoLyricsVignetteValue">0.22</span>
+                <input id="menu2NoLyricsVignette" type="range" min="0" max="0.75" step="0.01" value="0.22" />
+              </label>
               <label class="menu2-setting menu2-slider-setting">Fade ms <span id="menu2NoLyricsFadeValue">5000</span>
                 <input id="menu2NoLyricsFade" type="range" min="250" max="8000" step="50" value="5000" />
               </label>
               <button id="menu2NoLyricsFocusReset" class="menu2-action menu2-wide-action" type="button">Reset No Lyrics Focus</button>
+            </div>
+            <div class="menu2-dev-subsection">
+              <div class="menu2-section-head menu2-subsection-head"><h3>Record Crate / Next Up</h3><span>Queue album staging</span></div>
+              <label class="menu2-setting menu2-toggle-setting"><input id="menu2DjCrateEnabled" type="checkbox" /> Show DJ record crate</label>
+              <label class="menu2-setting menu2-slider-setting">Crate X % <span id="menu2DjCrateXValue">46.2</span>
+                <input id="menu2DjCrateX" type="range" min="0" max="100" step="0.1" value="46.2" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Crate Y % <span id="menu2DjCrateYValue">62.8</span>
+                <input id="menu2DjCrateY" type="range" min="0" max="100" step="0.1" value="62.8" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Crate scale <span id="menu2DjCrateScaleValue">0.42</span>
+                <input id="menu2DjCrateScale" type="range" min="0.05" max="2" step="0.01" value="0.42" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Crate rotate deg <span id="menu2DjCrateRotateValue">0</span>
+                <input id="menu2DjCrateRotate" type="range" min="-45" max="45" step="1" value="0" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Crate opacity <span id="menu2DjCrateOpacityValue">1.00</span>
+                <input id="menu2DjCrateOpacity" type="range" min="0" max="1" step="0.01" value="1" />
+              </label>
+              <label class="menu2-setting menu2-toggle-setting"><input id="menu2NextUpAlbumEnabled" type="checkbox" /> Show next-up album in crate</label>
+              <label class="menu2-setting menu2-slider-setting">Next album X % <span id="menu2NextUpAlbumXValue">46.1</span>
+                <input id="menu2NextUpAlbumX" type="range" min="0" max="100" step="0.1" value="46.1" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Next album Y % <span id="menu2NextUpAlbumYValue">59.9</span>
+                <input id="menu2NextUpAlbumY" type="range" min="0" max="100" step="0.1" value="59.9" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Next album size % <span id="menu2NextUpAlbumSizeValue">4.2</span>
+                <input id="menu2NextUpAlbumSize" type="range" min="1" max="18" step="0.1" value="4.2" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Rotate X deg <span id="menu2NextUpAlbumRotateXValue">22</span>
+                <input id="menu2NextUpAlbumRotateX" type="range" min="-70" max="70" step="1" value="22" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Rotate Y deg <span id="menu2NextUpAlbumRotateYValue">-8</span>
+                <input id="menu2NextUpAlbumRotateY" type="range" min="-70" max="70" step="1" value="-8" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Rotate Z deg <span id="menu2NextUpAlbumRotateZValue">-4</span>
+                <input id="menu2NextUpAlbumRotateZ" type="range" min="-60" max="60" step="1" value="-4" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Album depth <span id="menu2NextUpAlbumDepthValue">0.10</span>
+                <input id="menu2NextUpAlbumDepth" type="range" min="0" max="0.8" step="0.01" value="0.10" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Drop shadow <span id="menu2NextUpAlbumShadowValue">0.72</span>
+                <input id="menu2NextUpAlbumShadow" type="range" min="0" max="1.5" step="0.01" value="0.72" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Album opacity <span id="menu2NextUpAlbumOpacityValue">1.00</span>
+                <input id="menu2NextUpAlbumOpacity" type="range" min="0" max="1" step="0.01" value="1" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Crop from bottom % <span id="menu2NextUpAlbumCropBottomValue">18.0</span>
+                <input id="menu2NextUpAlbumCropBottom" type="range" min="0" max="70" step="0.1" value="18" />
+              </label>
+              <button id="menu2DjCrateReset" class="menu2-action menu2-wide-action" type="button">Reset Crate / Next Up</button>
             </div>
             <button id="menu2OpenCurrentUtility" class="menu2-action menu2-wide-action" type="button" aria-pressed="false">Open Advanced Utility Panel</button>
             <label class="menu2-setting menu2-toggle-setting"><input id="menu2ShowFloorControls" type="checkbox" /> Show legacy floor controls</label>

@@ -13223,7 +13223,107 @@ body::after,
   display: none !important;
 }
 
-/* v103: No Lyrics Focus Mode, a subtle blank-ceiling fallback with a soft DJ spotlight. */
+
+/* v105: DJ record crate and next-up album staged behind the DJ. */
+:root {
+  --dj-crate-x: 46.2%;
+  --dj-crate-y: 62.8%;
+  --dj-crate-scale: 0.42;
+  --dj-crate-rotate: 0deg;
+  --dj-crate-opacity: 1;
+  --next-up-album-x: 46.1%;
+  --next-up-album-y: 59.9%;
+  --next-up-album-size: 4.2%;
+  --next-up-album-rotate-x: 22deg;
+  --next-up-album-rotate-y: -8deg;
+  --next-up-album-rotate-z: -4deg;
+  --next-up-album-depth: 0.10;
+  --next-up-album-shadow: 0.72;
+  --next-up-album-opacity: 1;
+  --next-up-album-crop-bottom: 18%;
+}
+
+.dj-record-crate-layer {
+  position: absolute;
+  left: var(--dj-crate-x);
+  top: var(--dj-crate-y);
+  width: calc(var(--room-w) * 0.22 * var(--dj-crate-scale));
+  transform: translate(-50%, -50%) rotate(var(--dj-crate-rotate));
+  transform-origin: 50% 80%;
+  z-index: 77;
+  pointer-events: none;
+  opacity: var(--dj-crate-opacity);
+  filter: drop-shadow(0 calc(var(--room-unit) * 7) calc(var(--room-unit) * 10) rgba(0,0,0,0.44));
+}
+
+.dj-record-crate-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: auto;
+}
+
+.next-up-album-layer {
+  position: absolute;
+  left: var(--next-up-album-x);
+  top: var(--next-up-album-y);
+  width: var(--next-up-album-size);
+  aspect-ratio: 1 / 1;
+  z-index: 78;
+  pointer-events: none;
+  opacity: 0;
+  transform:
+    translate(-50%, -100%)
+    perspective(calc(var(--room-w) * 0.42))
+    rotateX(var(--next-up-album-rotate-x))
+    rotateY(var(--next-up-album-rotate-y))
+    rotateZ(var(--next-up-album-rotate-z));
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 calc(var(--room-unit) * 5) calc(var(--room-unit) * 8) rgba(0,0,0,calc(var(--next-up-album-shadow) * 0.72)));
+}
+
+.next-up-album-layer.next-up-album-has-art {
+  opacity: var(--next-up-album-opacity);
+}
+
+.next-up-album-depth {
+  position: absolute;
+  inset: 3% -4% -5% 5%;
+  border-radius: 3%;
+  background: linear-gradient(135deg, rgba(32,20,12,0.8), rgba(9,6,4,0.72));
+  transform: translate(calc(var(--next-up-album-depth) * var(--room-unit) * 14), calc(var(--next-up-album-depth) * var(--room-unit) * 10));
+  opacity: calc(0.25 + var(--next-up-album-depth) * 0.5);
+}
+
+.next-up-album-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 3%;
+  clip-path: inset(0 0 var(--next-up-album-crop-bottom) 0);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12), inset 0 -10px 16px rgba(0,0,0,0.22);
+}
+
+.next-up-album-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 3%;
+  clip-path: inset(0 0 var(--next-up-album-crop-bottom) 0);
+  background: linear-gradient(180deg, rgba(255,230,180,0.08), rgba(0,0,0,0.24));
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.dj-record-crate-disabled .dj-record-crate-layer,
+.next-up-album-disabled .next-up-album-layer {
+  opacity: 0 !important;
+}
+
+/* v103/v105: No Lyrics Focus Mode, a subtle blank-ceiling fallback with a soft DJ spotlight. */
 :root {
   --no-lyrics-ceiling-dim: 0.75;
   --no-lyrics-spotlight: 0.33;
@@ -13235,6 +13335,9 @@ body::after,
   --no-lyrics-cone-start-y: 0%;
   --no-lyrics-cone-start-size: 8%;
   --no-lyrics-cone-fade: 0.72;
+  --no-lyrics-cone-feather: 5.2;
+  --no-lyrics-floor-dim: 0.20;
+  --no-lyrics-vignette: 0.22;
   --no-lyrics-focus-fade: 5000ms;
 }
 
@@ -13257,6 +13360,8 @@ body::after,
 }
 
 .no-lyrics-ceiling-dim,
+.no-lyrics-floor-dim,
+.no-lyrics-room-vignette,
 .no-lyrics-spotlight-cone,
 .no-lyrics-spotlight-pool {
   position: absolute;
@@ -13276,6 +13381,22 @@ body::after,
       rgba(0, 0, 0, calc(var(--no-lyrics-ceiling-dim) * 0.18)) 82%,
       rgba(0, 0, 0, 0) 100%
     );
+}
+
+.no-lyrics-floor-dim {
+  left: 0;
+  top: 54%;
+  width: 100%;
+  height: 46%;
+  background:
+    radial-gradient(ellipse 42% 26% at var(--no-lyrics-spotlight-x) var(--no-lyrics-spotlight-y), rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, calc(var(--no-lyrics-floor-dim) * 0.26)) 58%, rgba(0, 0, 0, calc(var(--no-lyrics-floor-dim) * 0.75)) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, calc(var(--no-lyrics-floor-dim) * 0.76)) 100%);
+}
+
+.no-lyrics-room-vignette {
+  inset: 0;
+  background:
+    radial-gradient(ellipse 62% 52% at var(--no-lyrics-spotlight-x) var(--no-lyrics-spotlight-y), rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, calc(var(--no-lyrics-vignette) * 0.28)) 58%, rgba(0, 0, 0, calc(var(--no-lyrics-vignette) * 0.92)) 100%);
 }
 
 .no-lyrics-spotlight-cone {
@@ -13298,7 +13419,7 @@ body::after,
       rgba(255, 190, 100, calc(var(--no-lyrics-cone) * var(--no-lyrics-cone-fade) * 0.16)) 78%,
       rgba(255, 186, 92, 0) 100%
     );
-  filter: blur(calc(var(--room-unit) * 2.6));
+  filter: blur(calc(var(--room-unit) * var(--no-lyrics-cone-feather)));
   mix-blend-mode: screen;
 }
 

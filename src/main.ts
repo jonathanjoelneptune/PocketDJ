@@ -138,6 +138,9 @@ type NoLyricsFocusSettings = {
   coneStartY: number;
   coneStartSize: number;
   coneFade: number;
+  coneFeather: number;
+  floorDim: number;
+  vignette: number;
   fadeMs: number;
 };
 
@@ -153,11 +156,147 @@ const DEFAULT_NO_LYRICS_FOCUS: NoLyricsFocusSettings = {
   coneStartY: 0,
   coneStartSize: 8,
   coneFade: 0.72,
+  coneFeather: 5.2,
+  floorDim: 0.20,
+  vignette: 0.22,
   fadeMs: 5000,
 };
 
 const NO_LYRICS_FOCUS_KEY = "pocketdj-no-lyrics-focus-v1";
 let noLyricsFocus = loadNoLyricsFocusSettings();
+
+type DjCrateNextUpSettings = {
+  crateEnabled: boolean;
+  crateX: number;
+  crateY: number;
+  crateScale: number;
+  crateRotate: number;
+  crateOpacity: number;
+  nextEnabled: boolean;
+  nextX: number;
+  nextY: number;
+  nextSize: number;
+  nextRotateX: number;
+  nextRotateY: number;
+  nextRotateZ: number;
+  nextDepth: number;
+  nextShadow: number;
+  nextOpacity: number;
+  nextCropBottom: number;
+};
+
+const DEFAULT_DJ_CRATE_NEXT_UP: DjCrateNextUpSettings = {
+  crateEnabled: true,
+  crateX: 46.2,
+  crateY: 62.8,
+  crateScale: 0.42,
+  crateRotate: 0,
+  crateOpacity: 1,
+  nextEnabled: true,
+  nextX: 46.1,
+  nextY: 59.9,
+  nextSize: 4.2,
+  nextRotateX: 22,
+  nextRotateY: -8,
+  nextRotateZ: -4,
+  nextDepth: 0.10,
+  nextShadow: 0.72,
+  nextOpacity: 1,
+  nextCropBottom: 18,
+};
+
+const DJ_CRATE_NEXT_UP_KEY = "pocketdj-dj-crate-next-up-v1";
+let djCrateNextUp = loadDjCrateNextUpSettings();
+let nextUpQueueTrack: SpotifyCatalogTrack | null = null;
+let nextUpQueueLastFetchAt = 0;
+let nextUpQueueFetchInFlight = false;
+
+function clampDjCrateNextUpSettings(settings: Partial<DjCrateNextUpSettings>): DjCrateNextUpSettings {
+  return {
+    crateEnabled: settings.crateEnabled ?? DEFAULT_DJ_CRATE_NEXT_UP.crateEnabled,
+    crateX: Math.max(0, Math.min(100, Number(settings.crateX ?? DEFAULT_DJ_CRATE_NEXT_UP.crateX))),
+    crateY: Math.max(0, Math.min(100, Number(settings.crateY ?? DEFAULT_DJ_CRATE_NEXT_UP.crateY))),
+    crateScale: Math.max(0.05, Math.min(2, Number(settings.crateScale ?? DEFAULT_DJ_CRATE_NEXT_UP.crateScale))),
+    crateRotate: Math.max(-45, Math.min(45, Number(settings.crateRotate ?? DEFAULT_DJ_CRATE_NEXT_UP.crateRotate))),
+    crateOpacity: Math.max(0, Math.min(1, Number(settings.crateOpacity ?? DEFAULT_DJ_CRATE_NEXT_UP.crateOpacity))),
+    nextEnabled: settings.nextEnabled ?? DEFAULT_DJ_CRATE_NEXT_UP.nextEnabled,
+    nextX: Math.max(0, Math.min(100, Number(settings.nextX ?? DEFAULT_DJ_CRATE_NEXT_UP.nextX))),
+    nextY: Math.max(0, Math.min(100, Number(settings.nextY ?? DEFAULT_DJ_CRATE_NEXT_UP.nextY))),
+    nextSize: Math.max(1, Math.min(18, Number(settings.nextSize ?? DEFAULT_DJ_CRATE_NEXT_UP.nextSize))),
+    nextRotateX: Math.max(-70, Math.min(70, Number(settings.nextRotateX ?? DEFAULT_DJ_CRATE_NEXT_UP.nextRotateX))),
+    nextRotateY: Math.max(-70, Math.min(70, Number(settings.nextRotateY ?? DEFAULT_DJ_CRATE_NEXT_UP.nextRotateY))),
+    nextRotateZ: Math.max(-60, Math.min(60, Number(settings.nextRotateZ ?? DEFAULT_DJ_CRATE_NEXT_UP.nextRotateZ))),
+    nextDepth: Math.max(0, Math.min(0.8, Number(settings.nextDepth ?? DEFAULT_DJ_CRATE_NEXT_UP.nextDepth))),
+    nextShadow: Math.max(0, Math.min(1.5, Number(settings.nextShadow ?? DEFAULT_DJ_CRATE_NEXT_UP.nextShadow))),
+    nextOpacity: Math.max(0, Math.min(1, Number(settings.nextOpacity ?? DEFAULT_DJ_CRATE_NEXT_UP.nextOpacity))),
+    nextCropBottom: Math.max(0, Math.min(70, Number(settings.nextCropBottom ?? DEFAULT_DJ_CRATE_NEXT_UP.nextCropBottom))),
+  };
+}
+
+function loadDjCrateNextUpSettings(): DjCrateNextUpSettings {
+  try {
+    const raw = localStorage.getItem(DJ_CRATE_NEXT_UP_KEY);
+    if (raw) return clampDjCrateNextUpSettings(JSON.parse(raw) as Partial<DjCrateNextUpSettings>);
+  } catch (error) {
+    console.warn("Could not load DJ crate / next up settings", error);
+  }
+  return { ...DEFAULT_DJ_CRATE_NEXT_UP };
+}
+
+function saveDjCrateNextUpSettings(): void {
+  localStorage.setItem(DJ_CRATE_NEXT_UP_KEY, JSON.stringify(djCrateNextUp));
+}
+
+function applyDjCrateNextUpSettings(): void {
+  const root = document.documentElement;
+  root.classList.toggle("dj-record-crate-disabled", !djCrateNextUp.crateEnabled);
+  root.classList.toggle("next-up-album-disabled", !djCrateNextUp.nextEnabled);
+  root.style.setProperty("--dj-crate-x", `${djCrateNextUp.crateX}%`);
+  root.style.setProperty("--dj-crate-y", `${djCrateNextUp.crateY}%`);
+  root.style.setProperty("--dj-crate-scale", String(djCrateNextUp.crateScale));
+  root.style.setProperty("--dj-crate-rotate", `${djCrateNextUp.crateRotate}deg`);
+  root.style.setProperty("--dj-crate-opacity", String(djCrateNextUp.crateOpacity));
+  root.style.setProperty("--next-up-album-x", `${djCrateNextUp.nextX}%`);
+  root.style.setProperty("--next-up-album-y", `${djCrateNextUp.nextY}%`);
+  root.style.setProperty("--next-up-album-size", `${djCrateNextUp.nextSize}%`);
+  root.style.setProperty("--next-up-album-rotate-x", `${djCrateNextUp.nextRotateX}deg`);
+  root.style.setProperty("--next-up-album-rotate-y", `${djCrateNextUp.nextRotateY}deg`);
+  root.style.setProperty("--next-up-album-rotate-z", `${djCrateNextUp.nextRotateZ}deg`);
+  root.style.setProperty("--next-up-album-depth", String(djCrateNextUp.nextDepth));
+  root.style.setProperty("--next-up-album-shadow", String(djCrateNextUp.nextShadow));
+  root.style.setProperty("--next-up-album-opacity", String(djCrateNextUp.nextOpacity));
+  root.style.setProperty("--next-up-album-crop-bottom", `${djCrateNextUp.nextCropBottom}%`);
+
+  const enabled = document.querySelector<HTMLInputElement>("#menu2DjCrateEnabled");
+  const nextEnabled = document.querySelector<HTMLInputElement>("#menu2NextUpAlbumEnabled");
+  if (enabled) enabled.checked = djCrateNextUp.crateEnabled;
+  if (nextEnabled) nextEnabled.checked = djCrateNextUp.nextEnabled;
+  const fields: Array<[keyof DjCrateNextUpSettings, string, string, number]> = [
+    ["crateX", "menu2DjCrateX", "menu2DjCrateXValue", 1],
+    ["crateY", "menu2DjCrateY", "menu2DjCrateYValue", 1],
+    ["crateScale", "menu2DjCrateScale", "menu2DjCrateScaleValue", 2],
+    ["crateRotate", "menu2DjCrateRotate", "menu2DjCrateRotateValue", 0],
+    ["crateOpacity", "menu2DjCrateOpacity", "menu2DjCrateOpacityValue", 2],
+    ["nextX", "menu2NextUpAlbumX", "menu2NextUpAlbumXValue", 1],
+    ["nextY", "menu2NextUpAlbumY", "menu2NextUpAlbumYValue", 1],
+    ["nextSize", "menu2NextUpAlbumSize", "menu2NextUpAlbumSizeValue", 1],
+    ["nextRotateX", "menu2NextUpAlbumRotateX", "menu2NextUpAlbumRotateXValue", 0],
+    ["nextRotateY", "menu2NextUpAlbumRotateY", "menu2NextUpAlbumRotateYValue", 0],
+    ["nextRotateZ", "menu2NextUpAlbumRotateZ", "menu2NextUpAlbumRotateZValue", 0],
+    ["nextDepth", "menu2NextUpAlbumDepth", "menu2NextUpAlbumDepthValue", 2],
+    ["nextShadow", "menu2NextUpAlbumShadow", "menu2NextUpAlbumShadowValue", 2],
+    ["nextOpacity", "menu2NextUpAlbumOpacity", "menu2NextUpAlbumOpacityValue", 2],
+    ["nextCropBottom", "menu2NextUpAlbumCropBottom", "menu2NextUpAlbumCropBottomValue", 1],
+  ];
+  fields.forEach(([key, inputId, valueId, decimals]) => {
+    const input = document.querySelector<HTMLInputElement>(`#${inputId}`);
+    const label = document.querySelector<HTMLElement>(`#${valueId}`);
+    const value = Number(djCrateNextUp[key]);
+    if (input) input.value = String(value);
+    if (label) label.textContent = value.toFixed(decimals);
+  });
+}
+
 
 function clampNoLyricsFocus(settings: Partial<NoLyricsFocusSettings>): NoLyricsFocusSettings {
   return {
@@ -172,6 +311,9 @@ function clampNoLyricsFocus(settings: Partial<NoLyricsFocusSettings>): NoLyricsF
     coneStartY: Math.max(0, Math.min(35, Number(settings.coneStartY ?? DEFAULT_NO_LYRICS_FOCUS.coneStartY))),
     coneStartSize: Math.max(0, Math.min(38, Number(settings.coneStartSize ?? DEFAULT_NO_LYRICS_FOCUS.coneStartSize))),
     coneFade: Math.max(0, Math.min(1, Number(settings.coneFade ?? DEFAULT_NO_LYRICS_FOCUS.coneFade))),
+    coneFeather: Math.max(0, Math.min(18, Number(settings.coneFeather ?? DEFAULT_NO_LYRICS_FOCUS.coneFeather))),
+    floorDim: Math.max(0, Math.min(0.65, Number(settings.floorDim ?? DEFAULT_NO_LYRICS_FOCUS.floorDim))),
+    vignette: Math.max(0, Math.min(0.75, Number(settings.vignette ?? DEFAULT_NO_LYRICS_FOCUS.vignette))),
     fadeMs: Math.max(250, Math.min(8000, Number(settings.fadeMs ?? DEFAULT_NO_LYRICS_FOCUS.fadeMs))),
   };
 }
@@ -204,6 +346,9 @@ function applyNoLyricsFocusSettings(): void {
   root.style.setProperty("--no-lyrics-cone-start-y", `${noLyricsFocus.coneStartY}%`);
   root.style.setProperty("--no-lyrics-cone-start-size", `${noLyricsFocus.coneStartSize}%`);
   root.style.setProperty("--no-lyrics-cone-fade", String(noLyricsFocus.coneFade));
+  root.style.setProperty("--no-lyrics-cone-feather", `${noLyricsFocus.coneFeather}`);
+  root.style.setProperty("--no-lyrics-floor-dim", String(noLyricsFocus.floorDim));
+  root.style.setProperty("--no-lyrics-vignette", String(noLyricsFocus.vignette));
   root.style.setProperty("--no-lyrics-focus-fade", `${noLyricsFocus.fadeMs}ms`);
 
   const enabled = document.querySelector<HTMLInputElement>("#menu2NoLyricsFocusEnabled");
@@ -218,6 +363,9 @@ function applyNoLyricsFocusSettings(): void {
     ["coneStartY", "menu2NoLyricsConeStartY", "menu2NoLyricsConeStartYValue", 1],
     ["coneStartSize", "menu2NoLyricsConeStartSize", "menu2NoLyricsConeStartSizeValue", 1],
     ["coneFade", "menu2NoLyricsConeFade", "menu2NoLyricsConeFadeValue", 2],
+    ["coneFeather", "menu2NoLyricsConeFeather", "menu2NoLyricsConeFeatherValue", 1],
+    ["floorDim", "menu2NoLyricsFloorDim", "menu2NoLyricsFloorDimValue", 2],
+    ["vignette", "menu2NoLyricsVignette", "menu2NoLyricsVignetteValue", 2],
     ["fadeMs", "menu2NoLyricsFade", "menu2NoLyricsFadeValue", 0],
   ];
   if (enabled) enabled.checked = noLyricsFocus.enabled;
@@ -3350,6 +3498,7 @@ async function boot(): Promise<void> {
   applyPlacedActiveAlbumOpaqueMigration();
   applyAmbientTwinkleUserEditMigration();
   applyRoomUtilitySettings();
+  applyDjCrateNextUpSettings();
 
   if (state.spotifyClientId) {
     try {
@@ -4797,12 +4946,59 @@ function bindMenu2Controls(): void {
   bindNoLyricsSlider("#menu2NoLyricsSpotlightX", "x");
   bindNoLyricsSlider("#menu2NoLyricsSpotlightY", "y");
   bindNoLyricsSlider("#menu2NoLyricsSpotlightSize", "size");
+  bindNoLyricsSlider("#menu2NoLyricsConeStartX", "coneStartX");
+  bindNoLyricsSlider("#menu2NoLyricsConeStartY", "coneStartY");
+  bindNoLyricsSlider("#menu2NoLyricsConeStartSize", "coneStartSize");
+  bindNoLyricsSlider("#menu2NoLyricsConeFade", "coneFade");
+  bindNoLyricsSlider("#menu2NoLyricsConeFeather", "coneFeather");
+  bindNoLyricsSlider("#menu2NoLyricsFloorDim", "floorDim");
+  bindNoLyricsSlider("#menu2NoLyricsVignette", "vignette");
   bindNoLyricsSlider("#menu2NoLyricsFade", "fadeMs");
   document.querySelector<HTMLButtonElement>("#menu2NoLyricsFocusReset")?.addEventListener("click", () => {
     noLyricsFocus = { ...DEFAULT_NO_LYRICS_FOCUS };
     saveNoLyricsFocusSettings();
     applyNoLyricsFocusSettings();
   });
+  document.querySelector<HTMLInputElement>("#menu2DjCrateEnabled")?.addEventListener("change", (event) => {
+    djCrateNextUp = { ...djCrateNextUp, crateEnabled: (event.target as HTMLInputElement).checked };
+    saveDjCrateNextUpSettings();
+    applyDjCrateNextUpSettings();
+  });
+  document.querySelector<HTMLInputElement>("#menu2NextUpAlbumEnabled")?.addEventListener("change", (event) => {
+    djCrateNextUp = { ...djCrateNextUp, nextEnabled: (event.target as HTMLInputElement).checked };
+    saveDjCrateNextUpSettings();
+    applyDjCrateNextUpSettings();
+    updateNextUpAlbumVisual();
+  });
+  const bindCrateSlider = (selector: string, key: keyof DjCrateNextUpSettings) => {
+    document.querySelector<HTMLInputElement>(selector)?.addEventListener("input", (event) => {
+      djCrateNextUp = clampDjCrateNextUpSettings({ ...djCrateNextUp, [key]: Number((event.target as HTMLInputElement).value) });
+      saveDjCrateNextUpSettings();
+      applyDjCrateNextUpSettings();
+    });
+  };
+  bindCrateSlider("#menu2DjCrateX", "crateX");
+  bindCrateSlider("#menu2DjCrateY", "crateY");
+  bindCrateSlider("#menu2DjCrateScale", "crateScale");
+  bindCrateSlider("#menu2DjCrateRotate", "crateRotate");
+  bindCrateSlider("#menu2DjCrateOpacity", "crateOpacity");
+  bindCrateSlider("#menu2NextUpAlbumX", "nextX");
+  bindCrateSlider("#menu2NextUpAlbumY", "nextY");
+  bindCrateSlider("#menu2NextUpAlbumSize", "nextSize");
+  bindCrateSlider("#menu2NextUpAlbumRotateX", "nextRotateX");
+  bindCrateSlider("#menu2NextUpAlbumRotateY", "nextRotateY");
+  bindCrateSlider("#menu2NextUpAlbumRotateZ", "nextRotateZ");
+  bindCrateSlider("#menu2NextUpAlbumDepth", "nextDepth");
+  bindCrateSlider("#menu2NextUpAlbumShadow", "nextShadow");
+  bindCrateSlider("#menu2NextUpAlbumOpacity", "nextOpacity");
+  bindCrateSlider("#menu2NextUpAlbumCropBottom", "nextCropBottom");
+  document.querySelector<HTMLButtonElement>("#menu2DjCrateReset")?.addEventListener("click", () => {
+    djCrateNextUp = { ...DEFAULT_DJ_CRATE_NEXT_UP };
+    saveDjCrateNextUpSettings();
+    applyDjCrateNextUpSettings();
+    updateNextUpAlbumVisual();
+  });
+
   document.querySelector<HTMLButtonElement>("#menu2OpenCurrentUtility")?.addEventListener("click", () => {
     menu2AdvancedUtilityVisible = !menu2AdvancedUtilityVisible;
     applyMenu2Settings();
@@ -8606,6 +8802,7 @@ function updateSongChangeAlbumOverlay(track: AppState["playback"]): void {
 
   albumCover.alt = readyUrl ? `${track.title} album cover` : "";
   updatePlacedActiveAlbum(track);
+  updateNextUpAlbumVisual();
 }
 
 function playbackAlbumTrackKey(track: AppState["playback"]): string {
@@ -8673,6 +8870,42 @@ function updatePlacedActiveAlbum(track: AppState["playback"]): void {
   if (showAlbum && image.getAttribute("src") !== displayUrl) image.src = displayUrl;
   if (!showAlbum) image.removeAttribute("src");
   image.alt = showAlbum ? "Placed album cover on the back shelf" : "";
+}
+
+
+function songChangeAlbumIsInHands(): boolean {
+  const layer = document.querySelector<HTMLElement>("#songChangeAlbumLayer");
+  return Boolean(layer?.classList.contains("song-change-album-has-art") && isSongChangeRevealActive());
+}
+
+function updateNextUpAlbumVisual(): void {
+  const layer = document.querySelector<HTMLElement>("#nextUpAlbumLayer");
+  const image = document.querySelector<HTMLImageElement>("#nextUpAlbumCover");
+  if (!layer || !image) return;
+  const coverUrl = nextUpQueueTrack?.albumArtUrl || "";
+  const show = Boolean(djCrateNextUp.nextEnabled && djCrateNextUp.crateEnabled && coverUrl && !songChangeAlbumIsInHands());
+  layer.classList.toggle("next-up-album-has-art", show);
+  if (show && image.getAttribute("src") !== coverUrl) image.src = coverUrl;
+  if (!show) image.removeAttribute("src");
+  image.alt = show ? "Next up album cover in the record crate" : "";
+}
+
+async function refreshNextUpQueue(force = false): Promise<void> {
+  if (nextUpQueueFetchInFlight) return;
+  if (!loadTokens() || useDemo) return;
+  const now = Date.now();
+  if (!force && now - nextUpQueueLastFetchAt < 10000) return;
+  nextUpQueueFetchInFlight = true;
+  nextUpQueueLastFetchAt = now;
+  try {
+    const queue = await getSpotifyQueue(state.spotifyClientId, 3);
+    nextUpQueueTrack = queue[0] || null;
+    updateNextUpAlbumVisual();
+  } catch (error) {
+    console.warn("Could not refresh next-up queue album", error);
+  } finally {
+    nextUpQueueFetchInFlight = false;
+  }
 }
 
 function speakerPulseDurationMs(): number {
@@ -8938,6 +9171,7 @@ function tick(): void {
   }
 
   updateSongChangeAlbumOverlay(state.playback);
+  void refreshNextUpQueue(false);
   applySpeakerPulseTempo(state.playback);
   updateReactiveRoomPalette(state.playback);
   applyReactiveRoomPaletteFrame(state.playback);
