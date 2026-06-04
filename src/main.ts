@@ -176,6 +176,78 @@ function applyRoomCameraSettings(): void {
   if (yValue) yValue.textContent = roomCamera.y.toFixed(1);
 }
 
+type RoomVibeSettings = {
+  albumWash: number;
+  roomGlow: number;
+  accentGlow: number;
+  shadowPreserve: number;
+  neutralBoost: number;
+};
+
+const ROOM_VIBE_SETTINGS_KEY = "pocketdj-room-vibe-balance-v1";
+const DEFAULT_ROOM_VIBE_SETTINGS: RoomVibeSettings = {
+  albumWash: 0.34,
+  roomGlow: 0.64,
+  accentGlow: 1.08,
+  shadowPreserve: 0.22,
+  neutralBoost: 0.78,
+};
+let roomVibeSettings = loadRoomVibeSettings();
+
+function clampRoomVibeSettings(settings: Partial<RoomVibeSettings>): RoomVibeSettings {
+  return {
+    albumWash: Math.max(0, Math.min(1, Number(settings.albumWash ?? DEFAULT_ROOM_VIBE_SETTINGS.albumWash))),
+    roomGlow: Math.max(0, Math.min(1.5, Number(settings.roomGlow ?? DEFAULT_ROOM_VIBE_SETTINGS.roomGlow))),
+    accentGlow: Math.max(0, Math.min(1.8, Number(settings.accentGlow ?? DEFAULT_ROOM_VIBE_SETTINGS.accentGlow))),
+    shadowPreserve: Math.max(0, Math.min(0.6, Number(settings.shadowPreserve ?? DEFAULT_ROOM_VIBE_SETTINGS.shadowPreserve))),
+    neutralBoost: Math.max(0, Math.min(1, Number(settings.neutralBoost ?? DEFAULT_ROOM_VIBE_SETTINGS.neutralBoost))),
+  };
+}
+
+function loadRoomVibeSettings(): RoomVibeSettings {
+  try {
+    const raw = localStorage.getItem(ROOM_VIBE_SETTINGS_KEY);
+    if (!raw) return { ...DEFAULT_ROOM_VIBE_SETTINGS };
+    return clampRoomVibeSettings({ ...DEFAULT_ROOM_VIBE_SETTINGS, ...JSON.parse(raw) });
+  } catch {
+    return { ...DEFAULT_ROOM_VIBE_SETTINGS };
+  }
+}
+
+function saveRoomVibeSettings(): void {
+  localStorage.setItem(ROOM_VIBE_SETTINGS_KEY, JSON.stringify(roomVibeSettings));
+}
+
+function applyRoomVibeSettings(): void {
+  const root = document.documentElement;
+  root.style.setProperty("--room-vibe-album-wash-strength", roomVibeSettings.albumWash.toFixed(3));
+  root.style.setProperty("--room-vibe-glow-strength", roomVibeSettings.roomGlow.toFixed(3));
+  root.style.setProperty("--room-vibe-accent-strength", roomVibeSettings.accentGlow.toFixed(3));
+  root.style.setProperty("--room-vibe-shadow-preserve", roomVibeSettings.shadowPreserve.toFixed(3));
+  root.style.setProperty("--room-vibe-neutral-boost", roomVibeSettings.neutralBoost.toFixed(3));
+
+  const albumWashInput = document.querySelector<HTMLInputElement>("#menu2RoomVibeAlbumWash");
+  const albumWashValue = document.querySelector<HTMLElement>("#menu2RoomVibeAlbumWashValue");
+  const roomGlowInput = document.querySelector<HTMLInputElement>("#menu2RoomVibeRoomGlow");
+  const roomGlowValue = document.querySelector<HTMLElement>("#menu2RoomVibeRoomGlowValue");
+  const accentInput = document.querySelector<HTMLInputElement>("#menu2RoomVibeAccentGlow");
+  const accentValue = document.querySelector<HTMLElement>("#menu2RoomVibeAccentGlowValue");
+  const shadowInput = document.querySelector<HTMLInputElement>("#menu2RoomVibeShadowPreserve");
+  const shadowValue = document.querySelector<HTMLElement>("#menu2RoomVibeShadowPreserveValue");
+  const neutralInput = document.querySelector<HTMLInputElement>("#menu2RoomVibeNeutralBoost");
+  const neutralValue = document.querySelector<HTMLElement>("#menu2RoomVibeNeutralBoostValue");
+  if (albumWashInput) albumWashInput.value = roomVibeSettings.albumWash.toFixed(2);
+  if (albumWashValue) albumWashValue.textContent = roomVibeSettings.albumWash.toFixed(2);
+  if (roomGlowInput) roomGlowInput.value = roomVibeSettings.roomGlow.toFixed(2);
+  if (roomGlowValue) roomGlowValue.textContent = roomVibeSettings.roomGlow.toFixed(2);
+  if (accentInput) accentInput.value = roomVibeSettings.accentGlow.toFixed(2);
+  if (accentValue) accentValue.textContent = roomVibeSettings.accentGlow.toFixed(2);
+  if (shadowInput) shadowInput.value = roomVibeSettings.shadowPreserve.toFixed(2);
+  if (shadowValue) shadowValue.textContent = roomVibeSettings.shadowPreserve.toFixed(2);
+  if (neutralInput) neutralInput.value = roomVibeSettings.neutralBoost.toFixed(2);
+  if (neutralValue) neutralValue.textContent = roomVibeSettings.neutralBoost.toFixed(2);
+}
+
 type NoLyricsFocusSettings = {
   enabled: boolean;
   ceilingDim: number;
@@ -3586,6 +3658,7 @@ async function boot(): Promise<void> {
   reactiveRoomEnergyTo = 0.3;
   queueReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE, "default");
   document.documentElement.style.setProperty("--room-vibe-transition-ms", `${REACTIVE_ROOM_CROSSFADE_MS}ms`);
+  applyRoomVibeSettings();
   setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
   document.documentElement.style.setProperty("--music-room-energy", reactiveRoomRenderedEnergy.toFixed(3));
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
@@ -4071,6 +4144,7 @@ function applyMenu2Settings(): void {
   if (transparencyInput) transparencyInput.value = menu2Transparency.toFixed(2);
   if (transparencyValue) transparencyValue.textContent = menu2Transparency.toFixed(2);
   applyRoomCameraSettings();
+  applyRoomVibeSettings();
 
   const devVisible = menu2DevUnlocked && menu2PanelMode === "full";
   const devTab = document.querySelector<HTMLButtonElement>("#menu2DevTab");
@@ -6913,12 +6987,15 @@ function seededVibeColor(seed: string): RgbTriple {
 function makeRoomVibeAnchor(color: RgbTriple, seed: string, fallbackAmount: number): RgbTriple {
   const saturation = rgbSaturation(color);
   const brightness = rgbBrightness(color);
-  const needsColorLift = saturation < 0.22 || brightness > 0.82 || brightness < 0.12;
-  const lifted = needsColorLift ? mixRgb(color, seededVibeColor(seed), fallbackAmount) : color;
-  // Keep this as a color-separation lift, not a brute-force saturation pass: push
-  // neutral/white/black covers toward a stable song-derived accent so each track
-  // still gets a distinct room mood, while colorful covers keep their own identity.
-  return mixRgb(lifted, seededVibeColor(`${seed}:accent`), needsColorLift ? 0.14 : 0.04);
+  const needsColorLift = saturation < 0.24 || brightness > 0.78 || brightness < 0.14;
+  const neutralBoost = roomVibeSettings.neutralBoost;
+  const fallbackColor = seededVibeColor(seed);
+  const accentColor = seededVibeColor(`${seed}:accent`);
+  const lifted = needsColorLift ? mixRgb(color, fallbackColor, fallbackAmount * neutralBoost) : color;
+  const separated = mixRgb(lifted, accentColor, needsColorLift ? 0.22 * neutralBoost : 0.045);
+  // Preserve depth: avoid using near-white source colors as glow colors. Lower the
+  // maximum channel slightly so album-reactive color reads as light, not haze.
+  return separated.map((channel) => Math.round(Math.min(218, Math.max(26, channel)))) as RgbTriple;
 }
 
 function easeInOutCubic(t: number): number {
@@ -7033,12 +7110,13 @@ function paletteFromTrackText(track: AppState["playback"]): ReactiveRoomPalette 
   else [r, g, b] = [chroma, 0, x];
   const m = 0.28;
   const color: RgbTriple = [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+  const anchor = makeRoomVibeAnchor(color, seed, 0.72);
   return {
-    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, color, 0.34),
-    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, color, 0.68),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, color, 0.46),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, color, 0.40),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, color, 0.58),
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, anchor, 0.28),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, anchor, 0.66),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, anchor, 0.26),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, anchor, 0.28),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, anchor, 0.70),
   };
 }
 
@@ -7101,11 +7179,11 @@ async function extractReactiveRoomPalette(imageUrl: string, seed = imageUrl): Pr
   const vibrantAnchor = makeRoomVibeAnchor(vibrant, `${seed}:vibrant`, 0.72);
 
   return {
-    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, averageAnchor, 0.34),
-    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrantAnchor, 0.74),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, averageAnchor, 0.50),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, averageAnchor, 0.44),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrantAnchor, 0.64),
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, averageAnchor, 0.26),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrantAnchor, 0.68),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, averageAnchor, 0.24),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, averageAnchor, 0.26),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrantAnchor, 0.76),
   };
 }
 

@@ -1418,6 +1418,25 @@ export function renderShell(state: AppState): void {
               </select>
             </label>
             <div class="menu2-dev-subsection">
+              <div class="menu2-section-head menu2-subsection-head"><h3>Room Vibe Balance</h3><span>Color without haze</span></div>
+              <label class="menu2-setting menu2-slider-setting">Album wash strength <span id="menu2RoomVibeAlbumWashValue">0.34</span>
+                <input id="menu2RoomVibeAlbumWash" type="range" min="0" max="1" step="0.01" value="0.34" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Room glow strength <span id="menu2RoomVibeRoomGlowValue">0.64</span>
+                <input id="menu2RoomVibeRoomGlow" type="range" min="0" max="1.5" step="0.01" value="0.64" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Accent glow strength <span id="menu2RoomVibeAccentGlowValue">1.08</span>
+                <input id="menu2RoomVibeAccentGlow" type="range" min="0" max="1.8" step="0.01" value="1.08" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Shadow preservation <span id="menu2RoomVibeShadowPreserveValue">0.22</span>
+                <input id="menu2RoomVibeShadowPreserve" type="range" min="0" max="0.6" step="0.01" value="0.22" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Neutral album color boost <span id="menu2RoomVibeNeutralBoostValue">0.78</span>
+                <input id="menu2RoomVibeNeutralBoost" type="range" min="0" max="1" step="0.01" value="0.78" />
+              </label>
+              <button id="menu2RoomVibeReset" class="menu2-action menu2-wide-action" type="button">Reset Room Vibe Balance</button>
+            </div>
+            <div class="menu2-dev-subsection">
               <div class="menu2-section-head menu2-subsection-head"><h3>Scene Zoom / Room Camera</h3><span>Bottom-center camera transform</span></div>
               <label class="menu2-setting menu2-slider-setting">Camera zoom <span id="menu2RoomCameraZoomValue">1.000</span>
                 <input id="menu2RoomCameraZoom" type="range" min="0.75" max="1.35" step="0.001" value="1" />

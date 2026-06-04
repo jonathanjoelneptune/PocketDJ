@@ -132,16 +132,16 @@ button {
   opacity: 0;
   background-size: cover;
   background-position: center;
-  filter: blur(48px) saturate(1.4);
-  transform: scale(1.12);
-  mix-blend-mode: screen;
+  filter: blur(42px) saturate(1.18) contrast(1.05);
+  transform: scale(1.10);
+  mix-blend-mode: soft-light;
   transition: opacity var(--room-vibe-transition-ms, 5000ms) cubic-bezier(0.22, 0.72, 0.18, 1), filter var(--room-vibe-transition-ms, 5000ms) cubic-bezier(0.22, 0.72, 0.18, 1);
   pointer-events: none;
   will-change: opacity, filter;
 }
 
 .album-wash-active {
-  opacity: 0.16;
+  opacity: calc(0.035 + var(--room-vibe-album-wash-strength, 0.34) * 0.11);
 }
 
 .marquee {
@@ -7963,6 +7963,11 @@ body.lyrics-marquee-unavailable .marquee::after {
   --ambient-room-accent-rgb: 255, 186, 108;
   --music-room-energy: 0.3;
   --room-vibe-transition-ms: 5000ms;
+  --room-vibe-album-wash-strength: 0.34;
+  --room-vibe-glow-strength: 0.64;
+  --room-vibe-accent-strength: 1.08;
+  --room-vibe-shadow-preserve: 0.22;
+  --room-vibe-neutral-boost: 0.78;
   --room-unit: calc(var(--room-w) / 1764);
 }
 
@@ -8141,26 +8146,26 @@ body.lyrics-marquee-unavailable .marquee::after {
   mix-blend-mode: screen;
   transition: opacity var(--room-vibe-transition-ms, 5000ms) cubic-bezier(0.22, 0.72, 0.18, 1), filter var(--room-vibe-transition-ms, 5000ms) cubic-bezier(0.22, 0.72, 0.18, 1);
   background:
-    radial-gradient(62% 18% at 50% 34%, rgba(var(--string-light-core-rgb), calc(0.34 + var(--music-room-energy) * 0.08)) 0%, rgba(var(--string-light-tint-rgb), calc(0.20 + var(--music-room-energy) * 0.05)) 38%, rgba(var(--string-light-ambient-rgb), 0) 74%),
-    radial-gradient(70% 42% at 50% 43%, rgba(var(--ambient-room-glow-rgb), calc(0.24 + var(--music-room-energy) * 0.07)) 0%, rgba(var(--ambient-room-glow-rgb), calc(0.11 + var(--music-room-energy) * 0.04)) 52%, rgba(var(--ambient-room-glow-rgb), 0) 80%),
-    radial-gradient(56% 36% at 50% 60%, rgba(var(--ambient-room-accent-rgb), calc(0.14 + var(--music-room-energy) * 0.05)) 0%, rgba(var(--ambient-room-accent-rgb), calc(0.07 + var(--music-room-energy) * 0.04)) 42%, rgba(var(--ambient-room-accent-rgb), 0) 76%);
-  filter: blur(26px) saturate(1.02) brightness(1.02);
+    radial-gradient(52% 15% at 50% 34%, rgba(var(--string-light-core-rgb), calc((0.24 + var(--music-room-energy) * 0.05) * var(--room-vibe-accent-strength, 1.08))) 0%, rgba(var(--string-light-tint-rgb), calc((0.12 + var(--music-room-energy) * 0.035) * var(--room-vibe-accent-strength, 1.08))) 42%, rgba(var(--string-light-ambient-rgb), 0) 76%),
+    radial-gradient(62% 34% at 50% 43%, rgba(var(--ambient-room-glow-rgb), calc((0.11 + var(--music-room-energy) * 0.035) * var(--room-vibe-glow-strength, 0.64))) 0%, rgba(var(--ambient-room-glow-rgb), calc((0.055 + var(--music-room-energy) * 0.025) * var(--room-vibe-glow-strength, 0.64))) 52%, rgba(var(--ambient-room-glow-rgb), 0) 82%),
+    radial-gradient(48% 28% at 50% 60%, rgba(var(--ambient-room-accent-rgb), calc((0.12 + var(--music-room-energy) * 0.035) * var(--room-vibe-accent-strength, 1.08))) 0%, rgba(var(--ambient-room-accent-rgb), calc((0.055 + var(--music-room-energy) * 0.025) * var(--room-vibe-accent-strength, 1.08))) 44%, rgba(var(--ambient-room-accent-rgb), 0) 78%);
+  filter: blur(18px) saturate(1.08) brightness(0.98);
   will-change: opacity, transform, filter;
 }
 
 .ambient-music-glow.ambient-music-glow-active {
-  opacity: calc(0.54 + var(--music-room-energy) * 0.18);
+  opacity: calc((0.28 + var(--music-room-energy) * 0.10) * var(--room-vibe-glow-strength, 0.64));
   animation: ambientRoomBreathe var(--music-breathe-ms, 7600ms) ease-in-out infinite;
 }
 
 @keyframes ambientRoomBreathe {
   0%, 100% {
     transform: scale(0.994);
-    filter: blur(22px) saturate(1.04) brightness(0.98);
+    filter: blur(16px) saturate(1.06) brightness(0.96);
   }
   48% {
     transform: scale(1.006);
-    filter: blur(24px) saturate(1.12) brightness(1.04);
+    filter: blur(18px) saturate(1.14) brightness(1.02);
   }
 }
 
@@ -8239,8 +8244,9 @@ body.lyrics-marquee-unavailable .marquee::after {
 
 .room-bg::after {
   background:
-    radial-gradient(circle at center, rgba(255,255,255,0.026), transparent 46%),
-    linear-gradient(180deg, rgba(255, 220, 170, 0.018), rgba(0,0,0,0.07));
+    radial-gradient(circle at center, rgba(255,255,255,0.012), transparent 46%),
+    radial-gradient(82% 60% at 50% 44%, rgba(0,0,0,0) 0%, rgba(0,0,0, calc(var(--room-vibe-shadow-preserve, 0.22) * 0.20)) 72%, rgba(0,0,0, calc(var(--room-vibe-shadow-preserve, 0.22) * 0.42)) 100%),
+    linear-gradient(180deg, rgba(0,0,0, calc(var(--room-vibe-shadow-preserve, 0.22) * 0.26)), rgba(255, 220, 170, 0.006) 28%, rgba(0,0,0, calc(0.045 + var(--room-vibe-shadow-preserve, 0.22) * 0.16)));
 }
 
 .floor-controls-lock::before {
@@ -13585,6 +13591,11 @@ body::after,
    viewport/letterbox background remains pure black. */
 :root {
   --room-vibe-transition-ms: 5000ms;
+  --room-vibe-album-wash-strength: 0.34;
+  --room-vibe-glow-strength: 0.64;
+  --room-vibe-accent-strength: 1.08;
+  --room-vibe-shadow-preserve: 0.22;
+  --room-vibe-neutral-boost: 0.78;
 }
 html,
 body,
