@@ -7957,6 +7957,7 @@ body.lyrics-marquee-unavailable .marquee::after {
   --ambient-room-glow-rgb: 126, 82, 140;
   --ambient-room-accent-rgb: 255, 186, 108;
   --music-room-energy: 0.3;
+  --room-vibe-transition-ms: 3000ms;
   --room-unit: calc(var(--room-w) / 1764);
 }
 
@@ -8133,7 +8134,7 @@ body.lyrics-marquee-unavailable .marquee::after {
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: screen;
-  transition: opacity 6.2s cubic-bezier(0.22, 0.72, 0.18, 1);
+  transition: opacity var(--room-vibe-transition-ms, 3000ms) cubic-bezier(0.22, 0.72, 0.18, 1), filter var(--room-vibe-transition-ms, 3000ms) cubic-bezier(0.22, 0.72, 0.18, 1);
   background:
     radial-gradient(62% 18% at 50% 34%, rgba(var(--string-light-core-rgb), calc(0.28 + var(--music-room-energy) * 0.06)) 0%, rgba(var(--string-light-tint-rgb), calc(0.16 + var(--music-room-energy) * 0.04)) 38%, rgba(var(--string-light-ambient-rgb), 0) 74%),
     radial-gradient(70% 42% at 50% 43%, rgba(var(--ambient-room-glow-rgb), calc(0.18 + var(--music-room-energy) * 0.05)) 0%, rgba(var(--ambient-room-glow-rgb), calc(0.08 + var(--music-room-energy) * 0.03)) 52%, rgba(var(--ambient-room-glow-rgb), 0) 80%),
@@ -13570,4 +13571,18 @@ body::after,
 .no-lyrics-paused-ceiling-dim .marquee {
   opacity: 1 !important;
   filter: brightness(1.18) contrast(1.08) saturate(1.05);
+}
+
+
+/* v111 rendered room-vibe palette audit
+   Album-reactive colors are written only to the rendered CSS variables below after
+   JS interpolation/drift. Keep these variables scoped to visual room elements; the
+   viewport/letterbox background remains pure black. */
+:root {
+  --room-vibe-transition-ms: 3000ms;
+}
+html,
+body,
+#app {
+  background: #000000 !important;
 }

@@ -600,6 +600,11 @@ let reactiveRoomTransitionStartedAt = 0;
 let reactiveRoomTransitionActive = false;
 let reactiveRoomLastTargetKey = "default";
 let reactiveRoomCurrentRenderedPalette: ReactiveRoomPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
+let reactiveRoomRenderedEnergy = 0.3;
+let reactiveRoomEnergyFrom = 0.3;
+let reactiveRoomEnergyTo = 0.3;
+let reactiveRoomEnergyTransitionStartedAt = 0;
+let reactiveRoomEnergyTransitionActive = false;
 let stringLightResizeTimer: number | null = null;
 let ambientTwinkleResizeTimer: number | null = null;
 
@@ -3576,8 +3581,13 @@ async function boot(): Promise<void> {
   window.addEventListener("resize", updateDynamicCeilingReveal, { passive: true });
   renderShell(state);
   reactiveRoomCurrentRenderedPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
+  reactiveRoomRenderedEnergy = 0.3;
+  reactiveRoomEnergyFrom = 0.3;
+  reactiveRoomEnergyTo = 0.3;
   queueReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE, "default");
+  document.documentElement.style.setProperty("--room-vibe-transition-ms", `${REACTIVE_ROOM_CROSSFADE_MS}ms`);
   setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
+  document.documentElement.style.setProperty("--music-room-energy", reactiveRoomRenderedEnergy.toFixed(3));
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
   bindControls();
   bindFloorControlsLock();
@@ -6915,13 +6925,20 @@ function rgbTripleToCss(rgb: RgbTriple): string {
   return `${Math.round(clamp(rgb[0], 0, 255))}, ${Math.round(clamp(rgb[1], 0, 255))}, ${Math.round(clamp(rgb[2], 0, 255))}`;
 }
 
-function setReactiveRoomPalette(palette: ReactiveRoomPalette): void {
+function writeRenderedReactiveRoomPaletteToCss(palette: ReactiveRoomPalette): void {
+  // IMPORTANT: these CSS variables are the rendered/interpolated palette only.
+  // New album-art palettes must never be written directly to CSS, or the room
+  // appears to snap between songs instead of crossfading.
   const root = document.documentElement;
   root.style.setProperty("--string-light-core-rgb", rgbTripleToCss(palette.core));
   root.style.setProperty("--string-light-tint-rgb", rgbTripleToCss(palette.tint));
   root.style.setProperty("--string-light-ambient-rgb", rgbTripleToCss(palette.ambient));
   root.style.setProperty("--ambient-room-glow-rgb", rgbTripleToCss(palette.roomGlow));
   root.style.setProperty("--ambient-room-accent-rgb", rgbTripleToCss(palette.roomAccent));
+}
+
+function setReactiveRoomPalette(palette: ReactiveRoomPalette): void {
+  writeRenderedReactiveRoomPaletteToCss(palette);
 }
 
 function queueReactiveRoomPalette(palette: ReactiveRoomPalette, key: string): void {
@@ -7086,6 +7103,31 @@ function updateReactiveRoomPalette(track: AppState["playback"]): void {
     });
 }
 
+function queueReactiveRoomEnergy(targetEnergy: number): void {
+  const target = clamp(targetEnergy, 0, 1);
+  if (Math.abs(target - reactiveRoomEnergyTo) < 0.004) return;
+  reactiveRoomEnergyFrom = reactiveRoomRenderedEnergy;
+  reactiveRoomEnergyTo = target;
+  reactiveRoomEnergyTransitionStartedAt = performance.now();
+  reactiveRoomEnergyTransitionActive = true;
+}
+
+function updateReactiveRoomEnergyFrame(now = performance.now()): number {
+  if (!reactiveRoomEnergyTransitionActive) {
+    reactiveRoomRenderedEnergy = reactiveRoomEnergyTo;
+    return reactiveRoomRenderedEnergy;
+  }
+
+  const rawProgress = (now - reactiveRoomEnergyTransitionStartedAt) / REACTIVE_ROOM_CROSSFADE_MS;
+  const eased = easeInOutCubic(rawProgress);
+  reactiveRoomRenderedEnergy = reactiveRoomEnergyFrom + (reactiveRoomEnergyTo - reactiveRoomEnergyFrom) * eased;
+  if (rawProgress >= 1) {
+    reactiveRoomEnergyTransitionActive = false;
+    reactiveRoomRenderedEnergy = reactiveRoomEnergyTo;
+  }
+  return reactiveRoomRenderedEnergy;
+}
+
 function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
   const root = document.documentElement;
   const overlay = document.querySelector<HTMLElement>("#stringLightOverlay");
@@ -7093,7 +7135,9 @@ function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
   const twinkleOverlay = document.querySelector<HTMLElement>("#ambientTwinkleOverlay");
   const playing = track.isPlaying || track.source === "demo";
   const beatMs = speakerPulseDurationMs();
-  const pulseEnergy = clamp(((speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM) - 62) / 108, 0, 1);
+  const targetPulseEnergy = clamp(((speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM) - 62) / 108, 0, 1);
+  queueReactiveRoomEnergy(targetPulseEnergy);
+  const pulseEnergy = updateReactiveRoomEnergyFrame();
 
   root.classList.toggle("music-reactive-playing", playing);
   root.style.setProperty("--music-beat-ms", `${beatMs}ms`);
