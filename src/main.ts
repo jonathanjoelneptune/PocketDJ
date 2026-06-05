@@ -5062,6 +5062,12 @@ function isDocumentPictureInPictureSupported(): boolean {
 function pocketDjPipPlaybackKey(): string {
   const track = state.playback;
   const djPose = document.querySelector<HTMLImageElement>("#djSprite")?.getAttribute("src") || "";
+  const novaPose = document.querySelector<HTMLImageElement>("#djNovaSprite")?.getAttribute("src") || "";
+  const lyricText = document.querySelector<HTMLElement>("#activeLyricsBlock")?.textContent?.trim() || "";
+  const marqueeText = [
+    document.querySelector<HTMLElement>("#marqueeTitle")?.textContent?.trim() || "",
+    document.querySelector<HTMLElement>("#marqueeArtist")?.textContent?.trim() || "",
+  ].join("/");
   return [
     track.trackId,
     track.title,
@@ -5071,7 +5077,11 @@ function pocketDjPipPlaybackKey(): string {
     track.durationMs,
     track.isPlaying,
     djPose,
+    novaPose,
+    lyricText,
+    marqueeText,
     lyricsEnabled,
+    document.documentElement.className,
   ].join("|");
 }
 
@@ -5081,77 +5091,138 @@ function makePocketDjPipProgressKey(): string {
   return `${track.trackId}|${track.isPlaying}|${progress}|${track.durationMs}`;
 }
 
+function copyPocketDjPipDocumentStyles(doc: Document): void {
+  doc.head.querySelectorAll("style[data-pocketdj-pip-style], link[data-pocketdj-pip-style]").forEach((node) => node.remove());
+  document.head.querySelectorAll<HTMLStyleElement | HTMLLinkElement>('style, link[rel="stylesheet"]').forEach((node) => {
+    const clone = node.cloneNode(true) as HTMLStyleElement | HTMLLinkElement;
+    clone.setAttribute("data-pocketdj-pip-style", "app");
+    doc.head.appendChild(clone);
+  });
+}
+
+function canvasSnapshotMarkup(canvas: HTMLCanvasElement): string {
+  try {
+    const dataUrl = canvas.toDataURL("image/png");
+    const className = canvas.className || "";
+    const id = canvas.id ? `${canvas.id}-snapshot` : "pip-canvas-snapshot";
+    return `<img id="${escapeHtmlInline(id)}" class="${escapeHtmlInline(className)} pip-canvas-snapshot" src="${escapeHtmlInline(dataUrl)}" alt="" draggable="false" aria-hidden="true" />`;
+  } catch {
+    return "";
+  }
+}
+
+function buildPocketDjRoomCloneForPip(): string {
+  const room = document.querySelector<HTMLElement>(".room");
+  if (!room) return "";
+  const clone = room.cloneNode(true) as HTMLElement;
+
+  clone.querySelectorAll("#floorPlayer, .floor-player, .floor-controls-lock, .floor-controls-fullscreen").forEach((node) => node.remove());
+  clone.querySelectorAll("#menu2Bubble, #menu2Panel, #controlCard, #panelToggle, .panel-toggle, .menu2-bubble, .menu2-panel, .control-card, .room-utility-controls").forEach((node) => node.remove());
+  clone.querySelectorAll("button, input, select, textarea").forEach((node) => {
+    (node as HTMLElement).setAttribute("tabindex", "-1");
+    (node as HTMLElement).setAttribute("aria-hidden", "true");
+  });
+
+  clone.querySelectorAll<HTMLCanvasElement>("canvas").forEach((canvas) => {
+    const snapshot = canvasSnapshotMarkup(canvas);
+    if (snapshot) canvas.outerHTML = snapshot;
+    else canvas.remove();
+  });
+
+  clone.classList.add("pip-room-clone");
+  return clone.outerHTML;
+}
+
 function pocketDjPipStyles(): string {
   return `
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
-    body { margin: 0; overflow: hidden; background: #050403; color: #fff3cf; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    .pip-shell { width: 100vw; height: 100vh; min-width: 260px; min-height: 150px; display: grid; grid-template-columns: minmax(112px, 42%) 1fr; gap: 12px; padding: 12px; background: radial-gradient(circle at 36% 18%, rgba(239, 177, 63, 0.18), transparent 38%), linear-gradient(135deg, rgba(22, 16, 12, 0.98), rgba(3, 4, 7, 0.96)); border: 1px solid rgba(239, 177, 63, 0.35); }
-    .pip-room { position: relative; overflow: hidden; border-radius: 16px; min-height: 120px; background: linear-gradient(180deg, rgba(17, 31, 56, 0.92), rgba(11, 8, 7, 0.96)); box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.55); }
-    .pip-room::before { content: ""; position: absolute; inset: 8% 9% 39%; border-radius: 10px; background: radial-gradient(circle at 50% 60%, rgba(64, 126, 208, 0.42), transparent 55%), linear-gradient(180deg, rgba(8, 18, 42, 0.95), rgba(0, 0, 0, 0.8)); border: 1px solid rgba(255, 214, 128, 0.12); }
-    .pip-dj { position: absolute; left: 50%; bottom: 10%; width: 48%; transform: translateX(-50%); image-rendering: pixelated; filter: drop-shadow(0 12px 16px rgba(0,0,0,0.45)); }
-    .pip-art { position: absolute; right: 8%; bottom: 11%; width: 24%; aspect-ratio: 1; border-radius: 5px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-    .pip-meta { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-    .pip-kicker { color: #efb13f; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 900; }
-    .pip-title { font-size: clamp(1rem, 6vw, 1.55rem); line-height: 1.02; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pip-artist, .pip-album { color: rgba(255,255,255,0.68); font-size: clamp(0.72rem, 3vw, 0.95rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pip-progress { height: 5px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,0.16); }
-    .pip-progress span { display: block; height: 100%; width: 0%; background: #efb13f; border-radius: inherit; transition: width 180ms linear; }
-    .pip-actions { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
-    .pip-button { width: 38px; height: 38px; display: inline-grid; place-items: center; border-radius: 999px; border: 1px solid rgba(239,177,63,0.38); color: #efb13f; background: rgba(0,0,0,0.32); cursor: pointer; }
-    .pip-button-primary { width: 48px; height: 48px; background: #ffeec1; color: #100a03; border-color: rgba(255,255,255,0.32); }
-    .pip-button svg { width: 22px; height: 22px; fill: currentColor; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-    @media (max-width: 330px) { .pip-shell { grid-template-columns: 1fr; } .pip-room { display: none; } }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000000; }
+    body { color: #fff3cf; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .pip-full-room-shell {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      background: #000000;
+      border: 1px solid rgba(239, 177, 63, 0.36);
+    }
+    .pip-full-room-shell .room {
+      width: min(100vw, calc(100vh * 16 / 9)) !important;
+      height: min(100vh, calc(100vw * 9 / 16)) !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
+      box-shadow: none !important;
+      border: 0 !important;
+      transform: none !important;
+      pointer-events: none !important;
+      background: #000000 !important;
+    }
+    .pip-full-room-shell .room-scene-transform {
+      pointer-events: none !important;
+    }
+    .pip-full-room-shell .floor-player,
+    .pip-full-room-shell .control-card,
+    .pip-full-room-shell .panel-toggle,
+    .pip-full-room-shell .room-utility-controls,
+    .pip-full-room-shell .menu2-panel,
+    .pip-full-room-shell .menu2-bubble,
+    .pip-full-room-shell #floorPlayer,
+    .pip-full-room-shell #controlCard,
+    .pip-full-room-shell #panelToggle {
+      display: none !important;
+    }
+    .pip-full-room-shell .pip-canvas-snapshot {
+      object-fit: fill;
+      pointer-events: none;
+    }
+    .pip-full-room-shell .lyrics-boundary-guides,
+    .pip-full-room-shell .tall-lyric-guide-overlay,
+    .pip-full-room-shell .session-album-guide-overlay {
+      display: none !important;
+    }
+    .pip-empty {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 50% 45%, rgba(239, 177, 63, 0.20), transparent 35%), #050403;
+      color: #efb13f;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
   `;
+}
+
+function syncPocketDjPipDocumentState(doc: Document): void {
+  doc.documentElement.className = document.documentElement.className;
+  doc.documentElement.setAttribute("style", document.documentElement.getAttribute("style") || "");
+  doc.body.className = document.body.className;
 }
 
 function renderPocketDjPip(force = false): void {
   const pip = pocketDjPipWindow;
   if (!pip || pip.closed) return;
   const doc = pip.document;
+  syncPocketDjPipDocumentState(doc);
   const key = pocketDjPipPlaybackKey();
   const progressKey = makePocketDjPipProgressKey();
-  const track = state.playback;
-  const progressMs = getEstimatedPlaybackProgress(track);
-  const pct = track.durationMs > 0 ? clamp((progressMs / track.durationMs) * 100, 0, 100) : 0;
 
   if (force || key !== pocketDjPipRenderKey) {
     pocketDjPipRenderKey = key;
     pocketDjPipProgressKey = "";
-    const djSrc = document.querySelector<HTMLImageElement>("#djSprite")?.getAttribute("src") || "";
-    doc.body.innerHTML = `
-      <main class="pip-shell">
-        <section class="pip-room" aria-hidden="true">
-          ${djSrc ? `<img class="pip-dj" src="${escapeHtmlInline(djSrc)}" alt="" />` : ""}
-          ${track.albumArtUrl ? `<img class="pip-art" src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : ""}
-        </section>
-        <section class="pip-meta">
-          <div class="pip-kicker">PocketDJ Mini</div>
-          <div class="pip-title">${escapeHtmlInline(track.title || "PocketDJ")}</div>
-          <div class="pip-artist">${escapeHtmlInline(track.artist || "Waiting for music")}</div>
-          <div class="pip-album">${escapeHtmlInline(track.album || "")}</div>
-          <div class="pip-progress" aria-hidden="true"><span id="pipProgressFill"></span></div>
-          <div class="pip-actions">
-            <button id="pipPrev" class="pip-button" type="button" aria-label="Previous">${menu2Icon("prev")}</button>
-            <button id="pipPlay" class="pip-button pip-button-primary" type="button" aria-label="Play or pause">${menu2Icon(track.isPlaying ? "pause" : "play")}</button>
-            <button id="pipNext" class="pip-button" type="button" aria-label="Next">${menu2Icon("next")}</button>
-          </div>
-        </section>
-      </main>`;
-    doc.querySelector<HTMLButtonElement>("#pipPrev")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPrevButton")?.click());
-    doc.querySelector<HTMLButtonElement>("#pipPlay")?.addEventListener("click", runPlayPauseToggle);
-    doc.querySelector<HTMLButtonElement>("#pipNext")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelNextButton")?.click());
+    const roomMarkup = buildPocketDjRoomCloneForPip();
+    doc.body.innerHTML = roomMarkup
+      ? `<main class="pip-full-room-shell" aria-label="PocketDJ mini room">${roomMarkup}</main>`
+      : `<main class="pip-empty">PocketDJ</main>`;
   }
 
   if (progressKey !== pocketDjPipProgressKey) {
     pocketDjPipProgressKey = progressKey;
-    const fill = doc.querySelector<HTMLElement>("#pipProgressFill");
-    if (fill) fill.style.width = `${pct}%`;
-    const play = doc.querySelector<HTMLButtonElement>("#pipPlay");
-    if (play) {
-      play.innerHTML = menu2Icon(track.isPlaying ? "pause" : "play");
-      play.setAttribute("aria-label", track.isPlaying ? "Pause" : "Play");
-    }
   }
 }
 
@@ -5165,12 +5236,14 @@ async function openPocketDjPictureInPicture(): Promise<void> {
     return;
   }
   try {
-    const pip = await window.documentPictureInPicture!.requestWindow({ width: 420, height: 240 });
+    const pip = await window.documentPictureInPicture!.requestWindow({ width: 480, height: 270 });
     pocketDjPipWindow = pip;
     pocketDjPipRenderKey = "";
     pocketDjPipProgressKey = "";
-    pip.document.title = "PocketDJ Mini";
+    pip.document.title = "PocketDJ Mini Room";
+    copyPocketDjPipDocumentStyles(pip.document);
     const style = pip.document.createElement("style");
+    style.setAttribute("data-pocketdj-pip-style", "pip-room");
     style.textContent = pocketDjPipStyles();
     pip.document.head.appendChild(style);
     pip.addEventListener("pagehide", () => {
