@@ -8971,7 +8971,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-fill-color", roomUtility.lyricPosterFillColor);
   root.style.setProperty("--lyric-poster-stroke-opacity", String(roomUtility.lyricPosterStrokeOpacity));
   root.style.setProperty("--lyric-poster-fill-opacity", String(roomUtility.lyricPosterFillOpacity));
-  root.style.setProperty("--lyric-poster-glow", String(roomUtility.lyricPosterGlow));
+  root.style.setProperty("--lyric-poster-glow", "0");
   root.style.setProperty("--lyric-poster-one-row-vertical-stretch", String(roomUtility.lyricPosterOneRowVerticalStretch));
   root.style.setProperty("--lyric-poster-one-row-tightness", String(roomUtility.lyricPosterOneRowTightness));
   root.style.setProperty("--lyric-poster-one-row-perspective", String(roomUtility.lyricPosterOneRowPerspective));
@@ -9060,6 +9060,14 @@ function applyRoomUtilitySettings(): void {
   root.classList.toggle("lyric-poster-transition-soft-dissolve", roomUtility.lyricPosterTransition === "soft-dissolve");
   root.classList.toggle("lyric-poster-transition-ghost-drift", roomUtility.lyricPosterTransition === "ghost-drift");
   root.classList.toggle("lyric-poster-transition-back-push", roomUtility.lyricPosterTransition === "back-push");
+  // Ceiling lyrics are a projection layer, not decorative text. Keep all text effects
+  // disabled in every layout, including normal 16:9, tall, and full-tall modes.
+  roomUtility.lyricPosterGlow = 0;
+  roomUtility.lyricPosterEffectDropShadow = false;
+  roomUtility.lyricPosterEffectEmboss = false;
+  roomUtility.lyricPosterEffectInsetEmboss = false;
+  roomUtility.lyricPosterEffectBevel = false;
+  roomUtility.lyricPosterEffectSoftBlur = false;
   root.classList.toggle("lyric-poster-effect-drop-shadow", false);
   root.classList.toggle("lyric-poster-effect-emboss", false);
   root.classList.toggle("lyric-poster-effect-inset-emboss", false);

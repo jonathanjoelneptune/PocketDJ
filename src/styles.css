@@ -13635,3 +13635,49 @@ body,
 :root.room-fill-stretch .room {
   box-shadow: none !important;
 }
+
+
+/* v117: ceiling lyrics must never use decorative text effects in any layout.
+   This final guard covers normal 16:9, tall, full-tall, SVG rows, and HTML fallback rows. */
+:root {
+  --lyric-poster-glow: 0 !important;
+  --lyric-poster-effect-drop-shadow-filter: !important;
+  --lyric-poster-effect-emboss-filter: !important;
+  --lyric-poster-effect-inset-emboss-filter: !important;
+  --lyric-poster-effect-bevel-filter: !important;
+  --lyric-poster-effect-soft-blur-filter: !important;
+}
+
+#activeLyricsBlock .lyric-poster-svg-row,
+#activeLyricsBlock .lyric-poster-row-text,
+#activeLyricsBlock .lyric-poster-html-row span,
+.active-lyrics-block .lyric-poster-svg-row,
+.active-lyrics-block .lyric-poster-row-text,
+.active-lyrics-block .lyric-poster-html-row span,
+.lyric-poster-svg-row,
+.lyric-poster-row-text,
+.lyric-poster-html-row span {
+  filter: none !important;
+  -webkit-filter: none !important;
+  text-shadow: none !important;
+}
+
+.lyric-poster-effect-drop-shadow .lyric-poster-svg-row,
+.lyric-poster-effect-drop-shadow .lyric-poster-row-text,
+.lyric-poster-effect-drop-shadow .lyric-poster-html-row span,
+.lyric-poster-effect-emboss .lyric-poster-svg-row,
+.lyric-poster-effect-emboss .lyric-poster-row-text,
+.lyric-poster-effect-emboss .lyric-poster-html-row span,
+.lyric-poster-effect-inset-emboss .lyric-poster-svg-row,
+.lyric-poster-effect-inset-emboss .lyric-poster-row-text,
+.lyric-poster-effect-inset-emboss .lyric-poster-html-row span,
+.lyric-poster-effect-bevel .lyric-poster-svg-row,
+.lyric-poster-effect-bevel .lyric-poster-row-text,
+.lyric-poster-effect-bevel .lyric-poster-html-row span,
+.lyric-poster-effect-soft-blur .lyric-poster-svg-row,
+.lyric-poster-effect-soft-blur .lyric-poster-row-text,
+.lyric-poster-effect-soft-blur .lyric-poster-html-row span {
+  filter: none !important;
+  -webkit-filter: none !important;
+  text-shadow: none !important;
+}

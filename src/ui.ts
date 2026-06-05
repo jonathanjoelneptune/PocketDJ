@@ -586,7 +586,7 @@ export function renderShell(state: AppState): void {
               </label>
 
               <div class="utility-minihead">Ceiling lyric effects</div>
-              <label class="utility-checkbox"><input id="lyricPosterEffectDropShadow" type="checkbox" checked /> Drop shadow</label>
+              <label class="utility-checkbox"><input id="lyricPosterEffectDropShadow" type="checkbox" /> Drop shadow</label>
               <label class="utility-checkbox"><input id="lyricPosterEffectEmboss" type="checkbox" /> Emboss</label>
               <label class="utility-checkbox"><input id="lyricPosterEffectInsetEmboss" type="checkbox" /> Inset emboss</label>
               <label class="utility-checkbox"><input id="lyricPosterEffectBevel" type="checkbox" /> Bevel</label>
