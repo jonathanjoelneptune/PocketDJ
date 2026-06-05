@@ -39,6 +39,10 @@ declare global {
       }) => SpotifyWebPlaybackPlayer;
     };
     onSpotifyWebPlaybackSDKReady?: () => void;
+    documentPictureInPicture?: {
+      requestWindow: (options?: { width?: number; height?: number; disallowReturnToOpener?: boolean }) => Promise<Window>;
+      window?: Window | null;
+    };
   }
 }
 
@@ -125,6 +129,11 @@ if (!["auto", "off", "force"].includes(menu2FoldDockMode)) menu2FoldDockMode = "
 let menu2AdvancedUtilityVisible = false;
 let menu2ShowFloorControls = localStorage.getItem("pocketdj-menu2-show-floor-controls") === "1";
 let menu2SearchResultTab: "tracks" | "artists" | "playlists" | "albums" = "tracks";
+
+let pocketDjPipWindow: Window | null = null;
+let pocketDjPipRenderKey = "";
+let pocketDjPipProgressKey = "";
+
 
 type RoomCameraSettings = {
   zoom: number;
@@ -4238,7 +4247,7 @@ async function refreshMenu2ActiveTab(): Promise<void> {
 }
 
 
-function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "shuffle" | "repeat" | "queue" | "connect" | "openPanel" | "openPanelLeft" | "openPanelRight" | "broadcast" | "now" | "playlists" | "search" | "devices"): string {
+function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "pip" | "shuffle" | "repeat" | "queue" | "connect" | "openPanel" | "openPanelLeft" | "openPanelRight" | "broadcast" | "now" | "playlists" | "search" | "devices"): string {
   const paths: Record<typeof name, string> = {
     lyrics: '<path d="M10 18V7l8-1.7v10.2"/><circle cx="8" cy="18" r="2.1"/><circle cx="18" cy="15.5" r="2.1"/>',
     play: '<path d="M8.2 5.2v13.6L18.8 12z" fill="currentColor" stroke="none"/>',
@@ -4250,6 +4259,7 @@ function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume
     unlock: '<rect x="6" y="10" width="12" height="10" rx="2"/><path d="M8 10V8a4 4 0 0 1 7-2.6"/>',
     compact: '<rect x="5" y="5" width="14" height="14" rx="2"/><path d="M8 9h8M8 12h8M8 15h5"/>',
     fullscreen: '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
+    pip: '<rect x="3.5" y="5" width="17" height="13" rx="2.5"/><rect x="11" y="11" width="6.8" height="4.5" rx="1" fill="currentColor" stroke="none"/>',
     shuffle: '<path d="M4 7h3l10 10h3M17 7h3M17 7l3-3M17 7l3 3M4 17h3l3-3"/>',
     repeat: '<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
     queue: '<path d="M5 7h14M5 12h14M5 17h9"/>',
@@ -4501,6 +4511,7 @@ function syncMenu2Pills(): void {
   const connect = document.querySelector<HTMLButtonElement>("#menu2ConnectPill");
   const topLyrics = document.querySelector<HTMLButtonElement>("#menu2TopLyricsPill");
   const compact = document.querySelector<HTMLButtonElement>("#menu2CompactPill");
+  const pip = document.querySelector<HTMLButtonElement>("#menu2PipPill");
   const fullscreen = document.querySelector<HTMLButtonElement>("#menu2FullscreenPill");
   if (topLyrics) {
     topLyrics.innerHTML = menu2Icon("lyrics");
@@ -4525,6 +4536,14 @@ function syncMenu2Pills(): void {
     compact.classList.toggle("menu2-pill-active", menu2PanelMode === "compact");
     compact.title = menu2PanelMode === "compact" ? "Switch Menu 2.0 to full panel" : "Switch Menu 2.0 to compact";
     compact.setAttribute("aria-pressed", String(menu2PanelMode === "compact"));
+  }
+  if (pip) {
+    pip.innerHTML = menu2Icon("pip");
+    const active = Boolean(pocketDjPipWindow && !pocketDjPipWindow.closed);
+    pip.classList.toggle("menu2-pill-active", active);
+    pip.classList.toggle("menu2-pill-disabled", !isDocumentPictureInPictureSupported());
+    pip.title = isDocumentPictureInPictureSupported() ? (active ? "Close Picture-in-Picture" : "Open Picture-in-Picture") : "Picture-in-Picture requires desktop Chrome/Edge";
+    pip.setAttribute("aria-pressed", String(active));
   }
   if (fullscreen) {
     fullscreen.innerHTML = menu2Icon("fullscreen");
@@ -5036,6 +5055,147 @@ function runMenu2PlayPause(): void {
   runPlayPauseToggle();
 }
 
+function isDocumentPictureInPictureSupported(): boolean {
+  return typeof window.documentPictureInPicture?.requestWindow === "function";
+}
+
+function pocketDjPipPlaybackKey(): string {
+  const track = state.playback;
+  const djPose = document.querySelector<HTMLImageElement>("#djSprite")?.getAttribute("src") || "";
+  return [
+    track.trackId,
+    track.title,
+    track.artist,
+    track.album,
+    track.albumArtUrl,
+    track.durationMs,
+    track.isPlaying,
+    djPose,
+    lyricsEnabled,
+  ].join("|");
+}
+
+function makePocketDjPipProgressKey(): string {
+  const track = state.playback;
+  const progress = Math.round(getEstimatedPlaybackProgress(track) / 1000);
+  return `${track.trackId}|${track.isPlaying}|${progress}|${track.durationMs}`;
+}
+
+function pocketDjPipStyles(): string {
+  return `
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; overflow: hidden; background: #050403; color: #fff3cf; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .pip-shell { width: 100vw; height: 100vh; min-width: 260px; min-height: 150px; display: grid; grid-template-columns: minmax(112px, 42%) 1fr; gap: 12px; padding: 12px; background: radial-gradient(circle at 36% 18%, rgba(239, 177, 63, 0.18), transparent 38%), linear-gradient(135deg, rgba(22, 16, 12, 0.98), rgba(3, 4, 7, 0.96)); border: 1px solid rgba(239, 177, 63, 0.35); }
+    .pip-room { position: relative; overflow: hidden; border-radius: 16px; min-height: 120px; background: linear-gradient(180deg, rgba(17, 31, 56, 0.92), rgba(11, 8, 7, 0.96)); box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.55); }
+    .pip-room::before { content: ""; position: absolute; inset: 8% 9% 39%; border-radius: 10px; background: radial-gradient(circle at 50% 60%, rgba(64, 126, 208, 0.42), transparent 55%), linear-gradient(180deg, rgba(8, 18, 42, 0.95), rgba(0, 0, 0, 0.8)); border: 1px solid rgba(255, 214, 128, 0.12); }
+    .pip-dj { position: absolute; left: 50%; bottom: 10%; width: 48%; transform: translateX(-50%); image-rendering: pixelated; filter: drop-shadow(0 12px 16px rgba(0,0,0,0.45)); }
+    .pip-art { position: absolute; right: 8%; bottom: 11%; width: 24%; aspect-ratio: 1; border-radius: 5px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+    .pip-meta { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+    .pip-kicker { color: #efb13f; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 900; }
+    .pip-title { font-size: clamp(1rem, 6vw, 1.55rem); line-height: 1.02; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pip-artist, .pip-album { color: rgba(255,255,255,0.68); font-size: clamp(0.72rem, 3vw, 0.95rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pip-progress { height: 5px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,0.16); }
+    .pip-progress span { display: block; height: 100%; width: 0%; background: #efb13f; border-radius: inherit; transition: width 180ms linear; }
+    .pip-actions { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+    .pip-button { width: 38px; height: 38px; display: inline-grid; place-items: center; border-radius: 999px; border: 1px solid rgba(239,177,63,0.38); color: #efb13f; background: rgba(0,0,0,0.32); cursor: pointer; }
+    .pip-button-primary { width: 48px; height: 48px; background: #ffeec1; color: #100a03; border-color: rgba(255,255,255,0.32); }
+    .pip-button svg { width: 22px; height: 22px; fill: currentColor; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+    @media (max-width: 330px) { .pip-shell { grid-template-columns: 1fr; } .pip-room { display: none; } }
+  `;
+}
+
+function renderPocketDjPip(force = false): void {
+  const pip = pocketDjPipWindow;
+  if (!pip || pip.closed) return;
+  const doc = pip.document;
+  const key = pocketDjPipPlaybackKey();
+  const progressKey = makePocketDjPipProgressKey();
+  const track = state.playback;
+  const progressMs = getEstimatedPlaybackProgress(track);
+  const pct = track.durationMs > 0 ? clamp((progressMs / track.durationMs) * 100, 0, 100) : 0;
+
+  if (force || key !== pocketDjPipRenderKey) {
+    pocketDjPipRenderKey = key;
+    pocketDjPipProgressKey = "";
+    const djSrc = document.querySelector<HTMLImageElement>("#djSprite")?.getAttribute("src") || "";
+    doc.body.innerHTML = `
+      <main class="pip-shell">
+        <section class="pip-room" aria-hidden="true">
+          ${djSrc ? `<img class="pip-dj" src="${escapeHtmlInline(djSrc)}" alt="" />` : ""}
+          ${track.albumArtUrl ? `<img class="pip-art" src="${escapeHtmlInline(track.albumArtUrl)}" alt="" />` : ""}
+        </section>
+        <section class="pip-meta">
+          <div class="pip-kicker">PocketDJ Mini</div>
+          <div class="pip-title">${escapeHtmlInline(track.title || "PocketDJ")}</div>
+          <div class="pip-artist">${escapeHtmlInline(track.artist || "Waiting for music")}</div>
+          <div class="pip-album">${escapeHtmlInline(track.album || "")}</div>
+          <div class="pip-progress" aria-hidden="true"><span id="pipProgressFill"></span></div>
+          <div class="pip-actions">
+            <button id="pipPrev" class="pip-button" type="button" aria-label="Previous">${menu2Icon("prev")}</button>
+            <button id="pipPlay" class="pip-button pip-button-primary" type="button" aria-label="Play or pause">${menu2Icon(track.isPlaying ? "pause" : "play")}</button>
+            <button id="pipNext" class="pip-button" type="button" aria-label="Next">${menu2Icon("next")}</button>
+          </div>
+        </section>
+      </main>`;
+    doc.querySelector<HTMLButtonElement>("#pipPrev")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelPrevButton")?.click());
+    doc.querySelector<HTMLButtonElement>("#pipPlay")?.addEventListener("click", runPlayPauseToggle);
+    doc.querySelector<HTMLButtonElement>("#pipNext")?.addEventListener("click", () => document.querySelector<HTMLButtonElement>("#panelNextButton")?.click());
+  }
+
+  if (progressKey !== pocketDjPipProgressKey) {
+    pocketDjPipProgressKey = progressKey;
+    const fill = doc.querySelector<HTMLElement>("#pipProgressFill");
+    if (fill) fill.style.width = `${pct}%`;
+    const play = doc.querySelector<HTMLButtonElement>("#pipPlay");
+    if (play) {
+      play.innerHTML = menu2Icon(track.isPlaying ? "pause" : "play");
+      play.setAttribute("aria-label", track.isPlaying ? "Pause" : "Play");
+    }
+  }
+}
+
+async function openPocketDjPictureInPicture(): Promise<void> {
+  if (!isDocumentPictureInPictureSupported()) {
+    setMenu2Status("Picture-in-Picture is available in supported desktop Chrome/Edge browsers.", false);
+    return;
+  }
+  if (pocketDjPipWindow && !pocketDjPipWindow.closed) {
+    pocketDjPipWindow.focus();
+    return;
+  }
+  try {
+    const pip = await window.documentPictureInPicture!.requestWindow({ width: 420, height: 240 });
+    pocketDjPipWindow = pip;
+    pocketDjPipRenderKey = "";
+    pocketDjPipProgressKey = "";
+    pip.document.title = "PocketDJ Mini";
+    const style = pip.document.createElement("style");
+    style.textContent = pocketDjPipStyles();
+    pip.document.head.appendChild(style);
+    pip.addEventListener("pagehide", () => {
+      pocketDjPipWindow = null;
+      pocketDjPipRenderKey = "";
+      syncMenu2Pills();
+    });
+    renderPocketDjPip(true);
+    syncMenu2Pills();
+  } catch (error) {
+    setMenu2Status(error instanceof Error ? error.message : "Could not open Picture-in-Picture.", false);
+  }
+}
+
+function togglePocketDjPictureInPicture(): void {
+  if (pocketDjPipWindow && !pocketDjPipWindow.closed) {
+    pocketDjPipWindow.close();
+    pocketDjPipWindow = null;
+    pocketDjPipRenderKey = "";
+    syncMenu2Pills();
+    return;
+  }
+  void openPocketDjPictureInPicture();
+}
+
 function scheduleMenu2BubbleVolumeHide(): void {
   if (menu2BubbleVolumeTimer) window.clearTimeout(menu2BubbleVolumeTimer);
   menu2BubbleVolumeTimer = window.setTimeout(() => {
@@ -5112,6 +5272,7 @@ function bindMenu2Controls(): void {
     menu2NowRenderKey = "";
     renderMenu2NowPlaying();
   });
+  document.querySelector<HTMLButtonElement>("#menu2PipPill")?.addEventListener("click", () => togglePocketDjPictureInPicture());
   document.querySelector<HTMLButtonElement>("#menu2FullscreenPill")?.addEventListener("click", () => void toggleAppFullscreen());
   document.querySelector<HTMLButtonElement>("#menu2LockPill")?.addEventListener("click", handleMenu2LockClick);
   document.querySelector<HTMLButtonElement>("#menu2RefreshQueue")?.addEventListener("click", () => void loadMenu2Queue());
@@ -8966,10 +9127,14 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--lyric-poster-tall-final-two-bottom-br-y", `${roomUtility.lyricPosterTallFinalTwoBottomBRY}px`);
   root.style.setProperty("--lyric-poster-tall-final-two-bottom-bl-x", `${roomUtility.lyricPosterTallFinalTwoBottomBLX}px`);
   root.style.setProperty("--lyric-poster-tall-final-two-bottom-bl-y", `${roomUtility.lyricPosterTallFinalTwoBottomBLY}px`);
-  root.style.setProperty("--lyric-poster-stroke", `${roomUtility.lyricPosterStroke}px`);
+  // Ceiling lyric strokes are intentionally disabled in every layout. Keep the
+  // utility values present for backwards compatibility, but never render strokes.
+  roomUtility.lyricPosterStroke = 0;
+  roomUtility.lyricPosterStrokeOpacity = 0;
+  root.style.setProperty("--lyric-poster-stroke", "0px");
   root.style.setProperty("--lyric-poster-stroke-color", roomUtility.lyricPosterStrokeColor);
   root.style.setProperty("--lyric-poster-fill-color", roomUtility.lyricPosterFillColor);
-  root.style.setProperty("--lyric-poster-stroke-opacity", String(roomUtility.lyricPosterStrokeOpacity));
+  root.style.setProperty("--lyric-poster-stroke-opacity", "0");
   root.style.setProperty("--lyric-poster-fill-opacity", String(roomUtility.lyricPosterFillOpacity));
   root.style.setProperty("--lyric-poster-glow", "0");
   root.style.setProperty("--lyric-poster-one-row-vertical-stretch", String(roomUtility.lyricPosterOneRowVerticalStretch));
@@ -9601,6 +9766,8 @@ function tick(): void {
 
   const albumRevealReady = primeSongChangeAlbumReveal(state.playback);
 
+  dj.setTempoBpm(speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM);
+
   if (roomUtility.songChangeMode) {
     dj.setPose("a41.png");
     state.djMode = "playing";
@@ -9620,6 +9787,7 @@ function tick(): void {
   updatePlaybackUi(state.playback, state.debugOpen);
   refreshMenu2NowPlayingIfNeeded();
   syncMenu2Dock();
+  renderPocketDjPip();
 
   const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);

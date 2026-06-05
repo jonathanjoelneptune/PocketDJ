@@ -13681,3 +13681,26 @@ body,
   -webkit-filter: none !important;
   text-shadow: none !important;
 }
+
+
+/* v118: final ceiling lyric stroke guard and Menu 2.0 PiP affordance. */
+:root {
+  --lyric-poster-stroke: 0px !important;
+  --lyric-poster-stroke-opacity: 0 !important;
+}
+
+.lyric-poster-svg-row,
+.lyric-poster-row-text {
+  stroke: transparent !important;
+  stroke-opacity: 0 !important;
+  stroke-width: 0 !important;
+}
+
+.lyric-poster-html-row span {
+  -webkit-text-stroke-width: 0 !important;
+  -webkit-text-stroke-color: transparent !important;
+}
+
+.menu2-pip-pill.menu2-pill-disabled {
+  opacity: 0.48;
+}

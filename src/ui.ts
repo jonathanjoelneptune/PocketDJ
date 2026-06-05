@@ -1283,6 +1283,7 @@ export function renderShell(state: AppState): void {
               </div>
             </div>
             <button id="menu2CompactPill" class="menu2-pill menu2-round-pill menu2-panel-pill" type="button" aria-label="Toggle Menu 2.0 full or compact" title="Full Panel"></button>
+            <button id="menu2PipPill" class="menu2-pill menu2-round-pill menu2-pip-pill" type="button" aria-label="Open Picture-in-Picture" title="Picture-in-Picture"></button>
             <button id="menu2FullscreenPill" class="menu2-pill menu2-round-pill menu2-icon-pill" type="button" aria-label="Toggle fullscreen" title="Fullscreen"></button>
             <button id="menu2LockPill" class="menu2-pill menu2-round-pill menu2-lock-pill" type="button" aria-label="Lock Menu 2.0 open" title="Lock menu open"></button>
           </div>

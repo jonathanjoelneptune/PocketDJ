@@ -79,6 +79,7 @@ export class DjController {
   private lastStatus = "";
   private previousFrame = "";
   private pendingSongChangeCinematic = false;
+  private tempoBpm = 96;
 
   constructor(private readonly poseElement: HTMLElement, private readonly modeElement: HTMLElement) {
     this.preload();
@@ -125,6 +126,11 @@ export class DjController {
   setCinematicMode(enabled: boolean): void {
     if (enabled) this.enterCinematicMode();
     else this.enterNormalMode(Date.now());
+  }
+
+  setTempoBpm(bpm: number): void {
+    if (!Number.isFinite(bpm) || bpm <= 0) return;
+    this.tempoBpm = Math.max(55, Math.min(190, bpm));
   }
 
   getDebugStatus(): Record<string, string | number | boolean> {
@@ -276,7 +282,7 @@ export class DjController {
   }
 
   private frameDuration(loop: AnimationLoop, advancedIndex: number): number {
-    const base = randomInt(loop.minFrameMs, loop.maxFrameMs);
+    const base = this.frameBaseDuration(loop);
     const endPause = advancedIndex % loop.frames.length === 0
       ? randomInt(loop.endPauseMinMs, loop.endPauseMaxMs)
       : 0;
@@ -286,6 +292,20 @@ export class DjController {
       ? ALBUM_REVEAL_FRAME_HOLD_MULTIPLIER
       : 1;
     return Math.round(base * holdMultiplier) + endPause;
+  }
+
+  private frameBaseDuration(loop: AnimationLoop): number {
+    const organicBase = randomInt(loop.minFrameMs, loop.maxFrameMs);
+    // About half of the core scratch frame changes lock to the BPM grid. The
+    // other half stay organic/random so DJ NES feels musical without becoming a
+    // rigid metronome. Cinematics and idle/paused poses are never beat-quantized.
+    if (loop.kind !== "quick" || Math.random() >= 0.5) return organicBase;
+
+    const beatMs = 60_000 / Math.max(55, Math.min(190, this.tempoBpm || 96));
+    const grid = beatMs * (Math.random() < 0.72 ? 0.5 : 1);
+    const jitter = beatMs * (Math.random() * 0.10 - 0.05);
+    const beatDuration = Math.max(loop.minFrameMs, Math.min(loop.maxFrameMs, grid + jitter));
+    return Math.round(organicBase * 0.35 + beatDuration * 0.65);
   }
 
   private startNormalLoop(mode: DjMode, now: number): void {
