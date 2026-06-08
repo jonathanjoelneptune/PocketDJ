@@ -5059,15 +5059,25 @@ function isDocumentPictureInPictureSupported(): boolean {
   return typeof window.documentPictureInPicture?.requestWindow === "function";
 }
 
+
+function absoluteAssetUrl(src: string): string {
+  if (!src) return "";
+  try {
+    return new URL(src, window.location.href).href;
+  } catch {
+    return src;
+  }
+}
+
+function currentPocketDjPipLyricLine(): string {
+  if (!lyricsEnabled) return "";
+  return document.querySelector<HTMLElement>("#activeLyricsBlock")?.textContent?.trim() || "";
+}
+
 function pocketDjPipPlaybackKey(): string {
   const track = state.playback;
   const djPose = document.querySelector<HTMLImageElement>("#djSprite")?.getAttribute("src") || "";
   const novaPose = document.querySelector<HTMLImageElement>("#djNovaSprite")?.getAttribute("src") || "";
-  const lyricText = document.querySelector<HTMLElement>("#activeLyricsBlock")?.textContent?.trim() || "";
-  const marqueeText = [
-    document.querySelector<HTMLElement>("#marqueeTitle")?.textContent?.trim() || "",
-    document.querySelector<HTMLElement>("#marqueeArtist")?.textContent?.trim() || "",
-  ].join("/");
   return [
     track.trackId,
     track.title,
@@ -5078,8 +5088,7 @@ function pocketDjPipPlaybackKey(): string {
     track.isPlaying,
     djPose,
     novaPose,
-    lyricText,
-    marqueeText,
+    currentPocketDjPipLyricLine(),
     lyricsEnabled,
     document.documentElement.className,
   ].join("|");
@@ -5087,7 +5096,7 @@ function pocketDjPipPlaybackKey(): string {
 
 function makePocketDjPipProgressKey(): string {
   const track = state.playback;
-  const progress = Math.round(getEstimatedPlaybackProgress(track) / 1000);
+  const progress = Math.round(getEstimatedPlaybackProgress(track) / 250);
   return `${track.trackId}|${track.isPlaying}|${progress}|${track.durationMs}`;
 }
 
@@ -5100,37 +5109,71 @@ function copyPocketDjPipDocumentStyles(doc: Document): void {
   });
 }
 
-function canvasSnapshotMarkup(canvas: HTMLCanvasElement): string {
-  try {
-    const dataUrl = canvas.toDataURL("image/png");
-    const className = canvas.className || "";
-    const id = canvas.id ? `${canvas.id}-snapshot` : "pip-canvas-snapshot";
-    return `<img id="${escapeHtmlInline(id)}" class="${escapeHtmlInline(className)} pip-canvas-snapshot" src="${escapeHtmlInline(dataUrl)}" alt="" draggable="false" aria-hidden="true" />`;
-  } catch {
-    return "";
-  }
+function formatPipTime(ms: number): string {
+  if (!Number.isFinite(ms) || ms <= 0) return "0:00";
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-function buildPocketDjRoomCloneForPip(): string {
-  const room = document.querySelector<HTMLElement>(".room");
-  if (!room) return "";
-  const clone = room.cloneNode(true) as HTMLElement;
+function buildPocketDjMiniBoothMarkup(): string {
+  const track = state.playback;
+  const djSprite = document.querySelector<HTMLImageElement>("#djSprite")?.getAttribute("src") || "";
+  const novaSprite = document.querySelector<HTMLImageElement>("#djNovaSprite")?.getAttribute("src") || "";
+  const novaVisible = document.querySelector<HTMLElement>("#djNovaSprite")?.offsetParent !== null;
+  const lyricLine = currentPocketDjPipLyricLine();
+  const title = track.title?.trim() || "PocketDJ";
+  const artist = track.artist?.trim() || (track.trackId ? "Unknown Artist" : "Mini booth ready");
+  const album = track.album?.trim() || "";
+  const albumArt = track.albumArtUrl || "";
+  const progressMs = getEstimatedPlaybackProgress(track);
+  const durationMs = Math.max(0, track.durationMs || 0);
+  const progressPct = durationMs > 0 ? clamp(progressMs / durationMs, 0, 1) * 100 : 0;
+  const roomBg = absoluteAssetUrl("./assets/room/pocket-dj-room-offline-v1.png");
 
-  clone.querySelectorAll("#floorPlayer, .floor-player, .floor-controls-lock, .floor-controls-fullscreen").forEach((node) => node.remove());
-  clone.querySelectorAll("#menu2Bubble, #menu2Panel, #controlCard, #panelToggle, .panel-toggle, .menu2-bubble, .menu2-panel, .control-card, .room-utility-controls").forEach((node) => node.remove());
-  clone.querySelectorAll("button, input, select, textarea").forEach((node) => {
-    (node as HTMLElement).setAttribute("tabindex", "-1");
-    (node as HTMLElement).setAttribute("aria-hidden", "true");
-  });
+  return `
+    <main class="pip-mini-booth" aria-label="PocketDJ Mini Booth">
+      <section class="pip-mini-marquee" aria-label="Now playing">
+        <div class="pip-mini-marquee-inner">
+          <span class="pip-mini-title">${escapeHtmlInline(title)}</span>
+          <span class="pip-mini-separator">•</span>
+          <span class="pip-mini-artist">${escapeHtmlInline(artist)}</span>
+        </div>
+      </section>
 
-  clone.querySelectorAll<HTMLCanvasElement>("canvas").forEach((canvas) => {
-    const snapshot = canvasSnapshotMarkup(canvas);
-    if (snapshot) canvas.outerHTML = snapshot;
-    else canvas.remove();
-  });
+      <section class="pip-mini-stage" style="--pip-room-bg:url('${escapeHtmlInline(roomBg)}')" aria-label="DJ booth preview">
+        <div class="pip-mini-stage-wash"></div>
+        ${albumArt ? `<img class="pip-mini-album" src="${escapeHtmlInline(albumArt)}" alt="${escapeHtmlInline(album || title)} album art" />` : ""}
+        ${djSprite ? `<img class="pip-mini-dj ${novaVisible ? "pip-mini-dj-with-nova" : ""}" src="${escapeHtmlInline(absoluteAssetUrl(djSprite))}" alt="DJ" />` : ""}
+        ${novaVisible && novaSprite ? `<img class="pip-mini-dj pip-mini-nova" src="${escapeHtmlInline(absoluteAssetUrl(novaSprite))}" alt="DJ Nova" />` : ""}
+        <div class="pip-mini-deck-glow"></div>
+      </section>
 
-  clone.classList.add("pip-room-clone");
-  return clone.outerHTML;
+      <section class="pip-mini-lyric" aria-live="polite">
+        ${lyricLine ? escapeHtmlInline(lyricLine) : `<span class="pip-mini-lyric-muted">${lyricsEnabled ? "" : "Lyrics off"}</span>`}
+      </section>
+
+      <section class="pip-mini-meta">
+        <div class="pip-mini-meta-main">
+          <div class="pip-mini-song">${escapeHtmlInline(title)}</div>
+          <div class="pip-mini-sub">${escapeHtmlInline(album ? `${artist} · ${album}` : artist)}</div>
+        </div>
+      </section>
+
+      <section class="pip-mini-progress" aria-label="Playback progress">
+        <div class="pip-mini-time pip-mini-current">${formatPipTime(progressMs)}</div>
+        <div class="pip-mini-bar"><div id="pipMiniProgressFill" class="pip-mini-bar-fill" style="width:${progressPct.toFixed(2)}%"></div></div>
+        <div class="pip-mini-time pip-mini-duration">${formatPipTime(durationMs)}</div>
+      </section>
+
+      <section class="pip-mini-controls" aria-label="Playback controls">
+        <button id="pipMiniPrev" class="pip-mini-button" type="button" aria-label="Previous track">${menu2Icon("prev")}</button>
+        <button id="pipMiniPlay" class="pip-mini-button pip-mini-play" type="button" aria-label="${track.isPlaying ? "Pause" : "Play"}">${menu2Icon(track.isPlaying ? "pause" : "play")}</button>
+        <button id="pipMiniNext" class="pip-mini-button" type="button" aria-label="Next track">${menu2Icon("next")}</button>
+      </section>
+    </main>
+  `;
 }
 
 function pocketDjPipStyles(): string {
@@ -5138,62 +5181,243 @@ function pocketDjPipStyles(): string {
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000000; }
-    body { color: #fff3cf; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    .pip-full-room-shell {
-      position: fixed;
-      inset: 0;
+    body {
+      color: #fff3cf;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --pip-accent: var(--menu2-accent, #efb13f);
+      --pip-accent-rgb: var(--menu2-accent-rgb, 239, 177, 63);
+      --pip-panel: rgba(7, 6, 4, 0.82);
+      --pip-panel-strong: rgba(9, 8, 6, 0.94);
+    }
+    .pip-mini-booth {
       width: 100vw;
       height: 100vh;
+      min-width: 260px;
+      min-height: 160px;
+      display: grid;
+      grid-template-rows: auto minmax(76px, 1fr) auto auto auto;
+      gap: clamp(4px, 1.35vh, 9px);
+      padding: clamp(8px, 2.2vh, 14px);
+      background:
+        radial-gradient(circle at 50% 18%, rgba(var(--pip-accent-rgb), 0.20), transparent 34%),
+        linear-gradient(180deg, rgba(0,0,0,0.48), rgba(0,0,0,0.92)),
+        #000000;
+      border: 1px solid rgba(var(--pip-accent-rgb), 0.42);
       overflow: hidden;
+    }
+    .pip-mini-marquee {
+      border: 1px solid rgba(var(--pip-accent-rgb), 0.45);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.72), rgba(0,0,0,0.46));
+      box-shadow: 0 0 18px rgba(var(--pip-accent-rgb), 0.16), inset 0 0 0 1px rgba(255,255,255,0.04);
+      overflow: hidden;
+      min-height: clamp(28px, 7.8vh, 40px);
       display: grid;
       place-items: center;
-      background: #000000;
-      border: 1px solid rgba(239, 177, 63, 0.36);
+      padding: 0 clamp(9px, 2vw, 14px);
     }
-    .pip-full-room-shell .room {
-      width: min(100vw, calc(100vh * 16 / 9)) !important;
-      height: min(100vh, calc(100vw * 9 / 16)) !important;
-      max-width: 100vw !important;
-      max-height: 100vh !important;
-      box-shadow: none !important;
-      border: 0 !important;
-      transform: none !important;
-      pointer-events: none !important;
-      background: #000000 !important;
+    .pip-mini-marquee-inner {
+      max-width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      animation: pipMiniFadeIn 520ms ease both;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(var(--pip-accent-rgb), 0.34);
     }
-    .pip-full-room-shell .room-scene-transform {
-      pointer-events: none !important;
+    .pip-mini-title,
+    .pip-mini-artist {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .pip-full-room-shell .floor-player,
-    .pip-full-room-shell .control-card,
-    .pip-full-room-shell .panel-toggle,
-    .pip-full-room-shell .room-utility-controls,
-    .pip-full-room-shell .menu2-panel,
-    .pip-full-room-shell .menu2-bubble,
-    .pip-full-room-shell #floorPlayer,
-    .pip-full-room-shell #controlCard,
-    .pip-full-room-shell #panelToggle {
-      display: none !important;
+    .pip-mini-title { color: #fff7dc; }
+    .pip-mini-artist { color: rgba(255, 231, 169, 0.78); }
+    .pip-mini-separator { color: var(--pip-accent); opacity: 0.9; }
+    .pip-mini-stage {
+      position: relative;
+      min-height: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background-image:
+        linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.28)),
+        var(--pip-room-bg);
+      background-size: 174% auto;
+      background-position: 50% 60%;
+      box-shadow: inset 0 0 42px rgba(0,0,0,0.48), 0 8px 24px rgba(0,0,0,0.35);
     }
-    .pip-full-room-shell .pip-canvas-snapshot {
-      object-fit: fill;
+    .pip-mini-stage-wash {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 52% 52%, rgba(var(--pip-accent-rgb), 0.15), transparent 38%),
+        linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.18));
+      mix-blend-mode: screen;
+      opacity: 0.75;
       pointer-events: none;
     }
-    .pip-full-room-shell .lyrics-boundary-guides,
-    .pip-full-room-shell .tall-lyric-guide-overlay,
-    .pip-full-room-shell .session-album-guide-overlay {
-      display: none !important;
+    .pip-mini-album {
+      position: absolute;
+      left: 14%;
+      bottom: 11%;
+      width: min(23%, 70px);
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 2px solid rgba(0,0,0,0.86);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.48), inset 0 0 0 1px rgba(255,255,255,0.16);
+      transform: rotate(-5deg);
     }
-    .pip-empty {
-      width: 100vw;
-      height: 100vh;
+    .pip-mini-dj {
+      position: absolute;
+      left: 50%;
+      bottom: 1%;
+      width: min(42%, 150px);
+      max-height: 112%;
+      object-fit: contain;
+      transform: translateX(-50%);
+      image-rendering: pixelated;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.42));
+      z-index: 3;
+    }
+    .pip-mini-nova {
+      left: 56%;
+      width: min(38%, 136px);
+      z-index: 4;
+    }
+    .pip-mini-deck-glow {
+      position: absolute;
+      left: 50%;
+      bottom: 7%;
+      width: 54%;
+      height: 18%;
+      border-radius: 999px;
+      transform: translateX(-50%);
+      background: radial-gradient(ellipse at center, rgba(var(--pip-accent-rgb), 0.26), transparent 68%);
+      filter: blur(10px);
+      pointer-events: none;
+    }
+    .pip-mini-lyric {
+      min-height: 1.35em;
       display: grid;
       place-items: center;
-      background: radial-gradient(circle at 50% 45%, rgba(239, 177, 63, 0.20), transparent 35%), #050403;
-      color: #efb13f;
+      padding: 0 8px;
+      color: rgba(255, 245, 219, 0.94);
+      font-weight: 800;
+      font-size: clamp(11px, 3.6vh, 16px);
+      line-height: 1.18;
+      text-align: center;
+      text-wrap: balance;
+      overflow: hidden;
+    }
+    .pip-mini-lyric-muted { opacity: 0.42; }
+    .pip-mini-meta {
+      min-height: 0;
+      padding: clamp(5px, 1.2vh, 8px) clamp(8px, 2vw, 12px);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.42);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .pip-mini-song {
+      font-size: clamp(12px, 4.2vh, 18px);
+      line-height: 1.1;
       font-weight: 900;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .pip-mini-sub {
+      margin-top: 2px;
+      color: rgba(255, 231, 169, 0.70);
+      font-size: clamp(10px, 3vh, 13px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .pip-mini-progress {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      color: rgba(255,255,255,0.58);
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+    .pip-mini-bar {
+      height: 5px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.15);
+    }
+    .pip-mini-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(var(--pip-accent-rgb), 0.72), rgba(255,255,255,0.90));
+      transition: width 180ms linear;
+    }
+    .pip-mini-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(12px, 4vw, 24px);
+    }
+    .pip-mini-button {
+      width: clamp(34px, 11vh, 48px);
+      height: clamp(34px, 11vh, 48px);
+      border-radius: 999px;
+      border: 1px solid rgba(var(--pip-accent-rgb), 0.38);
+      background: rgba(0,0,0,0.56);
+      color: var(--pip-accent);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 6px 16px rgba(0,0,0,0.34);
+    }
+    .pip-mini-button svg { width: 55%; height: 55%; stroke-width: 2.5; }
+    .pip-mini-play {
+      width: clamp(42px, 13vh, 58px);
+      height: clamp(42px, 13vh, 58px);
+      background: var(--pip-accent);
+      color: #0a0703;
+      border-color: rgba(255,255,255,0.24);
+    }
+    @media (min-aspect-ratio: 1.55/1) and (min-width: 520px) {
+      .pip-mini-booth {
+        grid-template-columns: minmax(190px, 46%) 1fr;
+        grid-template-rows: auto auto 1fr auto auto;
+        grid-template-areas:
+          "marquee marquee"
+          "stage lyric"
+          "stage meta"
+          "stage progress"
+          "stage controls";
+      }
+      .pip-mini-marquee { grid-area: marquee; }
+      .pip-mini-stage { grid-area: stage; min-height: 0; }
+      .pip-mini-lyric { grid-area: lyric; align-self: end; }
+      .pip-mini-meta { grid-area: meta; align-self: center; }
+      .pip-mini-progress { grid-area: progress; }
+      .pip-mini-controls { grid-area: controls; }
+      .pip-mini-dj { width: min(58%, 170px); }
+      .pip-mini-album { width: min(25%, 76px); }
+    }
+    @media (max-height: 215px) {
+      .pip-mini-booth { grid-template-rows: auto minmax(60px, 1fr) auto auto; gap: 4px; padding: 7px; }
+      .pip-mini-lyric { display: none; }
+      .pip-mini-meta { display: none; }
+      .pip-mini-marquee { min-height: 26px; }
+    }
+    @keyframes pipMiniFadeIn {
+      from { opacity: 0; filter: blur(2px); }
+      to { opacity: 1; filter: blur(0); }
     }
   `;
 }
@@ -5202,6 +5426,38 @@ function syncPocketDjPipDocumentState(doc: Document): void {
   doc.documentElement.className = document.documentElement.className;
   doc.documentElement.setAttribute("style", document.documentElement.getAttribute("style") || "");
   doc.body.className = document.body.className;
+}
+
+function updatePocketDjPipProgress(doc: Document): void {
+  const track = state.playback;
+  const progressMs = getEstimatedPlaybackProgress(track);
+  const durationMs = Math.max(0, track.durationMs || 0);
+  const progressPct = durationMs > 0 ? clamp(progressMs / durationMs, 0, 1) * 100 : 0;
+  const fill = doc.querySelector<HTMLElement>("#pipMiniProgressFill");
+  const current = doc.querySelector<HTMLElement>(".pip-mini-current");
+  const duration = doc.querySelector<HTMLElement>(".pip-mini-duration");
+  if (fill) fill.style.width = `${progressPct.toFixed(2)}%`;
+  if (current) current.textContent = formatPipTime(progressMs);
+  if (duration) duration.textContent = formatPipTime(durationMs);
+}
+
+function bindPocketDjPipMiniControls(doc: Document): void {
+  doc.querySelector<HTMLButtonElement>("#pipMiniPlay")?.addEventListener("click", () => runMenu2PlayPause());
+  doc.querySelector<HTMLButtonElement>("#pipMiniNext")?.addEventListener("click", () => {
+    void runSpotifyPlaybackCommand(async () => {
+      await nextSpotifyTrack(state.spotifyClientId);
+    });
+  });
+  doc.querySelector<HTMLButtonElement>("#pipMiniPrev")?.addEventListener("click", () => {
+    void runSpotifyPlaybackCommand(async () => {
+      const estimatedProgress = getEstimatedPlaybackProgress(state.playback);
+      if (estimatedProgress > 3_000) {
+        await seekSpotify(state.spotifyClientId, 0);
+      } else {
+        await previousSpotifyTrack(state.spotifyClientId);
+      }
+    });
+  });
 }
 
 function renderPocketDjPip(force = false): void {
@@ -5215,14 +5471,13 @@ function renderPocketDjPip(force = false): void {
   if (force || key !== pocketDjPipRenderKey) {
     pocketDjPipRenderKey = key;
     pocketDjPipProgressKey = "";
-    const roomMarkup = buildPocketDjRoomCloneForPip();
-    doc.body.innerHTML = roomMarkup
-      ? `<main class="pip-full-room-shell" aria-label="PocketDJ mini room">${roomMarkup}</main>`
-      : `<main class="pip-empty">PocketDJ</main>`;
+    doc.body.innerHTML = buildPocketDjMiniBoothMarkup();
+    bindPocketDjPipMiniControls(doc);
   }
 
   if (progressKey !== pocketDjPipProgressKey) {
     pocketDjPipProgressKey = progressKey;
+    updatePocketDjPipProgress(doc);
   }
 }
 
@@ -5236,14 +5491,14 @@ async function openPocketDjPictureInPicture(): Promise<void> {
     return;
   }
   try {
-    const pip = await window.documentPictureInPicture!.requestWindow({ width: 480, height: 270 });
+    const pip = await window.documentPictureInPicture!.requestWindow({ width: 420, height: 320 });
     pocketDjPipWindow = pip;
     pocketDjPipRenderKey = "";
     pocketDjPipProgressKey = "";
-    pip.document.title = "PocketDJ Mini Room";
+    pip.document.title = "PocketDJ Mini Booth";
     copyPocketDjPipDocumentStyles(pip.document);
     const style = pip.document.createElement("style");
-    style.setAttribute("data-pocketdj-pip-style", "pip-room");
+    style.setAttribute("data-pocketdj-pip-style", "pip-mini-booth");
     style.textContent = pocketDjPipStyles();
     pip.document.head.appendChild(style);
     pip.addEventListener("pagehide", () => {
@@ -5251,6 +5506,7 @@ async function openPocketDjPictureInPicture(): Promise<void> {
       pocketDjPipRenderKey = "";
       syncMenu2Pills();
     });
+    pip.addEventListener("resize", () => renderPocketDjPip(true));
     renderPocketDjPip(true);
     syncMenu2Pills();
   } catch (error) {
