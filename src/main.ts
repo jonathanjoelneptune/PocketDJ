@@ -1,7 +1,7 @@
 import "./styles.css";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
-import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, observeSpotifyDjSpeech } from "./dj/speechBubble";
+import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, isSpotifyDjSpeakingForPose, observeSpotifyDjSpeech } from "./dj/speechBubble";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
 import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getSpotifyPlaylist, getExternalTrackTempoBpm, getTrackTempoBpm, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyQueue, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
@@ -10103,6 +10103,9 @@ function tick(): void {
   const albumRevealReady = primeSongChangeAlbumReveal(state.playback);
 
   dj.setTempoBpm(speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM);
+  // Speech is read from the existing Spotify playback poll. Only override
+  // the DJ's visual pose; never alter normalized playback or cinematic timing.
+  dj.setSpeakingActive(!useDemo && isSpotifyDjSpeakingForPose());
 
   if (roomUtility.songChangeMode) {
     dj.setPose("a41.png");
