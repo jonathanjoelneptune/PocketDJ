@@ -121,6 +121,57 @@
     .monitor-reference { border-top:1px solid #484053; padding-top:10px; font-size:.85rem; color:#c3b7ce; margin:10px 0 0; }
     @media (max-width:710px) { .monitor-layout { grid-template-columns:1fr; } .dj-stage { min-height:250px; } }
     @media (prefers-reduced-motion:reduce) { .dj-stage * { animation:none!important; } }
+
+    /* Phase 1: wordless pixel speech effect. No audio capture or fabricated dialogue. */
+    .dj-speech {
+      display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center;
+      min-height:82px; border:4px solid #35283e; border-radius:2px;
+      padding:10px 12px 12px; box-shadow:5px 5px 0 rgba(0,0,0,.55),inset -3px -3px 0 #e0cdb4;
+      opacity:0; visibility:hidden; pointer-events:none;
+      transform:translateY(8px) scale(.94); transform-origin:45% 100%;
+      transition:opacity .17s steps(4,end),transform .22s steps(5,end),visibility 0s linear .22s;
+      will-change:opacity,transform;
+    }
+    .dj-stage[data-mode="speaking"] .dj-speech, .dj-stage.previewing .dj-speech {
+      opacity:1; visibility:visible; transform:translateY(0) scale(1); transition-delay:0s;
+    }
+    .dj-speech::after { left:29%; bottom:-14px; width:14px; height:14px; }
+    .speech-pixels { display:flex; align-items:center; justify-content:center; gap:9px; height:15px; }
+    .speech-pixels span {
+      display:block; height:10px; width:10px; background:#57405a; box-shadow:2px 2px 0 #ceb5af;
+      animation:pixel-syllable .92s steps(2,end) infinite;
+    }
+    .speech-pixels span:nth-child(2){ animation-delay:.20s; }
+    .speech-pixels span:nth-child(3){ animation-delay:.40s; }
+    .speech-wave { display:flex; align-items:center; justify-content:center; height:23px; gap:5px;
+      opacity:.4; transition:opacity .2s linear; }
+    .speech-wave span { display:block; background:#88689b; width:6px; height:16px; transform-origin:50% 50%;
+      box-shadow:2px 0 #c8b2cc; animation:pixel-wave .82s steps(3,end) infinite alternate; }
+    .speech-wave span:nth-child(2) { animation-delay:.13s; }
+    .speech-wave span:nth-child(3) { animation-delay:.29s; }
+    .speech-wave span:nth-child(4) { animation-delay:.46s; }
+    .speech-wave span:nth-child(5) { animation-delay:.18s; }
+    .dj-stage[data-confidence="likely"] .speech-wave, .dj-stage.previewing .speech-wave {opacity:1}
+    .dj-stage[data-confidence="likely"] .dj-speech, .dj-stage.previewing .dj-speech {border-color:#6e4a85}
+    .dj-stage.previewing .dj-sprite { animation:dj-talk .27s ease-in-out infinite alternate; }
+    .dj-stage.previewing .dj-led { background:#91e4c7; opacity:1; box-shadow:0 0 17px #91e4c7; }
+    .dj-stage.previewing {border-color:#c4a2e4;}
+    .bubble-preview-row {display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;}
+    .bubble-preview-row .hint {margin:0; flex:1; min-width:170px}
+    @keyframes pixel-syllable {
+      0%,18%,100% { transform:translateY(2px); opacity:.4; }
+      35%,65% { transform:translateY(-3px); opacity:1; }
+    }
+    @keyframes pixel-wave {
+      0% {transform:scaleY(.35)}
+      55% {transform:scaleY(1.15)}
+      100% {transform:scaleY(.65)}
+    }
+    @media (prefers-reduced-motion:reduce) {
+      .dj-speech, .speech-wave { transition:none!important; }
+      .speech-pixels span, .speech-wave span {animation:none!important;}
+      .dj-stage.previewing .dj-sprite {animation:none!important;}
+    }
   </style>
 </head>
 <body>
@@ -215,10 +266,13 @@
       <span class="pill"><span class="dot" id="monitor-dot"></span><span id="monitor-time">Waiting for recording</span></span>
     </div>
     <div class="monitor-layout">
-      <div id="dj-stage" class="dj-stage" data-mode="waiting" role="img" aria-label="Mini DJ, waiting for playback data">
+      <div id="dj-stage" class="dj-stage" data-mode="waiting" data-confidence="none" role="img" aria-label="Mini DJ, waiting for playback data">
         <div class="dj-starlight"></div>
         <div class="equalizer" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-        <div id="dj-speech" class="dj-speech" aria-hidden="true"><span id="dj-speech-text">DJ speaking?</span></div>
+        <div id="dj-speech" class="dj-speech" aria-hidden="true">
+          <div class="speech-pixels" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="speech-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
         <div class="dj-figure">
           <img id="dj-sprite" class="dj-sprite" src="./assets/poses/final/i1.png" alt="" loading="eager">
           <div id="dj-fallback" class="dj-fallback" aria-hidden="true">
@@ -241,6 +295,10 @@
         <div class="monitor-reference">Your manual audio marker: <strong id="monitor-manual">Not marked</strong><br>
           <span id="monitor-agreement">Manual markers do not influence the automatic detector.</span></div>
       </div>
+    </div>
+    <div class="bubble-preview-row">
+      <button id="preview-bubble" type="button">Preview bubble (5 seconds)</button>
+      <p class="hint">Visual effect only. The preview makes no Spotify requests, changes no detector state, and does not enter the export.</p>
     </div>
   </section>
 
@@ -288,6 +346,7 @@
   let apiRequests = 0;
   let lastPlayerProbeAt = 0;
   let lastPrimaryFingerprint = null;
+  let bubblePreviewTimer = null;
 
   function tokens() {
     try {
@@ -321,6 +380,7 @@
     $("changes").textContent = String(changes);
     $("requests").textContent = String(apiRequests);
     $("interval").disabled = recording;
+    $("preview-bubble").disabled = recording || bubblePreviewTimer !== null;
   }
 
   function displayTime(iso) {
@@ -559,6 +619,8 @@
     const mode = monitorMode(inference.state);
     const stage = $("dj-stage");
     stage.dataset.mode = mode;
+    stage.dataset.confidence = inference.state === "likely-speaking" ? "likely" :
+      inference.state === "possible-speaking" ? "possible" : "none";
     stage.setAttribute("aria-label", "Mini DJ: " + inference.label + ". " + inference.reason);
     $("monitor-state").textContent = inference.label;
     $("monitor-reason").textContent = inference.reason;
@@ -568,7 +630,6 @@
       mode === "music" ? "Track metadata confirmed" :
       inference.state === "waiting" ? "Waiting" : inference.state === "stopped" ? "Stopped" : "No speech inference";
     $("monitor-streak").textContent = String(inference.candidates || 0);
-    $("dj-speech-text").textContent = inference.state === "likely-speaking" ? "DJ on the mic? •••" : "DJ speaking?";
     $("dj-speech").setAttribute("aria-hidden", mode === "speaking" ? "false" : "true");
     $("monitor-time").textContent = entry ? "Sample " + entry.number + " · " + displayTime(entry.observedAt) : "Waiting for recording";
     $("monitor-dot").className = "dot" + (mode === "music" || mode === "speaking" ? " live" : inference.state === "error" ? " warn" : "");
@@ -605,6 +666,32 @@
       "Current inference differs from your last marker; compare timestamps in the export.";
   }
 
+  // A visual-only preview for checking the bubble without Spotify playback.
+  // Never change the inferred state, recording, manual markers, or exported log.
+  function cancelBubblePreview() {
+    if (bubblePreviewTimer !== null) clearTimeout(bubblePreviewTimer);
+    bubblePreviewTimer = null;
+    $("dj-stage").classList.remove("previewing");
+    $("preview-bubble").textContent = "Preview bubble (5 seconds)";
+    $("dj-speech").setAttribute("aria-hidden", "true");
+  }
+
+  $("preview-bubble").addEventListener("click", () => {
+    if (recording || bubblePreviewTimer !== null) return;
+    const stage = $("dj-stage");
+    const previousLabel = stage.getAttribute("aria-label");
+    stage.classList.add("previewing");
+    stage.setAttribute("aria-label", "Mini DJ: visual-only speech bubble preview, not a Spotify detection.");
+    $("dj-speech").setAttribute("aria-hidden", "false");
+    $("preview-bubble").textContent = "Preview playing…";
+    bubblePreviewTimer = setTimeout(() => {
+      cancelBubblePreview();
+      stage.setAttribute("aria-label", previousLabel || "Mini DJ, waiting for playback data");
+      updateButtons();
+    }, 5000);
+    updateButtons();
+  });
+
   $("dj-sprite").addEventListener("error", () => {
     $("dj-sprite").hidden = true;
     $("dj-fallback").style.display = "block";
@@ -620,6 +707,7 @@
   }
 
   function stop(reason) {
+    cancelBubblePreview();
     recording = false;
     clearTimeout(timer);
     showStatus("Not recording", reason || "Recording stopped. Export the results for analysis.", "");
@@ -746,6 +834,7 @@
       showStatus("Spotify not connected", "Open Pocket DJ and connect Spotify in this same browser, then return.", "warn");
       return;
     }
+    cancelBubblePreview();
     recording = true;
     previous = null;
     lastPlayerProbeAt = 0;
@@ -765,6 +854,7 @@
   document.querySelectorAll("[data-mark]").forEach((b) => b.addEventListener("click", () => marker(b.dataset.mark)));
   $("clear").addEventListener("click", () => {
     if (recording) return;
+    cancelBubblePreview();
     log.length = 0;
     seq = 0; samples = 0; markers = 0; changes = 0; apiRequests = 0; previous = null;
     lastPlayerProbeAt = 0; lastPrimaryFingerprint = null;
