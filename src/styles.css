@@ -13825,3 +13825,132 @@ body,
   .spotify-dj-speech-bubble { transition: none; }
   .spotify-dj-speech-pixels i, .spotify-dj-speech-bars i { animation: none; }
 }
+
+
+/* Pocket DJ room lighting v1
+   Classic is neutral relative to the existing v65T grading. Presets change
+   only the visual light factors, not the underlying room art or asset layout. */
+:root {
+  --room-light-exposure: 1;
+  --room-light-saturation: 1;
+  --room-light-album-lift: 1;
+  --room-light-wall-fill: 0;
+  --room-light-dj-fill: 0;
+  --room-light-warmth: 0;
+}
+
+/* Applying the filter to the background element also grades its tall-mode
+   ::before ceiling clone. This prevents a 16:9 / tall brightness seam. */
+.room-bg {
+  filter:
+    brightness(calc(1.075 * var(--room-light-exposure, 1)))
+    contrast(1.035)
+    saturate(var(--room-light-saturation, 1));
+}
+
+/* Light the side shelves, center deck, and warm room independently.
+   The overlay sits behind sprites, text, and physical foreground elements.
+   All gradients fade toward the edges, leaving the night ceiling dark. */
+.room-lighting-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(ellipse 24% 42% at 9% 46%,
+      rgba(255, 198, 137, calc(var(--room-light-wall-fill, 0) * 0.21)) 0%,
+      rgba(255, 172, 105, calc(var(--room-light-wall-fill, 0) * 0.08)) 55%,
+      transparent 100%),
+    radial-gradient(ellipse 24% 42% at 91% 46%,
+      rgba(255, 198, 137, calc(var(--room-light-wall-fill, 0) * 0.21)) 0%,
+      rgba(255, 172, 105, calc(var(--room-light-wall-fill, 0) * 0.08)) 55%,
+      transparent 100%),
+    radial-gradient(ellipse 15% 22% at 50% 58%,
+      rgba(255, 219, 172, calc(var(--room-light-dj-fill, 0) * 0.18)) 0%,
+      rgba(255, 181, 103, calc(var(--room-light-dj-fill, 0) * 0.055)) 65%,
+      transparent 100%),
+    radial-gradient(ellipse 65% 38% at 50% 72%,
+      rgba(255, 171, 92, calc(var(--room-light-warmth, 0) * 0.08)) 0%,
+      transparent 100%);
+}
+
+/* Wall albums are a separate SVG/canvas surface. Brightening only the room
+   bitmap would leave the actual covers noticeably darker than their shelves. */
+.session-album-warp-canvas {
+  filter:
+    brightness(var(--room-light-album-lift, 1))
+    saturate(calc(1 + (var(--room-light-album-lift, 1) - 1) * 0.28));
+}
+.session-album-placeholder-image {
+  filter:
+    saturate(calc(0.86 + (var(--room-light-album-lift, 1) - 1) * 0.28))
+    contrast(0.98)
+    brightness(calc(0.90 * var(--room-light-album-lift, 1)))
+    sepia(0.14)
+    drop-shadow(0 3px 5px rgba(0, 0, 0, 0.30));
+}
+
+/* The soft foreground fill makes NES and Nova readable against the window
+   while respecting transparency, pose sizes, shadows, and sprite positions. */
+.dj-frame-img {
+  filter:
+    brightness(calc(1 + var(--room-light-dj-fill, 0) * 0.13))
+    saturate(calc(1 + var(--room-light-dj-fill, 0) * 0.09));
+}
+
+/* Keep five standard tabs on a single row even in compact mode. The hidden Dev
+   tab remains full-width when explicitly unlocked in the full panel. */
+.menu2-panel .menu2-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+.menu2-panel .menu2-tab {
+  min-width: 0;
+  padding: 8px 4px;
+  font-size: 0.69rem;
+  white-space: nowrap;
+}
+.menu2-panel .menu2-dev-tab:not([hidden]) {
+  grid-column: 1 / -1;
+}
+.menu2-mode-compact .menu2-tabs {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+/* Main-tab lighting controls reuse menu2's existing warm panel system. */
+.menu2-room-pane .menu2-section-head { margin-bottom: 9px; }
+.menu2-room-help {
+  margin: 8px 0 12px;
+  color: var(--menu2-muted, rgba(238, 221, 193, 0.72));
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+.menu2-room-lighting-controls {
+  display: grid;
+  gap: 5px;
+  margin: 6px 0 12px;
+}
+.menu2-room-advanced {
+  margin-top: 14px;
+  padding: 11px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(251, 191, 36, 0.19);
+  background: rgba(8, 9, 19, 0.26);
+}
+.menu2-room-advanced > summary {
+  cursor: pointer;
+  color: rgba(255, 218, 159, 0.94);
+  font-weight: 750;
+  font-size: 0.81rem;
+  margin-bottom: 3px;
+}
+.menu2-room-advanced[open] > summary { margin-bottom: 12px; }
+.menu2-room-advanced .menu2-dev-subsection {
+  margin-top: 13px;
+}
+.menu2-room-advanced .menu2-setting,
+.menu2-room-lighting-controls .menu2-setting {
+  max-width: 100%;
+}
