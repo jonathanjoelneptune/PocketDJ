@@ -24,7 +24,15 @@ type SpotifyTrackItem = {
   album?: { name?: string; uri?: string; images?: SpotifyImage[] };
 };
 
+export type SpotifyPlaybackObservation = {
+  httpStatus: 200 | 204;
+  isPlaying: boolean;
+  itemPresent: boolean;
+  currentlyPlayingType: string | null;
+};
+
 type CurrentlyPlayingResponse = {
+  currently_playing_type?: string;
   is_playing?: boolean;
   progress_ms?: number;
   item?: SpotifyTrackItem | null;
@@ -197,7 +205,7 @@ export async function setSpotifyRepeat(clientId: string, mode: "off" | "track" |
   await spotifyPlayerCommand(clientId, `/repeat?state=${mode}`, { method: "PUT" });
 }
 
-export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedTrack> {
+export async function getCurrentlyPlaying(clientId: string, onObservation?: (observation: SpotifyPlaybackObservation) => void): Promise<NormalizedTrack> {
   const token = await getUsableToken(clientId);
   if (!token) {
     clearTokens();
@@ -223,6 +231,7 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
   });
 
   if (response.status === 204) {
+    onObservation?.({ httpStatus: 204, isPlaying: false, itemPresent: false, currentlyPlayingType: null });
     return {
       source: "spotify",
       isAuthenticated: true,
@@ -256,6 +265,14 @@ export async function getCurrentlyPlaying(clientId: string): Promise<NormalizedT
 
   const json = (await response.json()) as CurrentlyPlayingResponse & { item?: SpotifyTrackItem | null };
   const item = json.item;
+  // This uses the playback response already fetched for Pocket DJ.
+  // Keep normal track normalization unchanged; the wordless room overlay is independent.
+  onObservation?.({
+    httpStatus: 200,
+    isPlaying: json.is_playing === true,
+    itemPresent: !!item,
+    currentlyPlayingType: typeof json.currently_playing_type === "string" ? json.currently_playing_type : null,
+  });
 
   if (!item) {
     return {
