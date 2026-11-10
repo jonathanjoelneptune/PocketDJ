@@ -1,6 +1,7 @@
 import "./styles.css";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
+import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, observeSpotifyDjSpeech } from "./dj/speechBubble";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
 import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getSpotifyPlaylist, getExternalTrackTempoBpm, getTrackTempoBpm, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyQueue, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
@@ -3663,6 +3664,7 @@ async function boot(): Promise<void> {
   updateDynamicCeilingReveal();
   window.addEventListener("resize", updateDynamicCeilingReveal, { passive: true });
   renderShell(state);
+  initializeSpotifyDjSpeechBubble();
   reactiveRoomCurrentRenderedPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
   reactiveRoomRenderedEnergy = 0.3;
   reactiveRoomEnergyFrom = 0.3;
@@ -6025,6 +6027,7 @@ function bindControls(): void {
 
   qs<HTMLButtonElement>("#disconnectSpotify").addEventListener("click", () => {
     disconnectSpotify();
+    clearSpotifyDjSpeechBubble();
     pocketDjPlayer?.disconnect();
     pocketDjPlayer = null;
     pocketDjDeviceId = null;
@@ -10052,12 +10055,15 @@ async function refreshLyricsForCurrentTrack(): Promise<void> {
 }
 
 async function pollSpotifyNow(): Promise<void> {
-  if (useDemo) return;
+  if (useDemo) {
+    clearSpotifyDjSpeechBubble();
+    return;
+  }
   if (!state.spotifyClientId) return;
 
   try {
     lastPollError = "";
-    const polledPlayback = await getCurrentlyPlaying(state.spotifyClientId);
+    const polledPlayback = await getCurrentlyPlaying(state.spotifyClientId, observeSpotifyDjSpeech);
     state.playback = reconcilePolledPlaybackWithIntent(polledPlayback);
     updatePlaybackUi(state.playback, state.debugOpen);
     void refreshLyricsForCurrentTrack();
@@ -10073,6 +10079,7 @@ async function pollSpotifyNow(): Promise<void> {
     }
   } catch (error) {
     lastPollError = error instanceof Error ? error.message : String(error);
+    clearSpotifyDjSpeechBubble();
     console.warn(lastPollError);
   } finally {
     // Keep visible-page polling fast so the DJ state changes quickly when Spotify starts,
