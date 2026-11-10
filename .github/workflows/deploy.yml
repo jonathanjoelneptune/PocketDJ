@@ -11,9 +11,11 @@ permissions:
   pages: write
   id-token: write
 
+# GitHub Pages publishes one revision at a time. The newest commit wins;
+# cancel an older run rather than queueing behind a stalled deployment.
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
