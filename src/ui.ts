@@ -37,6 +37,7 @@ export function renderShell(state: AppState): void {
         <div class="album-wash album-wash-a" id="albumWashA"></div>
         <div class="album-wash album-wash-b" id="albumWashB"></div>
         <div class="room-filter-overlay warm-club" id="roomFilterOverlay" aria-hidden="true"></div>
+        <div class="room-lighting-overlay" id="roomLightingOverlay" aria-hidden="true"></div>
         <div class="room-base-layer" aria-hidden="false">
         <div id="sessionAlbumFrameOverlay" class="session-album-frame-overlay" aria-hidden="true"></div>
         <canvas id="sessionAlbumWarpCanvas" class="session-album-warp-canvas" width="1764" height="992" aria-hidden="true"></canvas>
@@ -1299,6 +1300,7 @@ export function renderShell(state: AppState): void {
             <button class="menu2-tab" type="button" data-menu2-tab="playlists">My Playlists</button>
             <button class="menu2-tab" type="button" data-menu2-tab="search">Search</button>
             <button class="menu2-tab" type="button" data-menu2-tab="devices">Devices</button>
+            <button class="menu2-tab" type="button" data-menu2-tab="room">Room</button>
             <button id="menu2DevTab" class="menu2-tab menu2-dev-tab" type="button" data-menu2-tab="dev" hidden>Dev</button>
           </nav>
 
@@ -1376,6 +1378,80 @@ export function renderShell(state: AppState): void {
             <div class="menu2-section-head"><h3>Devices</h3><button id="menu2RefreshDevices" class="menu2-action" type="button">Refresh</button></div>
             <button id="menu2PlayHere" class="menu2-action menu2-wide-action" type="button">Play through Pocket DJ</button>
             <div id="menu2DeviceResults" class="menu2-list menu2-empty">Spotify devices will show here.</div>
+          </section>
+
+          <section id="menu2RoomPane" class="menu2-pane menu2-room-pane">
+            <div class="menu2-section-head"><h3>Room Lighting</h3><span>Cozy night, clearer details</span></div>
+            <label class="menu2-setting">Lighting preset
+              <select id="menu2RoomLightingPreset" class="menu2-select">
+                <option value="classic">Classic (original)</option>
+                <option value="brighter-night">Brighter Night</option>
+                <option value="deep-night">Deep Night</option>
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+            <p class="menu2-room-help">Classic preserves the original room and your existing advanced settings. Brighter Night lifts the artwork and softens the dark edges without changing the nighttime skyline.</p>
+            <div class="menu2-room-lighting-controls">
+              <label class="menu2-setting menu2-slider-setting">Room brightness <span id="menu2RoomLightingExposureValue">1.00</span>
+                <input id="menu2RoomLightingExposure" type="range" min="0.85" max="1.20" step="0.01" value="1" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Album clarity <span id="menu2RoomLightingAlbumLiftValue">1.00</span>
+                <input id="menu2RoomLightingAlbumLift" type="range" min="0.80" max="1.50" step="0.01" value="1" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Wall illumination <span id="menu2RoomLightingWallFillValue">0.00</span>
+                <input id="menu2RoomLightingWallFill" type="range" min="0" max="1" step="0.01" value="0" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">DJ illumination <span id="menu2RoomLightingDjFillValue">0.00</span>
+                <input id="menu2RoomLightingDjFill" type="range" min="0" max="1" step="0.01" value="0" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Warmth <span id="menu2RoomLightingWarmthValue">0.00</span>
+                <input id="menu2RoomLightingWarmth" type="range" min="0" max="1" step="0.01" value="0" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Vignette amount <span id="menu2RoomLightingVignetteValue">1.00</span>
+                <input id="menu2RoomLightingVignette" type="range" min="0" max="1.50" step="0.01" value="1" />
+              </label>
+            </div>
+            <button id="menu2RoomLightingReset" class="menu2-action menu2-wide-action" type="button">Restore Classic Lighting</button>
+            <details class="menu2-room-advanced">
+              <summary>Scene overlays &amp; ambient color</summary>
+              <label class="menu2-setting">Scene filter
+                <select id="menu2RoomSceneFilter" class="menu2-select">
+                  <option value="none">None</option>
+                <option value="warm-club">Warm Club</option>
+                <option value="dreamy-blue">Dreamy Blue</option>
+                <option value="deep-night">Deep Night</option>
+                <option value="retro-vhs">Retro VHS</option>
+                <option value="neon-purple">Neon Purple</option>
+                <option value="cinematic-amber">Cinematic Amber</option>
+                <option value="moody-lowlight">Moody Lowlight</option>
+                </select>
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Filter strength <span id="menu2RoomFilterStrengthValue">0.20</span>
+                <input id="menu2RoomFilterStrength" type="range" min="0" max="0.5" step="0.01" value="0.20" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Shadow opacity <span id="menu2RoomShadowOpacityValue">1.00</span>
+                <input id="menu2RoomShadowOpacity" type="range" min="0" max="1" step="0.01" value="1" />
+              </label>
+            <div class="menu2-dev-subsection">
+              <div class="menu2-section-head menu2-subsection-head"><h3>Room Vibe Balance</h3><span>Color without haze</span></div>
+              <label class="menu2-setting menu2-slider-setting">Album wash strength <span id="menu2RoomVibeAlbumWashValue">0.34</span>
+                <input id="menu2RoomVibeAlbumWash" type="range" min="0" max="1" step="0.01" value="0.34" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Room glow strength <span id="menu2RoomVibeRoomGlowValue">0.64</span>
+                <input id="menu2RoomVibeRoomGlow" type="range" min="0" max="1.5" step="0.01" value="0.64" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Accent glow strength <span id="menu2RoomVibeAccentGlowValue">1.08</span>
+                <input id="menu2RoomVibeAccentGlow" type="range" min="0" max="1.8" step="0.01" value="1.08" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Shadow preservation <span id="menu2RoomVibeShadowPreserveValue">0.22</span>
+                <input id="menu2RoomVibeShadowPreserve" type="range" min="0" max="0.6" step="0.01" value="0.22" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Neutral album color boost <span id="menu2RoomVibeNeutralBoostValue">0.78</span>
+                <input id="menu2RoomVibeNeutralBoost" type="range" min="0" max="1" step="0.01" value="0.78" />
+              </label>
+              <button id="menu2RoomVibeReset" class="menu2-action menu2-wide-action" type="button">Reset Room Vibe Balance</button>
+            </div>
+            </details>
           </section>
 
           <section id="menu2DevPane" class="menu2-pane menu2-dev-pane">
@@ -1457,25 +1533,6 @@ export function renderShell(state: AppState): void {
                 <button id="menu2DjSpeechBubblePreview" class="menu2-action" type="button">Preview speech + poses (5s)</button>
                 <button id="menu2DjSpeechBubbleReset" class="menu2-action" type="button">Reset bubble defaults</button>
               </div>
-            </div>
-            <div class="menu2-dev-subsection">
-              <div class="menu2-section-head menu2-subsection-head"><h3>Room Vibe Balance</h3><span>Color without haze</span></div>
-              <label class="menu2-setting menu2-slider-setting">Album wash strength <span id="menu2RoomVibeAlbumWashValue">0.34</span>
-                <input id="menu2RoomVibeAlbumWash" type="range" min="0" max="1" step="0.01" value="0.34" />
-              </label>
-              <label class="menu2-setting menu2-slider-setting">Room glow strength <span id="menu2RoomVibeRoomGlowValue">0.64</span>
-                <input id="menu2RoomVibeRoomGlow" type="range" min="0" max="1.5" step="0.01" value="0.64" />
-              </label>
-              <label class="menu2-setting menu2-slider-setting">Accent glow strength <span id="menu2RoomVibeAccentGlowValue">1.08</span>
-                <input id="menu2RoomVibeAccentGlow" type="range" min="0" max="1.8" step="0.01" value="1.08" />
-              </label>
-              <label class="menu2-setting menu2-slider-setting">Shadow preservation <span id="menu2RoomVibeShadowPreserveValue">0.22</span>
-                <input id="menu2RoomVibeShadowPreserve" type="range" min="0" max="0.6" step="0.01" value="0.22" />
-              </label>
-              <label class="menu2-setting menu2-slider-setting">Neutral album color boost <span id="menu2RoomVibeNeutralBoostValue">0.78</span>
-                <input id="menu2RoomVibeNeutralBoost" type="range" min="0" max="1" step="0.01" value="0.78" />
-              </label>
-              <button id="menu2RoomVibeReset" class="menu2-action menu2-wide-action" type="button">Reset Room Vibe Balance</button>
             </div>
             <div class="menu2-dev-subsection">
               <div class="menu2-section-head menu2-subsection-head"><h3>Scene Zoom / Room Camera</h3><span>Bottom-center camera transform</span></div>

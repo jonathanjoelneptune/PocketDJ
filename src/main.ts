@@ -88,7 +88,7 @@ let menu2HasOpened = localStorage.getItem("pocketdj-menu2-has-opened") !== "fals
 if (localStorage.getItem("pocketdj-menu2-has-opened") !== "true") {
   localStorage.setItem("pocketdj-menu2-has-opened", "true");
 }
-let menu2ActiveTab: "now" | "queue" | "playlists" | "search" | "devices" | "dev" = "now";
+let menu2ActiveTab: "now" | "queue" | "playlists" | "search" | "devices" | "room" | "dev" = "now";
 let menu2DevUnlocked = false;
 let menu2LockClickCount = 0;
 let menu2LockClickTimer: number | null = null;
@@ -258,6 +258,110 @@ function applyRoomVibeSettings(): void {
   if (shadowValue) shadowValue.textContent = roomVibeSettings.shadowPreserve.toFixed(2);
   if (neutralInput) neutralInput.value = roomVibeSettings.neutralBoost.toFixed(2);
   if (neutralValue) neutralValue.textContent = roomVibeSettings.neutralBoost.toFixed(2);
+}
+
+
+type RoomLightingPreset = "classic" | "brighter-night" | "deep-night" | "custom";
+type RoomLightingValues = {
+  exposure: number;
+  albumLift: number;
+  wallFill: number;
+  djFill: number;
+  warmth: number;
+  vignette: number;
+};
+type RoomLightingSettings = RoomLightingValues & { preset: RoomLightingPreset };
+
+const ROOM_LIGHTING_KEY = "pocketdj-room-lighting-v1";
+const ROOM_LIGHTING_PRESETS: Record<Exclude<RoomLightingPreset, "custom">, RoomLightingValues> = {
+  classic: { exposure: 1, albumLift: 1, wallFill: 0, djFill: 0, warmth: 0, vignette: 1 },
+  "brighter-night": { exposure: 1.06, albumLift: 1.18, wallFill: 0.62, djFill: 0.42, warmth: 0.30, vignette: 0.58 },
+  "deep-night": { exposure: 0.98, albumLift: 1.02, wallFill: 0.10, djFill: 0.12, warmth: 0.08, vignette: 1.20 },
+};
+// New installations see the improved night lighting. Classic always restores the
+// exact prior visual grading without altering existing room-utility storage.
+const DEFAULT_ROOM_LIGHTING: RoomLightingSettings = { preset: "brighter-night", ...ROOM_LIGHTING_PRESETS["brighter-night"] };
+
+function clampRoomLightingSettings(settings: Partial<RoomLightingSettings>): RoomLightingSettings {
+  const clampNumber = (value: unknown, fallback: number, min: number, max: number): number => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+  };
+  const preset: RoomLightingPreset = ["classic", "brighter-night", "deep-night", "custom"].includes(String(settings.preset))
+    ? settings.preset as RoomLightingPreset : DEFAULT_ROOM_LIGHTING.preset;
+  return {
+    preset,
+    exposure: clampNumber(settings.exposure, DEFAULT_ROOM_LIGHTING.exposure, 0.85, 1.20),
+    albumLift: clampNumber(settings.albumLift, DEFAULT_ROOM_LIGHTING.albumLift, 0.80, 1.50),
+    wallFill: clampNumber(settings.wallFill, DEFAULT_ROOM_LIGHTING.wallFill, 0, 1),
+    djFill: clampNumber(settings.djFill, DEFAULT_ROOM_LIGHTING.djFill, 0, 1),
+    warmth: clampNumber(settings.warmth, DEFAULT_ROOM_LIGHTING.warmth, 0, 1),
+    vignette: clampNumber(settings.vignette, DEFAULT_ROOM_LIGHTING.vignette, 0, 1.50),
+  };
+}
+
+function loadRoomLightingSettings(): RoomLightingSettings {
+  try {
+    const raw = localStorage.getItem(ROOM_LIGHTING_KEY);
+    return raw ? clampRoomLightingSettings({ ...DEFAULT_ROOM_LIGHTING, ...JSON.parse(raw) }) : { ...DEFAULT_ROOM_LIGHTING };
+  } catch {
+    return { ...DEFAULT_ROOM_LIGHTING };
+  }
+}
+
+let roomLightingSettings = loadRoomLightingSettings();
+
+function saveRoomLightingSettings(): void {
+  localStorage.setItem(ROOM_LIGHTING_KEY, JSON.stringify(roomLightingSettings));
+}
+
+function applyRoomLightingSettings(): void {
+  const root = document.documentElement;
+  root.style.setProperty("--room-light-exposure", roomLightingSettings.exposure.toFixed(3));
+  root.style.setProperty("--room-light-saturation", (1 + (roomLightingSettings.exposure - 1) * 0.65).toFixed(3));
+  root.style.setProperty("--room-light-album-lift", roomLightingSettings.albumLift.toFixed(3));
+  root.style.setProperty("--room-light-wall-fill", roomLightingSettings.wallFill.toFixed(3));
+  root.style.setProperty("--room-light-dj-fill", roomLightingSettings.djFill.toFixed(3));
+  root.style.setProperty("--room-light-warmth", roomLightingSettings.warmth.toFixed(3));
+  root.style.setProperty("--scene-vignette-strength", (roomUtility.vignetteStrength * roomLightingSettings.vignette).toFixed(3));
+  const preset = document.querySelector<HTMLSelectElement>("#menu2RoomLightingPreset");
+  if (preset) preset.value = roomLightingSettings.preset;
+  const fields: Array<[keyof RoomLightingValues, string]> = [
+    ["exposure", "menu2RoomLightingExposure"],
+    ["albumLift", "menu2RoomLightingAlbumLift"],
+    ["wallFill", "menu2RoomLightingWallFill"],
+    ["djFill", "menu2RoomLightingDjFill"],
+    ["warmth", "menu2RoomLightingWarmth"],
+    ["vignette", "menu2RoomLightingVignette"],
+  ];
+  fields.forEach(([key, id]) => {
+    const value = roomLightingSettings[key].toFixed(2);
+    const input = document.querySelector<HTMLInputElement>(`#${id}`);
+    const readout = document.querySelector<HTMLElement>(`#${id}Value`);
+    if (input) input.value = value;
+    if (readout) readout.textContent = value;
+  });
+}
+
+// These are the existing canonical utility settings, exposed in the normal Room
+// tab. Mirroring both panels prevents competing values or unsaved UI drift.
+function syncRoomOverlayControls(): void {
+  const filter = document.querySelector<HTMLSelectElement>("#menu2RoomSceneFilter");
+  if (filter) filter.value = roomUtility.sceneFilter;
+  const pairs: Array<[string, string, number]> = [
+    ["menu2RoomFilterStrength", "filterStrength", roomUtility.filterStrength],
+    ["menu2RoomShadowOpacity", "shadowOpacity", roomUtility.shadowOpacity],
+  ];
+  pairs.forEach(([id, legacyId, value]) => {
+    const input = document.querySelector<HTMLInputElement>(`#${id}`);
+    const readout = document.querySelector<HTMLElement>(`#${id}Value`);
+    if (input) input.value = value.toFixed(2);
+    if (readout) readout.textContent = value.toFixed(2);
+    const legacyInput = document.querySelector<HTMLInputElement>(`#${legacyId}`);
+    if (legacyInput) legacyInput.value = value.toFixed(2);
+    const legacyReadout = document.querySelector<HTMLElement>(`#${legacyId}Value`);
+    if (legacyReadout) legacyReadout.textContent = value.toFixed(2);
+  });
 }
 
 type NoLyricsFocusSettings = {
@@ -3672,6 +3776,7 @@ async function boot(): Promise<void> {
   queueReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE, "default");
   document.documentElement.style.setProperty("--room-vibe-transition-ms", `${REACTIVE_ROOM_CROSSFADE_MS}ms`);
   applyRoomVibeSettings();
+  applyRoomLightingSettings();
   setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
   document.documentElement.style.setProperty("--music-room-energy", reactiveRoomRenderedEnergy.toFixed(3));
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
@@ -4158,6 +4263,8 @@ function applyMenu2Settings(): void {
   if (transparencyValue) transparencyValue.textContent = menu2Transparency.toFixed(2);
   applyRoomCameraSettings();
   applyRoomVibeSettings();
+  applyRoomLightingSettings();
+  syncRoomOverlayControls();
 
   const devVisible = menu2DevUnlocked && menu2PanelMode === "full";
   const devTab = document.querySelector<HTMLButtonElement>("#menu2DevTab");
@@ -4172,12 +4279,12 @@ function applyMenu2Settings(): void {
   const floorToggle = document.querySelector<HTMLInputElement>("#menu2ShowFloorControls");
   if (floorToggle) floorToggle.checked = menu2ShowFloorControls;
 
-  const tabLabels: Record<string, string> = { now: "Now Playing", playlists: "My Playlists", search: "Search", devices: "Devices", dev: "Dev" };
+  const tabLabels: Record<string, string> = { now: "Now Playing", playlists: "My Playlists", search: "Search", devices: "Devices", room: "Room", dev: "Dev" };
   document.querySelectorAll<HTMLButtonElement>(".menu2-tab").forEach((tab) => {
     const tabKey = tab.dataset.menu2Tab || "";
     tab.classList.toggle("menu2-tab-active", tabKey === menu2ActiveTab);
-    if (menu2PanelMode === "compact" && ["now", "playlists", "search", "devices"].includes(tabKey)) {
-      tab.innerHTML = menu2Icon(tabKey as "now" | "playlists" | "search" | "devices");
+    if (menu2PanelMode === "compact" && ["now", "playlists", "search", "devices", "room"].includes(tabKey)) {
+      tab.innerHTML = menu2Icon(tabKey as "now" | "playlists" | "search" | "devices" | "room");
       tab.setAttribute("aria-label", tabLabels[tabKey] || tabKey);
       tab.setAttribute("title", tabLabels[tabKey] || tabKey);
     } else {
@@ -4249,7 +4356,7 @@ async function refreshMenu2ActiveTab(): Promise<void> {
 }
 
 
-function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "pip" | "shuffle" | "repeat" | "queue" | "connect" | "openPanel" | "openPanelLeft" | "openPanelRight" | "broadcast" | "now" | "playlists" | "search" | "devices"): string {
+function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "pip" | "shuffle" | "repeat" | "queue" | "connect" | "openPanel" | "openPanelLeft" | "openPanelRight" | "broadcast" | "now" | "playlists" | "search" | "devices" | "room"): string {
   const paths: Record<typeof name, string> = {
     lyrics: '<path d="M10 18V7l8-1.7v10.2"/><circle cx="8" cy="18" r="2.1"/><circle cx="18" cy="15.5" r="2.1"/>',
     play: '<path d="M8.2 5.2v13.6L18.8 12z" fill="currentColor" stroke="none"/>',
@@ -4274,6 +4381,7 @@ function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume
     playlists: '<path d="M6 7h12M6 12h12M6 17h8"/><rect x="3" y="5" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="10" width="1.5" height="1.5" fill="currentColor" stroke="none"/><rect x="3" y="15" width="1.5" height="1.5" fill="currentColor" stroke="none"/>',
     search: '<circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l5 5"/>',
     devices: '<rect x="5" y="5" width="14" height="10" rx="2"/><path d="M9 19h6M12 15v4"/>',
+    room: '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/><circle cx="12" cy="12" r="4"/>',
   };
   return `<svg class="menu2-svg-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths[name]}</svg>`;
 }
@@ -5664,6 +5772,78 @@ function bindMenu2Controls(): void {
     localStorage.setItem("pocketdj-menu2-transparency", menu2Transparency.toFixed(2));
     applyMenu2Settings();
   });
+  // Room Lighting: a non-destructive grading layer with independent presets.
+  const lightingPreset = document.querySelector<HTMLSelectElement>("#menu2RoomLightingPreset");
+  lightingPreset?.addEventListener("change", () => {
+    const preset = lightingPreset.value as RoomLightingPreset;
+    if (preset === "custom") {
+      roomLightingSettings = { ...roomLightingSettings, preset: "custom" };
+    } else if (Object.prototype.hasOwnProperty.call(ROOM_LIGHTING_PRESETS, preset)) {
+      roomLightingSettings = { preset, ...ROOM_LIGHTING_PRESETS[preset as Exclude<RoomLightingPreset, "custom">] };
+    }
+    saveRoomLightingSettings();
+    applyRoomLightingSettings();
+  });
+  const lightingFields: Array<[string, keyof RoomLightingValues]> = [
+    ["menu2RoomLightingExposure", "exposure"],
+    ["menu2RoomLightingAlbumLift", "albumLift"],
+    ["menu2RoomLightingWallFill", "wallFill"],
+    ["menu2RoomLightingDjFill", "djFill"],
+    ["menu2RoomLightingWarmth", "warmth"],
+    ["menu2RoomLightingVignette", "vignette"],
+  ];
+  lightingFields.forEach(([id, key]) => {
+    document.querySelector<HTMLInputElement>(`#${id}`)?.addEventListener("input", (event) => {
+      roomLightingSettings = clampRoomLightingSettings({
+        ...roomLightingSettings, [key]: Number((event.target as HTMLInputElement).value), preset: "custom",
+      });
+      saveRoomLightingSettings();
+      applyRoomLightingSettings();
+    });
+  });
+  document.querySelector<HTMLButtonElement>("#menu2RoomLightingReset")?.addEventListener("click", () => {
+    roomLightingSettings = { preset: "classic", ...ROOM_LIGHTING_PRESETS.classic };
+    saveRoomLightingSettings();
+    applyRoomLightingSettings();
+  });
+
+  // The five pre-existing Room Vibe sliders were visible in Dev but never
+  // registered input handlers. Keep their original storage key and CSS behavior.
+  const vibeFields: Array<[string, keyof RoomVibeSettings]> = [
+    ["menu2RoomVibeAlbumWash", "albumWash"],
+    ["menu2RoomVibeRoomGlow", "roomGlow"],
+    ["menu2RoomVibeAccentGlow", "accentGlow"],
+    ["menu2RoomVibeShadowPreserve", "shadowPreserve"],
+    ["menu2RoomVibeNeutralBoost", "neutralBoost"],
+  ];
+  vibeFields.forEach(([id, key]) => {
+    document.querySelector<HTMLInputElement>(`#${id}`)?.addEventListener("input", (event) => {
+      roomVibeSettings = clampRoomVibeSettings({ ...roomVibeSettings, [key]: Number((event.target as HTMLInputElement).value) });
+      saveRoomVibeSettings();
+      applyRoomVibeSettings();
+    });
+  });
+  document.querySelector<HTMLButtonElement>("#menu2RoomVibeReset")?.addEventListener("click", () => {
+    roomVibeSettings = { ...DEFAULT_ROOM_VIBE_SETTINGS };
+    saveRoomVibeSettings();
+    applyRoomVibeSettings();
+  });
+  document.querySelector<HTMLSelectElement>("#menu2RoomSceneFilter")?.addEventListener("change", (event) => {
+    roomUtility = { ...roomUtility, sceneFilter: (event.target as HTMLSelectElement).value as SceneFilter };
+    applyRoomUtilitySettings();
+    saveRoomUtilitySettings();
+  });
+  ([
+    ["menu2RoomFilterStrength", "filterStrength"],
+    ["menu2RoomShadowOpacity", "shadowOpacity"],
+  ] as const).forEach(([id, key]) => {
+    document.querySelector<HTMLInputElement>(`#${id}`)?.addEventListener("input", (event) => {
+      roomUtility = { ...roomUtility, [key]: Number((event.target as HTMLInputElement).value) };
+      applyRoomUtilitySettings();
+      saveRoomUtilitySettings();
+    });
+  });
+
   const bindRoomCameraSlider = (selector: string, key: keyof RoomCameraSettings) => {
     document.querySelector<HTMLInputElement>(selector)?.addEventListener("input", (event) => {
       roomCamera = clampRoomCameraSettings({ ...roomCamera, [key]: Number((event.target as HTMLInputElement).value) });
@@ -9199,7 +9379,7 @@ function applyRoomUtilitySettings(): void {
   root.style.setProperty("--speaker-pulse-duration", `${speakerPulseDurationMs()}ms`);
   root.classList.toggle("speaker-pulse-tempo-enabled", roomUtility.speakerPulseUseTempo);
   root.style.setProperty("--scene-filter-strength", String(roomUtility.filterStrength));
-  root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength));
+  root.style.setProperty("--scene-vignette-strength", String(roomUtility.vignetteStrength * roomLightingSettings.vignette));
   root.style.setProperty("--shadow-opacity", String(roomUtility.shadowOpacity));
   root.style.setProperty("--table-shadow-scale", String(roomUtility.tableShadowScale));
   root.style.setProperty("--floor-controls-idle-opacity", String(roomUtility.floorControlsIdleOpacity));
@@ -9256,6 +9436,7 @@ function applyRoomUtilitySettings(): void {
   if (filterOverlay) {
     filterOverlay.className = `room-filter-overlay ${roomUtility.sceneFilter}`;
   }
+  syncRoomOverlayControls();
 
   root.style.setProperty("--lyric-poster-guide-opacity", String(roomUtility.lyricPosterGuideOpacity));
   root.style.setProperty("--lyric-poster-center-guide-opacity", String(roomUtility.lyricPosterCenterGuideOpacity));
