@@ -1,5 +1,4 @@
 import "./styles.css";
-import { initializeRoomAtmosphere } from "./roomAtmosphere";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
 import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, isSpotifyDjSpeakingForPose, observeSpotifyDjSpeech } from "./dj/speechBubble";
@@ -3803,7 +3802,6 @@ async function boot(): Promise<void> {
   updateDynamicCeilingReveal();
   window.addEventListener("resize", updateDynamicCeilingReveal, { passive: true });
   renderShell(state);
-  initializeRoomAtmosphere();
   initializeSpotifyDjSpeechBubble();
   reactiveRoomCurrentRenderedPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
   reactiveRoomRenderedEnergy = 0.3;
