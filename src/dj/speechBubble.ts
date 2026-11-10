@@ -11,7 +11,9 @@ type Range = "x" | "y" | "scale" | "opacity" | "glow";
 type SpeechState = "off" | "music" | "possible" | "likely";
 
 const STORAGE_KEY = "pocketdj-spotify-ai-dj-bubble-v1";
-const DEFAULTS: Settings = { enabled: true, palette: "amber", x: 60.8, y: 34, scale: 1, opacity: 0.92, glow: 0.45 };
+// Tuned room values from the five-click Dev utility (10 Nov 2026).
+// An existing user's saved values still take precedence over these defaults.
+const DEFAULTS: Settings = { enabled: true, palette: "amber", x: 52.7, y: 36.4, scale: 0.50, opacity: 0.78, glow: 0.45 };
 const PALETTES: Palette[] = ["amber", "violet", "teal", "rose", "parchment"];
 const LIMITS: Record<Range, [number, number]> = {
   x: [4, 94], y: [7, 82], scale: [0.5, 2.2], opacity: [0.12, 1], glow: [0, 1],
@@ -166,6 +168,12 @@ export function observeSpotifyDjSpeech(observation: SpotifyDjSpeechObservation):
   }, 9000);
   renderState();
 }
+// Both the main room and the preview share the same visual trigger. Disabling
+// the bubble hides the bubble only; spoken commentary still animates DJ NES.
+export function isSpotifyDjSpeakingForPose(): boolean {
+  return previewTimer !== null || state === "possible" || state === "likely";
+}
+
 export function clearSpotifyDjSpeechBubble(): void {
   state = "off";
   musicObserved = false;
