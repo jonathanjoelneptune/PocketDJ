@@ -56,6 +56,71 @@
     #message { color: #f3ca9c; min-height: 24px; margin-top: 6px; overflow-wrap: anywhere; }
     .footer { margin-top: 10px; font-size: .82rem; }
     @media (max-width: 850px) { .grid { grid-template-columns: 1fr; } header { flex-direction: column; } }
+
+    /* Self-contained live detector display; does not affect the Pocket DJ room. */
+    .monitor-heading { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+    .monitor-heading h2 { margin:0; }
+    .monitor-subtitle { color:#b5afbe; font-size:.85rem; margin:4px 0 0; }
+    .monitor-layout { display:grid; grid-template-columns:minmax(235px, .88fr) minmax(300px, 1.12fr); gap:18px; align-items:stretch; }
+    .dj-stage { position:relative; min-height:286px; border:1px solid #655473; border-radius:12px; overflow:hidden;
+      background:radial-gradient(ellipse at 50% 20%, #463159 0, #292137 46%, #14111d 100%); isolation:isolate; }
+    .dj-stage::before { content:""; position:absolute; inset:0; opacity:.18; pointer-events:none; z-index:4;
+      background:repeating-linear-gradient(0deg,transparent 0 3px,#000 4px 5px); }
+    .dj-stage::after { content:""; position:absolute; left:0; right:0; bottom:0; height:52px; background:linear-gradient(#31243b,#120f18); border-top:3px solid #a07eab; z-index:2; }
+    .dj-starlight { position:absolute; width:75%; height:150%; left:13%; top:-30%; opacity:.48; transform:rotate(8deg);
+      background:linear-gradient(90deg,transparent,rgba(255,192,121,.13),transparent); filter:blur(2px); }
+    .dj-speech { position:absolute; right:12px; top:15px; width:min(46%,174px); min-height:60px; border:3px solid #2e2638;
+      background:#f7ecd8; color:#37283b; box-shadow:5px 5px 0 rgba(0,0,0,.32); font-family:ui-monospace,Consolas,monospace;
+      font-size:13px; font-weight:800; padding:10px 8px; text-align:center; display:none; align-items:center;
+      justify-content:center; z-index:6; line-height:1.3; }
+    .dj-speech::after { content:""; position:absolute; left:29%; bottom:-13px; width:13px; height:13px; background:#f7ecd8;
+      border-right:3px solid #2e2638; border-bottom:3px solid #2e2638; transform:rotate(45deg); }
+    .dj-figure { position:absolute; bottom:20px; left:50%; width:min(78%,280px); height:242px; transform:translateX(-50%); z-index:3;
+      display:flex; align-items:flex-end; justify-content:center; pointer-events:none; }
+    .dj-sprite { display:block; max-width:100%; max-height:100%; object-fit:contain; image-rendering:pixelated; filter:drop-shadow(0 6px 10px rgba(0,0,0,.55)); }
+    .dj-fallback { display:none; width:108px; height:120px; position:relative; margin-bottom:32px; }
+    .dj-fallback .head { position:absolute; top:11px; left:27px; height:57px; width:57px; background:#d19b74; border:6px solid #231f2a;
+      box-shadow:inset 0 11px #44313e; }
+    .dj-fallback .face { position:absolute; top:38px; left:39px; width:33px; height:8px; background:#27212c; box-shadow:0 10px #714a58; }
+    .dj-fallback .body { position:absolute; top:76px; left:12px; width:85px; height:47px; background:#a988da; border:6px solid #272131; }
+    .dj-decks { position:absolute; z-index:5; left:9%; right:9%; bottom:13px; display:flex; gap:14px; justify-content:space-between; pointer-events:none; }
+    .dj-deck { width:38%; height:20px; background:linear-gradient(#4b4159,#28202f); border:3px solid #9b8cab; border-radius:3px; position:relative; }
+    .dj-deck::after { content:""; position:absolute; left:35%; top:-7px; width:27px; height:27px; border:4px solid #1d1822; background:#bdaccb; border-radius:50%; box-shadow:inset 0 0 0 7px #493e54; }
+    .dj-led { position:absolute; z-index:6; bottom:23px; left:47%; width:7px; height:7px; border-radius:50%; background:#f4b871; opacity:.4; }
+    .dj-stage[data-mode="music"] .dj-sprite { animation: dj-groove .8s ease-in-out infinite alternate; }
+    .dj-stage[data-mode="speaking"] .dj-sprite { animation: dj-talk .27s ease-in-out infinite alternate; }
+    .dj-stage[data-mode="speaking"] .dj-speech { display:flex; }
+    .dj-stage[data-mode="speaking"] .dj-led { background:#91e4c7; opacity:1; box-shadow:0 0 17px #91e4c7; }
+    .dj-stage[data-mode="music"] .dj-led { opacity:1; box-shadow:0 0 12px #f4b871; }
+    .dj-stage[data-mode="speaking"] { border-color:#c4a2e4; }
+    .dj-stage[data-mode="paused"] .dj-figure,.dj-stage[data-mode="waiting"] .dj-figure { filter:grayscale(.75); opacity:.72; }
+    .equalizer { position:absolute; left:16px; top:20px; display:flex; gap:4px; align-items:flex-end; height:34px; opacity:.43; }
+    .equalizer span { display:block; width:7px; height:15px; background:#edb77a; border-radius:1px; }
+    .equalizer span:nth-child(2) { height:30px; }
+    .equalizer span:nth-child(3) { height:21px; }
+    .equalizer span:nth-child(4) { height:27px; }
+    .dj-stage[data-mode="music"] .equalizer,.dj-stage[data-mode="speaking"] .equalizer { opacity:1; }
+    .dj-stage[data-mode="music"] .equalizer span,.dj-stage[data-mode="speaking"] .equalizer span { animation:dj-bars .72s ease-in-out infinite alternate; }
+    .equalizer span:nth-child(2) { animation-delay:.16s!important; }
+    .equalizer span:nth-child(3) { animation-delay:.32s!important; }
+    .equalizer span:nth-child(4) { animation-delay:.48s!important; }
+    @keyframes dj-groove { from{transform:translateY(0) rotate(-1deg)} to{transform:translateY(-5px) rotate(1deg)} }
+    @keyframes dj-talk { from{transform:translateY(0) scale(1)} to{transform:translateY(-3px) scale(1.015)} }
+    @keyframes dj-bars { from{height:6px} to{height:31px} }
+    .monitor-state { display:inline-block; font-weight:850; font-size:1.3rem; margin:6px 0; letter-spacing:.01em; }
+    .monitor-flag { display:inline-block; padding:3px 9px; border-radius:6px; background:#3f344e; color:#e5d4f5;
+      font-size:.74rem; font-weight:800; text-transform:uppercase; letter-spacing:.065em; }
+    .monitor-flag.music { background:#244c3e; color:#a9f1d1; }
+    .monitor-flag.speaking { background:#684574; color:#fff0ff; }
+    .monitor-flag.error { background:#6b3a40; color:#ffe4d0; }
+    .monitor-reason { min-height:49px; color:#cec6d4; font-size:.93rem; margin:10px 0; }
+    .signal-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:12px 0; }
+    .signal { background:#13111b; padding:9px 10px; border:1px solid #403749; border-radius:7px; min-width:0; }
+    .signal span { display:block; color:#b2a6bb; font-size:.74rem; }
+    .signal strong { display:block; font-size:.87rem; margin-top:3px; overflow-wrap:anywhere; }
+    .monitor-reference { border-top:1px solid #484053; padding-top:10px; font-size:.85rem; color:#c3b7ce; margin:10px 0 0; }
+    @media (max-width:710px) { .monitor-layout { grid-template-columns:1fr; } .dj-stage { min-height:250px; } }
+    @media (prefers-reduced-motion:reduce) { .dj-stage * { animation:none!important; } }
   </style>
 </head>
 <body>
@@ -138,6 +203,45 @@
     </section>
   </div>
 
+
+  <section class="panel" aria-label="Live inferred DJ playback state">
+    <div class="monitor-heading">
+      <div>
+        <h2>Live mini DJ monitor</h2>
+        <p class="monitor-subtitle">Experimental state inference from Spotify playback metadata. No microphone or transcription.</p>
+      </div>
+      <span class="pill"><span class="dot" id="monitor-dot"></span><span id="monitor-time">Waiting for recording</span></span>
+    </div>
+    <div class="monitor-layout">
+      <div id="dj-stage" class="dj-stage" data-mode="waiting" role="img" aria-label="Mini DJ, waiting for playback data">
+        <div class="dj-starlight"></div>
+        <div class="equalizer" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div id="dj-speech" class="dj-speech" aria-hidden="true"><span id="dj-speech-text">DJ speaking?</span></div>
+        <div class="dj-figure">
+          <img id="dj-sprite" class="dj-sprite" src="./assets/poses/final/i1.png" alt="" loading="eager">
+          <div id="dj-fallback" class="dj-fallback" aria-hidden="true">
+            <div class="head"></div><div class="face"></div><div class="body"></div>
+          </div>
+        </div>
+        <div class="dj-decks" aria-hidden="true"><div class="dj-deck"></div><div class="dj-deck"></div></div>
+        <div class="dj-led"></div>
+      </div>
+      <div>
+        <div><span id="monitor-flag" class="monitor-flag">Waiting</span></div>
+        <div id="monitor-state" class="monitor-state" aria-live="polite">Awaiting first sample</div>
+        <p id="monitor-reason" class="monitor-reason">Start recording to classify the live playback state. A missing track item is only a speech candidate, not proof.</p>
+        <div class="signal-grid">
+          <div class="signal"><span>Spotify is_playing</span><strong id="monitor-playing">—</strong></div>
+          <div class="signal"><span>Spotify item</span><strong id="monitor-item">—</strong></div>
+          <div class="signal"><span>Consecutive candidates</span><strong id="monitor-streak">0</strong></div>
+          <div class="signal"><span>Playback item</span><strong id="monitor-track">—</strong></div>
+        </div>
+        <div class="monitor-reference">Your manual audio marker: <strong id="monitor-manual">Not marked</strong><br>
+          <span id="monitor-agreement">Manual markers do not influence the automatic detector.</span></div>
+      </div>
+    </div>
+  </section>
+
   <div class="grid">
     <section class="panel">
       <h2>Timeline <small>(newest first)</small></h2>
@@ -174,6 +278,11 @@
   let samples = 0;
   let markers = 0;
   let changes = 0;
+  let candidateStreak = 0;
+  let observedRealTrack = false;
+  let lastInferredState = "waiting";
+  let manualAudioState = null;
+  let lastSprite = "i1.png";
 
   function tokens() {
     try {
@@ -346,7 +455,7 @@
             (summary.currentlyPlayingType || summary.itemType || "type: unavailable") +
             " • " + (summary.isPlaying === null ? "playing: ?" : "playing: " + summary.isPlaying) +
             " • HTTP " + (entry.currentlyPlaying?.httpStatus ?? "error") + "/" + (entry.player?.httpStatus ?? "error") +
-            (entry.changed ? " • STATE CHANGE" : ""))
+            (entry.changed ? " • STATE CHANGE" : "") + (entry.inference ? " • " + entry.inference.label : ""))
           : "No playback payload • HTTP " + (entry.currentlyPlaying?.httpStatus ?? "error") + "/" + (entry.player?.httpStatus ?? "error"));
       for (const value of [displayTime(entry.at), entry.kind === "marker" ? "MANUAL" : "#" + entry.number, detail, entry.source]) {
         const td = document.createElement("td");
@@ -356,6 +465,134 @@
       tbody.append(tr);
     }
   }
+
+
+  // Experimental, read-only state machine. User markers NEVER influence detection.
+  // Spotify permits item:null for reasons other than AI DJ speech.
+  function inferDjState(entry) {
+    const player = entry.player;
+    const current = entry.currentlyPlaying;
+    const failure = [player.httpStatus, current.httpStatus];
+    const base = { state: "unknown", label: "Checking playback", confidence: "none", reason: "", candidates: 0 };
+
+    if (failure.includes(429)) {
+      candidateStreak = 0;
+      return { ...base, state: "rate-limited", label: "Spotify rate limited", reason: "Polling will back off automatically. No speech classification until valid API samples return." };
+    }
+    if (failure.includes(401)) {
+      candidateStreak = 0;
+      return { ...base, state: "disconnected", label: "Spotify session expired", reason: "Reconnect from Pocket DJ before testing again." };
+    }
+    if (failure.includes(403)) {
+      candidateStreak = 0;
+      return { ...base, state: "error", label: "Spotify API denied access", reason: "One of the read-only endpoints returned HTTP 403." };
+    }
+    if (failure.every(code => code === 204)) {
+      candidateStreak = 0;
+      return { ...base, state: "no-playback", label: "No active playback", reason: "Both endpoints returned HTTP 204. This is not a speech signal." };
+    }
+    if (failure.some(code => code !== 200)) {
+      candidateStreak = 0;
+      return { ...base, state: "unknown", label: "Playback data unavailable", reason: "Both endpoints must return HTTP 200 for speech inference. Check the timeline for errors." };
+    }
+    const a = current.data;
+    const b = player.data;
+    if (!a || !b || typeof a.isPlaying !== "boolean" || typeof b.isPlaying !== "boolean") {
+      candidateStreak = 0;
+      return { ...base, state: "unknown", label: "Incomplete playback data", reason: "Expected is_playing and item data are not available from both endpoints." };
+    }
+    if (a.isPlaying !== b.isPlaying || a.itemPresent !== b.itemPresent) {
+      candidateStreak = 0;
+      return { ...base, state: "transition", label: "Playback transitioning", reason: "Spotify's two endpoints disagree. Waiting for the next synchronized sample." };
+    }
+    if (!a.isPlaying) {
+      candidateStreak = 0;
+      return { ...base, state: "paused", label: "Music paused", reason: "Spotify reports is_playing=false. Even an empty item here does not indicate speech." };
+    }
+    if (a.itemPresent) {
+      candidateStreak = 0;
+      if (a.itemType === "track") {
+        observedRealTrack = true;
+        return { ...base, state: "music", label: "Music playing", confidence: "observed", reason: "Both endpoints report is_playing=true and a real track item." };
+      }
+      return { ...base, state: "other", label: "Other content playing", reason: "A playable item is present, but its type is not a normal track." };
+    }
+    if (a.currentlyPlayingType !== "track" || b.currentlyPlayingType !== "track") {
+      candidateStreak = 0;
+      return { ...base, state: "other", label: "Unclassified content", reason: "Playback is active with no item, but the reported type is not track." };
+    }
+
+    candidateStreak++;
+    if (candidateStreak > 1 && observedRealTrack) {
+      return { state: "likely-speaking", label: "Likely DJ talking", confidence: "medium", candidates: candidateStreak,
+        reason: "Both endpoints report active playback with no track item for multiple samples, following a real music track. Strong candidate, not official confirmation." };
+    }
+    return { state: "possible-speaking", label: "Possible DJ commentary", confidence: "low", candidates: candidateStreak,
+      reason: observedRealTrack
+        ? "The track item disappeared while playback remains active. Waiting for another confirming sample."
+        : "Playback is active but item is null. No real music track has been seen in this recording yet, so this may be another unreported playback state." };
+  }
+
+  function monitorMode(state) {
+    if (state === "music") return "music";
+    if (state === "likely-speaking" || state === "possible-speaking") return "speaking";
+    return "paused";
+  }
+
+  function setMonitor(inference, entry = null) {
+    const mode = monitorMode(inference.state);
+    const stage = $("dj-stage");
+    stage.dataset.mode = mode;
+    stage.setAttribute("aria-label", "Mini DJ: " + inference.label + ". " + inference.reason);
+    $("monitor-state").textContent = inference.label;
+    $("monitor-reason").textContent = inference.reason;
+    const flag = $("monitor-flag");
+    flag.className = "monitor-flag " + (mode === "music" ? "music" : mode === "speaking" ? "speaking" : ["disconnected", "error", "rate-limited"].includes(inference.state) ? "error" : "");
+    flag.textContent = mode === "speaking" ? "Inferred, not confirmed" :
+      mode === "music" ? "Track metadata confirmed" :
+      inference.state === "waiting" ? "Waiting" : inference.state === "stopped" ? "Stopped" : "No speech inference";
+    $("monitor-streak").textContent = String(inference.candidates || 0);
+    $("dj-speech-text").textContent = inference.state === "likely-speaking" ? "DJ on the mic? •••" : "DJ speaking?";
+    $("dj-speech").setAttribute("aria-hidden", mode === "speaking" ? "false" : "true");
+    $("monitor-time").textContent = entry ? "Sample " + entry.number + " · " + displayTime(entry.observedAt) : "Waiting for recording";
+    $("monitor-dot").className = "dot" + (mode === "music" || mode === "speaking" ? " live" : inference.state === "error" ? " warn" : "");
+
+    const playerState = entry?.currentlyPlaying?.data || entry?.player?.data;
+    $("monitor-playing").textContent = playerState && typeof playerState.isPlaying === "boolean" ? String(playerState.isPlaying) : "—";
+    $("monitor-item").textContent = playerState ? (playerState.itemPresent ? "Present" : "null") : "—";
+    $("monitor-track").textContent = playerState?.itemPresent ? (playerState.itemName || "(unnamed)") : "—";
+
+    const spriteName = mode === "music" ? "a1.png" : "i1.png";
+    if (spriteName !== lastSprite && !$("dj-sprite").hidden) {
+      $("dj-sprite").src = "./assets/poses/final/" + spriteName;
+      lastSprite = spriteName;
+    }
+    lastInferredState = inference.state;
+    updateManualComparison();
+  }
+
+  function updateManualComparison() {
+    const manual = $("monitor-manual");
+    const comparison = $("monitor-agreement");
+    if (!manualAudioState) {
+      manual.textContent = "Not marked";
+      comparison.textContent = "Manual markers do not influence the automatic detector.";
+      return;
+    }
+    manual.textContent = manualAudioState === "speaking" ? "DJ speech heard" :
+      manualAudioState === "music" ? "Music audible" : "Speech ended";
+    const detectedSpeech = lastInferredState === "likely-speaking" || lastInferredState === "possible-speaking";
+    const expectingSpeech = manualAudioState === "speaking";
+    const unclassifiable = ["waiting", "unknown", "transition", "rate-limited", "error", "disconnected", "stopped"].includes(lastInferredState);
+    comparison.textContent = unclassifiable ? "Waiting for comparable playback data." :
+      detectedSpeech === expectingSpeech ? "Current inference agrees with your last marker." :
+      "Current inference differs from your last marker; compare timestamps in the export.";
+  }
+
+  $("dj-sprite").addEventListener("error", () => {
+    $("dj-sprite").hidden = true;
+    $("dj-fallback").style.display = "block";
+  });
 
   function interval() {
     return Number($("interval").value) || 3000;
@@ -370,6 +607,7 @@
     recording = false;
     clearTimeout(timer);
     showStatus("Not recording", reason || "Recording stopped. Export the results for analysis.", "");
+    setMonitor({ state: "stopped", label: "Recording stopped", reason: "Live inference is off. The most recent samples remain in the timeline and downloads.", candidates: 0 });
     updateButtons();
   }
 
@@ -399,6 +637,9 @@
         currentlyPlaying,
         changed: false
       };
+      entry.inference = inferDjState(entry);
+      entry.inferenceChanged = entry.inference.state !== lastInferredState;
+      setMonitor(entry.inference, entry);
       const currentSig = signature(entry);
       entry.changed = previous !== null && currentSig !== previous;
       previous = currentSig;
@@ -410,7 +651,8 @@
         source: entry.source,
         player: entry.player,
         currentlyPlaying: entry.currentlyPlaying,
-        explanation: "These are sanitized summaries, not raw API responses."
+        inferredState: entry.inference,
+        explanation: "These are sanitized summaries, not raw API responses. Inference does not use manual markers."
       }, null, 2);
 
       if ([player.httpStatus, currentlyPlaying.httpStatus].includes(401)) {
@@ -436,6 +678,8 @@
     if (!recording) return;
     markers++;
     addEvent({ kind: "marker", label, at: new Date().toISOString(), source: $("source").value });
+    manualAudioState = label === "DJ speech START" ? "speaking" : label === "Music audible" ? "music" : "ended";
+    updateManualComparison();
     showStatus("Recording", "Marked: " + label, "live");
     // Markers are timestamped immediately; the next automatic sample stays rate-limited.
   }
@@ -463,6 +707,10 @@
     }
     recording = true;
     previous = null;
+    observedRealTrack = false;
+    candidateStreak = 0;
+    manualAudioState = null;
+    setMonitor({ state: "waiting", label: "Checking Spotify…", reason: "Collecting the first API sample. Music establishes a baseline before commentary inference.", candidates: 0 });
     showStatus("Recording", "Start with normal music, then mark the AI DJ commentary.", "live");
     updateButtons();
     sample();
@@ -476,22 +724,24 @@
     if (recording) return;
     log.length = 0;
     seq = 0; samples = 0; markers = 0; changes = 0; previous = null;
+    candidateStreak = 0; observedRealTrack = false; manualAudioState = null;
+    setMonitor({ state: "waiting", label: "Awaiting first sample", reason: "Start recording to inspect Spotify's active playback state.", candidates: 0 });
     $("details").textContent = "Start recording to inspect the API responses.";
     renderTimeline();
     updateButtons();
   });
   $("json").addEventListener("click", () => download(exportName("json"), "application/json", JSON.stringify({
-    schema: "pocketdj-ai-dj-diagnostic-v1",
+    schema: "pocketdj-ai-dj-diagnostic-v2",
     exportedAt: new Date().toISOString(),
     note: "Read-only observations. Manual markers indicate user-heard audio. No tokens, device IDs, or raw API payloads included.",
     samples, markers, changes, entries: log
   }, null, 2)));
   $("csv").addEventListener("click", () => {
-    const columns = ["timestamp", "kind", "source", "marker", "changed", "itemId", "itemName", "itemType", "playingType", "isPlaying", "progressMs", "contextType", "deviceType", "playerHttp", "currentlyPlayingHttp", "playerKeys", "currentlyPlayingKeys"];
+    const columns = ["timestamp", "kind", "source", "marker", "changed", "itemId", "itemName", "itemType", "playingType", "isPlaying", "progressMs", "contextType", "deviceType", "playerHttp", "currentlyPlayingHttp", "playerKeys", "currentlyPlayingKeys", "inferredState", "inferenceConfidence", "candidateStreak", "inferenceReason", "inferenceChanged"];
     const rows = [columns.map(escapeCsv).join(",")];
     for (const e of log) {
       const s = e.currentlyPlaying?.data || e.player?.data || {};
-      const values = [e.at, e.kind, e.source, e.label || "", e.changed ?? "", s.itemId, s.itemName, s.itemType, s.currentlyPlayingType, s.isPlaying, s.progressMs, s.contextType, (e.player?.data || {}).deviceType, e.player?.httpStatus, e.currentlyPlaying?.httpStatus, (e.player?.data?.topKeys || []).join("|"), (e.currentlyPlaying?.data?.topKeys || []).join("|")];
+      const values = [e.at, e.kind, e.source, e.label || "", e.changed ?? "", s.itemId, s.itemName, s.itemType, s.currentlyPlayingType, s.isPlaying, s.progressMs, s.contextType, (e.player?.data || {}).deviceType, e.player?.httpStatus, e.currentlyPlaying?.httpStatus, (e.player?.data?.topKeys || []).join("|"), (e.currentlyPlaying?.data?.topKeys || []).join("|"), e.inference?.state, e.inference?.confidence, e.inference?.candidates, e.inference?.reason, e.inferenceChanged];
       rows.push(values.map(escapeCsv).join(","));
     }
     download(exportName("csv"), "text/csv;charset=utf-8", rows.join("\r\n"));
