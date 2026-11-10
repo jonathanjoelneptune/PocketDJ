@@ -20,6 +20,7 @@ const POSE_BASE = "./assets/poses/final/";
 // Dedicated commentary poses already present in the final asset directory.
 // Keep these separate from scratching/idle/record-change pools.
 const SPEAKING_POSES = ["a37.png", "a29.png", "a28.png", "a38.png"] as const;
+const SPEAKING_POSE_HOLD_MS = 4_500;
 const ALBUM_REVEAL_FRAME_HOLD_MULTIPLIER = 2;
 
 /*
@@ -86,6 +87,7 @@ export class DjController {
   private speakingRequested = false;
   private speakingVisualActive = false;
   private nextSpeakingPoseAt = 0;
+  private lastSpeakingPose: string | null = null;
 
   constructor(private readonly poseElement: HTMLElement, private readonly modeElement: HTMLElement) {
     this.preload();
@@ -148,11 +150,13 @@ export class DjController {
   }
 
   private advanceSpeakingPose(now: number): void {
-    // Several seconds of commentary should feel alive, without rapid sprite
-    // flicker. Select a different pose each time, and hold it for 1.2–2.1 s.
-    const choices = SPEAKING_POSES.filter((pose) => pose !== this.currentFrame);
+    // Pick a fresh random pose at the start of each commentary segment and
+    // another different pose only if the DJ keeps talking for ~4.5 seconds.
+    // Brief updates naturally use a single pose throughout.
+    const choices = SPEAKING_POSES.filter((pose) => pose !== this.lastSpeakingPose);
     this.currentFrame = choices[randomInt(0, choices.length - 1)] || SPEAKING_POSES[0];
-    this.nextSpeakingPoseAt = now + randomInt(1_200, 2_100);
+    this.lastSpeakingPose = this.currentFrame;
+    this.nextSpeakingPoseAt = now + SPEAKING_POSE_HOLD_MS;
   }
 
   setPose(id: string, now = Date.now()): void {
