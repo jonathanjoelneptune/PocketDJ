@@ -133,6 +133,12 @@ export function renderShell(state: AppState): void {
           </div>
         </div>
 
+        <!-- Room-space overlay: follows the existing 16:9 camera, independent of sprite poses. -->
+        <div id="spotifyDjSpeechBubble" class="spotify-dj-speech-bubble" data-palette="amber" data-speech-state="off" aria-hidden="true">
+          <div class="spotify-dj-speech-pixels"><i></i><i></i><i></i></div>
+          <div class="spotify-dj-speech-bars"><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+
         <div class="floor-player floor-player-visible" id="floorPlayer" aria-label="Spotify floor playback controls">
           <button class="floor-control floor-control-prev" id="floorPrevButton" type="button" aria-label="Previous track" title="Previous track">
             <span class="floor-icon">⏮</span>
@@ -1418,6 +1424,40 @@ export function renderShell(state: AppState): void {
                 <option value="both-back">Display Both - DJ Nova in back</option>
               </select>
             </label>
+            <div class="menu2-dev-subsection menu2-dj-speech-bubble-tools">
+              <div class="menu2-section-head menu2-subsection-head"><h3>Spotify DJ Speech Bubble</h3><span>Wordless animation</span></div>
+              <p class="menu2-dev-note">Appears when Spotify AI DJ commentary is inferred from playback metadata. No transcription or audio capture. Adjust the bubble while previewing; these settings save only in this browser.</p>
+              <label class="menu2-setting menu2-toggle-setting"><input id="menu2DjSpeechBubbleEnabled" type="checkbox" checked /> Enable automatic bubble</label>
+              <label class="menu2-setting">Bubble colors
+                <select id="menu2DjSpeechBubblePalette" class="menu2-select">
+                  <option value="amber">Warm amber · room matched</option>
+                  <option value="violet">Night violet</option>
+                  <option value="teal">Neon teal</option>
+                  <option value="rose">Muted rose</option>
+                  <option value="parchment">Classic parchment</option>
+                </select>
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Position X <span id="menu2DjSpeechBubbleXValue">60.8%</span>
+                <input id="menu2DjSpeechBubbleX" type="range" min="4" max="94" step="0.1" value="60.8" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Position Y <span id="menu2DjSpeechBubbleYValue">34.0%</span>
+                <input id="menu2DjSpeechBubbleY" type="range" min="7" max="82" step="0.1" value="34" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Bubble scale <span id="menu2DjSpeechBubbleScaleValue">1.00x</span>
+                <input id="menu2DjSpeechBubbleScale" type="range" min="0.5" max="2.2" step="0.02" value="1" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Opacity <span id="menu2DjSpeechBubbleOpacityValue">92%</span>
+                <input id="menu2DjSpeechBubbleOpacity" type="range" min="0.12" max="1" step="0.01" value="0.92" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Glow strength <span id="menu2DjSpeechBubbleGlowValue">45%</span>
+                <input id="menu2DjSpeechBubbleGlow" type="range" min="0" max="1" step="0.01" value="0.45" />
+              </label>
+              <p id="menu2DjSpeechBubbleStatus" class="menu2-dev-note" role="status">Waiting for music; bubble hidden</p>
+              <div class="menu2-dj-speech-bubble-actions">
+                <button id="menu2DjSpeechBubblePreview" class="menu2-action" type="button">Preview for 5 seconds</button>
+                <button id="menu2DjSpeechBubbleReset" class="menu2-action" type="button">Reset bubble defaults</button>
+              </div>
+            </div>
             <div class="menu2-dev-subsection">
               <div class="menu2-section-head menu2-subsection-head"><h3>Room Vibe Balance</h3><span>Color without haze</span></div>
               <label class="menu2-setting menu2-slider-setting">Album wash strength <span id="menu2RoomVibeAlbumWashValue">0.34</span>
