@@ -41,6 +41,9 @@ export function renderShell(state: AppState): void {
         <div class="room-base-layer" aria-hidden="false">
         <div id="sessionAlbumFrameOverlay" class="session-album-frame-overlay" aria-hidden="true"></div>
         <canvas id="sessionAlbumWarpCanvas" class="session-album-warp-canvas" width="1764" height="992" aria-hidden="true"></canvas>
+        <!-- Constrained to the two album walls; no full-room animated surface. -->
+        <div class="room-spotlight-wall room-spotlight-left" aria-hidden="true"></div>
+        <div class="room-spotlight-wall room-spotlight-right" aria-hidden="true"></div>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
         <div id="stringLightOverlay" class="string-light-overlay" aria-hidden="true"></div>
         <div id="ambientTwinkleOverlay" class="ambient-twinkle-overlay" aria-hidden="true"></div>
@@ -1412,6 +1415,28 @@ export function renderShell(state: AppState): void {
               </label>
             </div>
             <button id="menu2RoomLightingReset" class="menu2-action menu2-wide-action" type="button">Restore Classic Lighting</button>
+            <details class="menu2-room-spotlights" open>
+              <summary>Living Atmosphere · Moving Spotlights</summary>
+              <p class="menu2-room-help">Slow, visible amber and blue light washes travel across the album walls. This desktop-first version avoids animated full-room layers. Mobile and reduced-motion devices keep the stable static room.</p>
+              <label class="menu2-setting menu2-toggle-setting"><input id="menu2SpotlightEnabled" type="checkbox" checked /> Enable moving spotlights</label>
+              <label class="menu2-setting menu2-slider-setting">Spotlight strength <span id="menu2SpotlightStrengthValue">0.90</span>
+                <input id="menu2SpotlightStrength" type="range" min="0" max="1.50" step="0.05" value="0.90" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Sweep duration <span id="menu2SpotlightSpeedValue">22s</span>
+                <input id="menu2SpotlightSpeed" type="range" min="8" max="60" step="1" value="22" />
+              </label>
+              <label class="menu2-setting">Spotlight colors
+                <select id="menu2SpotlightPalette" class="menu2-select">
+                  <option value="duo">Amber + Ice Blue</option>
+                  <option value="album">Album reactive</option>
+                  <option value="warm">Warm amber</option>
+                  <option value="cool">Ice blue</option>
+                </select>
+              </label>
+              <button id="menu2SpotlightReset" class="menu2-action menu2-wide-action" type="button">Reset Spotlights</button>
+              <p class="menu2-room-spotlights-safe-note">Performance safeguard: spotlight animation is disabled on touch screens, smaller layouts, and when reduced motion is requested.</p>
+            </details>
+
             <details class="menu2-room-advanced">
               <summary>Scene overlays &amp; ambient color</summary>
               <label class="menu2-setting">Scene filter

@@ -13954,3 +13954,130 @@ body,
 .menu2-room-lighting-controls .menu2-setting {
   max-width: 100%;
 }
+
+
+/* Living Atmosphere V2: desktop-constrained moving wall spotlights */
+/*
+ * Keep the former Phase 1 GPU regression isolated:
+ * - No full-room animated blend-mode/filter/blur layers.
+ * - Only two clipped wall regions, with two moving gradients apiece.
+ * - Animations disabled entirely for coarse pointers, small screens,
+ *   and users who prefer reduced motion.
+ * - Walls sit above album canvas but do not touch the centered DJ/lyrics.
+ * - Transform-only keyframes, no JS animation frame loop.
+ */
+:root {
+  --room-spotlight-strength: 0.90;
+  --room-spotlight-speed: 22s;
+  --room-spotlight-warm-rgb: 255, 161, 64;
+  --room-spotlight-cool-rgb: 82, 161, 255;
+  --room-spotlight-warm-scale: 1;
+  --room-spotlight-cool-scale: 1;
+}
+:root[data-room-spotlight-palette="warm"] {
+  --room-spotlight-warm-scale: 1.16;
+  --room-spotlight-cool-scale: 0;
+}
+:root[data-room-spotlight-palette="cool"] {
+  --room-spotlight-warm-scale: 0;
+  --room-spotlight-cool-scale: 1.16;
+}
+:root[data-room-spotlight-palette="album"] {
+  --room-spotlight-warm-rgb: var(--ambient-room-accent-rgb, 255, 161, 64);
+  --room-spotlight-cool-rgb: var(--ambient-room-glow-rgb, 82, 161, 255);
+}
+
+/* Start hidden for every device. Desktop-only CSS explicitly opts in. */
+.room-spotlight-wall {
+  display: none;
+  position: absolute;
+  top: 3%;
+  width: 28.5%;
+  height: 78%;
+  overflow: hidden;
+  z-index: 24;
+  pointer-events: none !important;
+  user-select: none;
+}
+.room-spotlight-left { left: 0; }
+.room-spotlight-right { right: 0; }
+.room-spotlight-wall::before,
+.room-spotlight-wall::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  left: -33%;
+  width: 93%;
+  height: 94%;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 1;
+}
+/* Strong, localized color overlays, unlike the previous near-invisible
+   broad ambient wash. Use normal source-over blending, not screen blend. */
+.room-spotlight-wall::before {
+  background: radial-gradient(ellipse at center,
+    rgba(var(--room-spotlight-warm-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-warm-scale, 1) * 0.47)) 0%,
+    rgba(var(--room-spotlight-warm-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-warm-scale, 1) * 0.31)) 28%,
+    rgba(var(--room-spotlight-warm-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-warm-scale, 1) * 0.10)) 53%,
+    transparent 76%);
+}
+.room-spotlight-wall::after {
+  left: -21%;
+  top: 6%;
+  width: 88%;
+  height: 98%;
+  background: radial-gradient(ellipse at center,
+    rgba(var(--room-spotlight-cool-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-cool-scale, 1) * 0.42)) 0%,
+    rgba(var(--room-spotlight-cool-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-cool-scale, 1) * 0.27)) 29%,
+    rgba(var(--room-spotlight-cool-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-cool-scale, 1) * 0.09)) 55%,
+    transparent 79%);
+}
+@keyframes pocketDjWallWarmSweep {
+  0%   { transform: translate3d(-10%, -7%, 0); }
+  48%  { transform: translate3d(41%, 8%, 0); }
+  100% { transform: translate3d(108%, -3%, 0); }
+}
+@keyframes pocketDjWallCoolSweep {
+  0%   { transform: translate3d(106%, 4%, 0); }
+  52%  { transform: translate3d(49%, -8%, 0); }
+  100% { transform: translate3d(-12%, 7%, 0); }
+}
+/* Safety gate: no spotlights, pseudo-element animations, or composited
+   moving layers on mobile/fold/touch/small screens. */
+@media (hover: hover) and (pointer: fine) and (min-width: 960px) and (prefers-reduced-motion: no-preference) {
+  :root.room-spotlight-enabled .room-spotlight-wall { display: block; }
+  :root.room-spotlight-enabled .room-spotlight-wall::before {
+    animation: pocketDjWallWarmSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
+  }
+  :root.room-spotlight-enabled .room-spotlight-wall::after {
+    animation: pocketDjWallCoolSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
+  }
+  :root.room-spotlight-enabled .room-spotlight-right::before,
+  :root.room-spotlight-enabled .room-spotlight-right::after {
+    animation-direction: alternate-reverse;
+  }
+}
+.menu2-room-spotlights {
+  margin: 14px 0 12px;
+  padding: 12px 10px;
+  border: 1px solid rgba(251, 191, 36, 0.20);
+  border-radius: 12px;
+  background: rgba(22, 19, 34, 0.36);
+}
+.menu2-room-spotlights > summary {
+  cursor: pointer;
+  color: rgba(255, 218, 159, 0.96);
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+.menu2-room-spotlights[open] > summary { margin-bottom: 9px; }
+.menu2-room-spotlights .menu2-setting { max-width: 100%; }
+.menu2-room-spotlights .menu2-room-help { margin: 2px 0 12px; }
+.menu2-room-spotlights .menu2-action { margin-top: 10px; }
+.menu2-room-spotlights-safe-note {
+  margin: 10px 0 0;
+  color: var(--menu2-muted, rgba(238, 221, 193, 0.7));
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
