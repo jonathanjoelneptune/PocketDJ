@@ -1437,24 +1437,24 @@ export function renderShell(state: AppState): void {
                   <option value="parchment">Classic parchment</option>
                 </select>
               </label>
-              <label class="menu2-setting menu2-slider-setting">Position X <span id="menu2DjSpeechBubbleXValue">60.8%</span>
-                <input id="menu2DjSpeechBubbleX" type="range" min="4" max="94" step="0.1" value="60.8" />
+              <label class="menu2-setting menu2-slider-setting">Position X <span id="menu2DjSpeechBubbleXValue">52.7%</span>
+                <input id="menu2DjSpeechBubbleX" type="range" min="4" max="94" step="0.1" value="52.7" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Position Y <span id="menu2DjSpeechBubbleYValue">34.0%</span>
-                <input id="menu2DjSpeechBubbleY" type="range" min="7" max="82" step="0.1" value="34" />
+              <label class="menu2-setting menu2-slider-setting">Position Y <span id="menu2DjSpeechBubbleYValue">36.4%</span>
+                <input id="menu2DjSpeechBubbleY" type="range" min="7" max="82" step="0.1" value="36.4" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Bubble scale <span id="menu2DjSpeechBubbleScaleValue">1.00x</span>
-                <input id="menu2DjSpeechBubbleScale" type="range" min="0.5" max="2.2" step="0.02" value="1" />
+              <label class="menu2-setting menu2-slider-setting">Bubble scale <span id="menu2DjSpeechBubbleScaleValue">0.50x</span>
+                <input id="menu2DjSpeechBubbleScale" type="range" min="0.5" max="2.2" step="0.02" value="0.5" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Opacity <span id="menu2DjSpeechBubbleOpacityValue">92%</span>
-                <input id="menu2DjSpeechBubbleOpacity" type="range" min="0.12" max="1" step="0.01" value="0.92" />
+              <label class="menu2-setting menu2-slider-setting">Opacity <span id="menu2DjSpeechBubbleOpacityValue">78%</span>
+                <input id="menu2DjSpeechBubbleOpacity" type="range" min="0.12" max="1" step="0.01" value="0.78" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Glow strength <span id="menu2DjSpeechBubbleGlowValue">45%</span>
                 <input id="menu2DjSpeechBubbleGlow" type="range" min="0" max="1" step="0.01" value="0.45" />
               </label>
               <p id="menu2DjSpeechBubbleStatus" class="menu2-dev-note" role="status">Waiting for music; bubble hidden</p>
               <div class="menu2-dj-speech-bubble-actions">
-                <button id="menu2DjSpeechBubblePreview" class="menu2-action" type="button">Preview for 5 seconds</button>
+                <button id="menu2DjSpeechBubblePreview" class="menu2-action" type="button">Preview speech + poses (5s)</button>
                 <button id="menu2DjSpeechBubbleReset" class="menu2-action" type="button">Reset bubble defaults</button>
               </div>
             </div>
