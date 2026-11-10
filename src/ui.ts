@@ -45,6 +45,11 @@ export function renderShell(state: AppState): void {
         <div id="stringLightOverlay" class="string-light-overlay" aria-hidden="true"></div>
         <div id="ambientTwinkleOverlay" class="ambient-twinkle-overlay" aria-hidden="true"></div>
         <div id="ambientMusicGlow" class="ambient-music-glow" aria-hidden="true"></div>
+        <div id="roomAtmosphereDrift" class="room-atmosphere-drift" aria-hidden="true">
+          <div class="room-atmosphere-beam room-atmosphere-beam-amber"></div>
+          <div class="room-atmosphere-beam room-atmosphere-beam-blue"></div>
+        </div>
+        <div id="roomAtmosphereParticles" class="room-atmosphere-particles" aria-hidden="true"></div>
 
         <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
           <div class="lyrics-boundary-guides" aria-hidden="true">
@@ -1412,6 +1417,22 @@ export function renderShell(state: AppState): void {
               </label>
             </div>
             <button id="menu2RoomLightingReset" class="menu2-action menu2-wide-action" type="button">Restore Classic Lighting</button>
+            <details class="menu2-room-atmosphere" open>
+              <summary>Living Atmosphere</summary>
+              <p class="menu2-room-help">Slowly shifting room light and a few floating dust motes. These effects stay separate from the lyrics and keep the room's nighttime look.</p>
+              <label class="menu2-setting menu2-toggle-setting"><input id="menu2AtmosphereDriftEnabled" type="checkbox" checked /> Slow drifting lights</label>
+              <label class="menu2-setting menu2-slider-setting">Light movement intensity <span id="menu2AtmosphereDriftIntensityValue">0.38</span>
+                <input id="menu2AtmosphereDriftIntensity" type="range" min="0" max="1" step="0.01" value="0.38" />
+              </label>
+              <label class="menu2-setting menu2-toggle-setting"><input id="menu2AtmosphereParticlesEnabled" type="checkbox" checked /> Floating dust particles</label>
+              <label class="menu2-setting menu2-slider-setting">Particle count <span id="menu2AtmosphereParticleCountValue">12</span>
+                <input id="menu2AtmosphereParticleCount" type="range" min="0" max="40" step="1" value="12" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Particle visibility <span id="menu2AtmosphereParticleOpacityValue">0.45</span>
+                <input id="menu2AtmosphereParticleOpacity" type="range" min="0" max="1" step="0.01" value="0.45" />
+              </label>
+              <button id="menu2AtmosphereReset" class="menu2-action menu2-wide-action" type="button">Reset Atmosphere Defaults</button>
+            </details>
             <details class="menu2-room-advanced">
               <summary>Scene overlays &amp; ambient color</summary>
               <label class="menu2-setting">Scene filter
