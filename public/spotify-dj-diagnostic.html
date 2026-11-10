@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14111c">
+  <title>Pocket DJ | Spotify AI DJ Diagnostic</title>
+  <style>
+    :root { color-scheme: dark; font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; background: #100f16; color: #f8f4ee; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1230px; margin: auto; padding: 25px 20px 65px; }
+    a { color: #f7bd86; }
+    .eyebrow { color: #ffac6c; font-size: .77rem; letter-spacing: .15em; font-weight: 800; }
+    h1 { font-size: clamp(1.65rem, 4vw, 2.45rem); line-height: 1.14; margin: 8px 0; }
+    h2 { font-size: 1.08rem; margin: 0 0 12px; }
+    p { color: #c6c1cc; margin: 7px 0 17px; }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+    .back { white-space: nowrap; font-size: .9rem; }
+    .notice { background: #292239; border: 1px solid #544465; border-radius: 12px; padding: 13px 16px; color: #f1e7fa; margin-bottom: 18px; }
+    .grid { display: grid; grid-template-columns: 1.03fr .97fr; gap: 16px; }
+    .panel { background: #1b1923; border: 1px solid #3a3446; border-radius: 15px; padding: 19px; min-width: 0; margin-bottom: 16px; }
+    .formrow { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px; margin-bottom: 14px; }
+    .formrow > label { flex: 1 1 145px; }
+    label { font-weight: 650; color: #d9d4dd; font-size: .88rem; }
+    select { display: block; width: 100%; background: #121018; color: #fff; border: 1px solid #655772; border-radius: 8px; padding: 10px; margin-top: 6px; font: inherit; }
+    button { font: inherit; font-weight: 700; color: #f7f0e9; border: 1px solid #70617a; background: #312a3c; border-radius: 9px; padding: 10px 13px; cursor: pointer; }
+    button:hover:not(:disabled) { background: #4a3b58; }
+    button:focus-visible, select:focus-visible { outline: 3px solid #f8b66d; outline-offset: 2px; }
+    button:disabled { opacity: .42; cursor: not-allowed; }
+    button.primary { color: #17101b; background: #f5aa70; border-color: #f5aa70; }
+    button.primary:hover:not(:disabled) { background: #ffd0a4; }
+    button.danger { border-color: #ad6670; }
+    .buttonrow { display: flex; flex-wrap: wrap; gap: 9px; margin: 8px 0 15px; }
+    .marker { background: #30263d; border-color: #805e99; }
+    .pill { display: inline-flex; align-items: center; gap: 7px; background: #343044; border-radius: 25px; padding: 4px 11px; font-size: .82rem; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #a8a2b1; }
+    .dot.live { background: #83dbad; box-shadow: 0 0 10px #83dbad; }
+    .dot.warn { background: #f9b771; }
+    .stats { display: flex; flex-wrap: wrap; gap: 15px; margin: 12px 0; }
+    .stat { background: #14131b; border-radius: 9px; padding: 10px 13px; min-width: 98px; }
+    .stat strong { display: block; font-variant-numeric: tabular-nums; font-size: 1.4rem; }
+    .stat span { color: #afa9ba; font-size: .78rem; }
+    .muted, small { color: #a8a1b4; }
+    .instructions { margin: 0; padding-left: 21px; color: #d2ccd8; }
+    .instructions li { margin: 0 0 8px; }
+    .scroll { max-height: 425px; overflow: auto; border: 1px solid #383240; border-radius: 9px; }
+    table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+    th, td { text-align: left; padding: 10px 9px; border-bottom: 1px solid #383240; vertical-align: top; }
+    th { background: #282330; position: sticky; top: 0; color: #c9c0d5; }
+    td { overflow-wrap: anywhere; }
+    tr.mark td { background: #392c45; }
+    tr.change td { background: #2f2a22; }
+    pre { color: #eee7f6; background: #121019; border: 1px solid #383240; border-radius: 9px; padding: 12px; max-height: 430px; overflow: auto; overflow-wrap: anywhere; white-space: pre-wrap; font-size: .77rem; }
+    .hint { font-size: .83rem; color: #b4acba; }
+    #message { color: #f3ca9c; min-height: 24px; margin-top: 6px; overflow-wrap: anywhere; }
+    .footer { margin-top: 10px; font-size: .82rem; }
+    @media (max-width: 850px) { .grid { grid-template-columns: 1fr; } header { flex-direction: column; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <div class="eyebrow">POCKET DJ / ENGINEERING DIAGNOSTICS</div>
+      <h1>Spotify AI DJ Signal Inspector</h1>
+      <p>Compare Spotify playback metadata with the moments you hear AI DJ commentary. Read-only. No room changes, no audio capture.</p>
+    </div>
+    <a class="back" href="./">Back to Pocket DJ</a>
+  </header>
+
+  <div class="notice">
+    <strong>What this test can prove:</strong> whether Spotify's public playback API reports a repeatable state change while the AI DJ is speaking.
+    It <strong>does not</strong> retrieve a speech transcript or inspect Spotify's private app interface.
+  </div>
+
+  <div class="grid">
+    <section class="panel" aria-label="Diagnostic controls">
+      <h2>1. Configure a session</h2>
+      <div class="formrow">
+        <label>Playback source
+          <select id="source">
+            <option value="Spotify desktop app">Spotify desktop app</option>
+            <option value="Spotify Chrome/web player">Spotify Chrome/web player</option>
+            <option value="Spotify phone app">Spotify phone app</option>
+            <option value="Pocket DJ web player">Pocket DJ web player</option>
+          </select>
+        </label>
+        <label>Polling interval
+          <select id="interval">
+            <option value="2000">2 seconds (higher API usage)</option>
+            <option value="3000" selected>3 seconds (recommended)</option>
+            <option value="5000">5 seconds</option>
+            <option value="8000">8 seconds</option>
+          </select>
+        </label>
+      </div>
+      <div class="buttonrow">
+        <button id="start" class="primary">Start recording</button>
+        <button id="stop" disabled>Stop recording</button>
+        <button id="sample" disabled>Sample now</button>
+      </div>
+      <div class="pill"><span class="dot" id="dot"></span><span id="status">Checking Spotify session…</span></div>
+      <div id="message" role="status" aria-live="polite"></div>
+      <p class="hint">Uses the Spotify session from Pocket DJ in the <strong>same browser profile and website origin</strong>. If disconnected, return to Pocket DJ, connect, then open this page again. No new Spotify redirect URL is needed.</p>
+
+      <h2>2. Mark what you hear</h2>
+      <p class="hint">Click the appropriate marker at the exact moment you hear the event. These timestamps are the ground truth for the comparison.</p>
+      <div class="buttonrow">
+        <button class="marker" data-mark="DJ speech START" disabled>🎙 DJ starts talking</button>
+        <button class="marker" data-mark="DJ speech END" disabled>🔇 DJ stops talking</button>
+        <button class="marker" data-mark="Music audible" disabled>♫ Music audible</button>
+      </div>
+      <div class="buttonrow">
+        <button id="json" disabled>Download JSON</button>
+        <button id="csv" disabled>Download CSV</button>
+        <button id="clear" class="danger" disabled>Clear log</button>
+      </div>
+      <p class="hint">Downloads contain playback metadata and marker timestamps, <strong>never access/refresh tokens, device IDs, or device names</strong>. They may contain song names, artists, and listening history, so review before sharing.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Test procedure</h2>
+      <ol class="instructions">
+        <li>Connect Spotify through <a href="./">Pocket DJ</a> in this browser if needed.</li>
+        <li>Start Spotify's AI DJ and play a normal song. Select the actual playback source above.</li>
+        <li>Click <strong>Start recording</strong>; collect at least 15 seconds of normal music as a baseline.</li>
+        <li>When the AI DJ speaks, click <strong>DJ starts talking</strong>; click <strong>DJ stops talking</strong> when it ends.</li>
+        <li>Click <strong>Music audible</strong> as the next song plays. Repeat for at least three DJ commentary segments.</li>
+        <li>Stop, download JSON, and compare the samples around each marker. Repeat for other playback sources if useful.</li>
+      </ol>
+      <div class="stats">
+        <div class="stat"><strong id="samples">0</strong><span>API samples</span></div>
+        <div class="stat"><strong id="markers">0</strong><span>Manual markers</span></div>
+        <div class="stat"><strong id="changes">0</strong><span>State changes</span></div>
+      </div>
+      <p class="hint">Each sample requests both <code>/me/player</code> and <code>/me/player/currently-playing</code>. Calls are non-overlapping, and recording automatically backs off when Spotify sends HTTP 429. Keep this tab in the foreground for the best timestamp resolution.</p>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Timeline <small>(newest first)</small></h2>
+      <div class="scroll">
+        <table aria-label="Diagnostic events">
+          <thead><tr><th>Local time</th><th>Type</th><th>Observation</th><th>Playback source</th></tr></thead>
+          <tbody id="timeline"><tr><td colspan="4" class="muted">No samples yet.</td></tr></tbody>
+        </table>
+      </div>
+      <p class="hint">Highlighted samples indicate observable metadata changes, <strong>not confirmed AI DJ speech</strong>. Match them to your manual markers.</p>
+    </section>
+    <section class="panel">
+      <h2>Latest API comparison</h2>
+      <pre id="details">Start recording to inspect field values and the complete set of returned field names.</pre>
+      <p class="hint">The inspector preserves the names of top-level, item, context, actions, and device fields, plus safe categorical values. It intentionally does not save complete raw API payloads.</p>
+    </section>
+  </div>
+
+  <p class="footer">Diagnostic only • Does not pause, skip, transfer, or modify Spotify playback • Logs remain in memory until exported or the page closes.</p>
+</main>
+<script>
+(() => {
+  "use strict";
+  const TOKEN_KEY = "pocket_dj_spotify_tokens";
+  const API = "https://api.spotify.com/v1/me/player";
+  const MAX_LOG = 2500;
+  const $ = (id) => document.getElementById(id);
+  const log = [];
+  let recording = false;
+  let busy = false;
+  let timer = null;
+  let seq = 0;
+  let previous = null;
+  let samples = 0;
+  let markers = 0;
+  let changes = 0;
+
+  function tokens() {
+    try {
+      const value = JSON.parse(localStorage.getItem(TOKEN_KEY) || "null");
+      return value && typeof value.accessToken === "string" ? value : null;
+    } catch { return null; }
+  }
+
+  function sessionReady() {
+    const value = tokens();
+    return !!(value && Number(value.expiresAt) > Date.now() + 10000);
+  }
+
+  function showStatus(status, message, state) {
+    $("status").textContent = status;
+    $("message").textContent = message || "";
+    $("dot").className = "dot" + (state ? " " + state : "");
+  }
+
+  function updateButtons() {
+    const valid = sessionReady();
+    $("start").disabled = recording || !valid;
+    $("stop").disabled = !recording;
+    $("sample").disabled = !recording || busy;
+    document.querySelectorAll("[data-mark]").forEach((b) => b.disabled = !recording);
+    $("json").disabled = log.length === 0;
+    $("csv").disabled = log.length === 0;
+    $("clear").disabled = recording || log.length === 0;
+    $("samples").textContent = String(samples);
+    $("markers").textContent = String(markers);
+    $("changes").textContent = String(changes);
+  }
+
+  function displayTime(iso) {
+    return new Date(iso).toLocaleTimeString(undefined, { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit", fractionalSecondDigits: 3 });
+  }
+
+  function escapeCsv(value) {
+    const str = value == null ? "" : String(value);
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+
+  // Deliberately omit authorization material, device names/IDs, and unbounded raw payloads.
+  function safeExtras(obj, known) {
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) return {};
+    const out = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (known.includes(key) || /token|secret|credential|auth|email|user|id|name|href|url|uri|image|description/i.test(key)) continue;
+      if (typeof value === "boolean" || (typeof value === "number" && Number.isFinite(value))) out[key] = value;
+      if (typeof value === "string" && value.length <= 72 && /^[\w .:/-]+$/.test(value)) out[key] = value;
+    }
+    return out;
+  }
+
+  function keysOf(value) {
+    return value && typeof value === "object" && !Array.isArray(value) ? Object.keys(value).sort() : [];
+  }
+
+  function summarize(body) {
+    if (!body || typeof body !== "object") return null;
+    const item = body.item && typeof body.item === "object" ? body.item : null;
+    const device = body.device && typeof body.device === "object" ? body.device : null;
+    const context = body.context && typeof body.context === "object" ? body.context : null;
+    const actions = body.actions && typeof body.actions === "object" ? body.actions : null;
+    return {
+      topKeys: keysOf(body),
+      itemKeys: keysOf(item),
+      contextKeys: keysOf(context),
+      deviceKeys: keysOf(device),
+      actionsKeys: keysOf(actions),
+      currentlyPlayingType: body.currently_playing_type ?? null,
+      isPlaying: typeof body.is_playing === "boolean" ? body.is_playing : null,
+      progressMs: typeof body.progress_ms === "number" ? body.progress_ms : null,
+      serverTimestamp: typeof body.timestamp === "number" ? body.timestamp : null,
+      itemPresent: !!item,
+      itemId: typeof item?.id === "string" ? item.id : null,
+      itemType: typeof item?.type === "string" ? item.type : null,
+      itemName: typeof item?.name === "string" ? item.name : null,
+      itemArtists: Array.isArray(item?.artists) ? item.artists.map(a => a && a.name).filter(x => typeof x === "string").slice(0, 12) : [],
+      itemDurationMs: typeof item?.duration_ms === "number" ? item.duration_ms : null,
+      contextPresent: !!context,
+      contextType: typeof context?.type === "string" ? context.type : null,
+      contextUriKind: typeof context?.uri === "string" ? context.uri.split(":")[1] || null : null,
+      deviceType: typeof device?.type === "string" ? device.type : null,
+      deviceActive: typeof device?.is_active === "boolean" ? device.is_active : null,
+      devicePrivateSession: typeof device?.is_private_session === "boolean" ? device.is_private_session : null,
+      deviceRestricted: typeof device?.is_restricted === "boolean" ? device.is_restricted : null,
+      shuffleState: typeof body.shuffle_state === "boolean" ? body.shuffle_state : null,
+      repeatState: typeof body.repeat_state === "string" ? body.repeat_state : null,
+      disallowedActions: actions?.disallows && typeof actions.disallows === "object"
+        ? Object.keys(actions.disallows).filter(k => actions.disallows[k] === true).sort() : [],
+      extraTopScalars: safeExtras(body, ["item", "device", "context", "actions", "currently_playing_type", "is_playing", "progress_ms", "timestamp", "shuffle_state", "repeat_state"]),
+      extraItemScalars: safeExtras(item, ["id", "type", "name", "artists", "album", "duration_ms", "uri", "external_urls", "href", "images"])
+    };
+  }
+
+  async function fetchState(endpoint, accessToken) {
+    const began = performance.now();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8500);
+    try {
+      const response = await fetch(API + endpoint, {
+        headers: { Authorization: "Bearer " + accessToken },
+        cache: "no-store",
+        signal: controller.signal
+      });
+      let data = null;
+      if (response.status !== 204 && response.ok) {
+        data = summarize(await response.json());
+      }
+      const retryHeader = response.headers.get("Retry-After");
+      return {
+        httpStatus: response.status,
+        latencyMs: Math.round(performance.now() - began),
+        retryAfterSeconds: retryHeader && /^\d+$/.test(retryHeader) ? Math.min(600, Number(retryHeader)) : null,
+        data
+      };
+    } catch (error) {
+      return { httpStatus: null, latencyMs: Math.round(performance.now() - began), error: error?.name === "AbortError" ? "Request timed out" : "Network request failed", data: null };
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function signature(entry) {
+    const a = entry.currentlyPlaying?.data;
+    const b = entry.player?.data;
+    const s = a || b;
+    return JSON.stringify({
+      currentlyPlayingHttp: entry.currentlyPlaying?.httpStatus,
+      playerHttp: entry.player?.httpStatus,
+      itemId: s?.itemId,
+      itemType: s?.itemType,
+      playingType: s?.currentlyPlayingType,
+      isPlaying: s?.isPlaying,
+      contextType: s?.contextType,
+      itemPresent: s?.itemPresent,
+      playerItemId: b?.itemId,
+      playerItemType: b?.itemType,
+      playerPlayingType: b?.currentlyPlayingType,
+      playerIsPlaying: b?.isPlaying,
+      playerContextType: b?.contextType,
+      playerDeviceType: b?.deviceType,
+      itemKeys: s?.itemKeys,
+      topKeys: s?.topKeys,
+      playerKeys: b?.topKeys
+    });
+  }
+
+  function addEvent(entry) {
+    log.push(entry);
+    if (log.length > MAX_LOG) log.shift();
+    renderTimeline();
+    updateButtons();
+  }
+
+  function renderTimeline() {
+    const tbody = $("timeline");
+    tbody.replaceChildren();
+    for (const entry of log.slice(-140).reverse()) {
+      const tr = document.createElement("tr");
+      tr.className = entry.kind === "marker" ? "mark" : entry.changed ? "change" : "";
+      const summary = entry.kind === "marker"
+        ? entry.label
+        : entry.currentlyPlaying?.data || entry.player?.data;
+      const detail = entry.kind === "marker"
+        ? entry.label
+        : (summary
+          ? ((summary.itemName || (summary.itemPresent ? "Unnamed item" : "No item")) + " • " +
+            (summary.currentlyPlayingType || summary.itemType || "type: unavailable") +
+            " • " + (summary.isPlaying === null ? "playing: ?" : "playing: " + summary.isPlaying) +
+            " • HTTP " + (entry.currentlyPlaying?.httpStatus ?? "error") + "/" + (entry.player?.httpStatus ?? "error") +
+            (entry.changed ? " • STATE CHANGE" : ""))
+          : "No playback payload • HTTP " + (entry.currentlyPlaying?.httpStatus ?? "error") + "/" + (entry.player?.httpStatus ?? "error"));
+      for (const value of [displayTime(entry.at), entry.kind === "marker" ? "MANUAL" : "#" + entry.number, detail, entry.source]) {
+        const td = document.createElement("td");
+        td.textContent = value;
+        tr.append(td);
+      }
+      tbody.append(tr);
+    }
+  }
+
+  function interval() {
+    return Number($("interval").value) || 3000;
+  }
+
+  function schedule(delay) {
+    clearTimeout(timer);
+    if (recording) timer = setTimeout(sample, delay);
+  }
+
+  function stop(reason) {
+    recording = false;
+    clearTimeout(timer);
+    showStatus("Not recording", reason || "Recording stopped. Export the results for analysis.", "");
+    updateButtons();
+  }
+
+  async function sample() {
+    if (!recording || busy) return;
+    const auth = tokens();
+    if (!auth || Number(auth.expiresAt) <= Date.now() + 5000) {
+      stop("Spotify token is missing or expired. Reconnect in Pocket DJ, then return here. Your current log can still be exported.");
+      return;
+    }
+    busy = true;
+    updateButtons();
+    try {
+      const at = new Date().toISOString();
+      const [player, currentlyPlaying] = await Promise.all([
+        fetchState("", auth.accessToken),
+        fetchState("/currently-playing", auth.accessToken)
+      ]);
+      if (!recording) return;
+      const entry = {
+        kind: "sample",
+        number: ++seq,
+        at,
+        observedAt: new Date().toISOString(),
+        source: $("source").value,
+        player,
+        currentlyPlaying,
+        changed: false
+      };
+      const currentSig = signature(entry);
+      entry.changed = previous !== null && currentSig !== previous;
+      previous = currentSig;
+      samples++;
+      if (entry.changed) changes++;
+      addEvent(entry);
+      $("details").textContent = JSON.stringify({
+        capturedAt: entry.at,
+        source: entry.source,
+        player: entry.player,
+        currentlyPlaying: entry.currentlyPlaying,
+        explanation: "These are sanitized summaries, not raw API responses."
+      }, null, 2);
+
+      if ([player.httpStatus, currentlyPlaying.httpStatus].includes(401)) {
+        stop("Spotify returned HTTP 401. Reconnect in Pocket DJ before another recording.");
+      } else if ([player.httpStatus, currentlyPlaying.httpStatus].includes(429)) {
+        const delay = Math.max(15000, (player.retryAfterSeconds || 0) * 1000, (currentlyPlaying.retryAfterSeconds || 0) * 1000);
+        showStatus("Rate limited; automatic retry", "Spotify returned HTTP 429. Pausing for " + Math.round(delay / 1000) + " seconds.", "warn");
+        schedule(delay);
+      } else {
+        showStatus("Recording", "Manual markers are available while Spotify plays.", "live");
+        schedule(interval());
+      }
+    } catch {
+      showStatus("Recording with errors", "An unexpected processing error occurred. Stop and export the available samples.", "warn");
+      schedule(interval());
+    } finally {
+      busy = false;
+      updateButtons();
+    }
+  }
+
+  function marker(label) {
+    if (!recording) return;
+    markers++;
+    addEvent({ kind: "marker", label, at: new Date().toISOString(), source: $("source").value });
+    showStatus("Recording", "Marked: " + label, "live");
+    // Markers are timestamped immediately; the next automatic sample stays rate-limited.
+  }
+
+  function download(name, mime, value) {
+    const blob = new Blob([value], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function exportName(ext) {
+    return "pocketdj-ai-dj-diagnostic-" + new Date().toISOString().replace(/[:.]/g, "-") + "." + ext;
+  }
+
+  $("start").addEventListener("click", () => {
+    if (!sessionReady() || recording) {
+      showStatus("Spotify not connected", "Open Pocket DJ and connect Spotify in this same browser, then return.", "warn");
+      return;
+    }
+    recording = true;
+    previous = null;
+    showStatus("Recording", "Start with normal music, then mark the AI DJ commentary.", "live");
+    updateButtons();
+    sample();
+  });
+  $("stop").addEventListener("click", () => stop());
+  $("sample").addEventListener("click", () => {
+    if (!busy) { clearTimeout(timer); sample(); }
+  });
+  document.querySelectorAll("[data-mark]").forEach((b) => b.addEventListener("click", () => marker(b.dataset.mark)));
+  $("clear").addEventListener("click", () => {
+    if (recording) return;
+    log.length = 0;
+    seq = 0; samples = 0; markers = 0; changes = 0; previous = null;
+    $("details").textContent = "Start recording to inspect the API responses.";
+    renderTimeline();
+    updateButtons();
+  });
+  $("json").addEventListener("click", () => download(exportName("json"), "application/json", JSON.stringify({
+    schema: "pocketdj-ai-dj-diagnostic-v1",
+    exportedAt: new Date().toISOString(),
+    note: "Read-only observations. Manual markers indicate user-heard audio. No tokens, device IDs, or raw API payloads included.",
+    samples, markers, changes, entries: log
+  }, null, 2)));
+  $("csv").addEventListener("click", () => {
+    const columns = ["timestamp", "kind", "source", "marker", "changed", "itemId", "itemName", "itemType", "playingType", "isPlaying", "progressMs", "contextType", "deviceType", "playerHttp", "currentlyPlayingHttp", "playerKeys", "currentlyPlayingKeys"];
+    const rows = [columns.map(escapeCsv).join(",")];
+    for (const e of log) {
+      const s = e.currentlyPlaying?.data || e.player?.data || {};
+      const values = [e.at, e.kind, e.source, e.label || "", e.changed ?? "", s.itemId, s.itemName, s.itemType, s.currentlyPlayingType, s.isPlaying, s.progressMs, s.contextType, (e.player?.data || {}).deviceType, e.player?.httpStatus, e.currentlyPlaying?.httpStatus, (e.player?.data?.topKeys || []).join("|"), (e.currentlyPlaying?.data?.topKeys || []).join("|")];
+      rows.push(values.map(escapeCsv).join(","));
+    }
+    download(exportName("csv"), "text/csv;charset=utf-8", rows.join("\r\n"));
+  });
+
+  if (sessionReady()) {
+    showStatus("Spotify session found", "Ready to record. The diagnostic only reads your account-wide playback state.", "");
+  } else {
+    showStatus("Spotify connection needed", "Connect Spotify through Pocket DJ in this browser, then reopen the diagnostic. An expired token will require reconnecting.", "warn");
+  }
+  updateButtons();
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && recording) $("message").textContent = "Browser background throttling can delay samples. Keep this tab visible during your test.";
+  });
+})();
+</script>
+</body>
+</html>
