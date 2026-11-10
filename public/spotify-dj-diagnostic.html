@@ -153,8 +153,9 @@
         </label>
         <label>Polling interval
           <select id="interval">
-            <option value="2000">2 seconds (higher API usage)</option>
-            <option value="3000" selected>3 seconds (recommended)</option>
+            <option value="1000">1 second (adaptive / experimental)</option>
+            <option value="2000" selected>2 seconds (recommended)</option>
+            <option value="3000">3 seconds</option>
             <option value="5000">5 seconds</option>
             <option value="8000">8 seconds</option>
           </select>
@@ -198,8 +199,9 @@
         <div class="stat"><strong id="samples">0</strong><span>API samples</span></div>
         <div class="stat"><strong id="markers">0</strong><span>Manual markers</span></div>
         <div class="stat"><strong id="changes">0</strong><span>State changes</span></div>
+        <div class="stat"><strong id="requests">0</strong><span>API requests</span></div>
       </div>
-      <p class="hint">Each sample requests both <code>/me/player</code> and <code>/me/player/currently-playing</code>. Calls are non-overlapping, and recording automatically backs off when Spotify sends HTTP 429. Keep this tab in the foreground for the best timestamp resolution.</p>
+      <p class="hint"><strong>1-second mode:</strong> checks <code>/me/player/currently-playing</code> every second, with an additional <code>/me/player</code> check on playback changes or every eight seconds. At 2 seconds or slower, both endpoints are checked each sample. API calls never overlap between samples and automatically back off on rate limiting. Avoid running Pocket DJ playback polling in another tab during high-frequency tests.</p>
     </section>
   </div>
 
@@ -283,6 +285,9 @@
   let lastInferredState = "waiting";
   let manualAudioState = null;
   let lastSprite = "i1.png";
+  let apiRequests = 0;
+  let lastPlayerProbeAt = 0;
+  let lastPrimaryFingerprint = null;
 
   function tokens() {
     try {
@@ -314,6 +319,8 @@
     $("samples").textContent = String(samples);
     $("markers").textContent = String(markers);
     $("changes").textContent = String(changes);
+    $("requests").textContent = String(apiRequests);
+    $("interval").disabled = recording;
   }
 
   function displayTime(iso) {
@@ -380,6 +387,7 @@
   }
 
   async function fetchState(endpoint, accessToken) {
+    apiRequests++;
     const began = performance.now();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8500);
@@ -390,14 +398,21 @@
         signal: controller.signal
       });
       let data = null;
+      let quotaExceeded = false;
       if (response.status !== 204 && response.ok) {
         data = summarize(await response.json());
+      } else if (response.status === 429) {
+        try {
+          const failure = await response.json();
+          quotaExceeded = failure?.error?.reason === "QUOTA_EXCEEDED";
+        } catch { /* Spotify may not include a parseable error body. */ }
       }
       const retryHeader = response.headers.get("Retry-After");
       return {
         httpStatus: response.status,
         latencyMs: Math.round(performance.now() - began),
         retryAfterSeconds: retryHeader && /^\d+$/.test(retryHeader) ? Math.min(600, Number(retryHeader)) : null,
+        quotaExceeded,
         data
       };
     } catch (error) {
@@ -407,29 +422,27 @@
     }
   }
 
+  // Compare playback data, not whether the optional secondary request ran.
   function signature(entry) {
-    const a = entry.currentlyPlaying?.data;
-    const b = entry.player?.data;
-    const s = a || b;
+    const s = entry.currentlyPlaying?.data || entry.player?.data;
     return JSON.stringify({
-      currentlyPlayingHttp: entry.currentlyPlaying?.httpStatus,
-      playerHttp: entry.player?.httpStatus,
+      status: entry.currentlyPlaying?.httpStatus,
       itemId: s?.itemId,
       itemType: s?.itemType,
       playingType: s?.currentlyPlayingType,
       isPlaying: s?.isPlaying,
       contextType: s?.contextType,
       itemPresent: s?.itemPresent,
-      playerItemId: b?.itemId,
-      playerItemType: b?.itemType,
-      playerPlayingType: b?.currentlyPlayingType,
-      playerIsPlaying: b?.isPlaying,
-      playerContextType: b?.contextType,
-      playerDeviceType: b?.deviceType,
       itemKeys: s?.itemKeys,
       topKeys: s?.topKeys,
-      playerKeys: b?.topKeys
+      disallowedActions: s?.disallowedActions
     });
+  }
+
+  function primaryFingerprint(response) {
+    if (response.httpStatus !== 200 || !response.data) return String(response.httpStatus);
+    const d = response.data;
+    return JSON.stringify([d.isPlaying, d.itemPresent, d.itemId, d.itemType, d.currentlyPlayingType, d.contextType]);
   }
 
   function addEvent(entry) {
@@ -454,9 +467,9 @@
           ? ((summary.itemName || (summary.itemPresent ? "Unnamed item" : "No item")) + " • " +
             (summary.currentlyPlayingType || summary.itemType || "type: unavailable") +
             " • " + (summary.isPlaying === null ? "playing: ?" : "playing: " + summary.isPlaying) +
-            " • HTTP " + (entry.currentlyPlaying?.httpStatus ?? "error") + "/" + (entry.player?.httpStatus ?? "error") +
+            " • HTTP " + (entry.currentlyPlaying?.httpStatus ?? "error") + "/" + (entry.player?.skipped ? "not sampled" : entry.player?.httpStatus ?? "error") +
             (entry.changed ? " • STATE CHANGE" : "") + (entry.inference ? " • " + entry.inference.label : ""))
-          : "No playback payload • HTTP " + (entry.currentlyPlaying?.httpStatus ?? "error") + "/" + (entry.player?.httpStatus ?? "error"));
+          : "No playback payload • HTTP " + (entry.currentlyPlaying?.httpStatus ?? "error") + "/" + (entry.player?.skipped ? "not sampled" : entry.player?.httpStatus ?? "error"));
       for (const value of [displayTime(entry.at), entry.kind === "marker" ? "MANUAL" : "#" + entry.number, detail, entry.source]) {
         const td = document.createElement("td");
         td.textContent = value;
@@ -472,65 +485,68 @@
   function inferDjState(entry) {
     const player = entry.player;
     const current = entry.currentlyPlaying;
-    const failure = [player.httpStatus, current.httpStatus];
-    const base = { state: "unknown", label: "Checking playback", confidence: "none", reason: "", candidates: 0 };
+    const checkedBoth = !player.skipped;
+    const statuses = checkedBoth ? [current.httpStatus, player.httpStatus] : [current.httpStatus];
+    const base = { state: "unknown", label: "Checking playback", confidence: "none", reason: "", candidates: 0,
+      verification: checkedBoth ? "both-endpoints" : "currently-playing-only" };
 
-    if (failure.includes(429)) {
+    if (statuses.includes(429)) {
       candidateStreak = 0;
-      return { ...base, state: "rate-limited", label: "Spotify rate limited", reason: "Polling will back off automatically. No speech classification until valid API samples return." };
+      return { ...base, state: "rate-limited", label: "Spotify rate limited",
+        reason: "Spotify returned HTTP 429. No speech classification until valid playback data returns." };
     }
-    if (failure.includes(401)) {
+    if (statuses.includes(401)) {
       candidateStreak = 0;
       return { ...base, state: "disconnected", label: "Spotify session expired", reason: "Reconnect from Pocket DJ before testing again." };
     }
-    if (failure.includes(403)) {
+    if (statuses.includes(403)) {
       candidateStreak = 0;
-      return { ...base, state: "error", label: "Spotify API denied access", reason: "One of the read-only endpoints returned HTTP 403." };
+      return { ...base, state: "error", label: "Spotify API denied access", reason: "A read-only endpoint returned HTTP 403." };
     }
-    if (failure.every(code => code === 204)) {
+    if (statuses.every(code => code === 204)) {
       candidateStreak = 0;
-      return { ...base, state: "no-playback", label: "No active playback", reason: "Both endpoints returned HTTP 204. This is not a speech signal." };
+      return { ...base, state: "no-playback", label: "No active playback", reason: "Spotify returned HTTP 204. This is not a speech signal." };
     }
-    if (failure.some(code => code !== 200)) {
+    if (statuses.some(code => code !== 200)) {
       candidateStreak = 0;
-      return { ...base, state: "unknown", label: "Playback data unavailable", reason: "Both endpoints must return HTTP 200 for speech inference. Check the timeline for errors." };
+      return { ...base, state: "unknown", label: "Playback data unavailable", reason: "A requested endpoint failed. Check the timeline for errors." };
     }
     const a = current.data;
-    const b = player.data;
+    const b = checkedBoth ? player.data : a;
     if (!a || !b || typeof a.isPlaying !== "boolean" || typeof b.isPlaying !== "boolean") {
       candidateStreak = 0;
-      return { ...base, state: "unknown", label: "Incomplete playback data", reason: "Expected is_playing and item data are not available from both endpoints." };
+      return { ...base, state: "unknown", label: "Incomplete playback data", reason: "Expected Spotify playback metadata is missing." };
     }
-    if (a.isPlaying !== b.isPlaying || a.itemPresent !== b.itemPresent) {
+    if (checkedBoth && (a.isPlaying !== b.isPlaying || a.itemPresent !== b.itemPresent)) {
       candidateStreak = 0;
-      return { ...base, state: "transition", label: "Playback transitioning", reason: "Spotify's two endpoints disagree. Waiting for the next synchronized sample." };
+      return { ...base, state: "transition", label: "Playback transitioning", reason: "Spotify's two endpoints disagree. Waiting for the next sample." };
     }
     if (!a.isPlaying) {
       candidateStreak = 0;
-      return { ...base, state: "paused", label: "Music paused", reason: "Spotify reports is_playing=false. Even an empty item here does not indicate speech." };
+      return { ...base, state: "paused", label: "Music paused", reason: "Spotify reports is_playing=false. This is not a speech signal." };
     }
     if (a.itemPresent) {
       candidateStreak = 0;
       if (a.itemType === "track") {
         observedRealTrack = true;
-        return { ...base, state: "music", label: "Music playing", confidence: "observed", reason: "Both endpoints report is_playing=true and a real track item." };
+        return { ...base, state: "music", label: "Music playing", confidence: "observed",
+          reason: "Spotify reports is_playing=true with a real track item." };
       }
-      return { ...base, state: "other", label: "Other content playing", reason: "A playable item is present, but its type is not a normal track." };
+      return { ...base, state: "other", label: "Other content playing", reason: "A playable item is present, but it is not a normal track." };
     }
     if (a.currentlyPlayingType !== "track" || b.currentlyPlayingType !== "track") {
       candidateStreak = 0;
       return { ...base, state: "other", label: "Unclassified content", reason: "Playback is active with no item, but the reported type is not track." };
     }
-
     candidateStreak++;
     if (candidateStreak > 1 && observedRealTrack) {
-      return { state: "likely-speaking", label: "Likely DJ talking", confidence: "medium", candidates: candidateStreak,
-        reason: "Both endpoints report active playback with no track item for multiple samples, following a real music track. Strong candidate, not official confirmation." };
+      return { ...base, state: "likely-speaking", label: "Likely DJ talking", confidence: "medium", candidates: candidateStreak,
+        reason: "Active playback with no item across multiple samples, after a normal track. Inference only, not an official DJ flag." };
     }
-    return { state: "possible-speaking", label: "Possible DJ commentary", confidence: "low", candidates: candidateStreak,
+    return { ...base, state: "possible-speaking", label: "Possible DJ commentary", confidence: "low", candidates: candidateStreak,
       reason: observedRealTrack
-        ? "The track item disappeared while playback remains active. Waiting for another confirming sample."
-        : "Playback is active but item is null. No real music track has been seen in this recording yet, so this may be another unreported playback state." };
+        ? "A real track item disappeared during active playback. Waiting for another sample."
+        : "Active playback has no item, but no normal track has been seen since recording began. This might be another playback state." };
   }
 
   function monitorMode(state) {
@@ -620,12 +636,32 @@
     }
     busy = true;
     updateButtons();
+    const cycleStartedAt = performance.now();
     try {
       const at = new Date().toISOString();
-      const [player, currentlyPlaying] = await Promise.all([
-        fetchState("", auth.accessToken),
-        fetchState("/currently-playing", auth.accessToken)
-      ]);
+      const fastMode = interval() === 1000;
+      let player;
+      let currentlyPlaying;
+      if (fastMode) {
+        // Prioritize one fast sample/second; corroborate whenever metadata changes.
+        currentlyPlaying = await fetchState("/currently-playing", auth.accessToken);
+        const fingerprint = primaryFingerprint(currentlyPlaying);
+        const shouldVerify = currentlyPlaying.httpStatus === 200 &&
+          (lastPlayerProbeAt === 0 || Date.now() - lastPlayerProbeAt >= 8000 ||
+           fingerprint !== lastPrimaryFingerprint);
+        if (shouldVerify && recording) {
+          player = await fetchState("", auth.accessToken);
+          lastPlayerProbeAt = Date.now();
+        } else {
+          player = { skipped: true, httpStatus: null, latencyMs: null, data: null };
+        }
+        lastPrimaryFingerprint = fingerprint;
+      } else {
+        [player, currentlyPlaying] = await Promise.all([
+          fetchState("", auth.accessToken),
+          fetchState("/currently-playing", auth.accessToken)
+        ]);
+      }
       if (!recording) return;
       const entry = {
         kind: "sample",
@@ -633,6 +669,8 @@
         at,
         observedAt: new Date().toISOString(),
         source: $("source").value,
+        intervalMs: interval(),
+        samplingMode: fastMode ? "adaptive" : "dual",
         player,
         currentlyPlaying,
         changed: false
@@ -657,13 +695,16 @@
 
       if ([player.httpStatus, currentlyPlaying.httpStatus].includes(401)) {
         stop("Spotify returned HTTP 401. Reconnect in Pocket DJ before another recording.");
+      } else if (player.quotaExceeded || currentlyPlaying.quotaExceeded) {
+        stop("Spotify reports QUOTA_EXCEEDED. Stop high-frequency testing until your development-mode quota resets.");
       } else if ([player.httpStatus, currentlyPlaying.httpStatus].includes(429)) {
         const delay = Math.max(15000, (player.retryAfterSeconds || 0) * 1000, (currentlyPlaying.retryAfterSeconds || 0) * 1000);
         showStatus("Rate limited; automatic retry", "Spotify returned HTTP 429. Pausing for " + Math.round(delay / 1000) + " seconds.", "warn");
         schedule(delay);
       } else {
         showStatus("Recording", "Manual markers are available while Spotify plays.", "live");
-        schedule(interval());
+        // Keep starts close to the selected cadence without overlapping requests.
+        schedule(Math.max(100, interval() - (performance.now() - cycleStartedAt)));
       }
     } catch {
       showStatus("Recording with errors", "An unexpected processing error occurred. Stop and export the available samples.", "warn");
@@ -707,6 +748,8 @@
     }
     recording = true;
     previous = null;
+    lastPlayerProbeAt = 0;
+    lastPrimaryFingerprint = null;
     observedRealTrack = false;
     candidateStreak = 0;
     manualAudioState = null;
@@ -723,7 +766,8 @@
   $("clear").addEventListener("click", () => {
     if (recording) return;
     log.length = 0;
-    seq = 0; samples = 0; markers = 0; changes = 0; previous = null;
+    seq = 0; samples = 0; markers = 0; changes = 0; apiRequests = 0; previous = null;
+    lastPlayerProbeAt = 0; lastPrimaryFingerprint = null;
     candidateStreak = 0; observedRealTrack = false; manualAudioState = null;
     setMonitor({ state: "waiting", label: "Awaiting first sample", reason: "Start recording to inspect Spotify's active playback state.", candidates: 0 });
     $("details").textContent = "Start recording to inspect the API responses.";
@@ -731,17 +775,17 @@
     updateButtons();
   });
   $("json").addEventListener("click", () => download(exportName("json"), "application/json", JSON.stringify({
-    schema: "pocketdj-ai-dj-diagnostic-v2",
+    schema: "pocketdj-ai-dj-diagnostic-v3",
     exportedAt: new Date().toISOString(),
     note: "Read-only observations. Manual markers indicate user-heard audio. No tokens, device IDs, or raw API payloads included.",
-    samples, markers, changes, entries: log
+    samples, markers, changes, apiRequests, entries: log
   }, null, 2)));
   $("csv").addEventListener("click", () => {
-    const columns = ["timestamp", "kind", "source", "marker", "changed", "itemId", "itemName", "itemType", "playingType", "isPlaying", "progressMs", "contextType", "deviceType", "playerHttp", "currentlyPlayingHttp", "playerKeys", "currentlyPlayingKeys", "inferredState", "inferenceConfidence", "candidateStreak", "inferenceReason", "inferenceChanged"];
+    const columns = ["timestamp", "kind", "source", "marker", "changed", "itemId", "itemName", "itemType", "playingType", "isPlaying", "progressMs", "contextType", "deviceType", "playerHttp", "currentlyPlayingHttp", "playerKeys", "currentlyPlayingKeys", "inferredState", "inferenceConfidence", "candidateStreak", "inferenceReason", "inferenceChanged", "pollIntervalMs", "samplingMode", "playerSkipped", "inferenceVerification"];
     const rows = [columns.map(escapeCsv).join(",")];
     for (const e of log) {
       const s = e.currentlyPlaying?.data || e.player?.data || {};
-      const values = [e.at, e.kind, e.source, e.label || "", e.changed ?? "", s.itemId, s.itemName, s.itemType, s.currentlyPlayingType, s.isPlaying, s.progressMs, s.contextType, (e.player?.data || {}).deviceType, e.player?.httpStatus, e.currentlyPlaying?.httpStatus, (e.player?.data?.topKeys || []).join("|"), (e.currentlyPlaying?.data?.topKeys || []).join("|"), e.inference?.state, e.inference?.confidence, e.inference?.candidates, e.inference?.reason, e.inferenceChanged];
+      const values = [e.at, e.kind, e.source, e.label || "", e.changed ?? "", s.itemId, s.itemName, s.itemType, s.currentlyPlayingType, s.isPlaying, s.progressMs, s.contextType, (e.player?.data || {}).deviceType, e.player?.httpStatus, e.currentlyPlaying?.httpStatus, (e.player?.data?.topKeys || []).join("|"), (e.currentlyPlaying?.data?.topKeys || []).join("|"), e.inference?.state, e.inference?.confidence, e.inference?.candidates, e.inference?.reason, e.inferenceChanged, e.intervalMs, e.samplingMode, e.player?.skipped === true, e.inference?.verification];
       rows.push(values.map(escapeCsv).join(","));
     }
     download(exportName("csv"), "text/csv;charset=utf-8", rows.join("\r\n"));
