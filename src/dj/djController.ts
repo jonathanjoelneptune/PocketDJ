@@ -17,6 +17,9 @@ type AnimationLoop = {
 };
 
 const POSE_BASE = "./assets/poses/final/";
+// Dedicated commentary poses already present in the final asset directory.
+// Keep these separate from scratching/idle/record-change pools.
+const SPEAKING_POSES = ["a37.png", "a29.png", "a28.png", "a38.png"] as const;
 const ALBUM_REVEAL_FRAME_HOLD_MULTIPLIER = 2;
 
 /*
@@ -80,6 +83,9 @@ export class DjController {
   private previousFrame = "";
   private pendingSongChangeCinematic = false;
   private tempoBpm = 96;
+  private speakingRequested = false;
+  private speakingVisualActive = false;
+  private nextSpeakingPoseAt = 0;
 
   constructor(private readonly poseElement: HTMLElement, private readonly modeElement: HTMLElement) {
     this.preload();
@@ -91,6 +97,31 @@ export class DjController {
 
   update(playback: NormalizedTrack, now = Date.now(), songChangeCinematicReady = true): DjMode {
     const nextMode = this.resolveMode(playback);
+
+    // Spotify AI DJ commentary looks like "no track" in the normalized playback.
+    // While our independent detector reports speech, keep the visible DJ in the
+    // speaking pose family instead of letting idle/paused overwrite each frame.
+    // Do not consume track-change timing: the next actual song must still get its
+    // existing album-reveal cinematic.
+    if (this.speakingRequested && this.controlMode === "normal") {
+      if (!this.speakingVisualActive) {
+        this.speakingVisualActive = true;
+        this.nextSpeakingPoseAt = 0;
+      }
+      if (now >= this.nextSpeakingPoseAt) this.advanceSpeakingPose(now);
+      this.paint();
+      return this.mode;
+    }
+
+    if (this.speakingVisualActive) {
+      this.speakingVisualActive = false;
+      this.nextSpeakingPoseAt = 0;
+      // Restore the correct loop immediately so a talking pose cannot linger
+      // through a normal music, paused, or idle transition.
+      this.mode = nextMode;
+      this.startNormalLoop(nextMode, now);
+    }
+
     this.handleTrackTiming(playback, nextMode, now, songChangeCinematicReady);
 
     if (this.controlMode !== "normal") {
@@ -110,6 +141,18 @@ export class DjController {
     this.stepNormalMode(now);
     this.paint();
     return this.mode;
+  }
+
+  setSpeakingActive(active: boolean): void {
+    this.speakingRequested = active;
+  }
+
+  private advanceSpeakingPose(now: number): void {
+    // Several seconds of commentary should feel alive, without rapid sprite
+    // flicker. Select a different pose each time, and hold it for 1.2–2.1 s.
+    const choices = SPEAKING_POSES.filter((pose) => pose !== this.currentFrame);
+    this.currentFrame = choices[randomInt(0, choices.length - 1)] || SPEAKING_POSES[0];
+    this.nextSpeakingPoseAt = now + randomInt(1_200, 2_100);
   }
 
   setPose(id: string, now = Date.now()): void {
@@ -137,6 +180,7 @@ export class DjController {
     return {
       mode: this.mode,
       controlMode: this.controlMode,
+      speakingPoseActive: this.speakingVisualActive,
       pose: this.currentFrame,
       loop: this.currentLoop.label,
       quickLoops: quickLoops.length,
@@ -390,7 +434,7 @@ export class DjController {
       this.poseElement.src = `${POSE_BASE}${this.currentFrame}`;
     }
 
-    const label = this.controlMode === "normal" ? this.mode : this.controlMode;
+    const label = this.speakingVisualActive ? "speaking" : this.controlMode === "normal" ? this.mode : this.controlMode;
     const status = `${label}:${this.currentFrame}:${this.currentLoop.id}`;
     if (status !== this.lastStatus) {
       this.lastStatus = status;
@@ -446,6 +490,7 @@ export class DjController {
     [...quickLoops, ...cinematicLoops, ...idleLoops, ...pausedLoops].forEach((loop) => {
       loop.frames.forEach((frame) => unique.add(frame));
     });
+    SPEAKING_POSES.forEach((pose) => unique.add(pose));
     unique.forEach((frame) => {
       const img = new Image();
       img.src = `${POSE_BASE}${frame}`;
