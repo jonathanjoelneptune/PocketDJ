@@ -13704,3 +13704,124 @@ body,
 .menu2-pip-pill.menu2-pill-disabled {
   opacity: 0.48;
 }
+
+
+/* Spotify AI DJ: room-matched, wordless pixel speech bubble.
+   Entirely separate from sprites, lyrics, and the Spotify transport controls. */
+.spotify-dj-speech-bubble {
+  --speech-bg: #1b1219;
+  --speech-ink: #ffcb7b;
+  --speech-border: #9d6239;
+  --speech-glow-rgb: 246, 155, 68;
+  --dj-speech-x: 60.8%;
+  --dj-speech-y: 34%;
+  --dj-speech-scale: 1;
+  --dj-speech-opacity: .92;
+  --dj-speech-glow: .45;
+  position: absolute;
+  left: var(--dj-speech-x);
+  top: var(--dj-speech-y);
+  width: calc(var(--room-w) * .14 * var(--dj-speech-scale));
+  aspect-ratio: 2.15 / 1;
+  z-index: 85;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--room-w) * .007 * var(--dj-speech-scale));
+  background: var(--speech-bg);
+  color: var(--speech-ink);
+  border: clamp(2px, calc(var(--room-w) * .003), 5px) solid var(--speech-border);
+  border-radius: 2px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.055),
+    3px 4px 0 rgba(0,0,0,.5),
+    0 0 calc(21px * var(--dj-speech-glow)) rgba(var(--speech-glow-rgb), .55);
+  image-rendering: pixelated;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(7%) scale(.96);
+  transform-origin: 30% 100%;
+  transition: opacity .16s steps(4,end), transform .20s steps(5,end), visibility 0s linear .20s;
+  isolation: isolate;
+}
+.spotify-dj-speech-bubble::after {
+  content: "";
+  position: absolute;
+  left: 22%;
+  bottom: calc(var(--room-w) * -.009 * var(--dj-speech-scale));
+  width: calc(var(--room-w) * .014 * var(--dj-speech-scale));
+  height: calc(var(--room-w) * .014 * var(--dj-speech-scale));
+  background: var(--speech-bg);
+  border-left: clamp(2px, calc(var(--room-w) * .003), 5px) solid var(--speech-border);
+  border-bottom: clamp(2px, calc(var(--room-w) * .003), 5px) solid var(--speech-border);
+  transform: rotate(-45deg);
+  z-index: -1;
+}
+.spotify-dj-speech-bubble.spotify-dj-speech-visible {
+  opacity: var(--dj-speech-opacity);
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
+}
+.spotify-dj-speech-pixels,
+.spotify-dj-speech-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--room-w) * .008 * var(--dj-speech-scale));
+}
+.spotify-dj-speech-pixels i {
+  width: calc(var(--room-w) * .010 * var(--dj-speech-scale));
+  height: calc(var(--room-w) * .010 * var(--dj-speech-scale));
+  min-width: 3px;
+  min-height: 3px;
+  background: var(--speech-ink);
+  box-shadow: 1px 1px 0 rgba(0,0,0,.7);
+  animation: spotify-dj-wordless-dots .9s steps(2,end) infinite;
+}
+.spotify-dj-speech-pixels i:nth-child(2) { animation-delay: .22s; }
+.spotify-dj-speech-pixels i:nth-child(3) { animation-delay: .44s; }
+.spotify-dj-speech-bars { gap: calc(var(--room-w) * .004 * var(--dj-speech-scale)); opacity: .35; }
+.spotify-dj-speech-bars i {
+  width: calc(var(--room-w) * .005 * var(--dj-speech-scale));
+  height: calc(var(--room-w) * .017 * var(--dj-speech-scale));
+  min-width: 2px;
+  background: var(--speech-ink);
+  animation: spotify-dj-wordless-bars .72s steps(3,end) infinite alternate;
+}
+.spotify-dj-speech-bars i:nth-child(2) { animation-delay: .12s; }
+.spotify-dj-speech-bars i:nth-child(3) { animation-delay: .27s; }
+.spotify-dj-speech-bars i:nth-child(4) { animation-delay: .39s; }
+.spotify-dj-speech-bars i:nth-child(5) { animation-delay: .18s; }
+.spotify-dj-speech-bubble[data-speech-state="likely"] .spotify-dj-speech-bars { opacity: 1; }
+.spotify-dj-speech-bubble[data-speech-state="likely"] { filter: brightness(1.10); }
+.spotify-dj-speech-bubble[data-palette="violet"] {
+  --speech-bg: #1c142a; --speech-ink: #d9b7ff; --speech-border: #986ac0; --speech-glow-rgb: 178, 118, 237;
+}
+.spotify-dj-speech-bubble[data-palette="teal"] {
+  --speech-bg: #102323; --speech-ink: #a1f0da; --speech-border: #4b9b92; --speech-glow-rgb: 85, 223, 196;
+}
+.spotify-dj-speech-bubble[data-palette="rose"] {
+  --speech-bg: #2d1821; --speech-ink: #f1b4b3; --speech-border: #b86d80; --speech-glow-rgb: 236, 128, 152;
+}
+.spotify-dj-speech-bubble[data-palette="parchment"] {
+  --speech-bg: #ecddc4; --speech-ink: #503446; --speech-border: #503446; --speech-glow-rgb: 224, 191, 138;
+}
+.menu2-dj-speech-bubble-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.menu2-dj-speech-bubble-actions .menu2-action { flex: 1 1 135px; }
+.menu2-dj-speech-bubble-tools .menu2-dev-note { line-height: 1.5; margin: 9px 0; }
+@keyframes spotify-dj-wordless-dots {
+  0%, 20%, 100% { opacity: .40; transform: translateY(2px); }
+  40%, 60% { opacity: 1; transform: translateY(-3px); }
+}
+@keyframes spotify-dj-wordless-bars {
+  0% { transform: scaleY(.35); }
+  60% { transform: scaleY(1.12); }
+  100% { transform: scaleY(.60); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spotify-dj-speech-bubble { transition: none; }
+  .spotify-dj-speech-pixels i, .spotify-dj-speech-bars i { animation: none; }
+}
