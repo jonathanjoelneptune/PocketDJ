@@ -275,7 +275,7 @@ type RoomLightingSettings = RoomLightingValues & { preset: RoomLightingPreset };
 const ROOM_LIGHTING_KEY = "pocketdj-room-lighting-v1";
 const ROOM_LIGHTING_PRESETS: Record<Exclude<RoomLightingPreset, "custom">, RoomLightingValues> = {
   classic: { exposure: 1, albumLift: 1, wallFill: 0, djFill: 0, warmth: 0, vignette: 1 },
-  "brighter-night": { exposure: 1.06, albumLift: 1.18, wallFill: 0.62, djFill: 0.42, warmth: 0.30, vignette: 0.58 },
+  "brighter-night": { exposure: 1.20, albumLift: 1.40, wallFill: 1.00, djFill: 0.85, warmth: 0.80, vignette: 0.85 },
   "deep-night": { exposure: 0.98, albumLift: 1.02, wallFill: 0.10, djFill: 0.12, warmth: 0.08, vignette: 1.20 },
 };
 // New installations see the improved night lighting. Classic always restores the
@@ -300,10 +300,44 @@ function clampRoomLightingSettings(settings: Partial<RoomLightingSettings>): Roo
   };
 }
 
+// One-time, narrowly scoped upgrade for the settings from the November 10
+// screenshot (all six sliders maxed), or the superseded Brighter Night preset.
+// Other saved Custom / Classic / Deep Night settings remain untouched.
+const ROOM_LIGHTING_NEXT_TEST_MIGRATION_KEY = "pocketdj-room-lighting-next-test-20261110";
+const PREVIOUS_BRIGHTER_NIGHT_VALUES: RoomLightingValues = {
+  exposure: 1.06, albumLift: 1.18, wallFill: 0.62, djFill: 0.42, warmth: 0.30, vignette: 0.58,
+};
+const PREVIOUS_MAXED_CUSTOM_VALUES: RoomLightingValues = {
+  exposure: 1.20, albumLift: 1.50, wallFill: 1.00, djFill: 1.00, warmth: 1.00, vignette: 1.50,
+};
+
+function roomLightingMatchesValues(settings: RoomLightingValues, values: RoomLightingValues): boolean {
+  const keys: Array<keyof RoomLightingValues> = ["exposure", "albumLift", "wallFill", "djFill", "warmth", "vignette"];
+  return keys.every((key) => Math.abs(settings[key] - values[key]) < 0.005);
+}
+
 function loadRoomLightingSettings(): RoomLightingSettings {
   try {
     const raw = localStorage.getItem(ROOM_LIGHTING_KEY);
-    return raw ? clampRoomLightingSettings({ ...DEFAULT_ROOM_LIGHTING, ...JSON.parse(raw) }) : { ...DEFAULT_ROOM_LIGHTING };
+    if (!raw) return { ...DEFAULT_ROOM_LIGHTING };
+    const saved = clampRoomLightingSettings({ ...DEFAULT_ROOM_LIGHTING, ...JSON.parse(raw) });
+    if (!localStorage.getItem(ROOM_LIGHTING_NEXT_TEST_MIGRATION_KEY)) {
+      const isScreenshotCustom = saved.preset === "custom"
+        && roomLightingMatchesValues(saved, PREVIOUS_MAXED_CUSTOM_VALUES);
+      const isPreviousBrighterNight = saved.preset === "brighter-night"
+        && roomLightingMatchesValues(saved, PREVIOUS_BRIGHTER_NIGHT_VALUES);
+      // Keep a local backup of the screenshot tuning in case it is revisited.
+      if (isScreenshotCustom) {
+        localStorage.setItem("pocketdj-room-lighting-before-next-test-v1", JSON.stringify(saved));
+      }
+      localStorage.setItem(ROOM_LIGHTING_NEXT_TEST_MIGRATION_KEY, "1");
+      if (isScreenshotCustom || isPreviousBrighterNight) {
+        const updated: RoomLightingSettings = { preset: "brighter-night", ...ROOM_LIGHTING_PRESETS["brighter-night"] };
+        localStorage.setItem(ROOM_LIGHTING_KEY, JSON.stringify(updated));
+        return updated;
+      }
+    }
+    return saved;
   } catch {
     return { ...DEFAULT_ROOM_LIGHTING };
   }
