@@ -98,7 +98,7 @@ function endPreview(): void {
   if (previewTimer !== null) window.clearTimeout(previewTimer);
   previewTimer = null;
   const button = byId<HTMLButtonElement>("menu2DjSpeechBubblePreview");
-  if (button) button.textContent = "Preview for 5 seconds";
+  if (button) button.textContent = "Preview speech + poses (5s)";
   renderState();
 }
 function preview(): void {
