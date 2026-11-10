@@ -13713,10 +13713,10 @@ body,
   --speech-ink: #ffcb7b;
   --speech-border: #9d6239;
   --speech-glow-rgb: 246, 155, 68;
-  --dj-speech-x: 60.8%;
-  --dj-speech-y: 34%;
-  --dj-speech-scale: 1;
-  --dj-speech-opacity: .92;
+  --dj-speech-x: 52.7%;
+  --dj-speech-y: 36.4%;
+  --dj-speech-scale: .50;
+  --dj-speech-opacity: .78;
   --dj-speech-glow: .45;
   position: absolute;
   left: var(--dj-speech-x);
