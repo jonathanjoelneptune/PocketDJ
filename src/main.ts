@@ -1,4 +1,5 @@
 import "./styles.css";
+import { initializeSpotifyEmbed, updateSpotifyEmbedArtwork } from "./spotify/embedMode";
 import { initializeRoomSpotlights, updateSpotlightAlbumColors } from "./roomSpotlights";
 import { initializeRoomParticles } from "./roomParticles";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
@@ -3804,6 +3805,7 @@ async function boot(): Promise<void> {
   updateDynamicCeilingReveal();
   window.addEventListener("resize", updateDynamicCeilingReveal, { passive: true });
   renderShell(state);
+  initializeSpotifyEmbed();
   initializeRoomSpotlights();
   initializeRoomParticles();
   initializeSpotifyDjSpeechBubble();
@@ -10288,6 +10290,7 @@ async function pollSpotifyNow(): Promise<void> {
     lastPollError = "";
     const polledPlayback = await getCurrentlyPlaying(state.spotifyClientId, observeSpotifyDjSpeech);
     state.playback = reconcilePolledPlaybackWithIntent(polledPlayback);
+    updateSpotifyEmbedArtwork(state.playback.albumArtUrl);
     updatePlaybackUi(state.playback, state.debugOpen);
     void refreshLyricsForCurrentTrack();
 
