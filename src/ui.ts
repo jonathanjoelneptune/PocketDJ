@@ -44,6 +44,11 @@ export function renderShell(state: AppState): void {
         <!-- Constrained to the two album walls; no full-room animated surface. -->
         <div class="room-spotlight-wall room-spotlight-left" aria-hidden="true"></div>
         <div class="room-spotlight-wall room-spotlight-right" aria-hidden="true"></div>
+        <div class="room-spotlight-zone room-spotlight-zone-left" aria-hidden="true"></div>
+        <div class="room-spotlight-zone room-spotlight-zone-center" aria-hidden="true"></div>
+        <div class="room-spotlight-zone room-spotlight-zone-right" aria-hidden="true"></div>
+        <div class="room-spotlight-full" aria-hidden="true"></div>
+        <div id="roomParticles" class="room-particles" aria-hidden="true"></div>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
         <div id="stringLightOverlay" class="string-light-overlay" aria-hidden="true"></div>
         <div id="ambientTwinkleOverlay" class="ambient-twinkle-overlay" aria-hidden="true"></div>
@@ -1417,7 +1422,14 @@ export function renderShell(state: AppState): void {
             <button id="menu2RoomLightingReset" class="menu2-action menu2-wide-action" type="button">Restore Classic Lighting</button>
             <details class="menu2-room-spotlights" open>
               <summary>Living Atmosphere · Moving Spotlights</summary>
-              <p class="menu2-room-help">Slow, visible amber and blue light washes travel across the album walls. This desktop-first version avoids animated full-room layers. Mobile and reduced-motion devices keep the stable static room.</p>
+              <p class="menu2-room-help">Choose independent color sweeps for the shelves, three zones, or the entire room. Album Reactive keeps the light colors distinct even when the cover art uses similar shades.</p>
+              <label class="menu2-setting">Spotlight movement
+                <select id="menu2SpotlightMode" class="menu2-select">
+                  <option value="walls">Album Walls (previous)</option>
+                  <option value="zones">Three Zones · Left / Center / Right</option>
+                  <option value="full">Full Room · Side-to-Side</option>
+                </select>
+              </label>
               <label class="menu2-setting menu2-toggle-setting"><input id="menu2SpotlightEnabled" type="checkbox" checked /> Enable moving spotlights</label>
               <label class="menu2-setting menu2-slider-setting">Spotlight strength <span id="menu2SpotlightStrengthValue">0.90</span>
                 <input id="menu2SpotlightStrength" type="range" min="0" max="1.50" step="0.05" value="0.90" />
@@ -1434,6 +1446,19 @@ export function renderShell(state: AppState): void {
                 </select>
               </label>
               <button id="menu2SpotlightReset" class="menu2-action menu2-wide-action" type="button">Reset Spotlights</button>
+              <details class="menu2-room-particles" open>
+                <summary>Floating Particles</summary>
+                <p class="menu2-room-help">Bright dust motes gently drifting through the lower room. Separate from the spotlights and disabled entirely on mobile, touch, and reduced-motion devices.</p>
+                <label class="menu2-setting menu2-toggle-setting"><input id="menu2ParticlesEnabled" type="checkbox" checked /> Enable floating particles</label>
+                <label class="menu2-setting menu2-slider-setting">Particle count <span id="menu2ParticlesCountValue">14</span>
+                  <input id="menu2ParticlesCount" type="range" min="0" max="40" step="1" value="14" />
+                </label>
+                <label class="menu2-setting menu2-slider-setting">Particle visibility <span id="menu2ParticlesVisibilityValue">0.65</span>
+                  <input id="menu2ParticlesVisibility" type="range" min="0" max="1" step="0.05" value="0.65" />
+                </label>
+                <button id="menu2ParticlesReset" class="menu2-action menu2-wide-action" type="button">Reset Particles</button>
+              </details>
+
               <p class="menu2-room-spotlights-safe-note">Performance safeguard: spotlight animation is disabled on touch screens, smaller layouts, and when reduced motion is requested.</p>
             </details>
 
