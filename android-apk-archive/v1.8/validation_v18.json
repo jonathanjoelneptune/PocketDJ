@@ -1,0 +1,25 @@
+{
+  "version": "v1.8",
+  "status": "static-validated; phone and foldable runtime NOT tested",
+  "filename": "PocketDJ-Spotify-v1.8-SWIPE-ROOT.apk",
+  "sha256": "f50a8ce77f47a2a22f097551232076035acc34e7e2aecb0972fb17ead4b6b8e8",
+  "bytes": 156140037,
+  "sha256_signing_cert": "72fd48cdfe257006f48db9b4851429dd3f05bcd9177c9b0efd21434a61347bf0",
+  "matches_v16_signer": true,
+  "v16_sha256": "8e3b53480fe7361bf3574472341c20729ecd4b4a2cd9544a0672f29d98826a2a",
+  "changed_uncompressed_entries_vs_v16": [
+    "res/layout/activity_now_playing.xml",
+    "res/layout/activity_now_playing_duo.xml"
+  ],
+  "added_entries_vs_v16": [
+    "classes19.dex"
+  ],
+  "custom_dex_bytes": 8404,
+  "v16_hook_dex_identical": true,
+  "compile": "Android GitHub Actions CI passed: both host classes + swipe router",
+  "remaining_risks": [
+    "No physical-device gesture testing",
+    "Artwork target detection depends on runtime hierarchy",
+    "Legacy v1.6 room sizing unchanged"
+  ]
+}
