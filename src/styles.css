@@ -14493,3 +14493,24 @@ html.spotify-embed-active.spotify-embed-compact .room {
 html.spotify-embed-active.spotify-embed-compact .marquee-content {
   gap: clamp(2px, 0.3vw, 5px);
 }
+
+/* v1.9 native Spotify landscape viewport: the full-width Android WebView
+   is intentionally shorter than 16:9 to keep native seeking/transport
+   accessible. Fill its width without distorting the room: clip only the
+   vertical overscan in compact Spotify-embed mode. Regular web unaffected. */
+@media (min-aspect-ratio: 2/1) {
+  html.spotify-embed-active.spotify-embed-compact .stage {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+  html.spotify-embed-active.spotify-embed-compact .room {
+    --room-w: 100vw;
+    --room-h: calc(100vw * 9 / 16);
+    width: var(--room-w) !important;
+    height: var(--room-h) !important;
+    max-height: none !important;
+    flex: 0 0 auto !important;
+  }
+}
