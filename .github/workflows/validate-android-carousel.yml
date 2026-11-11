@@ -35,6 +35,26 @@ jobs:
           mkdir -p /tmp/pocketdj-carousel-classes
           javac -source 8 -target 8 -cp "$PLATFORM" \
             -d /tmp/pocketdj-carousel-classes \
-            experiments/spotify-carousel-v1.7/PocketDjArtworkCarousel.java
+            experiments/spotify-carousel-v1.7/PocketDjArtworkCarousel.java \
+            experiments/spotify-carousel-v1.7/PocketDjArtworkInstaller.java
           test -f /tmp/pocketdj-carousel-classes/com/pocketdj/spotifyexperiment/PocketDjArtworkCarousel.class
           echo "Native carousel Java source compiled against $PLATFORM"
+
+      - name: Compile carousel and installer into DEX
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          PLATFORM="$(find "$SDK_ROOT/platforms" -maxdepth 2 -name android.jar | sort -V | tail -1)"
+          D8="$(find "$SDK_ROOT/build-tools" -maxdepth 2 -type f -name d8 | sort -V | tail -1)"
+          test -x "$D8"
+          mkdir -p /tmp/pocketdj-dex
+          mapfile -t CLASSES < <(find /tmp/pocketdj-carousel-classes -name '*.class')
+          "$D8" --min-api 26 --lib "$PLATFORM" --output /tmp/pocketdj-dex "${CLASSES[@]}"
+          test -s /tmp/pocketdj-dex/classes.dex
+          sha256sum /tmp/pocketdj-dex/classes.dex
+      - name: Upload compiled experimental DEX
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketdj-v17-carousel-dex
+          path: /tmp/pocketdj-dex/classes.dex
+          retention-days: 14
