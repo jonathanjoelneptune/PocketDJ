@@ -15,7 +15,7 @@ The installable APKs are **not committed** to the public PocketDJ repository: ea
 | v1.4 | View bounds and leaf-artwork hiding experiments | Foldable testing |
 | v1.5 | Landscape height cap | Foldable testing |
 | v1.6 | Safer artwork-leaf suppression and landscape centering | Last available tested baseline |
-| v1.7 | Native artwork swipe-carousel experiment | `experiments/spotify-carousel-v1.7`, PR #12; currently experimental |
+| v1.7 | Native artwork swipe-carousel experiment | APK assembled and statically validated; device test pending. [v1.7 record](./v1.7/README.md) |
 
 For precise historical SHA-256 digests and filenames, see [builds.json](./builds.json). These hashes identify the exact APK binaries that were generated in the development conversation. They do not imply Android runtime validation.
 
