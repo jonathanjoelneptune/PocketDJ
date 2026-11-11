@@ -17,7 +17,8 @@ The installable APKs are **not committed** to the public PocketDJ repository: ea
 | v1.6 | Safer artwork-leaf suppression and landscape centering | Last available tested baseline |
 | v1.7 | Native artwork swipe-carousel experiment | Device swipe-to-skip still occurred. [v1.7 record](./v1.7/README.md) |
 | v1.8 | Root-level swipe interception for phone and foldable | Device-confirmed right swipe works on album art; video and two-way carousel issues remain. [v1.8 record](./v1.8/README.md) |
-| v1.9 | Bidirectional artwork switch, slide transition, foldable sizing | Signed and statically validated; phone/tablet testing pending. [v1.9 record](./v1.9/README.md) |
+| v1.9 | Bidirectional artwork switch, slide transition, foldable sizing | Device-confirmed phone swipes, tablet geometry issues remain. [v1.9 record](./v1.9/README.md) |
+| v2.0 | Native-sized album hitbox, taller phone viewport, foldable portrait lift, display frame | Signed and statically validated; device tests pending. [v2.0 record](./v2.0/README.md) |
 
 For precise historical SHA-256 digests and filenames, see [builds.json](./builds.json). These hashes identify the exact APK binaries that were generated in the development conversation. They do not imply Android runtime validation.
 
