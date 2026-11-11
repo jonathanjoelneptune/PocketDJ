@@ -52,9 +52,9 @@ function readSettings(): RoomSpotlightSettings {
     if (!localStorage.getItem(FIFTEEN_SECOND_SWEEP_MIGRATION_KEY)) {
       if (stored.mode === "full" && stored.palette === "album" && stored.speed === 20) {
         stored.speed = 15;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stored)); } catch { /* Keep current-session choice. */ }
       }
-      localStorage.setItem(FIFTEEN_SECOND_SWEEP_MIGRATION_KEY, "1");
+      try { localStorage.setItem(FIFTEEN_SECOND_SWEEP_MIGRATION_KEY, "1"); } catch { /* Storage may be read-only. */ }
     }
     // Existing V2 installations retain their wall-only mode until explicitly changed.
     return normalize({ ...stored, mode: stored.mode ?? "walls" });
