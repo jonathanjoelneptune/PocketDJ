@@ -1,0 +1,21 @@
+{
+  "version": "2.0",
+  "filename": "PocketDJ-Spotify-v2.0-ARTWORK-BOUNDS.apk",
+  "bytes": 156143713,
+  "sha256": "f7d6e61f5088ca37e2408e8236189c37a55aac9f4d1ffeff3ad516845da12dcb",
+  "signing_cert_sha256": "72fd48cdfe257006f48db9b4851429dd3f05bcd9177c9b0efd21434a61347bf0",
+  "matches_v19_certificate": true,
+  "changed_entries_vs_v19": [
+    "classes18.dex",
+    "classes19.dex"
+  ],
+  "all_other_Spotify_files_unchanged": true,
+  "native_java_ci": "success",
+  "native_install_status": "not device tested",
+  "web_embed_css": "deployed via PR #16",
+  "limitations": [
+    "Landscape preserves full-width with intentional vertical cropping; full uncropped scene cannot fit with controls",
+    "Native Spotify full-page background fade not modified; requires separately verified background view",
+    "Artwork hitbox detection must be confirmed on phone/tablet"
+  ]
+}
