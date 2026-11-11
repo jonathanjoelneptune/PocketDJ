@@ -94,6 +94,15 @@ export async function handleSpotifyCallback(clientId: string, redirectUri = getD
   return true;
 }
 
+// A temporary 401 from Spotify must not destroy a valid refresh grant.
+let forceRefreshNextRequest = false;
+let refreshInFlight: Promise<TokenRecord | null> | null = null;
+
+function markAccessTokenRejected(): void {
+  forceRefreshNextRequest = true;
+  console.info("[PocketDJ auth] API access token rejected; refresh scheduled");
+}
+
 async function refreshAccessToken(clientId: string, tokens: TokenRecord): Promise<TokenRecord | null> {
   if (!tokens.refreshToken) return null;
 
@@ -131,8 +140,17 @@ async function refreshAccessToken(clientId: string, tokens: TokenRecord): Promis
 async function getUsableToken(clientId: string): Promise<string | null> {
   let tokens = loadTokens();
   if (!tokens) return null;
-  if (tokens.expiresAt <= Date.now() + 60_000) {
-    tokens = await refreshAccessToken(clientId, tokens);
+  if (forceRefreshNextRequest || tokens.expiresAt <= Date.now() + 60_000) {
+    // Single-flight refresh prevents concurrent startup requests from racing
+    // against rotating Spotify refresh tokens and invalidating the new grant.
+    if (!refreshInFlight) {
+      const active = tokens;
+      refreshInFlight = refreshAccessToken(clientId, active).finally(() => {
+        refreshInFlight = null;
+      });
+    }
+    tokens = await refreshInFlight;
+    if (tokens) forceRefreshNextRequest = false;
   }
   return tokens?.accessToken || null;
 }
@@ -157,8 +175,8 @@ async function spotifyPlayerCommand(clientId: string, endpoint: string, options:
   });
 
   if (response.status === 401) {
-    clearTokens();
-    throw new Error("Spotify session expired. Please connect again.");
+    markAccessTokenRejected();
+    throw new Error("Spotify access token was rejected. Refreshing session automatically.");
   }
 
   if (response.status === 403) {
@@ -257,8 +275,8 @@ export async function getCurrentlyPlaying(clientId: string, onObservation?: (obs
   }
 
   if (response.status === 401) {
-    clearTokens();
-    throw new Error("Spotify session expired. Please connect again.");
+    markAccessTokenRejected();
+    throw new Error("Spotify access token was rejected. Refreshing session automatically.");
   }
 
   if (response.status === 429) {
@@ -334,7 +352,7 @@ export async function getTrackTempoBpm(clientId: string, trackId: string): Promi
   const featuresResponse = await fetch(`https://api.spotify.com/v1/audio-features/${encodedTrackId}`, { headers });
 
   if (featuresResponse.status === 401) {
-    clearTokens();
+    markAccessTokenRejected();
     return null;
   }
 
@@ -349,7 +367,7 @@ export async function getTrackTempoBpm(clientId: string, trackId: string): Promi
   const analysisResponse = await fetch(`https://api.spotify.com/v1/audio-analysis/${encodedTrackId}`, { headers });
 
   if (analysisResponse.status === 401) {
-    clearTokens();
+    markAccessTokenRejected();
     return null;
   }
 
@@ -706,8 +724,8 @@ async function spotifyApiJson<T>(clientId: string, endpoint: string, options: Re
   });
 
   if (response.status === 401) {
-    clearTokens();
-    throw new Error("Spotify session expired. Please connect again.");
+    markAccessTokenRejected();
+    throw new Error("Spotify access token was rejected. Refreshing session automatically.");
   }
 
   if (response.status === 403) {
@@ -896,8 +914,8 @@ export async function getSpotifyDevices(clientId: string): Promise<SpotifyDevice
   });
 
   if (response.status === 401) {
-    clearTokens();
-    throw new Error("Spotify session expired. Please connect again.");
+    markAccessTokenRejected();
+    throw new Error("Spotify access token was rejected. Refreshing session automatically.");
   }
 
   if (response.status === 403) {
@@ -936,8 +954,8 @@ export async function transferSpotifyPlayback(clientId: string, deviceId: string
   });
 
   if (response.status === 401) {
-    clearTokens();
-    throw new Error("Spotify session expired. Please connect again.");
+    markAccessTokenRejected();
+    throw new Error("Spotify access token was rejected. Refreshing session automatically.");
   }
 
   if (response.status === 403) {
