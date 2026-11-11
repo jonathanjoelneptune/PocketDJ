@@ -14,6 +14,7 @@ import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import java.util.WeakHashMap;
+import java.lang.ref.WeakReference;
 
 /**
  * Attaches PocketDJ only to a proven artwork-only ImageView.
@@ -31,7 +32,7 @@ public final class PocketDjArtworkInstaller {
     private static final String TAG = "PocketDJ-artwork";
     private static final String URL =
             "https://jonathanjoelneptune.github.io/PocketDJ/#spotify-embed";
-    private static final WeakHashMap<View, PocketDjArtworkCarousel> installed =
+    private static final WeakHashMap<View, WeakReference<PocketDjArtworkCarousel>> installed =
             new WeakHashMap<>();
 
     private PocketDjArtworkInstaller() {}
@@ -46,7 +47,8 @@ public final class PocketDjArtworkInstaller {
         View root = anyView.getRootView();
         if (root == null || root.getWidth() <= 0 || root.getHeight() <= 0) return false;
 
-        PocketDjArtworkCarousel existing = installed.get(root);
+        WeakReference<PocketDjArtworkCarousel> existingRef = installed.get(root);
+        PocketDjArtworkCarousel existing = existingRef == null ? null : existingRef.get();
         if (existing != null) {
             // A stale entry after an activity recreation must not hide fallback.
             if (existing.getParent() != null) return true;
@@ -72,7 +74,7 @@ public final class PocketDjArtworkInstaller {
                 web.destroy();
                 return false;
             }
-            installed.put(root, pager);
+            installed.put(root, new WeakReference<>(pager));
             web.loadUrl(URL);
             Log.i(TAG, "Attached to artwork view: " + candidate.description);
             return true;
