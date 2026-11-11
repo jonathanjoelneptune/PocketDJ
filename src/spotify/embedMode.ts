@@ -12,7 +12,11 @@ let activeLayer = -1;
 const atmosphereLayers: HTMLDivElement[] = [];
 
 export function initializeSpotifyEmbed(): void {
-  const requested = /(?:^|[&#])spotify-embed(?:$|[=&])/i.test(window.location.hash);
+  const search = new URLSearchParams(window.location.search);
+  // Two independent opt-ins: explicit URL query is reliable in Android WebView;
+  // hash preserves compatibility with all existing v1.0 APK installations.
+  const requested = search.get("spotify_embed") === "1" ||
+    /(?:^|[&#])spotify-embed(?:$|[=&])/i.test(window.location.hash);
   try {
     if (requested) sessionStorage.setItem(EMBED_SESSION_KEY, "1");
     enabled = requested || sessionStorage.getItem(EMBED_SESSION_KEY) === "1";
@@ -49,7 +53,12 @@ export function initializeSpotifyEmbed(): void {
     .pocketDjSpotifySetCompact = (compact: boolean) => {
       document.documentElement.classList.toggle("spotify-embed-compact", Boolean(compact));
     };
-  console.info("[PocketDJ embed] Mode enabled; compact artwork view");
+  console.info("[PocketDJ embed] Mode enabled", {
+    query: search.has("spotify_embed"),
+    hash: window.location.hash === "#spotify-embed",
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
 }
 
 export function updateSpotifyEmbedArtwork(url: string | null): void {
