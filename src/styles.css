@@ -14558,3 +14558,47 @@ html.spotify-embed-active.spotify-embed-compact .stage::after {
   z-index: 90 !important;
   pointer-events: none !important;
 }
+
+
+/* PocketDJ Android v2.1: scene geometry is always true 16:9.
+   Do not stretch or crop room coordinates to fill an arbitrary foldable
+   WebView; center a full scene into the physically available viewport. */
+html.spotify-embed-active.spotify-embed-compact .stage {
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+}
+html.spotify-embed-active.spotify-embed-compact .room {
+  --room-w: min(100vw, calc(100vh * 16 / 9)) !important;
+  --room-h: calc(var(--room-w) * 9 / 16) !important;
+  width: var(--room-w) !important;
+  height: var(--room-h) !important;
+  max-height: 100vh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+/* Frame lives on the WebView itself, cannot cover native controls or steal
+   gestures. Replace v2.0 metallic border with a restrained black outline. */
+html.spotify-embed-active.spotify-embed-compact .stage::after {
+  display: block !important;
+  content: "" !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border: 2px solid rgba(0, 0, 0, 0.94) !important;
+  border-radius: 3px !important;
+  background: transparent !important;
+  box-shadow: inset 0 0 11px rgba(0,0,0,0.36) !important;
+  z-index: 90 !important;
+  pointer-events: none !important;
+}
+/* Sign metadata is compact-only. Preserve full-size typography everywhere
+   else and avoid WebView font auto-boosting on small rendered line lengths. */
+html.spotify-embed-active.spotify-embed-compact .marquee-title,
+html.spotify-embed-active.spotify-embed-compact .marquee-artist {
+  text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  letter-spacing: 0 !important;
+}
