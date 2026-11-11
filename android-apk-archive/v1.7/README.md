@@ -38,12 +38,12 @@ Spotify may render album art using another native view class or a different hier
 - [patch_v17.py](./patch_v17.py): exact v1.6-to-v1.7 source change script
 - [validate_v17.py](./validate_v17.py): ZIP contents, signing and DEX instruction validations
 - [validation_v17.json](./validation_v17.json): exact SHA-256 and signing-certificate fingerprints
-- [Java artwork carousel and installer](../../experiments/spotify-carousel-v1.7/): compiled to the extra, original PocketDJ DEX module on GitHub Actions (currently in experimental PR #12)
+- [Native artwork carousel and installer](./native/): original Java source compiled into the extra PocketDJ DEX module on GitHub Actions; staging and tests tracked in [experimental PR #12](https://github.com/jonathanjoelneptune/PocketDJ/pull/12).
 
 Rebuilding requires the matching original Spotify APK and the private test-signing key; **neither is committed**. Keep the signing key encrypted and backed up outside GitHub.
 
 ## Source and archive policy
 
-Native Java and CI source: [experimental Android carousel](../../experiments/spotify-carousel-v1.7/) (currently staged in PR #12 until device tests pass).
+Native Java source archived under [native/](./native/); CI experiment tracked in [PR #12](https://github.com/jonathanjoelneptune/PocketDJ/pull/12) until device tests pass.
 
 Public GitHub tracks build metadata, patch sources, tests, and SHA-256 hashes. It does **not** redistribute modified Spotify APK binaries or private signing keys. Store installable APKs only in an access-controlled private archive with appropriate licensing review.
