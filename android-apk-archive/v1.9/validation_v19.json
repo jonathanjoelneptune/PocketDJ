@@ -1,0 +1,30 @@
+{
+  "version": "v1.9",
+  "status": "build/static checks passed; Android device gesture and size behavior untested",
+  "filename": "PocketDJ-Spotify-v1.9-BIDIRECTIONAL-SWIPE.apk",
+  "size_bytes": 156143508,
+  "sha256": "31c65a818ea638306c7e8a267d5a44b7309715f02f2fbce2d3ca695b8857503e",
+  "sha256_signing_cert": "72fd48cdfe257006f48db9b4851429dd3f05bcd9177c9b0efd21434a61347bf0",
+  "signature_matches_v18": true,
+  "v18_sha256": "f50a8ce77f47a2a22f097551232076035acc34e7e2aecb0972fb17ead4b6b8e8",
+  "changed_zip_entries_vs_v18": [
+    "classes18.dex",
+    "classes19.dex"
+  ],
+  "unchanged_original_spotify_entries": true,
+  "dex18_bytes": 5348,
+  "dex19_bytes": 15660,
+  "apk_zip_entry_count": 4808,
+  "android_java_ci": "Native SwipeRouter/SwipePageEffects/SwipeHost* compilation and DEX generation PASSED",
+  "web_css": "Compact embedded landscape only, 2:1+ viewport crops vertical overscan",
+  "tests_still_required": [
+    "phone portrait gestures both directions",
+    "album art hidden under scene",
+    "Canvas/video track with Canvas disabled",
+    "foldable portrait progress/timeline",
+    "foldable landscape full width and native controls",
+    "vertical scroll",
+    "authentication and expanded mode",
+    "force stop/relaunch"
+  ]
+}
