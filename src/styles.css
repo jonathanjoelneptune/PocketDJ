@@ -14514,3 +14514,47 @@ html.spotify-embed-active.spotify-embed-compact .marquee-content {
     flex: 0 0 auto !important;
   }
 }
+
+
+/* Spotify Android compact v2.0: native viewport can be taller than 16:9.
+   Bottom-anchor the undistorted base scene; the existing ceiling strip
+   extends into spare height. Normal PocketDJ is unchanged. */
+@media (max-aspect-ratio: 3/2) {
+  html.spotify-embed-active.spotify-embed-compact .stage {
+    align-items: flex-end !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+  html.spotify-embed-active.spotify-embed-compact .room {
+    overflow: visible !important;
+    max-height: none !important;
+    flex: 0 0 auto !important;
+  }
+}
+/* Landscape keeps genuine scene geometry and symmetrical cropping so
+   Spotify's timeline can remain outside the shorter native viewport. */
+@media (min-aspect-ratio: 2/1) {
+  html.spotify-embed-active.spotify-embed-compact .stage {
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  html.spotify-embed-active.spotify-embed-compact .room {
+    overflow: hidden !important;
+    transform: none !important;
+  }
+}
+/* Thin hardware-style frame follows exactly the native WebView bounds.
+   Transparent outside the room: no gradients, black padding, or touch layer. */
+html.spotify-embed-active.spotify-embed-compact .stage::after {
+  display: block !important;
+  content: "" !important;
+  opacity: 1 !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border: 2px solid rgba(224, 190, 131, 0.56) !important;
+  border-radius: 5px !important;
+  box-shadow: inset 0 0 16px rgba(0,0,0,0.26), inset 0 0 1px rgba(255,255,255,0.25) !important;
+  background: transparent !important;
+  z-index: 90 !important;
+  pointer-events: none !important;
+}
