@@ -90,6 +90,14 @@
       "sha256": "f7d6e61f5088ca37e2408e8236189c37a55aac9f4d1ffeff3ad516845da12dcb",
       "android_test_status": "Statically validated and signed; user device testing pending",
       "binary_in_public_repo": false
+    },
+    {
+      "version": "v2.1",
+      "filename": "PocketDJ-Spotify-v2.1-CORE-STABILITY.apk",
+      "bytes": 156149494,
+      "sha256": "761084be9a72599c1cd452aa55c4e5b9bbb12c1d0f65261bc456f3a4a89735df",
+      "android_test_status": "Signed and statically validated; user device login/gesture tests pending",
+      "binary_in_public_repo": false
     }
   ]
 }
