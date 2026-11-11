@@ -97,7 +97,8 @@ function rgbToHsl(rgb: RgbColor): HslColor {
   if (max === r) h = ((g - b) / delta) % 6;
   else if (max === g) h = (b - r) / delta + 2;
   else h = (r - g) / delta + 4;
-  const s = delta / (1 - Math.abs(2 * l - 1) || 1);
+  const denominator = 1 - Math.abs(2 * l - 1);
+  const s = denominator > 0 ? delta / denominator : 0;
   return { h: (h * 60 + 360) % 360, s, l };
 }
 
