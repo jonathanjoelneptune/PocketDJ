@@ -14396,3 +14396,74 @@ html.spotify-embed-active.spotify-embed-compact .spotify-embed-atmosphere-active
 html.spotify-embed-active:not(.spotify-embed-compact) .spotify-embed-atmosphere {
   display: none;
 }
+
+
+/* Spotify-embed v1.1.
+   Anchor the view to its actual WebView rectangle, for phones and unfolded
+   tablets alike. Native Spotify playback buttons remain in Android, not here.
+   ID selectors override late, specificity-heavy menu declarations. */
+html.spotify-embed-active.spotify-embed-compact #controlCard,
+html.spotify-embed-active.spotify-embed-compact #panelToggle,
+html.spotify-embed-active.spotify-embed-compact #sidePanelTab,
+html.spotify-embed-active.spotify-embed-compact #menu2Panel,
+html.spotify-embed-active.spotify-embed-compact #floorPlayer,
+html.spotify-embed-active.spotify-embed-compact #animationDebugPanel,
+html.spotify-embed-active.spotify-embed-compact .menu2-fold-dock,
+html.spotify-embed-active.spotify-embed-compact .menu2-rail,
+html.spotify-embed-active.spotify-embed-compact .menu2-bubble {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+html.spotify-embed-active.spotify-embed-compact,
+html.spotify-embed-active.spotify-embed-compact body,
+html.spotify-embed-active.spotify-embed-compact #app,
+html.spotify-embed-active.spotify-embed-compact .stage {
+  overflow: hidden !important;
+  background: #111825 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+html.spotify-embed-active.spotify-embed-compact .stage {
+  position: fixed !important;
+  inset: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  isolation: isolate;
+}
+/* Preserve the real pixel geometry of the 16:9 room. Never distort sprites. */
+html.spotify-embed-active.spotify-embed-compact .room {
+  --room-w: min(100vw, calc(100vh * 16 / 9));
+  --room-h: calc(var(--room-w) * 9 / 16);
+  position: relative !important;
+  z-index: 2 !important;
+  width: var(--room-w) !important;
+  height: var(--room-h) !important;
+  max-height: 100vh !important;
+  margin: 0 auto !important;
+  flex: 0 0 auto !important;
+  box-shadow: none !important;
+}
+/* Full-bleed atmosphere replaces black letterboxing above, below or beside
+   the room, including extreme landscape/fold tablet proportions. */
+html.spotify-embed-active.spotify-embed-compact .stage::before {
+  z-index: 0 !important;
+  inset: -22% !important;
+  background-image: radial-gradient(ellipse at 50% 48%,#31405a,#111825 72%);
+  filter: blur(20px) !important;
+  opacity: 1 !important;
+}
+html.spotify-embed-active.spotify-embed-compact .stage::after {
+  z-index: 1 !important;
+  inset: 0 !important;
+  background: linear-gradient(to bottom,
+    rgba(7,11,21,.12),transparent 32%,transparent 68%,rgba(7,11,21,.2)) !important;
+}
+html.spotify-embed-active.spotify-embed-compact .spotify-embed-atmosphere {
+  z-index: 1 !important;
+  inset: -25% !important;
+  filter: blur(48px) saturate(1.5) brightness(.66) !important;
+}
