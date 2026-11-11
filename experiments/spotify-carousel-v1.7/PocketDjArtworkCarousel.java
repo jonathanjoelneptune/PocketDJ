@@ -1,6 +1,9 @@
 package com.pocketdj.spotifyexperiment;
 
 import android.content.Context;
+import android.app.Dialog;
+import android.view.Gravity;
+import android.widget.Button;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -40,6 +43,8 @@ public final class PocketDjArtworkCarousel extends FrameLayout {
     private boolean dragging;
     private Page page = Page.ALBUM;
     private PageListener listener;
+    private final Button expandButton;
+    private Dialog expandedDialog;
 
     private PocketDjArtworkCarousel(Context context, View album, WebView room) {
         super(context);
@@ -57,6 +62,17 @@ public final class PocketDjArtworkCarousel extends FrameLayout {
         addView(album, new LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         room.setVisibility(VISIBLE); // Keeps OAuth/session/renderer alive while hidden off-screen.
+        expandButton = new Button(context);
+        expandButton.setText("Expand");
+        expandButton.setAllCaps(false);
+        LayoutParams expandParams = new LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.END | Gravity.BOTTOM);
+        expandParams.rightMargin = Math.round(getResources().getDisplayMetrics().density * 6);
+        expandParams.bottomMargin = Math.round(getResources().getDisplayMetrics().density * 6);
+        addView(expandButton, expandParams);
+        expandButton.setVisibility(GONE);
+        expandButton.setOnClickListener(v -> openExpanded());
         setPositions(false);
     }
 
@@ -112,6 +128,7 @@ public final class PocketDjArtworkCarousel extends FrameLayout {
     }
 
     private void setPositions(boolean animated) {
+        if (expandedDialog != null) return;
         int width = getWidth();
         if (width <= 0) return;
         final float albumX = page == Page.ALBUM ? 0 : width;
@@ -133,7 +150,47 @@ public final class PocketDjArtworkCarousel extends FrameLayout {
         Page previous = page;
         page = next;
         setPositions(animated);
+        expandButton.setVisibility(next == Page.POCKET_DJ ? VISIBLE : GONE);
         if (previous != next && listener != null) listener.onPageChanged(next);
+    }
+
+    /**
+     * Temporary full-screen WebView using the SAME browser session.
+     * Android Back or Compact closes the dialog and reattaches the WebView
+     * inside its artwork slot. No Spotify private credentials are accessed.
+     */
+    private void openExpanded() {
+        if (expandedDialog != null || room.getParent() != this) return;
+        removeView(room);
+        final Dialog dialog = new Dialog(getContext(),
+                android.R.style.Theme_DeviceDefault_NoActionBar_Fullscreen);
+        final FrameLayout shell = new FrameLayout(getContext());
+        shell.addView(room, new LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        Button compact = new Button(getContext());
+        compact.setText("Compact");
+        compact.setAllCaps(false);
+        LayoutParams action = new LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.END | Gravity.BOTTOM);
+        action.rightMargin = Math.round(getResources().getDisplayMetrics().density * 12);
+        action.bottomMargin = Math.round(getResources().getDisplayMetrics().density * 12);
+        shell.addView(compact, action);
+        compact.setOnClickListener(v -> dialog.dismiss());
+        dialog.setContentView(shell);
+        expandedDialog = dialog;
+        dialog.setOnDismissListener(d -> {
+            room.evaluateJavascript(
+                    "window.pocketDjSpotifySetCompact && window.pocketDjSpotifySetCompact(true)", null);
+            shell.removeView(room);
+            addView(room, 0, new LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            expandedDialog = null;
+            setPositions(false);
+        });
+        room.evaluateJavascript(
+                "window.pocketDjSpotifySetCompact && window.pocketDjSpotifySetCompact(false)", null);
+        dialog.show();
     }
 
     @Override public boolean onInterceptTouchEvent(MotionEvent event) {
