@@ -14141,25 +14141,36 @@ body,
     transparent 78%);
 }
 .room-spotlight-zone::after { left: -20%; }
-.room-spotlight-full::before {
-  left: -34%;
-  width: 42%;
-  height: 90%;
-  top: 7%;
-}
+/* A complete left-to-right pass then a complete right-to-left pass.
+   Each directional pass uses the sweep-duration setting; two passes make
+   the full cycle. Only one color is visible at a time, so they cannot
+   converge over DJ NES. Each light fades in/out past the room edges. */
+.room-spotlight-full::before,
 .room-spotlight-full::after {
-  left: 92%;
-  width: 42%;
+  width: 38%;
   height: 90%;
   top: 7%;
 }
-@keyframes pocketDjFullRoomWarmSweep {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(310%, 5%, 0); }
+.room-spotlight-full::before { left: -44%; }
+.room-spotlight-full::after  { left: 106%; }
+
+/* 0-50%: warm spotlight sweeps left to right. It then remains hidden while
+   the cool spotlight makes the return trip. Keep the hidden half fixed. */
+@keyframes pocketDjFullRoomWarmPass {
+  0%   { opacity: 0; transform: translate3d(0, -2%, 0); }
+  1%   { opacity: 1; }
+  48%  { opacity: 1; }
+  50%  { opacity: 0; transform: translate3d(390%, 3%, 0); }
+  100% { opacity: 0; transform: translate3d(390%, 3%, 0); }
 }
-@keyframes pocketDjFullRoomCoolSweep {
-  from { transform: translate3d(0, -3%, 0); }
-  to   { transform: translate3d(-310%, 4%, 0); }
+/* 50-100%: cool spotlight sweeps right to left. Both remain hidden at the
+   handoff; its offscreen reset at 100% is not visible. */
+@keyframes pocketDjFullRoomCoolPass {
+  0%   { opacity: 0; transform: translate3d(0, 3%, 0); }
+  50%  { opacity: 0; transform: translate3d(0, 3%, 0); }
+  51%  { opacity: 1; }
+  98%  { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(-390%, -2%, 0); }
 }
 
 /* Desktop-only particles: no canvas, masks, blend modes, animated filters,
@@ -14226,11 +14237,13 @@ body,
     animation-delay: -13s;
   }
 
+  /* The animation cycle lasts TWO passes; with a 20s sweep setting the
+     primary moves for 20s, then the secondary returns for 20s. */
   :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::before {
-    animation: pocketDjFullRoomWarmSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
+    animation: pocketDjFullRoomWarmPass calc(var(--room-spotlight-speed, 20s) * 2) linear infinite;
   }
   :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::after {
-    animation: pocketDjFullRoomCoolSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
+    animation: pocketDjFullRoomCoolPass calc(var(--room-spotlight-speed, 20s) * 2) linear infinite;
   }
 
   :root.room-particles-active .room-particles { display: block; }

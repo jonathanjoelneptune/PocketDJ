@@ -17,9 +17,9 @@ const STORAGE_KEY = "pocketdj-room-spotlight-v2";
 export const DEFAULT_ROOM_SPOTLIGHTS: RoomSpotlightSettings = {
   enabled: true,
   strength: 0.90,
-  speed: 22,
-  palette: "duo",
-  mode: "zones",
+  speed: 20,
+  palette: "album",
+  mode: "full",
 };
 const PALETTES: SpotlightPalette[] = ["duo", "album", "warm", "cool"];
 const MODES: SpotlightMode[] = ["walls", "zones", "full"];
