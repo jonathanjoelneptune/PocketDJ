@@ -7,9 +7,6 @@
  */
 const EMBED_SESSION_KEY = "pocketdj_spotify_embed_v1";
 let enabled = false;
-let lastArtwork: string | null = null;
-let activeLayer = -1;
-const atmosphereLayers: HTMLDivElement[] = [];
 
 export function initializeSpotifyEmbed(): void {
   const search = new URLSearchParams(window.location.search);
@@ -25,16 +22,8 @@ export function initializeSpotifyEmbed(): void {
   }
   if (!enabled) return;
   document.documentElement.classList.add("spotify-embed-active", "spotify-embed-compact");
-  const stage = document.querySelector<HTMLElement>(".stage");
-  if (stage) {
-    for (let i = 0; i < 2; i += 1) {
-      const layer = document.createElement("div");
-      layer.className = "spotify-embed-atmosphere";
-      layer.setAttribute("aria-hidden", "true");
-      stage.prepend(layer);
-      atmosphereLayers.push(layer);
-    }
-  }
+  // The Android WebView exposes Spotify's own background around the room.
+  // Do not create or animate duplicate album-art gradients in compact mode.
   // Useful for diagnosing repeated login without ever exposing tokens.
   try {
     const raw = localStorage.getItem("pocket_dj_spotify_tokens");
@@ -61,30 +50,10 @@ export function initializeSpotifyEmbed(): void {
   });
 }
 
-export function updateSpotifyEmbedArtwork(url: string | null): void {
-  if (!enabled || url === lastArtwork) return;
-  lastArtwork = url;
-  let artwork = "";
-  if (url) {
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol === "https:") {
-        const safe = parsed.href.replace(/[\\"]/g, (c) => "\\" + c);
-        artwork = `url("${safe}")`;
-      }
-    } catch {
-      // Use ambient gradient when cover image is unavailable.
-    }
-  }
-  if (!atmosphereLayers.length) return;
-  activeLayer = (activeLayer + 1) % atmosphereLayers.length;
-  const next = atmosphereLayers[activeLayer];
-  next.style.backgroundImage = artwork || "linear-gradient(135deg,#223850,#111725 60%,#492b2f)";
-  // Insert image before changing opacity; crossfade after the next paint.
-  requestAnimationFrame(() => {
-    next.classList.add("spotify-embed-atmosphere-active");
-    for (let i = 0; i < atmosphereLayers.length; i += 1) {
-      if (i !== activeLayer) atmosphereLayers[i].classList.remove("spotify-embed-atmosphere-active");
-    }
-  });
+/**
+ * No album-wash work is required in transparent Spotify embed mode.
+ * Keep this exported compatibility hook for existing playback updates.
+ */
+export function updateSpotifyEmbedArtwork(_url: string | null): void {
+  // The room remains rendered normally; the surrounding area is native alpha.
 }

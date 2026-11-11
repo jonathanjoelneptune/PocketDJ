@@ -23,6 +23,54 @@ let marqueeTitleScrollTimer: number | null = null;
 let marqueeSupportingSwapTimer: number | null = null;
 let marqueeSupportingFadeTimer: number | null = null;
 let marqueeSupportingShowingAlbum = false;
+let embedArtistPan: Animation | null = null;
+let embedMarqueeResizeBound = false;
+
+function isSpotifyEmbedMarquee(): boolean {
+  return document.documentElement.classList.contains("spotify-embed-active") &&
+    document.documentElement.classList.contains("spotify-embed-compact");
+}
+
+/**
+ * The sign's available pixel width, not title character count, is our limit.
+ * Prefer a readable size, scale text down only as needed, then pan the text
+ * when it still cannot fit at our 6.5px readability floor.
+ */
+function fitEmbeddedMarqueeLine(element: HTMLElement, text: string, availableWidth: number): number {
+  if (!isSpotifyEmbedMarquee()) {
+    element.style.removeProperty("font-size");
+    return element.scrollWidth;
+  }
+  const style = getComputedStyle(element);
+  const family = style.fontFamily || "monospace";
+  const weight = style.fontWeight || "400";
+  const baseSize = Number.parseFloat(style.fontSize) || 8;
+  const letterSpacingRatio = (Number.parseFloat(style.letterSpacing) || 0) / baseSize;
+  const preferredSize = Math.min(12, Math.max(8, availableWidth / 16));
+  const floorSize = 6.5;
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    element.style.fontSize = `${floorSize}px`;
+    return element.scrollWidth;
+  }
+  const measure = (size: number): number => {
+    ctx.font = `${weight} ${size}px ${family}`;
+    return ctx.measureText(text).width + Math.max(0, text.length - 1) * letterSpacingRatio * size;
+  };
+  const fullWidth = measure(preferredSize);
+  const chosen = fullWidth <= availableWidth
+    ? preferredSize
+    : Math.max(floorSize, Math.min(preferredSize, preferredSize * availableWidth / Math.max(1, fullWidth)));
+  element.style.fontSize = `${chosen.toFixed(2)}px`;
+  return measure(chosen);
+}
+
+function clearEmbedArtistPan(): void {
+  embedArtistPan?.cancel();
+  embedArtistPan = null;
+}
+
 let noLyricsFocusLatched = false;
 let activeAlbumWashLayer = 0;
 let lastAlbumWashUrl = "";
@@ -1991,13 +2039,49 @@ function updateMarquee(track: NormalizedTrack): void {
   marquee.classList.toggle("marquee-paused", payload.state === "paused");
   marquee.classList.toggle("marquee-empty", payload.state === "empty");
   marquee.classList.toggle("marquee-playing", payload.state === "playing");
-  // Title/artist long-vs-short classes are set from actual rendered width in
-  // prepareMarqueeRowsForEntry/updateMarqueeRowPan. Do not use character-count
-  // guesses here, or short titles can stay left-anchored after a long scrolling title.
-  if (payload.key === lastMarqueeKey) return;
-  lastMarqueeKey = payload.key;
+  // Title/artist long-vs-short classes are set from actual rendered width.
+  const compactEmbed = isSpotifyEmbedMarquee();
+  const marqueeKey = `${compactEmbed ? "spotify-embed" : "regular"}::${payload.key}`;
+  if (marqueeKey === lastMarqueeKey) return;
+  lastMarqueeKey = marqueeKey;
+
+  if (!embedMarqueeResizeBound) {
+    embedMarqueeResizeBound = true;
+    window.addEventListener("resize", () => {
+      if (!isSpotifyEmbedMarquee()) return;
+      const board = document.querySelector<HTMLElement>(".marquee");
+      const heading = document.querySelector<HTMLElement>("#marqueeTitle");
+      const supporting = document.querySelector<HTMLElement>("#marqueeArtist");
+      if (board && heading && supporting) updateMarqueeRowPan(board, heading, supporting);
+    }, { passive: true });
+    void document.fonts?.ready.then(() => {
+      if (isSpotifyEmbedMarquee()) {
+        const board = document.querySelector<HTMLElement>(".marquee");
+        const heading = document.querySelector<HTMLElement>("#marqueeTitle");
+        const supporting = document.querySelector<HTMLElement>("#marqueeArtist");
+        if (board && heading && supporting) updateMarqueeRowPan(board, heading, supporting);
+      }
+    });
+  }
 
   if (marqueeSwapTimer) window.clearTimeout(marqueeSwapTimer);
+  if (compactEmbed) {
+    // No seven-second text transition inside the small album art.
+    clearTitleScrollLoop();
+    clearSupportingLineLoop();
+    clearEmbedArtistPan();
+    content.classList.remove("marquee-entering", "marquee-exiting");
+    marquee.classList.remove("marquee-swap");
+    titleEl.dataset.marqueeOriginal = payload.title;
+    artistEl.dataset.marqueeOriginal = payload.artist;
+    titleEl.textContent = payload.title;
+    artistEl.textContent = payload.artist;
+    prepareMarqueeRowsForEntry(marquee, titleEl, artistEl);
+    startSupportingLineLoop(marquee, artistEl, payload);
+    updateMarqueeRowPan(marquee, titleEl, artistEl);
+    return;
+  }
+  clearEmbedArtistPan();
 
   // Always transition song changes using the single clean title, not the duplicated scroll train.
   clearTitleScrollLoop();
@@ -2056,6 +2140,7 @@ function prepareMarqueeRowsForEntry(marquee: HTMLElement, titleEl: HTMLElement, 
   titleEl.style.transform = "translateX(0)";
   titleEl.style.marginLeft = "0";
 
+  fitEmbeddedMarqueeLine(titleEl, titleText, availableWidth);
   const titleIsLong = titleEl.scrollWidth > availableWidth + 6;
   marquee.classList.toggle("marquee-title-long", titleIsLong);
   marquee.classList.toggle("marquee-title-short", !titleIsLong);
@@ -2064,7 +2149,8 @@ function prepareMarqueeRowsForEntry(marquee: HTMLElement, titleEl: HTMLElement, 
   artistEl.style.transition = "none";
   artistEl.style.transform = "translateX(0)";
 
-  const artistIsLong = artistEl.scrollWidth > availableWidth + 6;
+  const artistMeasured = fitEmbeddedMarqueeLine(artistEl, artistText, availableWidth);
+  const artistIsLong = artistMeasured > availableWidth + 6;
   marquee.classList.toggle("marquee-artist-long", artistIsLong);
   marquee.classList.toggle("marquee-artist-short", !artistIsLong);
 }
@@ -2103,6 +2189,7 @@ function configureTitleMarqueeRow(options: {
   element.dataset.marqueeOriginal = originalText;
   element.style.transition = "none";
   element.style.transform = "translateX(0)";
+  fitEmbeddedMarqueeLine(element, originalText, availableWidth);
 
   const originalWidth = element.scrollWidth;
   const isLong = originalWidth > availableWidth + 6;
@@ -2129,7 +2216,7 @@ function configureTitleMarqueeRow(options: {
 function startTitleScrollLoop(element: HTMLElement, loopDistance: number, scrollSeconds: number): void {
   clearTitleScrollLoop();
 
-  const holdMs = 10_000;
+  const holdMs = isSpotifyEmbedMarquee() ? 2_500 : 10_000;
   const scrollMs = Math.round(scrollSeconds * 1000);
 
   element.style.transition = "none";
@@ -2167,6 +2254,7 @@ function clearSupportingLineLoop(): void {
     marqueeSupportingFadeTimer = null;
   }
   marqueeSupportingShowingAlbum = false;
+  clearEmbedArtistPan();
 }
 
 function startSupportingLineLoop(marquee: HTMLElement, artistEl: HTMLElement, payload: MarqueePayload): void {
@@ -2181,7 +2269,7 @@ function startSupportingLineLoop(marquee: HTMLElement, artistEl: HTMLElement, pa
 
   if (!canShowAlbum) return;
 
-  const supportingLineHoldMs = 10_500;
+  const supportingLineHoldMs = isSpotifyEmbedMarquee() ? 6_500 : 10_500;
 
   const flip = () => {
     marqueeSupportingShowingAlbum = !marqueeSupportingShowingAlbum;
@@ -2212,7 +2300,7 @@ function fadeSupportingLineTo(marquee: HTMLElement, artistEl: HTMLElement, nextT
     artistEl.style.transition = "";
     artistEl.classList.remove("marquee-support-fading");
     marqueeSupportingFadeTimer = null;
-  }, 1200);
+  }, isSpotifyEmbedMarquee() ? 400 : 1200);
 }
 
 function configureStaticArtistRow(options: {
@@ -2223,20 +2311,38 @@ function configureStaticArtistRow(options: {
 }): void {
   const { marquee, element, originalText, availableWidth } = options;
 
+  clearEmbedArtistPan();
   element.textContent = originalText;
   element.dataset.marqueeOriginal = originalText;
   element.dataset.marqueeStaticArtist = "true";
   element.style.transition = "none";
   element.style.transform = "translateX(0)";
+  element.style.removeProperty("width");
+  element.style.removeProperty("max-width");
+  element.style.removeProperty("overflow");
+  element.style.removeProperty("align-self");
 
-  const originalWidth = element.scrollWidth;
-  const isLong = originalWidth > availableWidth + 6;
+  const measuredWidth = fitEmbeddedMarqueeLine(element, originalText, availableWidth);
+  const isLong = measuredWidth > availableWidth + 6;
 
   marquee.classList.toggle("marquee-artist-long", isLong);
   marquee.classList.toggle("marquee-artist-short", !isLong);
 
-  // Artist row is fully decoupled from title scrolling. It remains centered and static.
-  element.textContent = originalText;
+  // Non-embedded mode retains the original static artist behavior.
+  if (isSpotifyEmbedMarquee() && isLong) {
+    const overflow = Math.max(1, measuredWidth - availableWidth + 8);
+    element.style.width = "max-content";
+    element.style.maxWidth = "none";
+    element.style.overflow = "visible";
+    element.style.alignSelf = "flex-start";
+    embedArtistPan = element.animate([
+      { transform: "translateX(0)", offset: 0 },
+      { transform: "translateX(0)", offset: 0.22 },
+      { transform: `translateX(-${overflow.toFixed(1)}px)`, offset: 0.78 },
+      { transform: `translateX(-${overflow.toFixed(1)}px)`, offset: 0.90 },
+      { transform: "translateX(0)", offset: 1 }
+    ], { duration: Math.max(11_000, Math.round(overflow / 17 * 1_000)), iterations: Infinity });
+  }
 }
 
 function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
@@ -2276,6 +2382,14 @@ function buildMarqueePayload(track: NormalizedTrack): MarqueePayload {
     state = "playing";
     title = `TITLE: ${cleanMarqueeText(track.title)}`;
     artist = `${artistPrefix}${artistRaw}`;
+  }
+
+  // Spotify's native player already labels song/artist. Use the tiny room
+  // marquee for the actual metadata; alternate artist and album on line two.
+  if (isSpotifyEmbedMarquee() && track.isAuthenticated && track.trackId) {
+    title = cleanMarqueeText(track.title);
+    artist = artistRaw;
+    albumLine = albumRaw;
   }
 
   return {

@@ -14467,3 +14467,29 @@ html.spotify-embed-active.spotify-embed-compact .spotify-embed-atmosphere {
   inset: -25% !important;
   filter: blur(48px) saturate(1.5) brightness(.66) !important;
 }
+
+
+/* Spotify embed v1.3: real alpha around the 16:9 room.
+   Show the native Spotify Now Playing background, not an artificial wash.
+   Only applies when the Android WebView explicitly requests compact mode.
+   Requires a transparent WebView background in the paired APK. */
+html.spotify-embed-active.spotify-embed-compact,
+html.spotify-embed-active.spotify-embed-compact body,
+html.spotify-embed-active.spotify-embed-compact #app,
+html.spotify-embed-active.spotify-embed-compact .stage {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+html.spotify-embed-active.spotify-embed-compact .stage::before,
+html.spotify-embed-active.spotify-embed-compact .stage::after,
+html.spotify-embed-active.spotify-embed-compact .spotify-embed-atmosphere {
+  display: none !important;
+  content: none !important;
+  opacity: 0 !important;
+}
+html.spotify-embed-active.spotify-embed-compact .room {
+  box-shadow: none !important;
+}
+html.spotify-embed-active.spotify-embed-compact .marquee-content {
+  gap: clamp(2px, 0.3vw, 5px);
+}
