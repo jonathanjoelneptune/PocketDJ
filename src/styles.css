@@ -14141,20 +14141,36 @@ body,
     transparent 78%);
 }
 .room-spotlight-zone::after { left: -20%; }
-/* The two pools follow ONE direction and share a trajectory. A half-cycle
-   negative delay spaces them evenly across the room, preventing the old
-   synchronized convergence directly over DJ NES.
-   Start and end beyond the room edges so the loop reset is invisible. */
+/* A complete left-to-right pass then a complete right-to-left pass.
+   Each directional pass uses the sweep-duration setting; two passes make
+   the full cycle. Only one color is visible at a time, so they cannot
+   converge over DJ NES. Each light fades in/out past the room edges. */
 .room-spotlight-full::before,
 .room-spotlight-full::after {
-  left: -44%;
   width: 38%;
   height: 90%;
   top: 7%;
 }
-@keyframes pocketDjFullRoomSweep {
-  from { transform: translate3d(0, -2%, 0); }
-  to   { transform: translate3d(390%, 3%, 0); }
+.room-spotlight-full::before { left: -44%; }
+.room-spotlight-full::after  { left: 106%; }
+
+/* 0-50%: warm spotlight sweeps left to right. It then remains hidden while
+   the cool spotlight makes the return trip. Keep the hidden half fixed. */
+@keyframes pocketDjFullRoomWarmPass {
+  0%   { opacity: 0; transform: translate3d(0, -2%, 0); }
+  1%   { opacity: 1; }
+  48%  { opacity: 1; }
+  50%  { opacity: 0; transform: translate3d(390%, 3%, 0); }
+  100% { opacity: 0; transform: translate3d(390%, 3%, 0); }
+}
+/* 50-100%: cool spotlight sweeps right to left. Both remain hidden at the
+   handoff; its offscreen reset at 100% is not visible. */
+@keyframes pocketDjFullRoomCoolPass {
+  0%   { opacity: 0; transform: translate3d(0, 3%, 0); }
+  50%  { opacity: 0; transform: translate3d(0, 3%, 0); }
+  51%  { opacity: 1; }
+  98%  { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(-390%, -2%, 0); }
 }
 
 /* Desktop-only particles: no canvas, masks, blend modes, animated filters,
@@ -14221,14 +14237,13 @@ body,
     animation-delay: -13s;
   }
 
-  :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::before,
-  :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::after {
-    animation: pocketDjFullRoomSweep var(--room-spotlight-speed, 20s) linear infinite;
+  /* The animation cycle lasts TWO passes; with a 20s sweep setting the
+     primary moves for 20s, then the secondary returns for 20s. */
+  :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::before {
+    animation: pocketDjFullRoomWarmPass calc(var(--room-spotlight-speed, 20s) * 2) linear infinite;
   }
-  /* At 20s per sweep the secondary color is 10s behind the primary.
-     Relative offset stays 50% at every sweep speed. */
   :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::after {
-    animation-delay: calc(var(--room-spotlight-speed, 20s) * -0.5);
+    animation: pocketDjFullRoomCoolPass calc(var(--room-spotlight-speed, 20s) * 2) linear infinite;
   }
 
   :root.room-particles-active .room-particles { display: block; }
