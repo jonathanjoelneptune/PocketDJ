@@ -50,12 +50,38 @@ def verify_zip():
 
 def main():
  cert=x509.load_pem_x509_certificate((ROOT/'pocketdj-test-signing-cert.pem').read_bytes())
- from importlib.util import spec_from_file_location, module_from_spec
- spec=spec_from_file_location('v16verify', '/mnt/data/pdj_v17_build/build_v16.py')
- v16=module_from_spec(spec)
- sys.modules['v16verify']=v16
- spec.loader.exec_module(v16)
- bsign=v16.verify_v2(BASE,cert)
+ # The v1.6 rollback does not include classes19.dex, so only run the
+ # cryptographic verifier against it. v1.8 gets full layout/DEX checks.
+ from cryptography.hazmat.primitives.asymmetric import padding
+ def verify_base_signing(path):
+  b=path.read_bytes(); eocd=b.rfind(b'PK\x05\x06')
+  cd_off=build.u32(b,eocd+16)
+  assert b[cd_off-16:cd_off]==b'APK Sig Block 42'
+  size=struct.unpack_from('<Q',b,cd_off-24)[0]
+  blockstart=cd_off-size-8
+  assert struct.unpack_from('<Q',b,blockstart)[0]==size
+  p=blockstart+8
+  length=struct.unpack_from('<Q',b,p)[0]
+  assert build.u32(b,p+8)==0x7109871a
+  val=b[p+12:p+8+length]
+  si=val[4:4+build.u32(val,0)]
+  signer=si[4:4+build.u32(si,0)]
+  pos=0
+  signed=signer[4:4+build.u32(signer,pos)]
+  pos+=4+len(signed)
+  sigs=signer[pos+4:pos+4+build.u32(signer,pos)]
+  dg=signed[4:4+build.u32(signed,0)]
+  entry=dg[4:4+build.u32(dg,0)]
+  assert build.u32(entry,0)==0x0103
+  recorded=entry[8:8+build.u32(entry,4)]
+  entry=sigs[4:4+build.u32(sigs,0)]
+  assert build.u32(entry,0)==0x0103
+  signature=entry[8:8+build.u32(entry,4)]
+  cert.public_key().verify(signature,signed,padding.PKCS1v15(),hashes.SHA256())
+  e=bytearray(b[eocd:]);struct.pack_into('<I',e,16,blockstart)
+  assert build.apk_digest(b[:blockstart],b[cd_off:eocd],e)==recorded
+  return recorded
+ bsign=verify_base_signing(BASE)
  nsign=build.verify_v2(PKG,cert)
  changed,dexsize=verify_zip()
  manifest={'version':'v1.8','status':'static-validated; phone and foldable runtime NOT tested',
