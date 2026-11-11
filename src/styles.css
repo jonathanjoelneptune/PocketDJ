@@ -14141,25 +14141,20 @@ body,
     transparent 78%);
 }
 .room-spotlight-zone::after { left: -20%; }
-.room-spotlight-full::before {
-  left: -34%;
-  width: 42%;
-  height: 90%;
-  top: 7%;
-}
+/* The two pools follow ONE direction and share a trajectory. A half-cycle
+   negative delay spaces them evenly across the room, preventing the old
+   synchronized convergence directly over DJ NES.
+   Start and end beyond the room edges so the loop reset is invisible. */
+.room-spotlight-full::before,
 .room-spotlight-full::after {
-  left: 92%;
-  width: 42%;
+  left: -44%;
+  width: 38%;
   height: 90%;
   top: 7%;
 }
-@keyframes pocketDjFullRoomWarmSweep {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(310%, 5%, 0); }
-}
-@keyframes pocketDjFullRoomCoolSweep {
-  from { transform: translate3d(0, -3%, 0); }
-  to   { transform: translate3d(-310%, 4%, 0); }
+@keyframes pocketDjFullRoomSweep {
+  from { transform: translate3d(0, -2%, 0); }
+  to   { transform: translate3d(390%, 3%, 0); }
 }
 
 /* Desktop-only particles: no canvas, masks, blend modes, animated filters,
@@ -14226,11 +14221,14 @@ body,
     animation-delay: -13s;
   }
 
-  :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::before {
-    animation: pocketDjFullRoomWarmSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
-  }
+  :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::before,
   :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::after {
-    animation: pocketDjFullRoomCoolSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
+    animation: pocketDjFullRoomSweep var(--room-spotlight-speed, 20s) linear infinite;
+  }
+  /* At 20s per sweep the secondary color is 10s behind the primary.
+     Relative offset stays 50% at every sweep speed. */
+  :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::after {
+    animation-delay: calc(var(--room-spotlight-speed, 20s) * -0.5);
   }
 
   :root.room-particles-active .room-particles { display: block; }
