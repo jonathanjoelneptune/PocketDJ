@@ -8020,6 +8020,9 @@ function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
   const pulseEnergy = updateReactiveRoomEnergyFrame();
 
   root.classList.toggle("music-reactive-playing", playing);
+  // Atmosphere only appears during actual playback; keep the legacy demo/reactive
+  // semantics untouched (a paused demo still has source="demo").
+  root.classList.toggle("room-atmosphere-playing", track.isPlaying);
   root.style.setProperty("--music-beat-ms", `${beatMs}ms`);
   root.style.setProperty("--music-breathe-ms", `${Math.round(Math.max(7200, beatMs * 14))}ms`);
   root.style.setProperty("--music-pulse-ms", `${Math.round(Math.max(2200, beatMs * 4.5))}ms`);

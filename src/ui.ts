@@ -1422,7 +1422,7 @@ export function renderShell(state: AppState): void {
             <button id="menu2RoomLightingReset" class="menu2-action menu2-wide-action" type="button">Restore Classic Lighting</button>
             <details class="menu2-room-spotlights" open>
               <summary>Living Atmosphere · Moving Spotlights</summary>
-              <p class="menu2-room-help">Choose independent color sweeps for the shelves, three zones, or the entire room. In Full Room, one color sweeps left to right, then the other sweeps right to left. Each pass uses the selected sweep duration, so 20 seconds per pass gives a 40-second alternating loop.</p>
+              <p class="menu2-room-help">Choose independent color sweeps for the shelves, three zones, or the entire room. In Full Room, one color sweeps left to right, then the other sweeps right to left. Each pass uses the selected sweep duration. At 15 seconds per pass, the complete alternating cycle takes 30 seconds. Spotlights and dust appear only during playback.</p>
               <label class="menu2-setting">Spotlight movement
                 <select id="menu2SpotlightMode" class="menu2-select">
                   <option value="walls">Album Walls (previous)</option>
@@ -1434,8 +1434,8 @@ export function renderShell(state: AppState): void {
               <label class="menu2-setting menu2-slider-setting">Spotlight strength <span id="menu2SpotlightStrengthValue">0.90</span>
                 <input id="menu2SpotlightStrength" type="range" min="0" max="1.50" step="0.05" value="0.90" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Seconds per sweep <span id="menu2SpotlightSpeedValue">20s</span>
-                <input id="menu2SpotlightSpeed" type="range" min="8" max="60" step="1" value="20" />
+              <label class="menu2-setting menu2-slider-setting">Seconds per sweep <span id="menu2SpotlightSpeedValue">15s</span>
+                <input id="menu2SpotlightSpeed" type="range" min="8" max="60" step="1" value="15" />
               </label>
               <label class="menu2-setting">Spotlight colors
                 <select id="menu2SpotlightPalette" class="menu2-select">
@@ -1448,7 +1448,7 @@ export function renderShell(state: AppState): void {
               <button id="menu2SpotlightReset" class="menu2-action menu2-wide-action" type="button">Reset Spotlights</button>
               <details class="menu2-room-particles" open>
                 <summary>Floating Particles</summary>
-                <p class="menu2-room-help">Bright dust motes gently drifting through the lower room. Separate from the spotlights and disabled entirely on mobile, touch, and reduced-motion devices.</p>
+                <p class="menu2-room-help">Bright dust motes gently drifting through the lower room. Visible only while music plays, and disabled on mobile, touch, and reduced-motion devices.</p>
                 <label class="menu2-setting menu2-toggle-setting"><input id="menu2ParticlesEnabled" type="checkbox" checked /> Enable floating particles</label>
                 <label class="menu2-setting menu2-slider-setting">Particle count <span id="menu2ParticlesCountValue">14</span>
                   <input id="menu2ParticlesCount" type="range" min="0" max="40" step="1" value="14" />
