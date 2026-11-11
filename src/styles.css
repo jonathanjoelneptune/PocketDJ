@@ -14320,3 +14320,79 @@ body,
 :root:not(.room-atmosphere-playing) .room-spotlight-full::after {
   animation-play-state: paused !important;
 }
+
+
+/* Spotify Android artwork integration (v1.0).
+   Strict opt-in: no impact on the regular website or expanded settings mode. */
+html.spotify-embed-active.spotify-embed-compact,
+html.spotify-embed-active.spotify-embed-compact body,
+html.spotify-embed-active.spotify-embed-compact #app {
+  background: #101723;
+}
+html.spotify-embed-active.spotify-embed-compact .stage {
+  background: #101723;
+  isolation: isolate;
+}
+html.spotify-embed-active.spotify-embed-compact .stage::before {
+  content: "";
+  position: absolute;
+  inset: -15%;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--spotify-embed-album-art, linear-gradient(135deg,#1e344e,#121725 65%,#34232b));
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(42px) brightness(.45) saturate(1.5);
+  opacity: .84;
+  transform: scale(1.08);
+}
+html.spotify-embed-active.spotify-embed-compact .stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom,rgba(4,7,16,.37),transparent 26%,transparent 76%,rgba(4,7,16,.48));
+}
+html.spotify-embed-active.spotify-embed-compact .room {
+  position: relative;
+  z-index: 1;
+  width: 100vw;
+  height: calc(100vw * 9 / 16);
+  flex-shrink: 0;
+  box-shadow: none;
+  background: transparent;
+}
+/* Native Spotify owns transport, seeking and track actions in compact mode.
+   Expanded mode automatically restores the normal full PocketDJ UI. */
+html.spotify-embed-active.spotify-embed-compact .control-card,
+html.spotify-embed-active.spotify-embed-compact .panel-toggle,
+html.spotify-embed-active.spotify-embed-compact .side-panel-tab,
+html.spotify-embed-active.spotify-embed-compact .menu2-panel,
+html.spotify-embed-active.spotify-embed-compact .menu2-bubble,
+html.spotify-embed-active.spotify-embed-compact .floor-player,
+html.spotify-embed-active.spotify-embed-compact #animationDebugPanel {
+  display: none !important;
+}
+
+/* Two inert layers crossfade on track changes without reloading the room. */
+html.spotify-embed-active.spotify-embed-compact .spotify-embed-atmosphere {
+  position: absolute;
+  inset: -15%;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(42px) brightness(.45) saturate(1.5);
+  transform: scale(1.08);
+  transition: opacity 2200ms ease-in-out;
+}
+html.spotify-embed-active.spotify-embed-compact .spotify-embed-atmosphere-active {
+  opacity: .84;
+}
+html.spotify-embed-active:not(.spotify-embed-compact) .spotify-embed-atmosphere {
+  display: none;
+}

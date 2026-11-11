@@ -108,7 +108,16 @@ async function refreshAccessToken(clientId: string, tokens: TokenRecord): Promis
   });
 
   const json = await response.json();
-  if (!response.ok) return null;
+  if (!response.ok) {
+    // Only a definitively revoked/invalid refresh grant requires new consent.
+    // Never discard valid stored credentials on 429/5xx/network failures.
+    if (response.status === 400 && json.error === "invalid_grant") {
+      clearTokens();
+      console.warn("[PocketDJ auth] Refresh grant rejected; reconnect required");
+      return null;
+    }
+    throw new Error(`Spotify refresh temporarily unavailable (HTTP ${response.status}).`);
+  }
 
   const refreshed: TokenRecord = {
     accessToken: json.access_token,
@@ -136,7 +145,6 @@ export async function getSpotifyAccessToken(clientId: string): Promise<string | 
 async function spotifyPlayerCommand(clientId: string, endpoint: string, options: RequestInit = {}): Promise<void> {
   const token = await getUsableToken(clientId);
   if (!token) {
-    clearTokens();
     throw new Error("Spotify disconnected. Please connect again.");
   }
 
@@ -208,7 +216,6 @@ export async function setSpotifyRepeat(clientId: string, mode: "off" | "track" |
 export async function getCurrentlyPlaying(clientId: string, onObservation?: (observation: SpotifyPlaybackObservation) => void): Promise<NormalizedTrack> {
   const token = await getUsableToken(clientId);
   if (!token) {
-    clearTokens();
     return {
       source: "none",
       isAuthenticated: false,
@@ -686,7 +693,6 @@ function normalizeCatalogAlbum(item: SpotifyAlbumItem | null | undefined): Spoti
 async function spotifyApiJson<T>(clientId: string, endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = await getUsableToken(clientId);
   if (!token) {
-    clearTokens();
     throw new Error("Spotify disconnected. Please connect again.");
   }
 
@@ -882,7 +888,6 @@ type SpotifyDevicesResponse = {
 export async function getSpotifyDevices(clientId: string): Promise<SpotifyDevice[]> {
   const token = await getUsableToken(clientId);
   if (!token) {
-    clearTokens();
     throw new Error("Spotify disconnected. Please connect again.");
   }
 
@@ -915,7 +920,6 @@ export async function getSpotifyDevices(clientId: string): Promise<SpotifyDevice
 export async function transferSpotifyPlayback(clientId: string, deviceId: string, play = true): Promise<void> {
   const token = await getUsableToken(clientId);
   if (!token) {
-    clearTokens();
     throw new Error("Spotify disconnected. Please connect again.");
   }
 
