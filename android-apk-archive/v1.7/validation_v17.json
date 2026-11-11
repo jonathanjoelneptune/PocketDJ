@@ -1,0 +1,26 @@
+{
+  "version": "v1.7 experimental",
+  "apk": "PocketDJ-Spotify-v1.7-SWIPE-CAROUSEL-EXPERIMENTAL.apk",
+  "sha256": "2632a1825192fcf667a91db1d290dc4cd6ec4076541f14beb9f0c42536b5d01d",
+  "size_bytes": 156143533,
+  "signing_cert_sha256": "72fd48cdfe257006f48db9b4851429dd3f05bcd9177c9b0efd21434a61347bf0",
+  "changed_entries_vs_v16": [
+    "classes18.dex"
+  ],
+  "added_entries_vs_v16": [
+    "classes19.dex"
+  ],
+  "dex_classes": [
+    "com.pocketdj.Hook",
+    "com.pocketdj.spotifyexperiment.PocketDjArtworkCarousel",
+    "com.pocketdj.spotifyexperiment.PocketDjArtworkInstaller"
+  ],
+  "ci_native_compilation": "passed on GitHub Actions",
+  "zip_integrity": "passed",
+  "v2_signature": "passed",
+  "stored_entry_alignment": "passed",
+  "dex_instruction_boundaries": "passed",
+  "android_install": "untested",
+  "native_artwork_detection": "untested",
+  "safety_fallback": "v1.6 manual toggle retained if detection fails"
+}
