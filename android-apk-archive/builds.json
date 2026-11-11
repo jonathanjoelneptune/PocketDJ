@@ -82,6 +82,14 @@
       "sha256": "31c65a818ea638306c7e8a267d5a44b7309715f02f2fbce2d3ca695b8857503e",
       "android_test_status": "Static signed and checked; physical Android runtime not tested",
       "binary_in_public_repo": false
+    },
+    {
+      "version": "v2.0",
+      "filename": "PocketDJ-Spotify-v2.0-ARTWORK-BOUNDS.apk",
+      "bytes": 156143713,
+      "sha256": "f7d6e61f5088ca37e2408e8236189c37a55aac9f4d1ffeff3ad516845da12dcb",
+      "android_test_status": "Statically validated and signed; user device testing pending",
+      "binary_in_public_repo": false
     }
   ]
 }
