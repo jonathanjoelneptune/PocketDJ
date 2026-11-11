@@ -1,7 +1,6 @@
 package com.pocketdj.spotifyexperiment;
 
 import android.content.Context;
-import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -82,7 +81,7 @@ public final class PocketDjArtworkCarousel extends FrameLayout {
 
         // Never replace the full native Now Playing scroll container.
         if (artworkView instanceof android.widget.ScrollView ||
-                artworkView instanceof androidx.core.widget.NestedScrollView) return null;
+                artworkView.getClass().getName().contains("NestedScrollView")) return null;
 
         host.removeViewAt(index);
         try {
