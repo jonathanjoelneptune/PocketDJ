@@ -14,10 +14,11 @@ export type RoomSpotlightSettings = {
 };
 
 const STORAGE_KEY = "pocketdj-room-spotlight-v2";
+const FIFTEEN_SECOND_SWEEP_MIGRATION_KEY = "pocketdj-spotlight-15s-sweep-20261110";
 export const DEFAULT_ROOM_SPOTLIGHTS: RoomSpotlightSettings = {
   enabled: true,
   strength: 0.90,
-  speed: 20,
+  speed: 15,
   palette: "album",
   mode: "full",
 };
@@ -45,6 +46,16 @@ function readSettings(): RoomSpotlightSettings {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_ROOM_SPOTLIGHTS };
     const stored = JSON.parse(raw) as Partial<RoomSpotlightSettings>;
+    // One-time update for the previously recommended Full Room + Album Reactive
+    // 20s setup. Preserve every other saved choice, including custom speeds.
+    // Mark checked configs too so a later user-selected 20s is never overwritten.
+    if (!localStorage.getItem(FIFTEEN_SECOND_SWEEP_MIGRATION_KEY)) {
+      if (stored.mode === "full" && stored.palette === "album" && stored.speed === 20) {
+        stored.speed = 15;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+      }
+      localStorage.setItem(FIFTEEN_SECOND_SWEEP_MIGRATION_KEY, "1");
+    }
     // Existing V2 installations retain their wall-only mode until explicitly changed.
     return normalize({ ...stored, mode: stored.mode ?? "walls" });
   } catch {
