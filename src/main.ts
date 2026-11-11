@@ -1,5 +1,6 @@
 import "./styles.css";
-import { initializeRoomSpotlights } from "./roomSpotlights";
+import { initializeRoomSpotlights, updateSpotlightAlbumColors } from "./roomSpotlights";
+import { initializeRoomParticles } from "./roomParticles";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
 import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, isSpotifyDjSpeakingForPose, observeSpotifyDjSpeech } from "./dj/speechBubble";
@@ -3804,6 +3805,7 @@ async function boot(): Promise<void> {
   window.addEventListener("resize", updateDynamicCeilingReveal, { passive: true });
   renderShell(state);
   initializeRoomSpotlights();
+  initializeRoomParticles();
   initializeSpotifyDjSpeechBubble();
   reactiveRoomCurrentRenderedPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
   reactiveRoomRenderedEnergy = 0.3;
@@ -7808,6 +7810,7 @@ function writeRenderedReactiveRoomPaletteToCss(palette: ReactiveRoomPalette): vo
   root.style.setProperty("--string-light-ambient-rgb", rgbTripleToCss(palette.ambient));
   root.style.setProperty("--ambient-room-glow-rgb", rgbTripleToCss(palette.roomGlow));
   root.style.setProperty("--ambient-room-accent-rgb", rgbTripleToCss(palette.roomAccent));
+  updateSpotlightAlbumColors(palette.roomAccent, palette.roomGlow);
 }
 
 function setReactiveRoomPalette(palette: ReactiveRoomPalette): void {

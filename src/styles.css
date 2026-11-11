@@ -14046,11 +14046,11 @@ body,
 /* Safety gate: no spotlights, pseudo-element animations, or composited
    moving layers on mobile/fold/touch/small screens. */
 @media (hover: hover) and (pointer: fine) and (min-width: 960px) and (prefers-reduced-motion: no-preference) {
-  :root.room-spotlight-enabled .room-spotlight-wall { display: block; }
-  :root.room-spotlight-enabled .room-spotlight-wall::before {
+  :root.room-spotlight-enabled[data-room-spotlight-mode="walls"] .room-spotlight-wall { display: block; }
+  :root.room-spotlight-enabled[data-room-spotlight-mode="walls"] .room-spotlight-wall::before {
     animation: pocketDjWallWarmSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
   }
-  :root.room-spotlight-enabled .room-spotlight-wall::after {
+  :root.room-spotlight-enabled[data-room-spotlight-mode="walls"] .room-spotlight-wall::after {
     animation: pocketDjWallCoolSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
   }
   :root.room-spotlight-enabled .room-spotlight-right::before,
@@ -14081,3 +14081,179 @@ body,
   font-size: 0.72rem;
   line-height: 1.45;
 }
+
+
+/* Living Atmosphere V3: scoped modes, separated album accents, and optional dust.
+   No permanent animated full-frame blending/filter layer. Full sweep moves two
+   narrow translucent pools across the room, not a rendered full-screen filter. */
+:root[data-room-spotlight-palette="album"] {
+  --room-spotlight-warm-rgb: var(--room-spotlight-album-primary-rgb, 255, 161, 64);
+  --room-spotlight-cool-rgb: var(--room-spotlight-album-secondary-rgb, 82, 161, 255);
+}
+
+.room-spotlight-zone,
+.room-spotlight-full,
+.room-particles {
+  display: none;
+  position: absolute;
+  pointer-events: none !important;
+  user-select: none;
+  overflow: hidden;
+}
+.room-spotlight-zone,
+.room-spotlight-full {
+  z-index: 24;
+  top: 3%;
+  height: 79%;
+}
+.room-spotlight-zone { width: 33.3334%; }
+.room-spotlight-zone-left { left: 0%; }
+.room-spotlight-zone-center { left: 33.3333%; }
+.room-spotlight-zone-right { left: 66.6666%; }
+.room-spotlight-full { left: 0; width: 100%; top: 0; height: 100%; }
+
+/* Reuse the existing vivid spotlight colors and intensity coefficients.
+   These pseudo-elements are much smaller than a full-room GPU effect. */
+.room-spotlight-zone::before, .room-spotlight-zone::after,
+.room-spotlight-full::before, .room-spotlight-full::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  left: -32%;
+  width: 90%;
+  height: 92%;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 1;
+}
+.room-spotlight-zone::before, .room-spotlight-full::before {
+  background: radial-gradient(ellipse at center,
+    rgba(var(--room-spotlight-warm-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-warm-scale, 1) * 0.47)) 0%,
+    rgba(var(--room-spotlight-warm-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-warm-scale, 1) * 0.31)) 30%,
+    rgba(var(--room-spotlight-warm-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-warm-scale, 1) * 0.09)) 55%,
+    transparent 78%);
+}
+.room-spotlight-zone::after, .room-spotlight-full::after {
+  background: radial-gradient(ellipse at center,
+    rgba(var(--room-spotlight-cool-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-cool-scale, 1) * 0.43)) 0%,
+    rgba(var(--room-spotlight-cool-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-cool-scale, 1) * 0.28)) 30%,
+    rgba(var(--room-spotlight-cool-rgb), calc(var(--room-spotlight-strength, 0.90) * var(--room-spotlight-cool-scale, 1) * 0.09)) 55%,
+    transparent 78%);
+}
+.room-spotlight-zone::after { left: -20%; }
+.room-spotlight-full::before {
+  left: -34%;
+  width: 42%;
+  height: 90%;
+  top: 7%;
+}
+.room-spotlight-full::after {
+  left: 92%;
+  width: 42%;
+  height: 90%;
+  top: 7%;
+}
+@keyframes pocketDjFullRoomWarmSweep {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(310%, 5%, 0); }
+}
+@keyframes pocketDjFullRoomCoolSweep {
+  from { transform: translate3d(0, -3%, 0); }
+  to   { transform: translate3d(-310%, 4%, 0); }
+}
+
+/* Desktop-only particles: no canvas, masks, blend modes, animated filters,
+   or per-frame JavaScript. Each mote is only a small painted dot. */
+.room-particles {
+  inset: 0;
+  z-index: 26;
+  width: 100%;
+  height: 100%;
+  contain: paint;
+}
+.room-particle {
+  position: absolute;
+  left: var(--particle-x, 50%);
+  top: var(--particle-y, 65%);
+  display: block;
+  width: calc(var(--particle-size, 4) * var(--room-unit, 1px));
+  height: calc(var(--particle-size, 4) * var(--room-unit, 1px));
+  min-width: 2px;
+  min-height: 2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff4d3 0%, rgba(255, 204, 134, 0.88) 42%, rgba(255, 182, 100, 0.12) 76%, transparent 100%);
+  box-shadow: 0 0 7px 1px rgba(255, 199, 118, 0.55);
+  opacity: 0;
+  pointer-events: none;
+}
+.room-particle-cool {
+  background: radial-gradient(circle, #e5f2ff 0%, rgba(158, 202, 255, 0.83) 42%, rgba(99, 155, 255, 0.13) 76%, transparent 100%);
+  box-shadow: 0 0 7px 1px rgba(152, 199, 255, 0.53);
+}
+@keyframes pocketDjDustFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  15%, 70% { opacity: calc(var(--particle-alpha, 0.8) * var(--room-particles-opacity, 0.65)); }
+  100% {
+    opacity: 0;
+    transform: translate3d(
+      calc(var(--particle-drift-x, 30) * var(--room-unit, 1px)),
+      calc(var(--particle-rise, 100) * var(--room-unit, 1px) * -1), 0);
+  }
+}
+:root.room-particles-paused .room-particle { animation-play-state: paused !important; }
+
+/* All effects require a non-touch desktop with no reduced-motion preference.
+   The particle controller also refuses to populate nodes when this query fails. */
+@media (hover: hover) and (pointer: fine) and (min-width: 960px) and (prefers-reduced-motion: no-preference) {
+  :root.room-spotlight-enabled[data-room-spotlight-mode="zones"] .room-spotlight-zone { display: block; }
+  :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full { display: block; }
+
+  :root.room-spotlight-enabled[data-room-spotlight-mode="zones"] .room-spotlight-zone::before {
+    animation: pocketDjWallWarmSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
+  }
+  :root.room-spotlight-enabled[data-room-spotlight-mode="zones"] .room-spotlight-zone::after {
+    animation: pocketDjWallCoolSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
+  }
+  :root.room-spotlight-enabled[data-room-spotlight-mode="zones"] .room-spotlight-zone-center::before,
+  :root.room-spotlight-enabled[data-room-spotlight-mode="zones"] .room-spotlight-zone-center::after {
+    animation-delay: -7s;
+  }
+  :root.room-spotlight-enabled[data-room-spotlight-mode="zones"] .room-spotlight-zone-right::before,
+  :root.room-spotlight-enabled[data-room-spotlight-mode="zones"] .room-spotlight-zone-right::after {
+    animation-delay: -13s;
+  }
+
+  :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::before {
+    animation: pocketDjFullRoomWarmSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
+  }
+  :root.room-spotlight-enabled[data-room-spotlight-mode="full"] .room-spotlight-full::after {
+    animation: pocketDjFullRoomCoolSweep var(--room-spotlight-speed, 22s) ease-in-out infinite alternate;
+  }
+
+  :root.room-particles-active .room-particles { display: block; }
+  :root.room-particles-active .room-particle {
+    animation: pocketDjDustFloat var(--particle-duration, 26s) ease-in-out var(--particle-delay, 0s) infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .room-spotlight-zone, .room-spotlight-full, .room-particles { display: none !important; }
+}
+.menu2-room-particles {
+  margin: 12px 0 0;
+  padding: 9px;
+  border: 1px solid rgba(255, 206, 143, 0.15);
+  border-radius: 10px;
+  background: rgba(17, 17, 31, 0.33);
+}
+.menu2-room-particles > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.81rem;
+  color: rgba(255, 218, 159, 0.96);
+}
+.menu2-room-particles[open] > summary { margin-bottom: 8px; }
+.menu2-room-particles .menu2-setting { max-width: 100%; }
+.menu2-room-particles .menu2-room-help { margin: 3px 0 10px; }
