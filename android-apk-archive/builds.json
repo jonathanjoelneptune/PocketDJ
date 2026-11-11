@@ -74,6 +74,14 @@
       "sha256": "f50a8ce77f47a2a22f097551232076035acc34e7e2aecb0972fb17ead4b6b8e8",
       "android_test_status": "Static validated; not yet tested on phone/foldable",
       "binary_in_public_repo": false
+    },
+    {
+      "version": "v1.9",
+      "filename": "PocketDJ-Spotify-v1.9-BIDIRECTIONAL-SWIPE.apk",
+      "bytes": 156143508,
+      "sha256": "31c65a818ea638306c7e8a267d5a44b7309715f02f2fbce2d3ca695b8857503e",
+      "android_test_status": "Static signed and checked; physical Android runtime not tested",
+      "binary_in_public_repo": false
     }
   ]
 }
