@@ -46,8 +46,10 @@ function fitEmbeddedMarqueeLine(element: HTMLElement, text: string, availableWid
   const weight = style.fontWeight || "400";
   const baseSize = Number.parseFloat(style.fontSize) || 8;
   const letterSpacingRatio = (Number.parseFloat(style.letterSpacing) || 0) / baseSize;
-  const preferredSize = Math.min(12, Math.max(8, availableWidth / 16));
-  const floorSize = 6.5;
+  // Compact artwork mode: aim for around 30-34 characters per sign row.
+  // Keep a readable minimum, then pan names that still exceed the display.
+  const preferredSize = Math.min(10, Math.max(6.8, availableWidth / 26));
+  const floorSize = 5.8;
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -2207,8 +2209,10 @@ function configureTitleMarqueeRow(options: {
   const loopDistance = Math.max(1, fullLoopWidth - originalWidth);
 
   // Constant visual speed. The title always pauses for 10 seconds when the T in TITLE is at the left edge.
-  const pxPerSecond = 34;
-  const scrollSeconds = Math.max(10, Math.min(44, loopDistance / pxPerSecond));
+  const pxPerSecond = isSpotifyEmbedMarquee() ? 68 : 34;
+  const scrollSeconds = isSpotifyEmbedMarquee()
+    ? Math.max(5, Math.min(26, loopDistance / pxPerSecond))
+    : Math.max(10, Math.min(44, loopDistance / pxPerSecond));
 
   startTitleScrollLoop(element, loopDistance, scrollSeconds);
 }
@@ -2216,7 +2220,7 @@ function configureTitleMarqueeRow(options: {
 function startTitleScrollLoop(element: HTMLElement, loopDistance: number, scrollSeconds: number): void {
   clearTitleScrollLoop();
 
-  const holdMs = isSpotifyEmbedMarquee() ? 2_500 : 10_000;
+  const holdMs = isSpotifyEmbedMarquee() ? 1_200 : 10_000;
   const scrollMs = Math.round(scrollSeconds * 1000);
 
   element.style.transition = "none";
@@ -2269,7 +2273,7 @@ function startSupportingLineLoop(marquee: HTMLElement, artistEl: HTMLElement, pa
 
   if (!canShowAlbum) return;
 
-  const supportingLineHoldMs = isSpotifyEmbedMarquee() ? 6_500 : 10_500;
+  const supportingLineHoldMs = isSpotifyEmbedMarquee() ? 8_000 : 10_500;
 
   const flip = () => {
     marqueeSupportingShowingAlbum = !marqueeSupportingShowingAlbum;
@@ -2341,7 +2345,7 @@ function configureStaticArtistRow(options: {
       { transform: `translateX(-${overflow.toFixed(1)}px)`, offset: 0.78 },
       { transform: `translateX(-${overflow.toFixed(1)}px)`, offset: 0.90 },
       { transform: "translateX(0)", offset: 1 }
-    ], { duration: Math.max(11_000, Math.round(overflow / 17 * 1_000)), iterations: Infinity });
+    ], { duration: Math.max(8_000, Math.round(overflow / 24 * 1_000)), iterations: Infinity });
   }
 }
 
