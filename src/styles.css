@@ -14375,3 +14375,24 @@ html.spotify-embed-active.spotify-embed-compact .floor-player,
 html.spotify-embed-active.spotify-embed-compact #animationDebugPanel {
   display: none !important;
 }
+
+/* Two inert layers crossfade on track changes without reloading the room. */
+html.spotify-embed-active.spotify-embed-compact .spotify-embed-atmosphere {
+  position: absolute;
+  inset: -15%;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(42px) brightness(.45) saturate(1.5);
+  transform: scale(1.08);
+  transition: opacity 2200ms ease-in-out;
+}
+html.spotify-embed-active.spotify-embed-compact .spotify-embed-atmosphere-active {
+  opacity: .84;
+}
+html.spotify-embed-active:not(.spotify-embed-compact) .spotify-embed-atmosphere {
+  display: none;
+}
