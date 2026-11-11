@@ -32,6 +32,16 @@ The APK changes only `classes18.dex` and adds our own `classes19.dex`. All other
 
 Spotify may render album art using another native view class or a different hierarchy; the safety check may reject it. Its own horizontal swipe-to-skip gesture may also intercept input before the pager. These require phone testing. The experimental fallback keeps Spotify usable, but it does not guarantee pager functionality.
 
+## Archived build source and verification
+
+- [build_v17.py](./build_v17.py): standalone custom DEX Hook generator, APK packager, and v2 signature routine
+- [patch_v17.py](./patch_v17.py): exact v1.6-to-v1.7 source change script
+- [validate_v17.py](./validate_v17.py): ZIP contents, signing and DEX instruction validations
+- [validation_v17.json](./validation_v17.json): exact SHA-256 and signing-certificate fingerprints
+- [Java artwork carousel and installer](../../experiments/spotify-carousel-v1.7/): compiled to the extra, original PocketDJ DEX module on GitHub Actions (currently in experimental PR #12)
+
+Rebuilding requires the matching original Spotify APK and the private test-signing key; **neither is committed**. Keep the signing key encrypted and backed up outside GitHub.
+
 ## Source and archive policy
 
 Native Java and CI source: [experimental Android carousel](../../experiments/spotify-carousel-v1.7/) (currently staged in PR #12 until device tests pass).
