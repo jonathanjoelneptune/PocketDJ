@@ -1,0 +1,34 @@
+{
+  "version": "2.1",
+  "filename": "PocketDJ-Spotify-v2.1-CORE-STABILITY.apk",
+  "bytes": 156149494,
+  "sha256": "761084be9a72599c1cd452aa55c4e5b9bbb12c1d0f65261bc456f3a4a89735df",
+  "signing_cert_sha256": "72fd48cdfe257006f48db9b4851429dd3f05bcd9177c9b0efd21434a61347bf0",
+  "same_signing_cert_as_v20": true,
+  "changed_entries_vs_v20": [
+    "classes18.dex",
+    "classes19.dex"
+  ],
+  "all_original_spotify_assets_and_playback_files_unchanged": true,
+  "dex_sizes": {
+    "custom_hook_dex": 5616,
+    "native_module_dex": 28420
+  },
+  "native_java_ci": "success",
+  "android_runtime": "not tested",
+  "critical_device_tests": [
+    "swipe right/left across entire artwork to just above song title",
+    "vertical scroll and timeline seeking",
+    "foldable portrait playlist header clearance",
+    "foldable landscape unwarped 16:9",
+    "close and reopen: PKCE login persistence",
+    "open Now Playing and immediately swipe: preload experience",
+    "Spotify page background black when PocketDJ shown"
+  ],
+  "limitations": [
+    "Spotify native background drawable may come from a child: root-only fade is best effort",
+    "Preload starts when Now Playing attaches, not before the Spotify process starts",
+    "Encrypted recovery store is seeded after one successful PocketDJ login; device test needed",
+    "Landscape may letterbox because uncropped 16:9 must fit above Spotify controls"
+  ]
+}
