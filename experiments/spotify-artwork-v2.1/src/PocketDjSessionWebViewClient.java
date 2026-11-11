@@ -76,6 +76,19 @@ public final class PocketDjSessionWebViewClient extends WebViewClient {
             started = true;
             final WeakReference<WebView> web = new WeakReference<>(view);
             main.postDelayed(() -> pollAndReschedule(web), 700);
+        } else {
+            // OAuth redirects complete after the original WebView is loaded.
+            // Capture new refresh grants promptly instead of waiting for the
+            // longer periodic probe, including after a successful PKCE return.
+            final WeakReference<WebView> web = new WeakReference<>(view);
+            main.postDelayed(() -> {
+                WebView live = web.get();
+                if (live != null && trusted(live.getUrl())) probe(live);
+            }, 1200);
+            main.postDelayed(() -> {
+                WebView live = web.get();
+                if (live != null && trusted(live.getUrl())) probe(live);
+            }, 4000);
         }
     }
 
