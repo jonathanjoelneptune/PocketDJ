@@ -66,6 +66,14 @@
       "sha256": "2632a1825192fcf667a91db1d290dc4cd6ec4076541f14beb9f0c42536b5d01d",
       "android_test_status": "build validated; Android install and artwork attachment untested",
       "binary_in_public_repo": false
+    },
+    {
+      "version": "v1.8",
+      "filename": "PocketDJ-Spotify-v1.8-SWIPE-ROOT.apk",
+      "bytes": 156140037,
+      "sha256": "f50a8ce77f47a2a22f097551232076035acc34e7e2aecb0972fb17ead4b6b8e8",
+      "android_test_status": "Static validated; not yet tested on phone/foldable",
+      "binary_in_public_repo": false
     }
   ]
 }
