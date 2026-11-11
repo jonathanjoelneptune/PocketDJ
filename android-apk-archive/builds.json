@@ -58,6 +58,14 @@
       "sha256": "8e3b53480fe7361bf3574472341c20729ecd4b4a2cd9544a0672f29d98826a2a",
       "android_test_status": "experimental",
       "binary_in_public_repo": false
+    },
+    {
+      "version": "v1.7",
+      "filename": "PocketDJ-Spotify-v1.7-SWIPE-CAROUSEL-EXPERIMENTAL.apk",
+      "bytes": 156143533,
+      "sha256": "2632a1825192fcf667a91db1d290dc4cd6ec4076541f14beb9f0c42536b5d01d",
+      "android_test_status": "build validated; Android install and artwork attachment untested",
+      "binary_in_public_repo": false
     }
   ]
 }
