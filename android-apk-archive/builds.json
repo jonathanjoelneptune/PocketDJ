@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "app_version": "Spotify 9.1.98.621",
+  "purpose": "Private Android PoC binary provenance; binaries intentionally excluded from this public repository",
+  "versions": [
+    {
+      "version": "v1.0",
+      "filename": "PocketDJ-Spotify-v9.1.98.621-POC-v1.0-UNTESTED.apk",
+      "bytes": 156135030,
+      "sha256": "9e18570dbff333e50c93ca77a82e2d9010b63a5ee1d5e9dbf714ac57ef9a5ab4",
+      "android_test_status": "experimental",
+      "binary_in_public_repo": false
+    },
+    {
+      "version": "v1.1",
+      "filename": "PocketDJ-Spotify-v9.1.98.621-POC-v1.1-UNTESTED.apk",
+      "bytes": 156135305,
+      "sha256": "fd2ccae162350f56867fe42c7478ece1368243a0835f546b6ddac40e44d67dc2",
+      "android_test_status": "experimental",
+      "binary_in_public_repo": false
+    },
+    {
+      "version": "v1.2",
+      "filename": "PocketDJ-Spotify-v1.2-STABILITY-ROLLBACK.apk",
+      "bytes": 156135030,
+      "sha256": "a2780841d5fab4686ed267fe6d7d7ac5c08b8c090e26b1553a7e2a0339119d3d",
+      "android_test_status": "experimental",
+      "binary_in_public_repo": false
+    },
+    {
+      "version": "v1.3",
+      "filename": "PocketDJ-Spotify-v1.3.apk",
+      "bytes": 156135046,
+      "sha256": "ddf907093bef14cfe08797c25f8cc417a3f838766e0eb5c184f7153558f1dd14",
+      "android_test_status": "experimental",
+      "binary_in_public_repo": false
+    },
+    {
+      "version": "v1.4",
+      "filename": "PocketDJ-Spotify-v1.4-SCENE-BOUNDS.apk",
+      "bytes": 156135240,
+      "sha256": "72755feaad3fb72e61fd1a149552e8af52e37d37aaad16d66939e156889b67d4",
+      "android_test_status": "experimental",
+      "binary_in_public_repo": false
+    },
+    {
+      "version": "v1.5",
+      "filename": "PocketDJ-Spotify-v1.5-LANDSCAPE-ARTWORK-POC.apk",
+      "bytes": 156135359,
+      "sha256": "745c38241a3596f2dca6a6f67dfa7804a70cca7ed6df362fdeba50ff75bec12e",
+      "android_test_status": "experimental",
+      "binary_in_public_repo": false
+    },
+    {
+      "version": "v1.6",
+      "filename": "PocketDJ-Spotify-v1.6.apk",
+      "bytes": 156135374,
+      "sha256": "8e3b53480fe7361bf3574472341c20729ecd4b4a2cd9544a0672f29d98826a2a",
+      "android_test_status": "experimental",
+      "binary_in_public_repo": false
+    }
+  ]
+}
