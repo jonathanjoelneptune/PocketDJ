@@ -2077,8 +2077,8 @@ function updateMarquee(track: NormalizedTrack): void {
     titleEl.textContent = payload.title;
     artistEl.textContent = payload.artist;
     prepareMarqueeRowsForEntry(marquee, titleEl, artistEl);
-    updateMarqueeRowPan(marquee, titleEl, artistEl);
     startSupportingLineLoop(marquee, artistEl, payload);
+    updateMarqueeRowPan(marquee, titleEl, artistEl);
     return;
   }
   clearEmbedArtistPan();
