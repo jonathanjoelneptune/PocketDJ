@@ -14616,3 +14616,36 @@ html.spotify-embed-active.spotify-embed-compact .marquee-artist {
     overflow: visible !important;
   }
 }
+
+
+/* v2.2: unfolded portrait uses a 1.60:1 native viewport so the unmodified
+   16:9 room can sit at the bottom and reveal its existing upper ceiling.
+   Never scale/squash the room background, sprites, speaker positions or text. */
+@media (min-aspect-ratio: 1.48) and (max-aspect-ratio: 1.72) {
+  html.spotify-embed-active.spotify-embed-compact .stage {
+    align-items: flex-end !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+  html.spotify-embed-active.spotify-embed-compact .room {
+    --room-w: min(100vw, calc(100vh * 16 / 9)) !important;
+    --room-h: calc(var(--room-w) * 9 / 16) !important;
+    width: var(--room-w) !important;
+    height: var(--room-h) !important;
+    max-height: none !important;
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+    margin-bottom: 0 !important;
+  }
+}
+/* The marquee is drawn in CSS, not a fetched image. Always keep its opaque
+   fallback behind the text when WebView initializes or repaints textures. */
+html.spotify-embed-active.spotify-embed-compact .marquee {
+  background-color: #080706 !important;
+  isolation: isolate;
+}
+html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-image,
+html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
+  image-rendering: auto;
+  visibility: visible !important;
+}
