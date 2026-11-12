@@ -19,3 +19,14 @@ New settings use `pocketdj-room-performance-lighting-v1`; unchanged earlier 0.76
 - Bar color swap swaps the foreground projection as well; bar position controls move the matching color hotspots.
 - Transport buttons and menu stay readable and clickable; the projection never captures touch.
 - Test Spotify compact phone/tablet and standard desktop, including reduced-motion preferences. Validate TypeScript/Vite CI.
+
+
+## V3: Rich pigments and contrast-preserving projection
+
+The Android screenshots showed that the foreground `screen` wash raised luminance and turned dark room details into a pale gray haze. The foreground layer now uses `mix-blend-mode: color` (with a soft-light fallback), so it transfers hue and saturation without broadly lifting brightness. That keeps the dark speaker cabinets, city window, DJ contours, album artwork and wood textures intact. No change to physical light-bar placement or its brighter emissive glow.
+
+Each target album now yields four light colors: two luminous fixture colors and two stage pigments at **minimum 91% saturation, 38% lightness**. Both color pairs interpolate together over the existing five-second transition, rather than recalculating HSL at intermediate frames. The projection keeps its seven localized gradients over the wall shelves, ceiling, DJ, table and floor, and tracks the bar positions and swapped colors.
+
+The Room controls and saved defaults (paused darkness 0.25 and album color intensity 1.00) are untouched. Existing user tuning remains intact. No extra animation loop, DOM element, image asset, filter or stage geometry change.
+
+**Device regression:** Play contrasting album covers (warm, cyan, blue, green). Compare against the previous screenshots: the scene should have stronger hue diversity but retain dark highlights and clear sprite edges. Verify five-second song transition, playing/paused fade, light bar swap, bar X positions, ceiling reveal, phone/tablet portraits, and reduced-motion.

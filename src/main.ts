@@ -7884,7 +7884,7 @@ function writeRenderedReactiveRoomPaletteToCss(palette: ReactiveRoomPalette): vo
   root.style.setProperty("--string-light-ambient-rgb", rgbTripleToCss(palette.ambient));
   root.style.setProperty("--ambient-room-glow-rgb", rgbTripleToCss(palette.roomGlow));
   root.style.setProperty("--ambient-room-accent-rgb", rgbTripleToCss(palette.roomAccent));
-  updateSpotlightAlbumColors(reactiveLightColorsCurrent.primary, reactiveLightColorsCurrent.secondary);
+  updateSpotlightAlbumColors(reactiveLightColorsCurrent);
 }
 
 function setReactiveRoomPalette(palette: ReactiveRoomPalette): void {
@@ -7915,6 +7915,8 @@ function applyReactiveRoomPaletteFrame(track: AppState["playback"]): void {
     reactiveLightColorsCurrent = {
       primary: mixRgb(reactiveLightColorsFrom.primary, reactiveLightColorsTo.primary, eased),
       secondary: mixRgb(reactiveLightColorsFrom.secondary, reactiveLightColorsTo.secondary, eased),
+      washPrimary: mixRgb(reactiveLightColorsFrom.washPrimary, reactiveLightColorsTo.washPrimary, eased),
+      washSecondary: mixRgb(reactiveLightColorsFrom.washSecondary, reactiveLightColorsTo.washSecondary, eased),
     };
 
     if (rawProgress >= 1) {

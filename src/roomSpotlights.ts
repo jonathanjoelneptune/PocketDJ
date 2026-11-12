@@ -97,7 +97,13 @@ function applySettings(): void {
 
 
 type RgbColor = [number, number, number];
-export type AlbumLightColors = { primary: RgbColor; secondary: RgbColor };
+export type AlbumLightColors = {
+  primary: RgbColor;
+  secondary: RgbColor;
+  // Saturated scene pigments follow the same hue as the luminous light bars.
+  washPrimary: RgbColor;
+  washSecondary: RgbColor;
+};
 type HslColor = { h: number; s: number; l: number };
 let recentAlbumColors: AlbumLightColors | null = null;
 
@@ -155,15 +161,21 @@ export function deriveSpotlightAlbumColors(accent: RgbColor, glow: RgbColor): Al
   const boostedSecondaryHue = mixHue(secondHue, (primaryHue + 150) % 360, separationWeight);
   const first = hslToRgb({ h: primaryHue, s: Math.max(primary.s, 0.62), l: Math.max(0.46, Math.min(0.63, primary.l)) });
   const second = hslToRgb({ h: boostedSecondaryHue, s: Math.max(secondary.s, 0.61), l: Math.max(0.43, Math.min(0.60, secondary.l)) });
-  return { primary: first, secondary: second };
+  // Deep pigments are calculated at album boundaries, not during RGB
+  // interpolation, so the stage never snaps near a neutral midpoint.
+  const washPrimary = hslToRgb({ h: primaryHue, s: Math.max(primary.s, 0.91), l: 0.38 });
+  const washSecondary = hslToRgb({ h: boostedSecondaryHue, s: Math.max(secondary.s, 0.91), l: 0.38 });
+  return { primary: first, secondary: second, washPrimary, washSecondary };
 }
 
-/** Receive the smoothly interpolated pair from main.ts. */
-export function updateSpotlightAlbumColors(primary: RgbColor, secondary: RgbColor): void {
-  recentAlbumColors = { primary, secondary };
+/** Receive the two fixture colors and two richer stage colors from main.ts. */
+export function updateSpotlightAlbumColors(colors: AlbumLightColors): void {
+  recentAlbumColors = colors;
   const root = document.documentElement;
-  root.style.setProperty("--room-spotlight-album-primary-rgb", primary.join(", "));
-  root.style.setProperty("--room-spotlight-album-secondary-rgb", secondary.join(", "));
+  root.style.setProperty("--room-spotlight-album-primary-rgb", colors.primary.join(", "));
+  root.style.setProperty("--room-spotlight-album-secondary-rgb", colors.secondary.join(", "));
+  root.style.setProperty("--room-performance-album-primary-rgb", colors.washPrimary.join(", "));
+  root.style.setProperty("--room-performance-album-secondary-rgb", colors.washSecondary.join(", "));
 }
 
 /** Call once after renderShell(). No runtime or Spotify dependencies. */
@@ -187,7 +199,7 @@ export function initializeRoomSpotlights(): void {
     settings = normalize({ ...settings, palette: (event.target as HTMLSelectElement).value as SpotlightPalette });
     saveSettings();
     applySettings();
-    if (recentAlbumColors) updateSpotlightAlbumColors(recentAlbumColors.primary, recentAlbumColors.secondary);
+    if (recentAlbumColors) updateSpotlightAlbumColors(recentAlbumColors);
   });
   document.querySelector<HTMLSelectElement>("#menu2SpotlightMode")?.addEventListener("change", (event) => {
     settings = normalize({ ...settings, mode: (event.target as HTMLSelectElement).value as SpotlightMode });
