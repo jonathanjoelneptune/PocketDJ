@@ -3,6 +3,7 @@ import { initializeSpotifyEmbed, updateSpotifyEmbedArtwork } from "./spotify/emb
 import { initializeRoomSpotlights, deriveSpotlightAlbumColors, updateSpotlightAlbumColors, type AlbumLightColors } from "./roomSpotlights";
 import { initializeRoomParticles } from "./roomParticles";
 import { initializeRoomLightBars } from "./roomLightBars";
+import { initializePerformanceLighting } from "./roomPerformanceLighting";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
 import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, isSpotifyDjSpeakingForPose, observeSpotifyDjSpeech } from "./dj/speechBubble";
@@ -202,10 +203,11 @@ type RoomVibeSettings = {
 
 const ROOM_VIBE_SETTINGS_KEY = "pocketdj-room-vibe-balance-v1";
 const ROOM_VIBE_DEFAULTS_MIGRATION_KEY = "pocketdj-room-vibe-richer-album-20261112";
+const ROOM_VIBE_DRAMATIC_MIGRATION_KEY = "pocketdj-room-vibe-stage-color-20261112";
 const DEFAULT_ROOM_VIBE_SETTINGS: RoomVibeSettings = {
-  albumWash: 0.44,
-  roomGlow: 0.82,
-  accentGlow: 1.20,
+  albumWash: 0.56,
+  roomGlow: 1.12,
+  accentGlow: 1.46,
   shadowPreserve: 0.22,
   neutralBoost: 0.78,
 };
@@ -236,6 +238,16 @@ function loadRoomVibeSettings(): RoomVibeSettings {
         localStorage.setItem(ROOM_VIBE_SETTINGS_KEY, JSON.stringify(saved));
         localStorage.setItem(ROOM_VIBE_DEFAULTS_MIGRATION_KEY, "1");
       } catch { /* Continue with the migrated in-memory values. */ }
+    }
+    if (!localStorage.getItem(ROOM_VIBE_DRAMATIC_MIGRATION_KEY)) {
+      // Raise the previous recommendations, but don't overwrite tuned values.
+      if (saved.albumWash === 0.44) saved.albumWash = DEFAULT_ROOM_VIBE_SETTINGS.albumWash;
+      if (saved.roomGlow === 0.82) saved.roomGlow = DEFAULT_ROOM_VIBE_SETTINGS.roomGlow;
+      if (saved.accentGlow === 1.20) saved.accentGlow = DEFAULT_ROOM_VIBE_SETTINGS.accentGlow;
+      try {
+        localStorage.setItem(ROOM_VIBE_SETTINGS_KEY, JSON.stringify(saved));
+        localStorage.setItem(ROOM_VIBE_DRAMATIC_MIGRATION_KEY, "1");
+      } catch { /* Visuals still work with read-only storage. */ }
     }
     return clampRoomVibeSettings({ ...DEFAULT_ROOM_VIBE_SETTINGS, ...saved });
   } catch {
@@ -3830,6 +3842,7 @@ async function boot(): Promise<void> {
   initializeRoomSpotlights();
   initializeRoomParticles();
   initializeRoomLightBars();
+  initializePerformanceLighting();
   initializeSpotifyDjSpeechBubble();
   reactiveRoomCurrentRenderedPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
   reactiveRoomRenderedEnergy = 0.3;
@@ -7786,6 +7799,37 @@ function makeRoomVibeAnchor(color: RgbTriple, seed: string, fallbackAmount: numb
   return separated.map((channel) => Math.round(Math.min(218, Math.max(26, channel)))) as RgbTriple;
 }
 
+/**
+ * Color-wheel rotation in HSV space for artwork with only one usable hue.
+ * It produces a contrasting color from that hue rather than forcing all
+ * records into the same amber-violet palette.
+ */
+function rotateRoomHue(rgb: RgbTriple, degrees: number): RgbTriple {
+  const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const delta = max - min;
+  let h = 0;
+  if (delta > 0.0001) {
+    if (max === r) h = ((g - b) / delta) % 6;
+    else if (max === g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+  }
+  h = ((h * 60 + degrees) % 360 + 360) % 360;
+  const saturation = Math.max(0.64, max === 0 ? 0 : delta / max);
+  const value = Math.max(0.63, Math.min(0.86, max));
+  const chroma = value * saturation;
+  const x = chroma * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = value - chroma;
+  let channels: RgbTriple;
+  if (h < 60) channels = [chroma, x, 0];
+  else if (h < 120) channels = [x, chroma, 0];
+  else if (h < 180) channels = [0, chroma, x];
+  else if (h < 240) channels = [0, x, chroma];
+  else if (h < 300) channels = [x, 0, chroma];
+  else channels = [chroma, 0, x];
+  return channels.map(channel => Math.round((channel + m) * 255)) as RgbTriple;
+}
+
 function easeInOutCubic(t: number): number {
   const x = clamp(t, 0, 1);
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
@@ -7908,12 +7952,13 @@ function paletteFromTrackText(track: AppState["playback"]): ReactiveRoomPalette 
   const m = 0.28;
   const color: RgbTriple = [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
   const anchor = makeRoomVibeAnchor(color, seed, 0.72);
+  const secondary = rotateRoomHue(anchor, 145);
   return {
-    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, anchor, 0.28),
-    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, anchor, 0.66),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, anchor, 0.38),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, anchor, 0.43),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, anchor, 0.82),
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, anchor, 0.70),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, anchor, 0.94),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, secondary, 0.65),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, secondary, 0.90),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, anchor, 0.96),
   };
 }
 
@@ -7943,6 +7988,11 @@ async function extractReactiveRoomPalette(imageUrl: string, seed = imageUrl): Pr
   let weightedB = 0;
   let vibrantScore = -1;
   let vibrant: RgbTriple = DEFAULT_REACTIVE_ROOM_PALETTE.tint;
+  // Coarse 30-degree hue buckets find colors that occupy the artwork, not
+  // single tiny saturated pixels. Pick a second sufficiently distinct hue.
+  const hueBuckets = Array.from({ length: 12 }, () => ({
+    weight: 0, r: 0, g: 0, b: 0,
+  }));
 
   for (let index = 0; index < data.length; index += 4) {
     const alpha = data[index + 3] / 255;
@@ -7966,21 +8016,60 @@ async function extractReactiveRoomPalette(imageUrl: string, seed = imageUrl): Pr
       vibrantScore = score;
       vibrant = [r, g, b];
     }
+
+    if (saturation >= 0.23 && brightness >= 0.12 && brightness <= 0.92) {
+      const red = r / 255, green = g / 255, blue = b / 255;
+      const delta = Math.max(red, green, blue) - Math.min(red, green, blue);
+      let hue = 0;
+      if (delta > 0.0001) {
+        if (red >= green && red >= blue) hue = ((green - blue) / delta) % 6;
+        else if (green >= red && green >= blue) hue = (blue - red) / delta + 2;
+        else hue = (red - green) / delta + 4;
+      }
+      hue = ((hue * 60) % 360 + 360) % 360;
+      const bucket = hueBuckets[Math.floor(hue / 30) % hueBuckets.length];
+      const colorWeight = alpha * (0.25 + saturation) * (0.30 + brightness);
+      bucket.weight += colorWeight;
+      bucket.r += r * colorWeight;
+      bucket.g += g * colorWeight;
+      bucket.b += b * colorWeight;
+    }
   }
 
   const average: RgbTriple = totalWeight > 0
     ? [Math.round(weightedR / totalWeight), Math.round(weightedG / totalWeight), Math.round(weightedB / totalWeight)]
     : DEFAULT_REACTIVE_ROOM_PALETTE.tint;
 
-  const averageAnchor = makeRoomVibeAnchor(average, seed, 0.58);
-  const vibrantAnchor = makeRoomVibeAnchor(vibrant, `${seed}:vibrant`, 0.72);
+  let primaryBucket = 0;
+  for (let i = 1; i < hueBuckets.length; i += 1) {
+    if (hueBuckets[i].weight > hueBuckets[primaryBucket].weight) primaryBucket = i;
+  }
+  let secondaryBucket = -1;
+  for (let i = 0; i < hueBuckets.length; i += 1) {
+    const separation = Math.abs(i - primaryBucket);
+    if (Math.min(separation, 12 - separation) < 3) continue;
+    if (hueBuckets[i].weight < hueBuckets[primaryBucket].weight * 0.13) continue;
+    if (secondaryBucket < 0 || hueBuckets[i].weight > hueBuckets[secondaryBucket].weight) secondaryBucket = i;
+  }
+  const bucketColor = (index: number): RgbTriple => {
+    const bucket = hueBuckets[index];
+    return bucket.weight > 0
+      ? [Math.round(bucket.r / bucket.weight), Math.round(bucket.g / bucket.weight), Math.round(bucket.b / bucket.weight)]
+      : vibrant;
+  };
+
+  const primarySource = hueBuckets[primaryBucket].weight > 0.3 ? bucketColor(primaryBucket) : vibrant;
+  const primary = makeRoomVibeAnchor(primarySource, `${seed}:primary`, 0.74);
+  const secondary = secondaryBucket >= 0
+    ? makeRoomVibeAnchor(bucketColor(secondaryBucket), `${seed}:secondary`, 0.74)
+    : rotateRoomHue(primary, 145);
 
   return {
-    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, averageAnchor, 0.26),
-    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrantAnchor, 0.68),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, averageAnchor, 0.36),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, averageAnchor, 0.46),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrantAnchor, 0.86),
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, primary, 0.73),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, primary, 0.94),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, average, 0.55),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, secondary, 0.92),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, primary, 0.96),
   };
 }
 
