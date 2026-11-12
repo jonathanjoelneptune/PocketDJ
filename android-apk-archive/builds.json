@@ -112,7 +112,15 @@
       "filename": "PocketDJ-Spotify-v2.3-ARTWORK-CAROUSEL.apk",
       "bytes": 156151530,
       "sha256": "72094cbc0094ec5abddec4bb7689b34ff23c420deb4da83b3859f0d68bc1a0e5",
-      "android_test_status": "Java/D8 compilation passed, signed and static validated; Android device tests pending, guarded tablet reflow is experimental",
+      "android_test_status": "Device reported blank PocketDJ in phone and both tablet views; do not use as baseline",
+      "binary_in_public_repo": false
+    },
+    {
+      "version": "v2.3.1",
+      "filename": "PocketDJ-Spotify-v2.3.1-RECOVERY.apk",
+      "bytes": 156151439,
+      "sha256": "688d410627e6bba8e9901cd5ff48659c7fc2f2e11a0f78ef32ab160260af084a",
+      "android_test_status": "Signed/static verified; device test pending; recovers exact v2.2 Hook while retaining v2.3 swipe DEX",
       "binary_in_public_repo": false
     }
   ]
