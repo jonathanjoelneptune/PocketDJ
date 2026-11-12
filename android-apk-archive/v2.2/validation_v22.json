@@ -1,0 +1,28 @@
+{
+  "version": "2.2",
+  "filename": "PocketDJ-Spotify-v2.2-PRELOAD-LAYOUT.apk",
+  "bytes": 156149516,
+  "sha256": "0a7c52dfee591871afb784d7bd2e6d9727467a1975e8fa1adb7a0d0719315f31",
+  "signing_cert_sha256": "72fd48cdfe257006f48db9b4851429dd3f05bcd9177c9b0efd21434a61347bf0",
+  "certificate_unchanged_vs_v21": true,
+  "changed_entries_vs_v21": [
+    "classes18.dex"
+  ],
+  "classes19_dex_sha256_unchanged": "d3875093488f4ba9560eadc0f85bc403d77f98871ce149276cde68384453bfb3",
+  "all_original_spotify_entries_unchanged": true,
+  "hook_dex_bytes": 5644,
+  "web_changes": "New embed warmup and no-blocking-startup published separately through GitHub Pages",
+  "android_runtime": "untested on device",
+  "critical_tests": [
+    "phone: artwork/swipes still toggle and timeline/lyrics visible",
+    "unfolded portrait: extra ceiling while playlist heading and title remain visible",
+    "tablet landscape: room stays 16:9 and play/pause icon visible",
+    "first reveal: speaker images and marquee background appear immediately",
+    "Spotify close/reopen: PocketDJ session remains authenticated"
+  ],
+  "limitations": [
+    "The website preload begins on Now Playing attachment; actual fetch time still depends on network/cache",
+    "Playback UI remains Spotify owned, not repositioned independently",
+    "Artwork transition and touch behavior cannot be proven by static validation"
+  ]
+}
