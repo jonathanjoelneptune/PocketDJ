@@ -3844,6 +3844,11 @@ async function boot(): Promise<void> {
   applyRoomUtilitySettings();
   applyDjCrateNextUpSettings();
 
+  // Painting the room must never wait on Spotify network/API calls. This is
+  // particularly important when Android warms the WebView offscreen: by the
+  // first swipe the renderer and sprite poses should already be running.
+  requestAnimationFrame(tick);
+
   if (state.spotifyClientId) {
     try {
       await handleSpotifyCallback(state.spotifyClientId, state.redirectUri);
@@ -3855,7 +3860,9 @@ async function boot(): Promise<void> {
   }
 
   if (loadTokens()) {
-    await pollSpotifyNow();
+    // Fetch in parallel; a slow Spotify request is not a reason to leave the
+    // first room frame blank or its assets undrawn.
+    void pollSpotifyNow();
     void initializePocketDjBrowserDevice();
     void refreshSpotifyDevices();
     schedulePostConnectPlaybackRefresh();
@@ -3866,7 +3873,6 @@ async function boot(): Promise<void> {
     updatePlaybackUi(state.playback, state.debugOpen);
   }
 
-  requestAnimationFrame(tick);
 }
 
 

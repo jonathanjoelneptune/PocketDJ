@@ -8,6 +8,84 @@
 const EMBED_SESSION_KEY = "pocketdj_spotify_embed_v1";
 let enabled = false;
 
+/**
+ * WebView's onPageFinished is not a reliable readiness signal for the visual
+ * room: HTML may be present while image decoding, the pixel font, and the
+ * first sprite compositing are still pending. Explicitly warm only the
+ * handful of assets required for the initial scene, and do it during native
+ * artwork display rather than after the user's first swipe.
+ *
+ * All URLs stay on the existing PocketDJ origin. Normal website mode is not
+ * affected. A missing image does not block the whole room indefinitely.
+ */
+function beginEmbeddedRoomWarmup(): void {
+  const root = document.documentElement;
+  root.dataset.pocketDjEmbedWarm = "loading";
+  const criticalAssets = [
+    "./assets/room/pocket-dj-room-offline-v1.png",
+    "./assets/Speaker.png",
+    "./assets/Speaker Driver.png",
+  ];
+  const images = Array.from(document.querySelectorAll<HTMLImageElement>(
+    "#leftSpeaker img, #rightSpeaker img, #djSprite"
+  ));
+  for (const element of images) {
+    element.loading = "eager";
+    element.decoding = "sync";
+    const src = element.getAttribute("src");
+    if (src && !src.startsWith("data:")) criticalAssets.push(src);
+  }
+
+  const decode = async (path: string): Promise<boolean> => {
+    try {
+      const absolute = new URL(path, document.baseURI).href;
+      const image = new Image();
+      image.decoding = "sync";
+      image.src = absolute;
+      if (typeof image.decode === "function") {
+        await image.decode();
+        return image.naturalWidth > 0;
+      }
+      if (image.complete) return image.naturalWidth > 0;
+      return await new Promise<boolean>(resolve => {
+        image.onload = () => resolve(true);
+        image.onerror = () => resolve(false);
+      });
+    } catch {
+      return false;
+    }
+  };
+
+  const fontReady = document.fonts
+    ? Promise.all([
+        document.fonts.load('12px "Press Start 2P"'),
+        document.fonts.ready
+      ]).then(() => true, () => false)
+    : Promise.resolve(true);
+
+  void Promise.all([
+    Promise.all([...new Set(criticalAssets)].map(decode)),
+    fontReady
+  ]).then(([results, fontLoaded]) => {
+    // Retry only failed built-in sprite elements once; a cache miss on
+    // startup should not permanently remove the speakers.
+    images.forEach(image => {
+      if (image.complete && image.naturalWidth === 0) {
+        const original = image.getAttribute("src");
+        if (original) image.src = new URL(original, document.baseURI).href;
+      }
+    });
+    root.dataset.pocketDjEmbedWarm = results.every(Boolean) && fontLoaded
+      ? "ready" : "partial";
+    console.info("[PocketDJ embed] critical scene warmup", {
+      ready: root.dataset.pocketDjEmbedWarm,
+      loaded: results.filter(Boolean).length,
+      requested: results.length,
+      fontLoaded
+    });
+  });
+}
+
 export function initializeSpotifyEmbed(): void {
   const search = new URLSearchParams(window.location.search);
   // Two independent opt-ins: explicit URL query is reliable in Android WebView;
@@ -22,6 +100,7 @@ export function initializeSpotifyEmbed(): void {
   }
   if (!enabled) return;
   document.documentElement.classList.add("spotify-embed-active", "spotify-embed-compact");
+  beginEmbeddedRoomWarmup();
   // The Android WebView exposes Spotify's own background around the room.
   // Do not create or animate duplicate album-art gradients in compact mode.
   // Useful for diagnosing repeated login without ever exposing tokens.
