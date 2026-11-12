@@ -8147,12 +8147,43 @@ function updateReactiveRoomEnergyFrame(now = performance.now()): number {
   return reactiveRoomRenderedEnergy;
 }
 
+// Spotify's Android playback bridge can briefly oscillate between playing
+// and paused during handoff. The scene-lighting state is visually debounced
+// without delaying the actual transport/DJ/lyric state. A candidate must
+// remain unchanged for 260ms on touch devices before the room fades.
+// The first render always follows the real playback value immediately.
+const ROOM_PLAYBACK_LIGHTING_SETTLE_MS = window.matchMedia("(pointer: coarse)").matches ? 260 : 0;
+let roomLightingStateInitialized = false;
+let roomLightingStablePlaying = false;
+let roomLightingCandidatePlaying = false;
+let roomLightingCandidateSince = 0;
+
+function getStableRoomLightingPlaybackState(playing: boolean, now: number): boolean {
+  if (!roomLightingStateInitialized) {
+    roomLightingStateInitialized = true;
+    roomLightingStablePlaying = playing;
+    roomLightingCandidatePlaying = playing;
+    roomLightingCandidateSince = now;
+    return playing;
+  }
+  if (playing !== roomLightingCandidatePlaying) {
+    roomLightingCandidatePlaying = playing;
+    roomLightingCandidateSince = now;
+  }
+  if (roomLightingStablePlaying !== roomLightingCandidatePlaying &&
+      now - roomLightingCandidateSince >= ROOM_PLAYBACK_LIGHTING_SETTLE_MS) {
+    roomLightingStablePlaying = roomLightingCandidatePlaying;
+  }
+  return roomLightingStablePlaying;
+}
+
 function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
   const root = document.documentElement;
   const overlay = document.querySelector<HTMLElement>("#stringLightOverlay");
   const ambientGlow = document.querySelector<HTMLElement>("#ambientMusicGlow");
   const twinkleOverlay = document.querySelector<HTMLElement>("#ambientTwinkleOverlay");
   const playing = track.isPlaying || track.source === "demo";
+  const stableRoomPlaying = getStableRoomLightingPlaybackState(track.isPlaying, performance.now());
   const beatMs = speakerPulseDurationMs();
   const targetPulseEnergy = clamp(((speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM) - 62) / 108, 0, 1);
   queueReactiveRoomEnergy(targetPulseEnergy);
@@ -8161,7 +8192,7 @@ function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
   root.classList.toggle("music-reactive-playing", playing);
   // Atmosphere only appears during actual playback; keep the legacy demo/reactive
   // semantics untouched (a paused demo still has source="demo").
-  root.classList.toggle("room-atmosphere-playing", track.isPlaying);
+  root.classList.toggle("room-atmosphere-playing", stableRoomPlaying);
   root.style.setProperty("--music-beat-ms", `${beatMs}ms`);
   root.style.setProperty("--music-breathe-ms", `${Math.round(Math.max(7200, beatMs * 14))}ms`);
   root.style.setProperty("--music-pulse-ms", `${Math.round(Math.max(2200, beatMs * 4.5))}ms`);
@@ -8180,7 +8211,9 @@ function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
   }
 
   if (ambientGlow) {
-    ambientGlow.classList.toggle("ambient-music-glow-active", playing);
+    // Keep the largest blended ambient layer on the same stable playback
+    // envelope as the dimmer/light bars, rather than restarting its fade.
+    ambientGlow.classList.toggle("ambient-music-glow-active", stableRoomPlaying);
   }
 
   if (twinkleOverlay) {
