@@ -86,6 +86,104 @@ function beginEmbeddedRoomWarmup(): void {
   });
 }
 
+/**
+ * Recover failed built-in speaker PNGs without re-rendering the room.
+ *
+ * The speaker cabinets and moving cones are separate PNGs. An intermittent
+ * Android WebView image failure can leave both cabinets transparent while the
+ * cones still animate. Warmup alone cannot guarantee a later decode succeeds.
+ *
+ * Track the existing DOM <img> elements, retry only missing images, and
+ * recheck when Spotify returns the WebView to the foreground. A bounded
+ * cache-busted retry avoids a poisoned image-cache entry without causing
+ * continuous network traffic or changing other scene layers.
+ */
+function watchEmbeddedSpeakerAssets(): void {
+  const selector = "#leftSpeaker .speaker-image, #rightSpeaker .speaker-image, " +
+    "#leftSpeaker .speaker-driver, #rightSpeaker .speaker-driver";
+  const tracked = Array.from(document.querySelectorAll<HTMLImageElement>(selector));
+  if (tracked.length === 0) return;
+  const maxAttempts = 3;
+  const retries = new WeakMap<HTMLImageElement, number>();
+  const pending = new WeakSet<HTMLImageElement>();
+  const originals = new WeakMap<HTMLImageElement, string>();
+
+  for (const img of tracked) {
+    const src = img.getAttribute("src");
+    if (!src) continue;
+    originals.set(img, new URL(src, document.baseURI).href);
+    retries.set(img, 0);
+    img.loading = "eager";
+    img.decoding = "sync";
+  }
+
+  const recover = (img: HTMLImageElement): void => {
+    if (!document.documentElement.classList.contains("spotify-embed-compact")) return;
+    if (img.complete && img.naturalWidth > 0) return;
+    if (pending.has(img)) return;
+    const original = originals.get(img);
+    const attempt = retries.get(img) ?? 0;
+    if (!original || attempt >= maxAttempts) return;
+    retries.set(img, attempt + 1);
+    pending.add(img);
+
+    // Fetch into a detached image first. A successful decode is then swapped
+    // onto the visible element; failed attempts never replace healthy imagery.
+    const url = new URL(original);
+    url.searchParams.set("pd_speaker_retry", String(attempt + 1));
+    const probe = new Image();
+    probe.decoding = "sync";
+    const timeout = window.setTimeout(() => {
+      probe.onload = null;
+      probe.onerror = null;
+      pending.delete(img);
+    }, 5000);
+    probe.onload = () => {
+      window.clearTimeout(timeout);
+      const finish = () => {
+        pending.delete(img);
+        if (probe.naturalWidth > 0 &&
+            (!img.complete || img.naturalWidth === 0)) {
+          img.src = url.href;
+        }
+      };
+      if (typeof probe.decode === "function") {
+        void probe.decode().then(finish, finish);
+      } else {
+        finish();
+      }
+    };
+    probe.onerror = () => {
+      window.clearTimeout(timeout);
+      pending.delete(img);
+    };
+    probe.src = url.href;
+  };
+
+  const check = (): void => {
+    if (document.hidden) return;
+    for (const img of tracked) {
+      if (img.isConnected && img.complete && img.naturalWidth === 0) recover(img);
+    }
+  };
+
+  for (const img of tracked) {
+    img.addEventListener("error", () => recover(img));
+  }
+
+  // The WebView can resume with only part of its image content decoded.
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) window.setTimeout(check, 250);
+  });
+  window.addEventListener("pageshow", () => window.setTimeout(check, 250));
+  window.addEventListener("pocketdj:embed-compact", () => window.setTimeout(check, 250));
+
+  // Limited early-life checks: delayed failures do not always dispatch error
+  // before Spotify makes the artwork carousel visible.
+  const checks = [1600, 3500, 7000, 12000];
+  for (const delay of checks) window.setTimeout(check, delay);
+}
+
 export function initializeSpotifyEmbed(): void {
   const search = new URLSearchParams(window.location.search);
   // Two independent opt-ins: explicit URL query is reliable in Android WebView;
@@ -101,6 +199,7 @@ export function initializeSpotifyEmbed(): void {
   if (!enabled) return;
   document.documentElement.classList.add("spotify-embed-active", "spotify-embed-compact");
   beginEmbeddedRoomWarmup();
+  watchEmbeddedSpeakerAssets();
   // The Android WebView exposes Spotify's own background around the room.
   // Do not create or animate duplicate album-art gradients in compact mode.
   // Useful for diagnosing repeated login without ever exposing tokens.
@@ -120,6 +219,8 @@ export function initializeSpotifyEmbed(): void {
   (window as Window & { pocketDjSpotifySetCompact?: (compact: boolean) => void })
     .pocketDjSpotifySetCompact = (compact: boolean) => {
       document.documentElement.classList.toggle("spotify-embed-compact", Boolean(compact));
+      // Native carousel re-entry may occur without a page navigation.
+      if (compact) window.dispatchEvent(new Event("pocketdj:embed-compact"));
     };
   console.info("[PocketDJ embed] Mode enabled", {
     query: search.has("spotify_embed"),
