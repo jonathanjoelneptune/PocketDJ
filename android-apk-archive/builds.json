@@ -122,6 +122,14 @@
       "sha256": "688d410627e6bba8e9901cd5ff48659c7fc2f2e11a0f78ef32ab160260af084a",
       "android_test_status": "Signed/static verified; device test pending; recovers exact v2.2 Hook while retaining v2.3 swipe DEX",
       "binary_in_public_repo": false
+    },
+    {
+      "version": "v2.3.2",
+      "filename": "PocketDJ-Spotify-v2.3.2-DISPLAY-RECOVERY.apk",
+      "bytes": 156151530,
+      "sha256": "83cec1724221dab4198a2f0af61f96bbb9465784a6a701b5a5ee41afad54cb11",
+      "android_test_status": "Signed and static verified; Android phone/tablet runtime not yet verified. Fixes exactly one instruction in failed v2.3 WebView reveal.",
+      "binary_in_public_repo": false
     }
   ]
 }
