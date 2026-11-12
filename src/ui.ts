@@ -1966,6 +1966,14 @@ function fallbackCopyText(text: string): void {
 
 
 function updateAlbumWashCrossfade(imageUrl: string): void {
+  // In Spotify's compact Android WebView, the two enormous image-backed,
+  // blurred/masked wash surfaces are redundant with our album color gradients.
+  // Crossfading them causes expensive composition over the cloned ceiling and
+  // sometimes black/white flashes during track changes. Keep this feature
+  // intact for regular web/expanded room mode.
+  const root = document.documentElement;
+  if (root.classList.contains("spotify-embed-active") &&
+      root.classList.contains("spotify-embed-compact")) return;
   const washA = document.querySelector<HTMLDivElement>("#albumWashA");
   const washB = document.querySelector<HTMLDivElement>("#albumWashB");
   if (!washA || !washB) return;
