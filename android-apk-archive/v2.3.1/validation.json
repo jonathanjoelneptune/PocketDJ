@@ -1,0 +1,15 @@
+{
+  "build": "2.3.1-RECOVERY",
+  "filename": "PocketDJ-Spotify-v2.3.1-RECOVERY.apk",
+  "bytes": 156151439,
+  "sha256": "688d410627e6bba8e9901cd5ff48659c7fc2f2e11a0f78ef32ab160260af084a",
+  "signing_sha256": "72fd48cdfe257006f48db9b4851429dd3f05bcd9177c9b0efd21434a61347bf0",
+  "changed_apk_entries_vs_working_v22": [
+    "classes19.dex"
+  ],
+  "v22_hook_byte_identical": true,
+  "v23_gesture_and_long_press_dex_byte_identical": true,
+  "android_runtime_tested": false,
+  "description": "Restores v2.2 WebView life cycle, button visibility and sizing; keeps v2.3 root swipe router/long-press; disables v2.3 tablet reflow; website CSS unchanged.",
+  "caution": "The old mode toggle and Expand buttons are visible again. This recovery is intentionally not the final buttonless/tablet full-width build."
+}
