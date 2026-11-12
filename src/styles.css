@@ -14908,7 +14908,9 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
   z-index: 1;
   pointer-events: none !important;
   user-select: none;
-  mix-blend-mode: color;
+  /* Soft-light tints existing highlights without flattening dark pixels.
+     It is less aggressive than color blending on the detailed cityscape. */
+  mix-blend-mode: soft-light;
   background:
     /* Restrained ceiling reflection without lifting dark ceiling details. */
     radial-gradient(ellipse 35% 27% at var(--room-light-bar-left-x, 31.6%) 6%,
@@ -14967,4 +14969,54 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
 
 @media (prefers-reduced-motion: reduce) {
   .room-playback-dimmer, .room-performance-wash { transition: none; }
+}
+
+/* Skyline-preserving light treatment (Android stability pass).
+   All three large album-reactive layers would otherwise overlap the night
+   window and reduce the contrast of buildings. The soft elliptical window
+   exclusion uses a feathered alpha mask: window center retains ~96% original
+   scene detail while outer walls, shelves, ceiling and floor retain their
+   color effects. No hard rectangular crop or added image layer. */
+.room-performance-wash,
+.ambient-music-glow {
+  -webkit-mask-image: radial-gradient(ellipse 24% 23% at 50% 50%,
+    rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.04) 48%,
+    rgba(0,0,0,0.24) 68%, #000 100%);
+  mask-image: radial-gradient(ellipse 24% 23% at 50% 50%,
+    rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.04) 48%,
+    rgba(0,0,0,0.24) 68%, #000 100%);
+}
+/* The album image wash is 124% tall and scaled; its center still lines up
+   with the room window but the wider overlay needs a slightly smaller mask. */
+.album-wash {
+  -webkit-mask-image: radial-gradient(ellipse 18% 18% at 50% 50%,
+    rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.08) 48%,
+    rgba(0,0,0,0.36) 74%, #000 100%);
+  mask-image: radial-gradient(ellipse 18% 18% at 50% 50%,
+    rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.08) 48%,
+    rgba(0,0,0,0.36) 74%, #000 100%);
+}
+
+/* Android Spotify WebView: avoid animating a blurred, screen-blended,
+   full-scene layer while JS repaints gradients during every song change.
+   Keep album color and play/pause fades, but animate opacity only; use one
+   static filter instead of per-frame blur/scale/filter composition.
+   The mobile palette updates are separately rate-limited in main.ts. */
+@media (pointer: coarse) {
+  .ambient-music-glow,
+  .ambient-music-glow.ambient-music-glow-active {
+    animation: none !important;
+    transform: none !important;
+    filter: blur(13px) saturate(1.06) !important;
+    transition: opacity 850ms ease !important;
+    will-change: opacity;
+  }
+  .album-wash {
+    transition: opacity 900ms ease !important;
+    will-change: opacity;
+  }
+  .room-performance-wash {
+    transition: opacity 850ms ease !important;
+    will-change: opacity;
+  }
 }

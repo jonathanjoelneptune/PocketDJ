@@ -7874,7 +7874,17 @@ function rgbTripleToCss(rgb: RgbTriple): string {
   return `${Math.round(clamp(rgb[0], 0, 255))}, ${Math.round(clamp(rgb[1], 0, 255))}, ${Math.round(clamp(rgb[2], 0, 255))}`;
 }
 
+// The Android Spotify WebView must not repaint all color-gradient layers
+// every frame. Sample the continuously interpolated palette at a controlled
+// 80 ms on touch devices; the full five-second color timeline is retained.
+const REACTIVE_PALETTE_CSS_INTERVAL_MS = window.matchMedia("(pointer: coarse)").matches ? 80 : 33;
+let reactivePaletteLastCssWriteAt = -Infinity;
+let reactiveEnergyLastCssWriteAt = -Infinity;
+
 function writeRenderedReactiveRoomPaletteToCss(palette: ReactiveRoomPalette): void {
+  const paintTime = performance.now();
+  if (paintTime - reactivePaletteLastCssWriteAt < REACTIVE_PALETTE_CSS_INTERVAL_MS) return;
+  reactivePaletteLastCssWriteAt = paintTime;
   // IMPORTANT: these CSS variables are the rendered/interpolated palette only.
   // New album-art palettes must never be written directly to CSS, or the room
   // appears to snap between songs instead of crossfading.
@@ -8155,7 +8165,11 @@ function syncMusicReactiveEnvironment(track: AppState["playback"]): void {
   root.style.setProperty("--music-beat-ms", `${beatMs}ms`);
   root.style.setProperty("--music-breathe-ms", `${Math.round(Math.max(7200, beatMs * 14))}ms`);
   root.style.setProperty("--music-pulse-ms", `${Math.round(Math.max(2200, beatMs * 4.5))}ms`);
-  root.style.setProperty("--music-room-energy", pulseEnergy.toFixed(3));
+  const energyPaintTime = performance.now();
+  if (energyPaintTime - reactiveEnergyLastCssWriteAt >= REACTIVE_PALETTE_CSS_INTERVAL_MS) {
+    reactiveEnergyLastCssWriteAt = energyPaintTime;
+    root.style.setProperty("--music-room-energy", pulseEnergy.toFixed(3));
+  }
 
   if (overlay) {
     overlay.classList.toggle("string-lights-playing", playing);

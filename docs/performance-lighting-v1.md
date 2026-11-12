@@ -30,3 +30,19 @@ Each target album now yields four light colors: two luminous fixture colors and 
 The Room controls and saved defaults (paused darkness 0.25 and album color intensity 1.00) are untouched. Existing user tuning remains intact. No extra animation loop, DOM element, image asset, filter or stage geometry change.
 
 **Device regression:** Play contrasting album covers (warm, cyan, blue, green). Compare against the previous screenshots: the scene should have stronger hue diversity but retain dark highlights and clear sprite edges. Verify five-second song transition, playing/paused fade, light bar swap, bar X positions, ceiling reveal, phone/tablet portraits, and reduced-motion.
+
+
+## V4: Skyline protection and Android WebView compositing stability
+
+The city window is a protected focal area. A feathered radial alpha exclusion now suppresses album-driven coloring from **three scene-wide layers**: the environmental foreground/background wash, the ambient music glow and the blurred album wash. The center of the skyline receives approximately 4% of these effects, while surrounding shelves, ceiling and floor retain their full colored response. The exclusion is soft, avoiding a sharp rectangular window cutout. Physical light bar emitters remain unaffected.
+
+The room environmental wash now uses **soft-light** instead of `color` blending. Soft-light responds to existing luminance and gives the walls richer highlight tint while maintaining original shadow detail. The vivid physical bars still use their own local glow.
+
+On coarse-pointer/mobile devices, large-screen ambient glow no longer animates blur, scale or filter, and album wash only animates opacity rather than filter changes. The room's existing color interpolation still runs over five seconds, but updates to gradient CSS variables and music-energy style variables are bounded at ~12.5 updates/second on mobile (~30/s on desktop), instead of repainting many full-room layers for every requestAnimationFrame. This is a performance mitigation for WebView flashing, not a confirmed root-cause diagnosis.
+
+Verification:
+- Compare playing versus paused with the skyline visible and city building edges distinct.
+- Try covers with intense warm and teal colors; tint on shelves/floor should remain visible with the skyline comparatively dark and crisp.
+- Test track crossfades, repeated pause/play transitions, backgrounding/reopening Spotify, Android portrait/foldable and expanded ceiling.
+- Check light bar colors, swaps, spectrum changes, lyrics, and DJ pose changes; animations should remain independent.
+- Validate that the app is not blank on Android WebView and that reduced-motion preferences still apply.
