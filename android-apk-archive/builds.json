@@ -98,6 +98,14 @@
       "sha256": "761084be9a72599c1cd452aa55c4e5b9bbb12c1d0f65261bc456f3a4a89735df",
       "android_test_status": "Signed and statically validated; user device login/gesture tests pending",
       "binary_in_public_repo": false
+    },
+    {
+      "version": "v2.2",
+      "filename": "PocketDJ-Spotify-v2.2-PRELOAD-LAYOUT.apk",
+      "bytes": 156149516,
+      "sha256": "0a7c52dfee591871afb784d7bd2e6d9727467a1975e8fa1adb7a0d0719315f31",
+      "android_test_status": "Signed and statically validated; user device testing pending",
+      "binary_in_public_repo": false
     }
   ]
 }
