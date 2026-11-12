@@ -1,0 +1,27 @@
+{
+  "build": "v2.4 full-width pane experiment",
+  "sha256": "68b8fe24c0dd2b092482e4e1fb61669673c5914434ab75f505bed09740d79597",
+  "bytes": 156151530,
+  "signer_fingerprint": "72fd48cdfe257006f48db9b4851429dd3f05bcd9177c9b0efd21434a61347bf0",
+  "changed_entries": [
+    "res/layout/activity_now_playing_duo.xml"
+  ],
+  "patch": [
+    {
+      "view": "left guide",
+      "old": 0.5,
+      "new": 0.0,
+      "offset": 1272
+    },
+    {
+      "view": "Now Playing content pane",
+      "old": 0.5,
+      "new": 1.0,
+      "offset": 1492
+    }
+  ],
+  "integrity": "ZIP CRC, APK v2 signature, two original custom DEX files unchanged",
+  "phone_layout": "unchanged",
+  "tablet_proof": "requires on-device testing: Spotify content may still constrain width or fail vertical reflow",
+  "known_limitation": "Not guaranteed to make PocketDJ fill width or move song title and playback controls; native children may enforce max dimensions"
+}
