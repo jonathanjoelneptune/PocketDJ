@@ -14700,3 +14700,112 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
   }
 }
 /* All standard PocketDJ modes and normal website visitors are unaffected. */
+
+
+/* Album-reactive wall fixtures. A local z-layer 1 keeps the wall fixtures
+   below z-layer 2 speakers and z-layer 4 DJ, including future walk sprites.
+   No motion loop, large-area filter, or touch-device exclusion is required. */
+.room-light-bars {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none !important;
+  user-select: none;
+}
+
+:root:not(.room-light-bars-enabled) .room-light-bars { display: none; }
+
+.room-light-bar {
+  position: absolute;
+  top: var(--room-light-bar-top, 38.4%);
+  width: var(--room-light-bar-width, 2.7%);
+  height: var(--room-light-bar-height, 12%);
+  transform: translateX(-50%);
+  border: clamp(1px, calc(var(--room-w) * 0.00125), 2px) solid rgba(4, 9, 17, 0.95);
+  border-radius: clamp(2px, calc(var(--room-w) * 0.0048), 7px);
+  background: linear-gradient(90deg, #07111d 0%, #253a49 20%, #101e2b 78%, #040810 100%);
+  box-shadow:
+    0 0 0 1px rgba(80, 54, 33, 0.88),
+    inset 0 0 0 1px rgba(148, 172, 180, 0.28),
+    0 4px 6px rgba(0, 0, 0, 0.60);
+  isolation: isolate;
+}
+
+.room-light-bar-left {
+  left: var(--room-light-bar-left-x, 33.7%);
+  --room-light-bar-color: var(--room-spotlight-album-primary-rgb, 255, 161, 64);
+}
+
+.room-light-bar-right {
+  left: var(--room-light-bar-right-x, 66.7%);
+  --room-light-bar-color: var(--room-spotlight-album-secondary-rgb, 82, 161, 255);
+}
+
+:root[data-room-light-bar-swap="true"] .room-light-bar-left {
+  --room-light-bar-color: var(--room-spotlight-album-secondary-rgb, 82, 161, 255);
+}
+
+:root[data-room-light-bar-swap="true"] .room-light-bar-right {
+  --room-light-bar-color: var(--room-spotlight-album-primary-rgb, 255, 161, 64);
+}
+
+/* Small local radial halo adds wall depth without lighting a full-screen layer. */
+.room-light-bar::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -28% -105%;
+  pointer-events: none;
+  border-radius: 48%;
+  background: radial-gradient(ellipse at center,
+    rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.36)) 0%,
+    rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.15)) 40%,
+    transparent 76%);
+  transition: opacity 300ms ease;
+}
+
+.room-light-bar-emitter {
+  position: absolute;
+  inset: clamp(1px, calc(var(--room-w) * 0.0018), 3px);
+  border-radius: clamp(1px, calc(var(--room-w) * 0.0028), 4px);
+  background:
+    linear-gradient(90deg, rgba(4, 10, 17, 0.40), rgba(255, 255, 255, 0.22) 40%, rgba(255, 255, 255, 0.04) 65%, rgba(4, 10, 17, 0.30)),
+    linear-gradient(180deg, rgba(1, 8, 15, 0.34), transparent 13%, rgba(255, 255, 255, 0.12) 50%, transparent 86%, rgba(1, 8, 15, 0.34)),
+    rgba(var(--room-light-bar-color), 0.96);
+  opacity: min(1, var(--room-light-bar-brightness, 1));
+  box-shadow:
+    inset 0 0 0 1px rgba(250, 250, 244, 0.33),
+    inset 0 0 8px rgba(255, 255, 255, 0.27),
+    0 0 6px rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.58)),
+    0 0 19px rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.30));
+  transition: opacity 300ms ease;
+}
+
+/* Keep the physical housings in place on pause; only the illumination changes. */
+:root[data-room-light-bar-pause="dim"]:not(.room-atmosphere-playing) .room-light-bar-emitter {
+  opacity: calc(min(1, var(--room-light-bar-brightness, 1)) * 0.24);
+}
+:root[data-room-light-bar-pause="dim"]:not(.room-atmosphere-playing) .room-light-bar::before {
+  opacity: 0.24;
+}
+:root[data-room-light-bar-pause="off"]:not(.room-atmosphere-playing) .room-light-bar-emitter,
+:root[data-room-light-bar-pause="off"]:not(.room-atmosphere-playing) .room-light-bar::before {
+  opacity: 0;
+}
+
+.menu2-room-light-bars {
+  margin: 12px 0;
+  padding: 11px 10px;
+  border: 1px solid rgba(251, 191, 36, 0.19);
+  border-radius: 12px;
+  background: rgba(16, 22, 31, 0.46);
+}
+.menu2-room-light-bars > summary {
+  cursor: pointer;
+  color: rgba(255, 221, 168, 0.96);
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+.menu2-room-light-bars[open] > summary { margin-bottom: 9px; }
+.menu2-room-light-bars .menu2-setting { max-width: 100%; }
+.menu2-room-light-bars .menu2-action { margin-top: 10px; }

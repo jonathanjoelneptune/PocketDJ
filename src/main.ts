@@ -2,6 +2,7 @@ import "./styles.css";
 import { initializeSpotifyEmbed, updateSpotifyEmbedArtwork } from "./spotify/embedMode";
 import { initializeRoomSpotlights, updateSpotlightAlbumColors } from "./roomSpotlights";
 import { initializeRoomParticles } from "./roomParticles";
+import { initializeRoomLightBars } from "./roomLightBars";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
 import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, isSpotifyDjSpeakingForPose, observeSpotifyDjSpeech } from "./dj/speechBubble";
@@ -3808,6 +3809,7 @@ async function boot(): Promise<void> {
   initializeSpotifyEmbed();
   initializeRoomSpotlights();
   initializeRoomParticles();
+  initializeRoomLightBars();
   initializeSpotifyDjSpeechBubble();
   reactiveRoomCurrentRenderedPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
   reactiveRoomRenderedEnergy = 0.3;
