@@ -1,0 +1,29 @@
+{
+  "version": "2.3.2",
+  "apk_file": "PocketDJ-Spotify-v2.3.2-DISPLAY-RECOVERY.apk",
+  "apk_bytes": 156151530,
+  "apk_sha256": "83cec1724221dab4198a2f0af61f96bbb9465784a6a701b5a5ee41afad54cb11",
+  "signing_certificate_sha256": "72fd48cdfe257006f48db9b4851429dd3f05bcd9177c9b0efd21434a61347bf0",
+  "all_original_spotify_files_byte_identical_to_v23": true,
+  "changed_apk_entries_vs_v23": [
+    "classes18.dex"
+  ],
+  "changed_dex_payload_bytes": 1,
+  "exact_instruction_change": {
+    "dex_offset": 3877,
+    "before": 70,
+    "after": 6,
+    "meaning": "const/4 v6, 4 (INVISIBLE) to const/4 v6, 0 (VISIBLE) in showRoom()"
+  },
+  "native_carousel_dex_identical_to_v23_and_v231": true,
+  "features_reintroduced": [
+    "hidden compact Spotify toggle and Expand button",
+    "long press >=650ms opens dev mode",
+    "square phone artwork area with centered native 16:9 room",
+    "transparent top/bottom swipe region",
+    "tablet layout reflow only if native seekbar shifts",
+    "session persistence and preload from stable v231"
+  ],
+  "risk": "Tablet full-width is conditional; reflow refuses unsafe layouts and keeps prior size. Must test on phone and foldable.",
+  "android_device_tested": false
+}
