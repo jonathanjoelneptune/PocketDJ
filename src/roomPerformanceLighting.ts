@@ -9,9 +9,10 @@ export type RoomPerformanceLightingSettings = {
 };
 
 const STORAGE_KEY = "pocketdj-room-performance-lighting-v1";
+const LIGHTING_REBALANCE_MIGRATION = "pocketdj-room-performance-wash-rebalance-20261112";
 export const DEFAULT_ROOM_PERFORMANCE_LIGHTING: RoomPerformanceLightingSettings = {
-  idleDim: 0.76,
-  colorStrength: 1.25,
+  idleDim: 0.25,
+  colorStrength: 1.00,
 };
 
 function clamp(value: unknown, fallback: number, min: number, max: number): number {
@@ -20,15 +21,26 @@ function clamp(value: unknown, fallback: number, min: number, max: number): numb
 }
 function normalize(source: Partial<RoomPerformanceLightingSettings>): RoomPerformanceLightingSettings {
   return {
-    idleDim: clamp(source.idleDim, DEFAULT_ROOM_PERFORMANCE_LIGHTING.idleDim, 0.25, 0.92),
+    idleDim: clamp(source.idleDim, DEFAULT_ROOM_PERFORMANCE_LIGHTING.idleDim, 0, 0.92),
     colorStrength: clamp(source.colorStrength, DEFAULT_ROOM_PERFORMANCE_LIGHTING.colorStrength, 0, 1.8),
   };
 }
 function load(): RoomPerformanceLightingSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? normalize(JSON.parse(raw) as Partial<RoomPerformanceLightingSettings>)
-      : { ...DEFAULT_ROOM_PERFORMANCE_LIGHTING };
+    if (!raw) return { ...DEFAULT_ROOM_PERFORMANCE_LIGHTING };
+    const saved = JSON.parse(raw) as Partial<RoomPerformanceLightingSettings>;
+    // Migrate only the original, untouched defaults from the previous build.
+    // A separately customized value is preserved, and this runs once only.
+    if (!localStorage.getItem(LIGHTING_REBALANCE_MIGRATION)) {
+      if (saved.idleDim === 0.76) saved.idleDim = DEFAULT_ROOM_PERFORMANCE_LIGHTING.idleDim;
+      if (saved.colorStrength === 1.25) saved.colorStrength = DEFAULT_ROOM_PERFORMANCE_LIGHTING.colorStrength;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+        localStorage.setItem(LIGHTING_REBALANCE_MIGRATION, "1");
+      } catch { /* Keep the adjusted values in this session. */ }
+    }
+    return normalize(saved);
   } catch {
     return { ...DEFAULT_ROOM_PERFORMANCE_LIGHTING };
   }

@@ -14862,14 +14862,22 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
 .menu2-room-light-bars .menu2-setting { max-width: 100%; }
 .menu2-room-light-bars .menu2-action { margin-top: 10px; }
 
-/* Performance Lighting: dark, quiet room when no music is playing.
-   A composited opacity-only overlay makes the playback wake-up dramatic without
-   animating a full-scene brightness/filter effect on phones or tablets.
-   Marquee and the floor control deck remain legible above this layer. */
+/* Music-driven scene lighting.
+   A single foreground-colored wash (z74) sits above wall albums (z21),
+   spotlights (z24), speakers (z2), table and DJ (z4). The resting dimmer
+   is z76; floor transport z80, lyrics z82 and marquee z96 stay legible.
+   No animated scene filter, DOM work, or extra RAF is introduced. */
 :root {
-  --room-performance-idle-dim: 0.76;
-  --room-performance-color-strength: 1.25;
+  --room-performance-idle-dim: 0.25;
+  --room-performance-color-strength: 1;
+  --room-performance-left-rgb: var(--room-spotlight-album-primary-rgb, 255, 161, 64);
+  --room-performance-right-rgb: var(--room-spotlight-album-secondary-rgb, 82, 161, 255);
 }
+:root[data-room-light-bar-swap="true"] {
+  --room-performance-left-rgb: var(--room-spotlight-album-secondary-rgb, 82, 161, 255);
+  --room-performance-right-rgb: var(--room-spotlight-album-primary-rgb, 255, 161, 64);
+}
+
 .room-playback-dimmer {
   position: absolute;
   z-index: 76;
@@ -14879,42 +14887,62 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
   height: calc(100% + var(--dynamic-ceiling-reveal-px, 0px));
   pointer-events: none !important;
   background: #010307;
-  opacity: var(--room-performance-idle-dim, 0.76);
+  opacity: var(--room-performance-idle-dim, 0.25);
   transition: opacity 1650ms cubic-bezier(0.20, 0.70, 0.22, 1);
 }
 :root.room-atmosphere-playing .room-playback-dimmer { opacity: 0; }
 
-/* Leave floor transport accessible and readable in the resting room.
-   Speakers (z2) and DJ (z4) darken with the scene, but maintain occlusion. */
+/* Keep floor playback controls above the dimming layer. */
 .room-base-layer > .floor-player { z-index: 80; }
 
-/* Distinct secondary/primary color on each album wall, a brighter stage
-   center and diffuse floor light. No blurred bitmap, full-screen blend-mode,
-   independent timers, RAF, or per-frame DOM creation. */
+/* Low-opacity color projection in FRONT of sprites and all artwork.
+   Screen blending simulates illumination without muddying the window or
+   flattening deep shadows. Two softly spread overhead gradients let light
+   reach the normal ceiling and the optional tall-ceiling reveal.
+   Gradient centers track the physical bars' adjustable X coordinates. */
 .room-performance-wash {
   position: absolute;
-  inset: 0;
-  z-index: 1;
+  left: 0;
+  top: calc(var(--dynamic-ceiling-reveal-px, 0px) * -1);
+  width: 100%;
+  height: calc(100% + var(--dynamic-ceiling-reveal-px, 0px));
+  z-index: 74;
   pointer-events: none !important;
+  user-select: none;
+  mix-blend-mode: screen;
   background:
-    radial-gradient(ellipse 35% 47% at 23% 47%,
-      rgba(var(--room-spotlight-album-primary-rgb, 255, 161, 64), calc(var(--room-performance-color-strength, 1.25) * 0.40)) 0%,
-      rgba(var(--room-spotlight-album-primary-rgb, 255, 161, 64), calc(var(--room-performance-color-strength, 1.25) * 0.19)) 47%,
+    /* Soft reflected light on the ceiling: present, never a neon stripe. */
+    radial-gradient(ellipse 33% 25% at var(--room-light-bar-left-x, 31.6%) 5%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.065)) 0%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.023)) 52%,
       transparent 100%),
-    radial-gradient(ellipse 35% 47% at 77% 47%,
-      rgba(var(--room-spotlight-album-secondary-rgb, 82, 161, 255), calc(var(--room-performance-color-strength, 1.25) * 0.40)) 0%,
-      rgba(var(--room-spotlight-album-secondary-rgb, 82, 161, 255), calc(var(--room-performance-color-strength, 1.25) * 0.19)) 47%,
+    radial-gradient(ellipse 33% 25% at var(--room-light-bar-right-x, 69.6%) 5%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.065)) 0%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.023)) 52%,
       transparent 100%),
-    radial-gradient(ellipse 32% 30% at 50% 63%,
-      rgba(var(--ambient-room-accent-rgb, 255, 161, 64), calc(var(--room-performance-color-strength, 1.25) * 0.25)) 0%,
-      rgba(var(--ambient-room-glow-rgb, 82, 161, 255), calc(var(--room-performance-color-strength, 1.25) * 0.14)) 54%,
+    /* Primary and secondary spill reach wall-album canvases and speakers. */
+    radial-gradient(ellipse 41% 47% at var(--room-light-bar-left-x, 31.6%) 46%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.19)) 0%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.105)) 47%,
       transparent 100%),
-    radial-gradient(ellipse 55% 19% at 50% 84%,
-      rgba(var(--room-spotlight-album-secondary-rgb, 82, 161, 255), calc(var(--room-performance-color-strength, 1.25) * 0.22)) 0%,
-      rgba(var(--room-spotlight-album-primary-rgb, 255, 161, 64), calc(var(--room-performance-color-strength, 1.25) * 0.075)) 65%,
+    radial-gradient(ellipse 41% 47% at var(--room-light-bar-right-x, 69.6%) 46%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.19)) 0%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.105)) 47%,
+      transparent 100%),
+    /* Central color spill lights the DJ, mixer, crate and tabletop. */
+    radial-gradient(ellipse 32% 28% at 45% 63%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.12)) 0%,
+      transparent 100%),
+    radial-gradient(ellipse 32% 28% at 55% 63%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.12)) 0%,
+      transparent 100%),
+    /* Restrained floor bounce keeps the wood texture and rug contrast. */
+    radial-gradient(ellipse 56% 19% at 50% 84%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.095)) 0%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.033)) 64%,
       transparent 100%);
   opacity: 0;
-  transition: opacity 1600ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition: opacity 1600ms cubic-bezier(0.20, 0.70, 0.20, 1);
 }
 :root.room-atmosphere-playing .room-performance-wash { opacity: 1; }
 
