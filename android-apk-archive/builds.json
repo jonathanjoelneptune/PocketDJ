@@ -130,6 +130,14 @@
       "sha256": "83cec1724221dab4198a2f0af61f96bbb9465784a6a701b5a5ee41afad54cb11",
       "android_test_status": "Signed and static verified; Android phone/tablet runtime not yet verified. Fixes exactly one instruction in failed v2.3 WebView reveal.",
       "binary_in_public_repo": false
+    },
+    {
+      "version": "v2.4",
+      "filename": "PocketDJ-Spotify-v2.4-FULL-PANE-EXPERIMENT.apk",
+      "bytes": 156151530,
+      "sha256": "68b8fe24c0dd2b092482e4e1fb61669673c5914434ab75f505bed09740d79597",
+      "android_test_status": "Native foldable duo XML right pane 50% to 100%; ZIP/signature/static diff passed; real Android reflow untested",
+      "binary_in_public_repo": false
     }
   ]
 }
