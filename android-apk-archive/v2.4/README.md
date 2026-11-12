@@ -38,3 +38,6 @@ This is a private experimental build. It could cause native Spotify tablet conte
 3. Verify the phone portrait mode, two-way artwork swipes, long-press developer mode, and OAuth login were not affected.
 
 If the pane becomes full width but the room stays narrower, the next targeted change is the **artwork height/vertical reflow constraint**, not a CSS stretch. If Spotify's controls stay at the original vertical positions, we will need a structural change in its Now Playing content hierarchy based on the observed device layout. Do not blindly translate button surfaces.
+## Additional view-ID finding
+
+The earlier `ArtworkReflow.java` uses `0x7f0b1043` for an assumed full-screen artwork carousel. Inspection of Spotify's packaged layouts places this ID in `res/layout/now_playing_bar.xml` and `res/xml/now_playing_bar_scene.xml`, which describe the compact Now Playing **mini-player**, not the full-screen artwork viewport. Therefore that selector cannot be relied upon to move the full-screen title and seekbar. v2.4 intentionally makes only the parent-pane width correction; full-screen vertical reflow remains unverified.
