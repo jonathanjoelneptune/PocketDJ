@@ -20,6 +20,7 @@ The installable APKs are **not committed** to the public PocketDJ repository: ea
 | v1.9 | Bidirectional artwork switch, slide transition, foldable sizing | Device-confirmed phone swipes, tablet geometry issues remain. [v1.9 record](./v1.9/README.md) |
 | v2.0 | Native-sized album hitbox, taller phone viewport, foldable portrait lift, display frame | Signed and statically validated; device tests pending. [v2.0 record](./v2.0/README.md) |
 | v2.1 | Expanded swipe region, preloaded WebView, AndroidKeyStore session backup, 16:9 and black frame | Signed and statically validated; runtime tests pending. [v2.1 record](./v2.1/README.md) |
+| v2.2 | Render-before-poll startup, decoded asset warmup, portrait clearance and proportion-safe foldable room | Signed/static verified; Android device tests pending. [v2.2 record](./v2.2/README.md) |
 
 For precise historical SHA-256 digests and filenames, see [builds.json](./builds.json). These hashes identify the exact APK binaries that were generated in the development conversation. They do not imply Android runtime validation.
 
