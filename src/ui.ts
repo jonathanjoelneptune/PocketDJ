@@ -1525,12 +1525,12 @@ export function renderShell(state: AppState): void {
 
             <details class="menu2-room-performance-lighting">
               <summary>Music-Driven Scene Lighting</summary>
-              <p class="menu2-room-help">The room brightens on playback as an album-colored light wash reaches the DJ, speakers, table, wall albums, floor, and ceiling. The physical light bars sit behind the DJ but their colors project forward. Song colors still crossfade over 5 seconds.</p>
+              <p class="menu2-room-help">The room brightens during playback with a gentler album-colored wash behind the DJ, speakers and table. Rich colors illuminate the backdrop, wall and ceiling without tinting the foreground figures. Song colors still crossfade over 5 seconds.</p>
               <label class="menu2-setting menu2-slider-setting">Darkness when paused <span id="menu2PerformanceIdleDimValue">0.25</span>
                 <input id="menu2PerformanceIdleDim" type="range" min="0" max="0.92" step="0.01" value="0.25" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Album color intensity <span id="menu2PerformanceColorValue">1.00</span>
-                <input id="menu2PerformanceColor" type="range" min="0" max="1.8" step="0.05" value="1.00" />
+              <label class="menu2-setting menu2-slider-setting">Album color intensity <span id="menu2PerformanceColorValue">0.85</span>
+                <input id="menu2PerformanceColor" type="range" min="0" max="1.8" step="0.05" value="0.85" />
               </label>
               <button id="menu2PerformanceReset" class="menu2-action menu2-wide-action" type="button">Reset Scene Lighting</button>
             </details>

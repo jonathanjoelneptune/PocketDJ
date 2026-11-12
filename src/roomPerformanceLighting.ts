@@ -10,9 +10,10 @@ export type RoomPerformanceLightingSettings = {
 
 const STORAGE_KEY = "pocketdj-room-performance-lighting-v1";
 const LIGHTING_REBALANCE_MIGRATION = "pocketdj-room-performance-wash-rebalance-20261112";
+const SOFTER_WASH_MIGRATION = "pocketdj-room-performance-softer-background-20261112";
 export const DEFAULT_ROOM_PERFORMANCE_LIGHTING: RoomPerformanceLightingSettings = {
   idleDim: 0.25,
-  colorStrength: 1.00,
+  colorStrength: 0.85,
 };
 
 function clamp(value: unknown, fallback: number, min: number, max: number): number {
@@ -39,6 +40,15 @@ function load(): RoomPerformanceLightingSettings {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
         localStorage.setItem(LIGHTING_REBALANCE_MIGRATION, "1");
       } catch { /* Keep the adjusted values in this session. */ }
+    }
+    // One-time follow-up: update only the previous 1.00 default. Values
+    // already customized to other strengths retain their saved tuning.
+    if (!localStorage.getItem(SOFTER_WASH_MIGRATION)) {
+      if (saved.colorStrength === 1.00) saved.colorStrength = DEFAULT_ROOM_PERFORMANCE_LIGHTING.colorStrength;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+        localStorage.setItem(SOFTER_WASH_MIGRATION, "1");
+      } catch { /* Continue using in-memory settings if storage is blocked. */ }
     }
     return normalize(saved);
   } catch {

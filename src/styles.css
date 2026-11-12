@@ -14869,7 +14869,7 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
    No animated scene filter, DOM work, or extra RAF is introduced. */
 :root {
   --room-performance-idle-dim: 0.25;
-  --room-performance-color-strength: 1;
+  --room-performance-color-strength: 0.85;
   --room-performance-left-rgb: var(--room-performance-album-primary-rgb, 176, 75, 17);
   --room-performance-right-rgb: var(--room-performance-album-secondary-rgb, 17, 135, 176);
 }
@@ -14895,52 +14895,50 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
 /* Keep floor playback controls above the dimming layer. */
 .room-base-layer > .floor-player { z-index: 80; }
 
-/* Rich color projection across the DJ, speakers and wall albums.
-   Screen blending added luminance to every channel and made the Android room
-   look gray/washed out. 'color' transfers hue/saturation while keeping the
-   scene's original luminance and shadow contrast. Light bars retain their
-   bright emissive glow on the layer behind the DJ.
-   All pigment endpoints are RGB-interpolated with the album in five seconds. */
+/* Rich environmental spill, positioned behind the speakers, DJ and table.
+   Preserve the deeper pigment hues and 5-second interpolated transitions,
+   while dialing back the intensity so the foreground keeps its texture.
+   The physical wall fixtures remain vivid and in their existing positions. */
 .room-performance-wash {
   position: absolute;
   left: 0;
   top: calc(var(--dynamic-ceiling-reveal-px, 0px) * -1);
   width: 100%;
   height: calc(100% + var(--dynamic-ceiling-reveal-px, 0px));
-  z-index: 74;
+  z-index: 1;
   pointer-events: none !important;
   user-select: none;
   mix-blend-mode: color;
   background:
     /* Restrained ceiling reflection without lifting dark ceiling details. */
     radial-gradient(ellipse 35% 27% at var(--room-light-bar-left-x, 31.6%) 6%,
-      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.23)) 0%,
-      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.10)) 58%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.18)) 0%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.07)) 58%,
       transparent 100%),
     radial-gradient(ellipse 35% 27% at var(--room-light-bar-right-x, 69.6%) 6%,
-      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.23)) 0%,
-      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.10)) 58%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.18)) 0%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.07)) 58%,
       transparent 100%),
     /* Deep album color reaches all shelf albums and speaker faces. */
     radial-gradient(ellipse 43% 48% at var(--room-light-bar-left-x, 31.6%) 44%,
-      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.55)) 0%,
-      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.29)) 51%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.42)) 0%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.23)) 51%,
       transparent 100%),
     radial-gradient(ellipse 43% 48% at var(--room-light-bar-right-x, 69.6%) 44%,
-      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.55)) 0%,
-      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.29)) 51%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.42)) 0%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.23)) 51%,
       transparent 100%),
     /* The central DJ and decks carry a mixture of both hues. */
     radial-gradient(ellipse 32% 31% at 43% 63%,
-      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.30)) 0%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.18)) 0%,
       transparent 100%),
     radial-gradient(ellipse 32% 31% at 57% 63%,
-      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.30)) 0%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.18)) 0%,
       transparent 100%),
     /* Gentle hue on rug/wood while preserving their grain and black levels. */
     radial-gradient(ellipse 56% 19% at 50% 84%,
-      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.27)) 0%,
-      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.12)) 64%,
+      rgba(var(--room-performance-right-rgb), calc(var(--room-performance-color-strength, 1) * 0.18)) 0%,
+      rgba(var(--room-performance-left-rgb), calc(var(--room-performance-color-strength, 1) * 0.08)) 64%,
       transparent 100%);
   opacity: 0;
   transition: opacity 1600ms cubic-bezier(0.20, 0.70, 0.20, 1);
