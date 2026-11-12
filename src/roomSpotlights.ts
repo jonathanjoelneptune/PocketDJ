@@ -15,6 +15,7 @@ export type RoomSpotlightSettings = {
 
 const STORAGE_KEY = "pocketdj-room-spotlight-v2";
 const FIFTEEN_SECOND_SWEEP_MIGRATION_KEY = "pocketdj-spotlight-15s-sweep-20261110";
+// Full Room / Album Reactive is enabled by default; saved user opt-outs still win.
 export const DEFAULT_ROOM_SPOTLIGHTS: RoomSpotlightSettings = {
   enabled: true,
   strength: 0.90,
@@ -95,9 +96,10 @@ function applySettings(): void {
 }
 
 
-type RgbColor = readonly [number, number, number];
+type RgbColor = [number, number, number];
+export type AlbumLightColors = { primary: RgbColor; secondary: RgbColor };
 type HslColor = { h: number; s: number; l: number };
-let recentAlbumColors: { accent: RgbColor; glow: RgbColor } | null = null;
+let recentAlbumColors: AlbumLightColors | null = null;
 
 function rgbToHsl(rgb: RgbColor): HslColor {
   const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
@@ -137,16 +139,12 @@ function mixHue(from: number, to: number, ratio: number): number {
 }
 
 /**
- * The canonical room palette is interpolated by main.ts across 5 seconds.
- * Derive two vivid, distinct accent lights from those rendered colors only.
- * If the two hues converge, gradually move the secondary toward a complementary
- * hue instead of letting both lights become one muddy color. No threshold snap.
- * Does not change the canonical room/album palette.
+ * Derive a stable two-light palette at a song target, not on every interpolated
+ * frame. Deriving HSL hues after RGB interpolation may snap near gray (when hue
+ * becomes undefined); interpolating the finished RGB endpoints avoids that.
+ * The main room palette itself remains unchanged by this function.
  */
-export function updateSpotlightAlbumColors(accent: RgbColor, glow: RgbColor): void {
-  recentAlbumColors = { accent, glow };
-  // Physical light bars also use these colors, independently of the spotlight mode.
-  // Keep the album palette live even when the user's spotlights use a fixed palette.
+export function deriveSpotlightAlbumColors(accent: RgbColor, glow: RgbColor): AlbumLightColors {
   const primary = rgbToHsl(accent);
   const secondary = rgbToHsl(glow);
   // When neutral, borrow the other hue; default to a stable amber/blue pairing.
@@ -157,9 +155,15 @@ export function updateSpotlightAlbumColors(accent: RgbColor, glow: RgbColor): vo
   const boostedSecondaryHue = mixHue(secondHue, (primaryHue + 150) % 360, separationWeight);
   const first = hslToRgb({ h: primaryHue, s: Math.max(primary.s, 0.62), l: Math.max(0.46, Math.min(0.63, primary.l)) });
   const second = hslToRgb({ h: boostedSecondaryHue, s: Math.max(secondary.s, 0.61), l: Math.max(0.43, Math.min(0.60, secondary.l)) });
+  return { primary: first, secondary: second };
+}
+
+/** Receive the smoothly interpolated pair from main.ts. */
+export function updateSpotlightAlbumColors(primary: RgbColor, secondary: RgbColor): void {
+  recentAlbumColors = { primary, secondary };
   const root = document.documentElement;
-  root.style.setProperty("--room-spotlight-album-primary-rgb", first.join(", "));
-  root.style.setProperty("--room-spotlight-album-secondary-rgb", second.join(", "));
+  root.style.setProperty("--room-spotlight-album-primary-rgb", primary.join(", "));
+  root.style.setProperty("--room-spotlight-album-secondary-rgb", secondary.join(", "));
 }
 
 /** Call once after renderShell(). No runtime or Spotify dependencies. */
@@ -183,7 +187,7 @@ export function initializeRoomSpotlights(): void {
     settings = normalize({ ...settings, palette: (event.target as HTMLSelectElement).value as SpotlightPalette });
     saveSettings();
     applySettings();
-    if (recentAlbumColors) updateSpotlightAlbumColors(recentAlbumColors.accent, recentAlbumColors.glow);
+    if (recentAlbumColors) updateSpotlightAlbumColors(recentAlbumColors.primary, recentAlbumColors.secondary);
   });
   document.querySelector<HTMLSelectElement>("#menu2SpotlightMode")?.addEventListener("change", (event) => {
     settings = normalize({ ...settings, mode: (event.target as HTMLSelectElement).value as SpotlightMode });

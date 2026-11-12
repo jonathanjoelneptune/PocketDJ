@@ -1,6 +1,6 @@
 import "./styles.css";
 import { initializeSpotifyEmbed, updateSpotifyEmbedArtwork } from "./spotify/embedMode";
-import { initializeRoomSpotlights, updateSpotlightAlbumColors } from "./roomSpotlights";
+import { initializeRoomSpotlights, deriveSpotlightAlbumColors, updateSpotlightAlbumColors, type AlbumLightColors } from "./roomSpotlights";
 import { initializeRoomParticles } from "./roomParticles";
 import { initializeRoomLightBars } from "./roomLightBars";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
@@ -201,10 +201,11 @@ type RoomVibeSettings = {
 };
 
 const ROOM_VIBE_SETTINGS_KEY = "pocketdj-room-vibe-balance-v1";
+const ROOM_VIBE_DEFAULTS_MIGRATION_KEY = "pocketdj-room-vibe-richer-album-20261112";
 const DEFAULT_ROOM_VIBE_SETTINGS: RoomVibeSettings = {
-  albumWash: 0.34,
-  roomGlow: 0.64,
-  accentGlow: 1.08,
+  albumWash: 0.44,
+  roomGlow: 0.82,
+  accentGlow: 1.20,
   shadowPreserve: 0.22,
   neutralBoost: 0.78,
 };
@@ -224,7 +225,19 @@ function loadRoomVibeSettings(): RoomVibeSettings {
   try {
     const raw = localStorage.getItem(ROOM_VIBE_SETTINGS_KEY);
     if (!raw) return { ...DEFAULT_ROOM_VIBE_SETTINGS };
-    return clampRoomVibeSettings({ ...DEFAULT_ROOM_VIBE_SETTINGS, ...JSON.parse(raw) });
+    const saved = JSON.parse(raw) as Partial<RoomVibeSettings>;
+    // Increase album color presence only for untouched previous defaults.
+    // Existing manual room color tuning remains intact.
+    if (!localStorage.getItem(ROOM_VIBE_DEFAULTS_MIGRATION_KEY)) {
+      if (saved.albumWash === 0.34) saved.albumWash = DEFAULT_ROOM_VIBE_SETTINGS.albumWash;
+      if (saved.roomGlow === 0.64) saved.roomGlow = DEFAULT_ROOM_VIBE_SETTINGS.roomGlow;
+      if (saved.accentGlow === 1.08) saved.accentGlow = DEFAULT_ROOM_VIBE_SETTINGS.accentGlow;
+      try {
+        localStorage.setItem(ROOM_VIBE_SETTINGS_KEY, JSON.stringify(saved));
+        localStorage.setItem(ROOM_VIBE_DEFAULTS_MIGRATION_KEY, "1");
+      } catch { /* Continue with the migrated in-memory values. */ }
+    }
+    return clampRoomVibeSettings({ ...DEFAULT_ROOM_VIBE_SETTINGS, ...saved });
   } catch {
     return { ...DEFAULT_ROOM_VIBE_SETTINGS };
   }
@@ -826,6 +839,13 @@ let reactiveRoomTransitionStartedAt = 0;
 let reactiveRoomTransitionActive = false;
 let reactiveRoomLastTargetKey = "default";
 let reactiveRoomCurrentRenderedPalette: ReactiveRoomPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
+// Color pair is determined once per album, then interpolated with the same
+// ease and duration as the room palette (no intermediate HSL hue discontinuities).
+let reactiveLightColorsCurrent: AlbumLightColors = deriveSpotlightAlbumColors(
+  DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow,
+);
+let reactiveLightColorsFrom: AlbumLightColors = reactiveLightColorsCurrent;
+let reactiveLightColorsTo: AlbumLightColors = reactiveLightColorsCurrent;
 let reactiveRoomRenderedEnergy = 0.3;
 let reactiveRoomEnergyFrom = 0.3;
 let reactiveRoomEnergyTo = 0.3;
@@ -7820,7 +7840,7 @@ function writeRenderedReactiveRoomPaletteToCss(palette: ReactiveRoomPalette): vo
   root.style.setProperty("--string-light-ambient-rgb", rgbTripleToCss(palette.ambient));
   root.style.setProperty("--ambient-room-glow-rgb", rgbTripleToCss(palette.roomGlow));
   root.style.setProperty("--ambient-room-accent-rgb", rgbTripleToCss(palette.roomAccent));
-  updateSpotlightAlbumColors(palette.roomAccent, palette.roomGlow);
+  updateSpotlightAlbumColors(reactiveLightColorsCurrent.primary, reactiveLightColorsCurrent.secondary);
 }
 
 function setReactiveRoomPalette(palette: ReactiveRoomPalette): void {
@@ -7834,6 +7854,8 @@ function queueReactiveRoomPalette(palette: ReactiveRoomPalette, key: string): vo
   reactiveRoomLastTargetKey = paletteKey;
   reactiveRoomFromPalette = reactiveRoomCurrentRenderedPalette;
   reactiveRoomToPalette = palette;
+  reactiveLightColorsFrom = reactiveLightColorsCurrent;
+  reactiveLightColorsTo = deriveSpotlightAlbumColors(palette.roomAccent, palette.roomGlow);
   reactiveRoomTransitionStartedAt = performance.now();
   reactiveRoomTransitionActive = true;
 }
@@ -7846,14 +7868,20 @@ function applyReactiveRoomPaletteFrame(track: AppState["playback"]): void {
     const rawProgress = (now - reactiveRoomTransitionStartedAt) / REACTIVE_ROOM_CROSSFADE_MS;
     const eased = easeInOutCubic(rawProgress);
     base = interpolatePalette(reactiveRoomFromPalette, reactiveRoomToPalette, eased);
+    reactiveLightColorsCurrent = {
+      primary: mixRgb(reactiveLightColorsFrom.primary, reactiveLightColorsTo.primary, eased),
+      secondary: mixRgb(reactiveLightColorsFrom.secondary, reactiveLightColorsTo.secondary, eased),
+    };
 
     if (rawProgress >= 1) {
       reactiveRoomTransitionActive = false;
       reactiveRoomBasePalette = reactiveRoomToPalette;
       base = reactiveRoomBasePalette;
+      reactiveLightColorsCurrent = reactiveLightColorsTo;
     }
   } else {
     reactiveRoomBasePalette = reactiveRoomToPalette;
+    reactiveLightColorsCurrent = reactiveLightColorsTo;
   }
 
   const playing = track.isPlaying || track.source === "demo";
@@ -7883,9 +7911,9 @@ function paletteFromTrackText(track: AppState["playback"]): ReactiveRoomPalette 
   return {
     core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, anchor, 0.28),
     tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, anchor, 0.66),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, anchor, 0.26),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, anchor, 0.28),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, anchor, 0.70),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, anchor, 0.38),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, anchor, 0.43),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, anchor, 0.82),
   };
 }
 
@@ -7950,9 +7978,9 @@ async function extractReactiveRoomPalette(imageUrl: string, seed = imageUrl): Pr
   return {
     core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, averageAnchor, 0.26),
     tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, vibrantAnchor, 0.68),
-    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, averageAnchor, 0.24),
-    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, averageAnchor, 0.26),
-    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrantAnchor, 0.76),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, averageAnchor, 0.36),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, averageAnchor, 0.46),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, vibrantAnchor, 0.86),
   };
 }
 

@@ -19,17 +19,18 @@ export type RoomLightBarSettings = {
 };
 
 const STORAGE_KEY = "pocketdj-room-light-bars-v1";
+const DEFAULTS_MIGRATION_KEY = "pocketdj-room-light-bars-defaults-20261112";
 export const DEFAULT_ROOM_LIGHT_BARS: RoomLightBarSettings = {
   enabled: true,
   brightness: 1,
   glow: 0.90,
-  width: 2.7,
-  height: 12,
+  width: 3.2,
+  height: 15,
   top: 38.4,
-  leftX: 33.7,
-  rightX: 66.7,
+  leftX: 31.6,
+  rightX: 69.6,
   swap: false,
-  pauseMode: "lit",
+  pauseMode: "dim",
 };
 
 function clamp(value: unknown, fallback: number, min: number, max: number): number {
@@ -55,7 +56,25 @@ function normalize(source: Partial<RoomLightBarSettings>): RoomLightBarSettings 
 function readSettings(): RoomLightBarSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? normalize(JSON.parse(raw) as Partial<RoomLightBarSettings>) : { ...DEFAULT_ROOM_LIGHT_BARS };
+    if (!raw) return { ...DEFAULT_ROOM_LIGHT_BARS };
+    const saved = JSON.parse(raw) as Partial<RoomLightBarSettings>;
+
+    // One-time update for fixtures created in the first release. Only migrate
+    // unchanged old defaults, so custom widths/positions/glows survive.
+    if (!localStorage.getItem(DEFAULTS_MIGRATION_KEY)) {
+      if (saved.width === 2.7) saved.width = DEFAULT_ROOM_LIGHT_BARS.width;
+      if (saved.height === 12) saved.height = DEFAULT_ROOM_LIGHT_BARS.height;
+      if (saved.leftX === 33.7) saved.leftX = DEFAULT_ROOM_LIGHT_BARS.leftX;
+      if (saved.rightX === 66.7) saved.rightX = DEFAULT_ROOM_LIGHT_BARS.rightX;
+      // The initial 'lit' was the default; select the owner's new dim preference.
+      // An explicitly selected 'off' remains untouched, and later edits persist.
+      if (saved.pauseMode === "lit" || saved.pauseMode == null) saved.pauseMode = "dim";
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+        localStorage.setItem(DEFAULTS_MIGRATION_KEY, "1");
+      } catch { /* Read-only storage: apply migration to this session. */ }
+    }
+    return normalize(saved);
   } catch {
     return { ...DEFAULT_ROOM_LIGHT_BARS };
   }

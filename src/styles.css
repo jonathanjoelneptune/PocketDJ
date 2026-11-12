@@ -14702,9 +14702,10 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
 /* All standard PocketDJ modes and normal website visitors are unaffected. */
 
 
-/* Album-reactive wall fixtures. A local z-layer 1 keeps the wall fixtures
-   below z-layer 2 speakers and z-layer 4 DJ, including future walk sprites.
-   No motion loop, large-area filter, or touch-device exclusion is required. */
+/* Album-reactive wall fixtures: genuine dark charcoal housings with a soft,
+   localized wall/floor bounce. All effects live inside the room-base layer
+   (z-index 1), behind foreground speakers (z-index 2) and DJ (z-index 4).
+   No extra filters, frame loops, large backdrop textures or pointer capture. */
 .room-light-bars {
   position: absolute;
   inset: 0;
@@ -14715,82 +14716,133 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
 
 :root:not(.room-light-bars-enabled) .room-light-bars { display: none; }
 
+.room-light-bar-left,
+.room-light-bar-cast-left {
+  --room-light-bar-color: var(--room-spotlight-album-primary-rgb, 255, 161, 64);
+}
+.room-light-bar-right,
+.room-light-bar-cast-right {
+  --room-light-bar-color: var(--room-spotlight-album-secondary-rgb, 82, 161, 255);
+}
+:root[data-room-light-bar-swap="true"] .room-light-bar-left,
+:root[data-room-light-bar-swap="true"] .room-light-bar-cast-left {
+  --room-light-bar-color: var(--room-spotlight-album-secondary-rgb, 82, 161, 255);
+}
+:root[data-room-light-bar-swap="true"] .room-light-bar-right,
+:root[data-room-light-bar-swap="true"] .room-light-bar-cast-right {
+  --room-light-bar-color: var(--room-spotlight-album-primary-rgb, 255, 161, 64);
+}
+
+/* Broad, feathered colored wall bounce plus a dimmer reflection toward
+   the rug. The cast spans only a local patch, not the entire room surface. */
+.room-light-bar-cast {
+  position: absolute;
+  top: calc(var(--room-light-bar-top, 38.4%) - 12%);
+  width: 31%;
+  height: 54%;
+  transform: translateX(-50%);
+  pointer-events: none !important;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  opacity: min(1, var(--room-light-bar-glow, 0.90));
+  background:
+    radial-gradient(ellipse 49% 45% at 50% 41%,
+      rgba(var(--room-light-bar-color), 0.25) 0%,
+      rgba(var(--room-light-bar-color), 0.14) 36%,
+      rgba(var(--room-light-bar-color), 0.045) 69%,
+      transparent 100%),
+    radial-gradient(ellipse 65% 37% at 50% 91%,
+      rgba(var(--room-light-bar-color), 0.085) 0%,
+      rgba(var(--room-light-bar-color), 0.025) 58%,
+      transparent 100%);
+  transition: opacity 340ms ease;
+}
+.room-light-bar-cast-left { left: var(--room-light-bar-left-x, 31.6%); }
+.room-light-bar-cast-right { left: var(--room-light-bar-right-x, 69.6%); }
+
 .room-light-bar {
   position: absolute;
   top: var(--room-light-bar-top, 38.4%);
-  width: var(--room-light-bar-width, 2.7%);
-  height: var(--room-light-bar-height, 12%);
+  width: var(--room-light-bar-width, 3.2%);
+  height: var(--room-light-bar-height, 15%);
   transform: translateX(-50%);
-  border: clamp(1px, calc(var(--room-w) * 0.00125), 2px) solid rgba(4, 9, 17, 0.95);
-  border-radius: clamp(2px, calc(var(--room-w) * 0.0048), 7px);
-  background: linear-gradient(90deg, #07111d 0%, #253a49 20%, #101e2b 78%, #040810 100%);
+  border: clamp(2px, calc(var(--room-w) * 0.00155), 3px) solid #07090d;
+  border-radius: clamp(3px, calc(var(--room-w) * 0.004), 6px);
+  background: linear-gradient(90deg, #030405 0%, #191d23 19%, #0b0e12 80%, #020304 100%);
   box-shadow:
-    0 0 0 1px rgba(80, 54, 33, 0.88),
-    inset 0 0 0 1px rgba(148, 172, 180, 0.28),
-    0 4px 6px rgba(0, 0, 0, 0.60);
+    0 0 0 1px rgba(27, 30, 35, 0.96),
+    inset 1px 0 0 rgba(107, 115, 120, 0.21),
+    inset -1px 0 0 rgba(0, 0, 0, 0.88),
+    0 4px 8px rgba(0, 0, 0, 0.48);
   isolation: isolate;
 }
+.room-light-bar-left { left: var(--room-light-bar-left-x, 31.6%); }
+.room-light-bar-right { left: var(--room-light-bar-right-x, 69.6%); }
 
-.room-light-bar-left {
-  left: var(--room-light-bar-left-x, 33.7%);
-  --room-light-bar-color: var(--room-spotlight-album-primary-rgb, 255, 161, 64);
-}
-
-.room-light-bar-right {
-  left: var(--room-light-bar-right-x, 66.7%);
-  --room-light-bar-color: var(--room-spotlight-album-secondary-rgb, 82, 161, 255);
-}
-
-:root[data-room-light-bar-swap="true"] .room-light-bar-left {
-  --room-light-bar-color: var(--room-spotlight-album-secondary-rgb, 82, 161, 255);
-}
-
-:root[data-room-light-bar-swap="true"] .room-light-bar-right {
-  --room-light-bar-color: var(--room-spotlight-album-primary-rgb, 255, 161, 64);
-}
-
-/* Small local radial halo adds wall depth without lighting a full-screen layer. */
+/* Narrow diffused halo on the back wall. Separate broad bounce above
+   supplies illumination without an oversized luminous emitter. */
 .room-light-bar::before {
   content: "";
   position: absolute;
   z-index: -1;
-  inset: -28% -105%;
+  inset: -32% -120%;
   pointer-events: none;
   border-radius: 48%;
+  opacity: 1;
   background: radial-gradient(ellipse at center,
-    rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.36)) 0%,
-    rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.15)) 40%,
-    transparent 76%);
-  transition: opacity 300ms ease;
+    rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.27)) 0%,
+    rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.10)) 48%,
+    transparent 82%);
+  transition: opacity 340ms ease;
 }
 
 .room-light-bar-emitter {
   position: absolute;
-  inset: clamp(1px, calc(var(--room-w) * 0.0018), 3px);
-  border-radius: clamp(1px, calc(var(--room-w) * 0.0028), 4px);
+  inset: clamp(1px, calc(var(--room-w) * 0.002), 3px);
+  border-radius: clamp(1px, calc(var(--room-w) * 0.0022), 3px);
   background:
-    linear-gradient(90deg, rgba(4, 10, 17, 0.40), rgba(255, 255, 255, 0.22) 40%, rgba(255, 255, 255, 0.04) 65%, rgba(4, 10, 17, 0.30)),
-    linear-gradient(180deg, rgba(1, 8, 15, 0.34), transparent 13%, rgba(255, 255, 255, 0.12) 50%, transparent 86%, rgba(1, 8, 15, 0.34)),
-    rgba(var(--room-light-bar-color), 0.96);
+    linear-gradient(90deg,
+      rgba(2, 5, 9, 0.49) 0%,
+      rgba(255, 255, 255, 0.11) 24%,
+      rgba(255, 255, 255, 0.18) 49%,
+      rgba(255, 255, 255, 0.04) 74%,
+      rgba(2, 5, 9, 0.52) 100%),
+    linear-gradient(180deg,
+      rgba(4, 8, 13, 0.40) 0%,
+      transparent 16%,
+      rgba(255, 255, 255, 0.06) 46%,
+      transparent 82%,
+      rgba(4, 8, 13, 0.42) 100%),
+    rgba(var(--room-light-bar-color), 0.94);
   opacity: min(1, var(--room-light-bar-brightness, 1));
   box-shadow:
-    inset 0 0 0 1px rgba(250, 250, 244, 0.33),
-    inset 0 0 8px rgba(255, 255, 255, 0.27),
-    0 0 6px rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.58)),
-    0 0 19px rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.30));
-  transition: opacity 300ms ease;
+    inset 0 0 0 1px rgba(208, 211, 209, 0.18),
+    inset 0 0 9px rgba(255, 255, 255, 0.16),
+    0 0 7px rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.39)),
+    0 0 17px rgba(var(--room-light-bar-color), calc(var(--room-light-bar-glow, 0.90) * 0.21));
+  transition: opacity 340ms ease;
 }
 
-/* Keep the physical housings in place on pause; only the illumination changes. */
+/* Pause mode changes lighting only, preserving both black fixtures.
+   The room's existing music state is the only source of playing/paused truth. */
 :root[data-room-light-bar-pause="dim"]:not(.room-atmosphere-playing) .room-light-bar-emitter {
   opacity: calc(min(1, var(--room-light-bar-brightness, 1)) * 0.24);
 }
-:root[data-room-light-bar-pause="dim"]:not(.room-atmosphere-playing) .room-light-bar::before {
-  opacity: 0.24;
+:root[data-room-light-bar-pause="dim"]:not(.room-atmosphere-playing) .room-light-bar::before,
+:root[data-room-light-bar-pause="dim"]:not(.room-atmosphere-playing) .room-light-bar-cast {
+  opacity: 0.22;
 }
 :root[data-room-light-bar-pause="off"]:not(.room-atmosphere-playing) .room-light-bar-emitter,
-:root[data-room-light-bar-pause="off"]:not(.room-atmosphere-playing) .room-light-bar::before {
+:root[data-room-light-bar-pause="off"]:not(.room-atmosphere-playing) .room-light-bar::before,
+:root[data-room-light-bar-pause="off"]:not(.room-atmosphere-playing) .room-light-bar-cast {
   opacity: 0;
+}
+
+/* Amplify album-related room color lightly while keeping artwork legible.
+   Fixture bounce supplies local color; ambient layer remains the same existing
+   scene lighting animation, with no extra animation task or screen filter. */
+:root.room-light-bars-enabled .ambient-music-glow.ambient-music-glow-active {
+  opacity: calc((0.36 + var(--music-room-energy, 0.30) * 0.10) * var(--room-vibe-glow-strength, 0.82));
 }
 
 .menu2-room-light-bars {

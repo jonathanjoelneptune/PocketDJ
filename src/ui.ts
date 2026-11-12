@@ -100,6 +100,8 @@ export function renderShell(state: AppState): void {
         <div class="room-spotlight-full" aria-hidden="true"></div>
         <!-- Physical wall fixtures: above the room art, below z-index 2 speakers and z-index 4 DJ. -->
         <div id="roomLightBars" class="room-light-bars" aria-hidden="true">
+          <div class="room-light-bar-cast room-light-bar-cast-left"></div>
+          <div class="room-light-bar-cast room-light-bar-cast-right"></div>
           <div class="room-light-bar room-light-bar-left"><span class="room-light-bar-emitter"></span></div>
           <div class="room-light-bar room-light-bar-right"><span class="room-light-bar-emitter"></span></div>
         </div>
@@ -1519,7 +1521,7 @@ export function renderShell(state: AppState): void {
 
             <details class="menu2-room-light-bars">
               <summary>Album-Reactive Wall Light Bars</summary>
-              <p class="menu2-room-help">Two framed light bars beside the back window. They follow the two album colors through the room's existing 5-second track crossfade and sit behind the speakers and DJ. Changes are saved on this device.</p>
+              <p class="menu2-room-help">Two framed light bars beside the back window. They follow two album colors through the room's smooth 5-second track crossfade and cast a soft tint across the back wall and floor. Fixtures and glow sit behind the speakers and DJ. Changes are saved on this device.</p>
               <label class="menu2-setting menu2-toggle-setting"><input id="menu2LightBarsEnabled" type="checkbox" checked /> Show wall light bars</label>
               <label class="menu2-setting menu2-slider-setting">Brightness <span id="menu2LightBarsBrightnessValue">1.00</span>
                 <input id="menu2LightBarsBrightness" type="range" min="0" max="1.50" step="0.05" value="1" />
@@ -1527,26 +1529,26 @@ export function renderShell(state: AppState): void {
               <label class="menu2-setting menu2-slider-setting">Wall glow <span id="menu2LightBarsGlowValue">0.90</span>
                 <input id="menu2LightBarsGlow" type="range" min="0" max="1.50" step="0.05" value="0.90" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Bar width <span id="menu2LightBarsWidthValue">2.7%</span>
-                <input id="menu2LightBarsWidth" type="range" min="1.4" max="4.5" step="0.1" value="2.7" />
+              <label class="menu2-setting menu2-slider-setting">Bar width <span id="menu2LightBarsWidthValue">3.2%</span>
+                <input id="menu2LightBarsWidth" type="range" min="1.4" max="4.5" step="0.1" value="3.2" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Bar height <span id="menu2LightBarsHeightValue">12.0%</span>
-                <input id="menu2LightBarsHeight" type="range" min="8" max="22" step="0.5" value="12" />
+              <label class="menu2-setting menu2-slider-setting">Bar height <span id="menu2LightBarsHeightValue">15.0%</span>
+                <input id="menu2LightBarsHeight" type="range" min="8" max="22" step="0.5" value="15" />
               </label>
               <label class="menu2-setting menu2-slider-setting">Vertical position <span id="menu2LightBarsTopValue">38.4%</span>
                 <input id="menu2LightBarsTop" type="range" min="24" max="60" step="0.2" value="38.4" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Left bar position <span id="menu2LightBarsLeftXValue">33.7%</span>
-                <input id="menu2LightBarsLeftX" type="range" min="24" max="44" step="0.2" value="33.7" />
+              <label class="menu2-setting menu2-slider-setting">Left bar position <span id="menu2LightBarsLeftXValue">31.6%</span>
+                <input id="menu2LightBarsLeftX" type="range" min="24" max="44" step="0.2" value="31.6" />
               </label>
-              <label class="menu2-setting menu2-slider-setting">Right bar position <span id="menu2LightBarsRightXValue">66.7%</span>
-                <input id="menu2LightBarsRightX" type="range" min="56" max="76" step="0.2" value="66.7" />
+              <label class="menu2-setting menu2-slider-setting">Right bar position <span id="menu2LightBarsRightXValue">69.6%</span>
+                <input id="menu2LightBarsRightX" type="range" min="56" max="76" step="0.2" value="69.6" />
               </label>
               <label class="menu2-setting menu2-toggle-setting"><input id="menu2LightBarsSwap" type="checkbox" /> Swap left and right album colors</label>
               <label class="menu2-setting">When music is paused
                 <select id="menu2LightBarsPauseMode" class="menu2-select">
-                  <option value="lit" selected>Stay illuminated</option>
-                  <option value="dim">Dim to a soft glow</option>
+                  <option value="lit">Stay illuminated</option>
+                  <option value="dim" selected>Dim to a soft glow</option>
                   <option value="off">Turn emitters off</option>
                 </select>
               </label>
