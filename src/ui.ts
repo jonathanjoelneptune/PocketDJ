@@ -98,6 +98,8 @@ export function renderShell(state: AppState): void {
         <div class="room-spotlight-zone room-spotlight-zone-center" aria-hidden="true"></div>
         <div class="room-spotlight-zone room-spotlight-zone-right" aria-hidden="true"></div>
         <div class="room-spotlight-full" aria-hidden="true"></div>
+        <!-- Localized album-color illumination across both shelves, back wall and floor. -->
+        <div id="roomPerformanceWash" class="room-performance-wash" aria-hidden="true"></div>
         <!-- Physical wall fixtures: above the room art, below z-index 2 speakers and z-index 4 DJ. -->
         <div id="roomLightBars" class="room-light-bars" aria-hidden="true">
           <div class="room-light-bar-cast room-light-bar-cast-left"></div>
@@ -110,6 +112,8 @@ export function renderShell(state: AppState): void {
         <div id="stringLightOverlay" class="string-light-overlay" aria-hidden="true"></div>
         <div id="ambientTwinkleOverlay" class="ambient-twinkle-overlay" aria-hidden="true"></div>
         <div id="ambientMusicGlow" class="ambient-music-glow" aria-hidden="true"></div>
+        <!-- Scene-wide resting darkness fades away at playback; no animated GPU filter. -->
+        <div id="roomPlaybackDimmer" class="room-playback-dimmer" aria-hidden="true"></div>
 
         <div id="lyricsCeiling" class="lyrics-ceiling lyric-poster-ceiling" aria-live="polite">
           <div class="lyrics-boundary-guides" aria-hidden="true">
@@ -1517,6 +1521,18 @@ export function renderShell(state: AppState): void {
               </details>
 
               <p class="menu2-room-spotlights-safe-note">Performance safeguard: spotlight animation is disabled on touch screens, smaller layouts, and when reduced motion is requested.</p>
+            </details>
+
+            <details class="menu2-room-performance-lighting">
+              <summary>Music-Driven Scene Lighting</summary>
+              <p class="menu2-room-help">A dark room comes alive during playback. Stronger album-derived colors illuminate the shelves, wall, and floor. Color changes follow the existing smooth 5-second song transition.</p>
+              <label class="menu2-setting menu2-slider-setting">Darkness when paused <span id="menu2PerformanceIdleDimValue">0.76</span>
+                <input id="menu2PerformanceIdleDim" type="range" min="0.25" max="0.92" step="0.02" value="0.76" />
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Album color intensity <span id="menu2PerformanceColorValue">1.25</span>
+                <input id="menu2PerformanceColor" type="range" min="0" max="1.8" step="0.05" value="1.25" />
+              </label>
+              <button id="menu2PerformanceReset" class="menu2-action menu2-wide-action" type="button">Reset Scene Lighting</button>
             </details>
 
             <details class="menu2-room-light-bars">
