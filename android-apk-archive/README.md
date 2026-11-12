@@ -24,6 +24,7 @@ The installable APKs are **not committed** to the public PocketDJ repository: ea
 | v2.3 | Hidden 650ms long-press developer mode, phone-centered artwork scene and guarded native tablet reflow | Signed and statically validated; device tests pending. [v2.3 record](./v2.3/README.md) |
 | v2.3.1 | Blank-screen recovery using exact v2.2 WebView hook + v2.3 swipe module | Statically verified; device test pending. [v2.3.1 record](./v2.3.1/README.md) |
 | v2.3.2 | Corrected v2.3 WebView reveal, hidden buttons, phone centering and guarded tablet reflow | Signed; verified exactly one DEX payload byte changed vs v2.3; device test pending. [v2.3.2 record](./v2.3.2/README.md) |
+| v2.4 | Foldable native parent-pane width 50%→100%, no changes to working WebView/gesture DEX | Signed and statically validated; true native reflow needs device check. [v2.4 record](./v2.4/README.md) |
 
 For precise historical SHA-256 digests and filenames, see [builds.json](./builds.json). These hashes identify the exact APK binaries that were generated in the development conversation. They do not imply Android runtime validation.
 
