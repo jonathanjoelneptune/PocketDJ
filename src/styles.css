@@ -15036,3 +15036,29 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
     transition: opacity 1650ms cubic-bezier(0.20, 0.70, 0.22, 1) !important;
   }
 }
+
+/* Compact Spotify Android: use the existing album-derived room gradients and
+   wall light fixtures, not additional full-frame bitmap washes. Two blurred,
+   masked, soft-light album images and a third blurred screen-blend glow were
+   being composited over the duplicated ceiling every time music starts/stops
+   or tracks change. Android WebView can intermittently drop those surfaces.
+   This removes the redundant compositor passes rather than changing colors,
+   light positions, brightness, or the timing of the remaining effects.
+   The normal web/expanded room retains these visual layers. */
+html.spotify-embed-active.spotify-embed-compact .album-wash,
+html.spotify-embed-active.spotify-embed-compact .ambient-music-glow {
+  display: none !important;
+  animation: none !important;
+  transition: none !important;
+  filter: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  will-change: auto !important;
+}
+
+/* Keep the GPU composition predictable for the remaining compact-scene wash.
+   It is already masked to protect the skyline; only its opacity changes on
+   play/pause, while album hues follow the bounded five-second CSS updates. */
+html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
+  backface-visibility: hidden;
+}
