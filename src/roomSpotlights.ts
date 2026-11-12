@@ -145,7 +145,8 @@ function mixHue(from: number, to: number, ratio: number): number {
  */
 export function updateSpotlightAlbumColors(accent: RgbColor, glow: RgbColor): void {
   recentAlbumColors = { accent, glow };
-  if (settings.palette !== "album") return;
+  // Physical light bars also use these colors, independently of the spotlight mode.
+  // Keep the album palette live even when the user's spotlights use a fixed palette.
   const primary = rgbToHsl(accent);
   const secondary = rgbToHsl(glow);
   // When neutral, borrow the other hue; default to a stable amber/blue pairing.
