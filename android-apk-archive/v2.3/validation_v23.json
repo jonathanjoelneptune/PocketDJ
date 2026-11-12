@@ -1,0 +1,31 @@
+{
+  "version": "2.3",
+  "filename": "PocketDJ-Spotify-v2.3-ARTWORK-CAROUSEL.apk",
+  "bytes": 156151530,
+  "sha256": "72094cbc0094ec5abddec4bb7689b34ff23c420deb4da83b3859f0d68bc1a0e5",
+  "signing_cert_sha256": "72fd48cdfe257006f48db9b4851429dd3f05bcd9177c9b0efd21434a61347bf0",
+  "same_signing_cert_as_v22": true,
+  "changed_entries_vs_v22": [
+    "classes18.dex",
+    "classes19.dex"
+  ],
+  "all_spotify_owned_entries_unchanged": true,
+  "native_features": [
+    "phone square artwork gesture area with centered 16:9 web scene",
+    "top-right Spotify toggle hidden",
+    "compact Expand button hidden; 650ms PocketDJ long-press activates existing full-screen WebView",
+    "same-WebView Compact button visible in expanded developer mode",
+    "guarded native tablet artwork slot resize only if seekbar moves with it",
+    "preserved v2.2 preloader/session backup and native album-swipe interception"
+  ],
+  "web_companion": "embedded-only CSS in PR, native APK uses same GitHub Pages URL",
+  "android_runtime": "untested; conditional tablet reflow must be verified on device",
+  "risk_note": "Native tablet reflow is experimentally gated; if seekbar movement cannot be verified the APK restores original artwork bounds",
+  "critical_tests": [
+    "phone album/PocketDJ swipe both directions, including transparent top/bottom",
+    "phone long-press opens full-screen login and Compact closes",
+    "tablet unfolded portrait and landscape full width only when album-slot reflow validated",
+    "song title, seekbar, transport remain visible and clickable; scroll works",
+    "Spotify close and reopen preserves PocketDJ sign-in"
+  ]
+}
