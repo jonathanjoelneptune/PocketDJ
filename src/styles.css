@@ -14649,3 +14649,54 @@ html.spotify-embed-active.spotify-embed-compact .room-speaker .speaker-driver {
   image-rendering: auto;
   visibility: visible !important;
 }
+
+
+/* PocketDJ Spotify native carousel v2.3
+   Phone artwork WebView remains square for reliable swipes. The visible
+   16:9 scene sits vertically centered with a frame around the scene ONLY,
+   never around transparent top/bottom gesture space. */
+@media (min-aspect-ratio: 19/20) and (max-aspect-ratio: 21/20) {
+  html.spotify-embed-active.spotify-embed-compact .stage {
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+  html.spotify-embed-active.spotify-embed-compact .room {
+    --room-w: min(100vw, calc(100vh * 16 / 9)) !important;
+    --room-h: calc(var(--room-w) * 9 / 16) !important;
+    width: var(--room-w) !important;
+    height: var(--room-h) !important;
+    flex: 0 0 auto !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    outline: 2px solid rgba(0, 0, 0, 0.94) !important;
+    outline-offset: -2px !important;
+    border-radius: 2px;
+  }
+  html.spotify-embed-active.spotify-embed-compact .stage::after {
+    display: none !important;
+    content: none !important;
+  }
+}
+
+/* When native artwork reflow is confirmed, the extended tablet slot is
+   about 1.50:1. Draw the EXACT 16:9 base room at full viewport width and
+   let the existing ceiling reveal fill the extra height above it. No stretch,
+   no distorted scene coordinates. This also applies in tablet landscape. */
+@media (min-aspect-ratio: 7/5) and (max-aspect-ratio: 8/5) {
+  html.spotify-embed-active.spotify-embed-compact .stage {
+    align-items: flex-end !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+  html.spotify-embed-active.spotify-embed-compact .room {
+    --room-w: 100vw !important;
+    --room-h: calc(100vw * 9 / 16) !important;
+    width: var(--room-w) !important;
+    height: var(--room-h) !important;
+    max-height: none !important;
+    overflow: visible !important;
+    flex: 0 0 auto !important;
+  }
+}
+/* All standard PocketDJ modes and normal website visitors are unaffected. */
