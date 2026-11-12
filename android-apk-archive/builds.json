@@ -106,6 +106,14 @@
       "sha256": "0a7c52dfee591871afb784d7bd2e6d9727467a1975e8fa1adb7a0d0719315f31",
       "android_test_status": "Signed and statically validated; user device testing pending",
       "binary_in_public_repo": false
+    },
+    {
+      "version": "v2.3",
+      "filename": "PocketDJ-Spotify-v2.3-ARTWORK-CAROUSEL.apk",
+      "bytes": 156151530,
+      "sha256": "72094cbc0094ec5abddec4bb7689b34ff23c420deb4da83b3859f0d68bc1a0e5",
+      "android_test_status": "Java/D8 compilation passed, signed and static validated; Android device tests pending, guarded tablet reflow is experimental",
+      "binary_in_public_repo": false
     }
   ]
 }
