@@ -15143,3 +15143,81 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
       linear var(--room-light-flicker-delay, 0s) infinite;
   }
 }
+
+
+/* Party Mode is a distinct scene overlay, not a modifier of our carefully
+   calibrated album-reactive lighting. The canvas lives above DJ/speakers
+   (z2/z4) and below the lighting dimmer (z76), floor controls (z80),
+   lyrics (z82) and marquee (z96).
+   No CSS blend modes, full-screen filters, masks, or opacity animations. */
+.room-party-canvas {
+  position: absolute;
+  z-index: 75;
+  left: 0;
+  top: calc(var(--dynamic-ceiling-reveal-px, 0px) * -1);
+  width: 100%;
+  height: calc(100% + var(--dynamic-ceiling-reveal-px, 0px));
+  pointer-events: none !important;
+  display: none;
+}
+
+/* A larger, transparent target is necessary for narrow wall fixtures on
+   phones. It does not capture or cancel horizontal swipe gestures. */
+.room-party-tap-target {
+  position: absolute;
+  z-index: 78;
+  top: calc(var(--room-light-bar-top, 38.4%) - 3%);
+  width: calc(var(--room-light-bar-width, 3.2%) + 5%);
+  height: calc(var(--room-light-bar-height, 15%) + 6%);
+  transform: translateX(-50%);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 7px;
+  outline: none;
+  background: transparent;
+  opacity: 1;
+  cursor: default;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.room-party-tap-left { left: var(--room-light-bar-left-x, 31.6%); }
+.room-party-tap-right { left: var(--room-light-bar-right-x, 69.6%); }
+:root:not(.room-light-bars-enabled) .room-party-tap-target { display: none; }
+.room-party-tap-target:focus-visible {
+  outline: 2px solid rgba(255, 221, 160, .8);
+  outline-offset: 2px;
+}
+
+/* During a show, only the existing EMITTER'S inner highlight breathes a
+   bit faster. All room-wide gradients, pause fades, and the rare flicker
+   mechanism remain untouched. Respects the separate bar-motion toggle. */
+:root.party-mode-active.room-light-bars-motion .room-light-bar-left .room-light-bar-emitter {
+  --room-light-breathe-time: 2.8s;
+}
+:root.party-mode-active.room-light-bars-motion .room-light-bar-right .room-light-bar-emitter {
+  --room-light-breathe-time: 3.6s;
+}
+
+.menu2-room-party {
+  margin: 12px 0;
+  padding: 11px 10px;
+  border: 1px solid rgba(128, 109, 255, .3);
+  border-radius: 12px;
+  background: rgba(16, 22, 31, .46);
+}
+.menu2-room-party > summary {
+  cursor: pointer;
+  color: rgba(220, 206, 255, .98);
+  font-size: .85rem;
+  font-weight: 750;
+}
+.menu2-room-party[open] > summary { margin-bottom: 9px; }
+.menu2-room-party .menu2-setting { max-width: 100%; }
+.menu2-room-party .menu2-action { margin-top: 10px; }
+#menu2PartyStatus { font-weight: 700; color: rgba(205, 231, 255, .94); }
+
+@media (prefers-reduced-motion: reduce) {
+  .room-party-canvas { display: none !important; }
+}

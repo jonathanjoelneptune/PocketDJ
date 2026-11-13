@@ -4,6 +4,7 @@ import { initializeRoomSpotlights, deriveSpotlightAlbumColors, updateSpotlightAl
 import { initializeRoomParticles } from "./roomParticles";
 import { initializeRoomLightBars } from "./roomLightBars";
 import { initializePerformanceLighting } from "./roomPerformanceLighting";
+import { initializePartyMode, updatePartyMode } from "./partyMode";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
 import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, isSpotifyDjSpeakingForPose, observeSpotifyDjSpeech } from "./dj/speechBubble";
@@ -3843,6 +3844,7 @@ async function boot(): Promise<void> {
   initializeRoomParticles();
   initializeRoomLightBars();
   initializePerformanceLighting();
+  initializePartyMode();
   initializeSpotifyDjSpeechBubble();
   reactiveRoomCurrentRenderedPalette = DEFAULT_REACTIVE_ROOM_PALETTE;
   reactiveRoomRenderedEnergy = 0.3;
@@ -10522,6 +10524,19 @@ function tick(): void {
   updateReactiveRoomPalette(state.playback);
   applyReactiveRoomPaletteFrame(state.playback);
   syncMusicReactiveEnvironment(state.playback);
+  updatePartyMode({
+    now: performance.now(),
+    trackKey: state.playback.trackId || `${state.playback.source}:${state.playback.title}:${state.playback.artist}:${state.playback.durationMs}`,
+    title: state.playback.title,
+    artist: state.playback.artist,
+    album: state.playback.album,
+    bpm: speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM,
+    bpmSource: speakerTempoSource,
+    playing: document.documentElement.classList.contains("room-atmosphere-playing"),
+    speaking: !useDemo && isSpotifyDjSpeakingForPose(),
+    primary: reactiveLightColorsCurrent.primary,
+    secondary: reactiveLightColorsCurrent.secondary,
+  });
   updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
   updatePlaybackUi(state.playback, state.debugOpen);
   refreshMenu2NowPlayingIfNeeded();
