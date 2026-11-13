@@ -236,7 +236,7 @@ function resizeIfNeeded(): boolean {
 
 /** Fractional beam visibility avoids lines popping on/off as a song evolves. */
 function beamVisibility(index: number, movingCount: number): number {
-  return clamp(movingCount - index, 0, 1);
+  return Math.max(0, Math.min(1, movingCount - index));
 }
 function paintBeam(fromX: number, fromY: number, toX: number, toY: number,
                    spread: number, color: Rgb, alpha: number): void {
