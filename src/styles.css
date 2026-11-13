@@ -15242,3 +15242,30 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
 .room-light-bar-cast {
   opacity: calc(min(1, var(--room-light-bar-glow, 0.9)) * 0.50);
 }
+
+
+/* Atomic ceiling lyric presentation (v119).
+   Keep the previous, fully painted SVG visible while the next glyphs are fit
+   and rasterized on a separate layer. No fade/slide/position changes. */
+#activeLyricsBlock .lyric-poster-render-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  animation: none !important;
+  transition: none !important;
+}
+
+#activeLyricsBlock .lyric-poster-render-staging {
+  /* Nonzero opacity prompts Chrome to rasterize the incoming SVG while the
+     previous committed lyric remains visible. */
+  opacity: 0.01;
+  will-change: opacity;
+}
+
+#activeLyricsBlock .lyric-poster-render-committed {
+  opacity: 1;
+  will-change: auto;
+}
