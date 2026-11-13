@@ -14603,6 +14603,17 @@ html.spotify-embed-active.spotify-embed-compact .marquee-artist {
   letter-spacing: 0 !important;
 }
 
+/* Unfolded Spotify tablet: retain the embedded room layout and native controls
+   but give the sign the same text spacing as the full browser marquee. The
+   phone's small-screen compact sign remains unchanged. */
+html.spotify-embed-active.spotify-embed-compact.spotify-embed-tablet-marquee .marquee-content {
+  gap: clamp(5px, 0.55vw, 10px);
+}
+html.spotify-embed-active.spotify-embed-compact.spotify-embed-tablet-marquee .marquee-title,
+html.spotify-embed-active.spotify-embed-compact.spotify-embed-tablet-marquee .marquee-artist {
+  letter-spacing: 0.045em !important;
+}
+
 
 /* A square phone album slot can show PocketDJ's extra ceiling above the
    unchanged 16:9 base room. Anchor the room bottom to the original album
