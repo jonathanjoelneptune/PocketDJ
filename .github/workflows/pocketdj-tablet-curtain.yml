@@ -30,7 +30,6 @@ jobs:
           java-version: "17"
       - name: Configure current Android SDK
         uses: android-actions/setup-android@v3
-        with:
       - name: Install Android API and D8
         run: |
           sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
