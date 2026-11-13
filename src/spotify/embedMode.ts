@@ -8,6 +8,29 @@
 const EMBED_SESSION_KEY = "pocketdj_spotify_embed_v1";
 let enabled = false;
 
+// Keep the native compact-room layout on every device, but use the original
+// full marquee presentation on the unfolded Fold/tablet display. The art-slot
+// WebView may be a cropped rectangle, so detect using the SCREEN's short side,
+// not the album-art viewport's aspect ratio or width.
+const TABLET_MARQUEE_MIN_SHORT_SIDE_CSS_PX = 480;
+
+function updateSpotifyTabletMarquee(): void {
+  const root = document.documentElement;
+  const shortSide = Math.min(window.screen.width, window.screen.height);
+  const fullMarquee = enabled && root.classList.contains("spotify-embed-compact") &&
+    shortSide >= TABLET_MARQUEE_MIN_SHORT_SIDE_CSS_PX;
+  const wasFull = root.classList.contains("spotify-embed-tablet-marquee");
+  root.classList.toggle("spotify-embed-tablet-marquee", fullMarquee);
+  if (wasFull !== fullMarquee) {
+    console.info("[PocketDJ embed] Marquee layout", {
+      mode: fullMarquee ? "tablet-full" : "phone-compact",
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+      viewportWidth: window.innerWidth
+    });
+  }
+}
+
 /**
  * WebView's onPageFinished is not a reliable readiness signal for the visual
  * room: HTML may be present while image decoding, the pixel font, and the
@@ -198,6 +221,13 @@ export function initializeSpotifyEmbed(): void {
   }
   if (!enabled) return;
   document.documentElement.classList.add("spotify-embed-active", "spotify-embed-compact");
+  updateSpotifyTabletMarquee();
+  // Fold, rotate and split-window changes should re-evaluate the marquee only.
+  // Room geometry, native carousel and WebView session remain untouched.
+  window.addEventListener("resize", updateSpotifyTabletMarquee, { passive: true });
+  window.addEventListener("orientationchange", () => {
+    window.setTimeout(updateSpotifyTabletMarquee, 120);
+  }, { passive: true });
   beginEmbeddedRoomWarmup();
   watchEmbeddedSpeakerAssets();
   // The Android WebView exposes Spotify's own background around the room.
@@ -219,6 +249,7 @@ export function initializeSpotifyEmbed(): void {
   (window as Window & { pocketDjSpotifySetCompact?: (compact: boolean) => void })
     .pocketDjSpotifySetCompact = (compact: boolean) => {
       document.documentElement.classList.toggle("spotify-embed-compact", Boolean(compact));
+      updateSpotifyTabletMarquee();
       // Native carousel re-entry may occur without a page navigation.
       if (compact) window.dispatchEvent(new Event("pocketdj:embed-compact"));
     };
