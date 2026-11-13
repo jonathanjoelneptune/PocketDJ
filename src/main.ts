@@ -10028,11 +10028,17 @@ function primeSongChangeAlbumReveal(track: AppState["playback"], now = Date.now(
     albumRevealPreloadImage = new Image();
 
     const image = albumRevealPreloadImage;
-    image.onload = () => {
+    const markDecodedAlbumReady = () => {
       if (albumRevealPreloadTrackId === trackId && albumRevealPreloadUrl === albumArtUrl) {
         albumRevealLoadedUrl = albumArtUrl;
         updateSongChangeAlbumOverlay(track);
       }
+    };
+    image.onload = () => {
+      // Image.onload is network completion, not proof that the pixels have been
+      // decoded. Android Chrome can flash a partially uploaded cover if we
+      // reveal the album at this stage. The decode promise owns readiness.
+      if (typeof image.decode !== "function") markDecodedAlbumReady();
     };
     image.onerror = () => {
       if (albumRevealPreloadTrackId === trackId && albumRevealPreloadUrl === albumArtUrl) {
@@ -10043,14 +10049,10 @@ function primeSongChangeAlbumReveal(track: AppState["playback"], now = Date.now(
 
     if (typeof image.decode === "function") {
       void image.decode()
-        .then(() => {
-          if (albumRevealPreloadTrackId === trackId && albumRevealPreloadUrl === albumArtUrl) {
-            albumRevealLoadedUrl = albumArtUrl;
-            updateSongChangeAlbumOverlay(track);
-          }
-        })
+        .then(markDecodedAlbumReady)
         .catch(() => {
-          // onerror/onload will handle the final state where supported.
+          // Keep the album hidden if decoding fails. The existing timeout still
+          // allows the DJ cinematic to proceed without showing broken artwork.
         });
     }
   }
