@@ -15,6 +15,7 @@ export type RoomLightBarSettings = {
   leftX: number;
   rightX: number;
   swap: boolean;
+  motion: boolean;
   pauseMode: LightBarPauseMode;
 };
 
@@ -30,6 +31,7 @@ export const DEFAULT_ROOM_LIGHT_BARS: RoomLightBarSettings = {
   leftX: 31.6,
   rightX: 69.6,
   swap: false,
+  motion: true,
   pauseMode: "dim",
 };
 
@@ -49,6 +51,7 @@ function normalize(source: Partial<RoomLightBarSettings>): RoomLightBarSettings 
     leftX: clamp(source.leftX, DEFAULT_ROOM_LIGHT_BARS.leftX, 24, 44),
     rightX: clamp(source.rightX, DEFAULT_ROOM_LIGHT_BARS.rightX, 56, 76),
     swap: typeof source.swap === "boolean" ? source.swap : DEFAULT_ROOM_LIGHT_BARS.swap,
+    motion: typeof source.motion === "boolean" ? source.motion : DEFAULT_ROOM_LIGHT_BARS.motion,
     pauseMode: source.pauseMode === "dim" || source.pauseMode === "off" ? source.pauseMode : "lit",
   };
 }
@@ -90,6 +93,7 @@ function save(): void {
 function apply(): void {
   const root = document.documentElement;
   root.classList.toggle("room-light-bars-enabled", settings.enabled);
+  root.classList.toggle("room-light-bars-motion", settings.motion);
   root.dataset.roomLightBarSwap = String(settings.swap);
   root.dataset.roomLightBarPause = settings.pauseMode;
   root.style.setProperty("--room-light-bar-brightness", settings.brightness.toFixed(2));
@@ -119,9 +123,11 @@ function apply(): void {
   }
   const enabled = document.getElementById("menu2LightBarsEnabled") as HTMLInputElement | null;
   const swap = document.getElementById("menu2LightBarsSwap") as HTMLInputElement | null;
+  const motion = document.getElementById("menu2LightBarsMotion") as HTMLInputElement | null;
   const pause = document.getElementById("menu2LightBarsPauseMode") as HTMLSelectElement | null;
   if (enabled) enabled.checked = settings.enabled;
   if (swap) swap.checked = settings.swap;
+  if (motion) motion.checked = settings.motion;
   if (pause) pause.value = settings.pauseMode;
 }
 
@@ -149,6 +155,11 @@ export function initializeRoomLightBars(): void {
   });
   document.getElementById("menu2LightBarsSwap")?.addEventListener("change", (event) => {
     settings = { ...settings, swap: (event.target as HTMLInputElement).checked };
+    save();
+    apply();
+  });
+  document.getElementById("menu2LightBarsMotion")?.addEventListener("change", (event) => {
+    settings = { ...settings, motion: (event.target as HTMLInputElement).checked };
     save();
     apply();
   });
