@@ -15271,8 +15271,9 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
 }
 
 
-/* v120: Fully rasterized glyph surfaces for Chrome on touch devices.
-   Matrix3d row geometry and calibrated ceiling perspective are unchanged. */
+/* v121: Production Canvas 2D lyric surfaces for all layout modes.
+   Calibrated matrix3d ceiling geometry remains unchanged, and native SVG is
+   retained as a fallback if rasterization is unavailable. */
 #activeLyricsBlock .lyric-poster-row-canvas {
   display: block;
   width: 100%;
@@ -15281,11 +15282,9 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
   pointer-events: none;
 }
 
-@media (pointer: coarse) {
-  #activeLyricsBlock .lyric-poster-html-row {
-    /* Retain overflow clipping, but remove the extra paint containment/layer.
-       The canvas already contains the complete fitted glyph bitmap. */
-    contain: layout !important;
-    will-change: auto !important;
-  }
+#activeLyricsBlock .lyric-poster-html-row:has(> .lyric-poster-row-canvas) {
+  /* Avoid a redundant paint layer once the entire glyph row is a bitmap.
+     The original clipped SVG path keeps its existing containment. */
+  contain: layout !important;
+  will-change: auto !important;
 }
