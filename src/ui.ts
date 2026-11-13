@@ -1561,6 +1561,7 @@ export function renderShell(state: AppState): void {
                 <input id="menu2LightBarsRightX" type="range" min="56" max="76" step="0.2" value="69.6" />
               </label>
               <label class="menu2-setting menu2-toggle-setting"><input id="menu2LightBarsSwap" type="checkbox" /> Swap left and right album colors</label>
+              <label class="menu2-setting menu2-toggle-setting"><input id="menu2LightBarsMotion" type="checkbox" checked /> Subtle breathing glow + occasional independent flicker</label>
               <label class="menu2-setting">When music is paused
                 <select id="menu2LightBarsPauseMode" class="menu2-select">
                   <option value="lit">Stay illuminated</option>

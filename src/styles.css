@@ -15062,3 +15062,77 @@ html.spotify-embed-active.spotify-embed-compact .ambient-music-glow {
 html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
   backface-visibility: hidden;
 }
+
+
+/* Quiet wall-fixture micro-animation.
+   Two bar-local, opacity-only highlights. No full-room blend/filter, no
+   scene-level opacity change, no JS loop or random timers. Both fixtures use
+   different phase offsets and incommensurate durations, so they don't pulse
+   or flicker together. Existing scene lighting/fades remain the authority.
+   Keep all effects inside the emitter so pause/off inherits its 1650ms fade. */
+.room-light-bar-emitter::before,
+.room-light-bar-emitter::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none !important;
+  opacity: 0;
+}
+
+/* A slight brightness variation on the illuminated diffuser, not the
+   entire scene or even the full fixture shadow. */
+.room-light-bar-emitter::before {
+  background:
+    radial-gradient(ellipse 70% 57% at 50% 43%,
+      rgba(255, 255, 255, 0.28),
+      rgba(var(--room-light-bar-color), 0.16) 60%,
+      transparent 100%);
+}
+
+/* Rare, brief 5-9% dips simulate an occasional tiny electrical flutter.
+   They never invert or blank the emitter (and can't flash the ceiling). */
+.room-light-bar-emitter::after {
+  background: rgba(3, 6, 10, 0.62);
+}
+
+@keyframes pocketDjLampBreathe {
+  0%, 100% { opacity: 0.08; }
+  50% { opacity: 0.24; }
+}
+@keyframes pocketDjLampRareFlicker {
+  0%, 86.5%, 88.0%, 89.5%, 100% { opacity: 0; }
+  87.0% { opacity: 0.10; }
+  87.3% { opacity: 0.025; }
+  87.7% { opacity: 0.13; }
+  88.5% { opacity: 0.055; }
+  89.0% { opacity: 0; }
+}
+
+/* Bar clocks intentionally differ: roughly one soft flutter each 53 / 71 s.
+   No keyframes animate CSS filters, box shadows, gradients or fixture alpha. */
+.room-light-bar-left .room-light-bar-emitter {
+  --room-light-breathe-time: 7.3s;
+  --room-light-flicker-time: 53s;
+  --room-light-breathe-delay: -2.6s;
+  --room-light-flicker-delay: -8s;
+}
+.room-light-bar-right .room-light-bar-emitter {
+  --room-light-breathe-time: 9.1s;
+  --room-light-flicker-time: 71s;
+  --room-light-breathe-delay: -5.1s;
+  --room-light-flicker-delay: -35s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root.room-light-bars-motion.room-light-bars-enabled.room-atmosphere-playing
+  .room-light-bar-emitter::before {
+    animation: pocketDjLampBreathe var(--room-light-breathe-time, 8s)
+      ease-in-out var(--room-light-breathe-delay, 0s) infinite;
+  }
+  :root.room-light-bars-motion.room-light-bars-enabled.room-atmosphere-playing
+  .room-light-bar-emitter::after {
+    animation: pocketDjLampRareFlicker var(--room-light-flicker-time, 59s)
+      linear var(--room-light-flicker-delay, 0s) infinite;
+  }
+}

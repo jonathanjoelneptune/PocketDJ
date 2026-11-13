@@ -24,3 +24,14 @@ The moving spotlights already ship enabled with Full Room / Album Reactive and r
 - Check 16:9 web, phone portrait, tablet portrait, tablet landscape; all geometry is anchored to room space.
 - Adjust bar positions in Room settings, refresh, and Reset: values persist, and Reset uses new defaults.
 - Spotlights stay opt-in to supported devices only; toggles remain independent of bar visibility.
+
+
+## Micro-animation: subtle independent glow and rare flicker
+
+A saved **Subtle breathing glow + occasional independent flicker** toggle is enabled by default and can be disabled in the existing Room > Album-Reactive Wall Light Bars menu. Existing saved settings retain their values; the new `motion` field defaults to `true` on older saves.
+
+Two tiny emitter-local pseudo-elements change only opacity. The soft white-and-album-colored internal highlight breathes every 7.3 seconds on the left bar and every 9.1 seconds on the right. A separate dark diffuser overlay causes a short, shallow dip once per ~53 or ~71 seconds, respectively, using deliberately different phase offsets. No random timers, JavaScript render loops, new assets, outer box-shadow/filter animations, or full-scene compositing are added.
+
+Micro-animation runs only during confirmed playback, when bars are enabled and motion is permitted. Paused/off modes keep their existing 1.65-second fade, and the complete five-second album color transition is unaffected. Respects reduced-motion accessibility settings.
+
+Test: allow playback for 2+ minutes with contrasting albums; bars should have barely noticeable, non-synchronized variations, never switch fully off or flash the ceiling, and pause/resume without disrupting the room. Confirm the toggle stops/restarts micro-animation without affecting lamp colors or baseline brightness. Test Android Spotify compact room and desktop.
