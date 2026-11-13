@@ -1,0 +1,37 @@
+name: Tablet carousel Java/D8 compile gate
+on:
+  pull_request:
+    paths:
+      - 'android-native/tablet-carousel/**'
+      - '.github/workflows/tablet-carousel-dex.yml'
+  workflow_dispatch:
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use runner Android SDK and D8
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -f "$ANDROID_HOME/platforms/android-35/android.jar"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/d8"
+      - name: Compile new classes only
+        run: bash android-native/tablet-carousel/build_dex.sh
+      - name: Verify no compile-only stub reached DEX
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('android-native/tablet-carousel/build/classes20.dex')
+          raw=p.read_bytes()
+          assert raw[:4]==b'dex\n'
+          assert b'TabletCarouselHost' in raw
+          assert b'TabletCarouselAnimator' in raw
+          print('DEX size:',len(raw))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tablet-carousel-unintegrated-classes20
+          path: android-native/tablet-carousel/build/classes20.dex
+          if-no-files-found: error
