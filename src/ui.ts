@@ -4,6 +4,12 @@ import { formatMs, qs } from "./utils/dom";
 
 
 let lastLyricsRenderSignature = "";
+let lyricRenderGeneration = 0;
+
+function cancelPendingLyricPresentation(): number {
+  // Reject pending animation-frame callbacks when lyrics are cleared or superseded.
+  return ++lyricRenderGeneration;
+}
 let lastAlbumArtBackgroundUrl: string | null = null;
 
 type MarqueeState = "empty" | "paused" | "playing";
@@ -2631,6 +2637,7 @@ export function updateLyricsCeiling(
     // Paused, missing and pre-first-line states can last thousands of frames.
     // Clear only on the transition to empty, not on every requestAnimationFrame.
     if (lastLyricsRenderSignature || activeBlock.childNodes.length) {
+      cancelPendingLyricPresentation();
       lastLyricsRenderSignature = "";
       updateLyricGeometryMonitor(null, null, null);
       activeBlock.replaceChildren();
@@ -2694,6 +2701,7 @@ export function updateLyricsCeiling(
   const maxRowsValue = testRowsValue || (rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue);
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, "none");
   setNoLyricsFocusActive(false);
+  const renderGeneration = cancelPendingLyricPresentation();
   lastLyricsRenderSignature = renderSignature;
   if (activeBlock.style.getPropertyValue("--lyric-line-visibility") !== "1") {
     activeBlock.style.setProperty("--lyric-line-visibility", "1");
@@ -2769,11 +2777,35 @@ export function updateLyricsCeiling(
     <div id="lyricDomDiagnosticOverlay" class="lyric-dom-diagnostic-overlay" aria-hidden="true"></div>
   `;
 
+  // Build the next complete lyric as a separate composited layer. The old
+  // lyric remains fully visible until Chrome has had multiple paint opportunities
+  // for the new SVG glyphs and their four-corner transforms.
+  activeBlock.querySelectorAll(".lyric-poster-render-staging").forEach((stale) => stale.remove());
+  const nextLayer = document.createElement("div");
+  nextLayer.className = "lyric-poster-render-layer lyric-poster-render-staging";
+  nextLayer.innerHTML = nextLyricsMarkup;
+  activeBlock.appendChild(nextLayer);
   runWithoutVisibleLyricPaint(() => {
-    activeBlock.innerHTML = nextLyricsMarkup;
-    fitRenderedLyricGlyphsToSourceBoxes(layout, controls);
-    updateLyricDomDiagnosticOverlay(layout, diagnostics);
-    updateLyricGeometryMonitor(layout, trapezoid, controls, diagnostics);
+    fitRenderedLyricGlyphsToSourceBoxes(layout, controls, nextLayer);
+    updateLyricDomDiagnosticOverlay(layout, diagnostics, nextLayer);
+    updateLyricGeometryMonitor(layout, trapezoid, controls, diagnostics, nextLayer);
+  });
+
+  // A microtask or a single requestAnimationFrame does not guarantee that
+  // Android Chrome has rasterized every SVG tile. Keep the existing committed
+  // layer visible for two compositor frames before the atomic presentation.
+  requestAnimationFrame(() => {
+    if (renderGeneration !== lyricRenderGeneration || !nextLayer.isConnected) return;
+    requestAnimationFrame(() => {
+      if (renderGeneration !== lyricRenderGeneration || !nextLayer.isConnected) return;
+      requestAnimationFrame(() => {
+        if (renderGeneration !== lyricRenderGeneration || !nextLayer.isConnected) return;
+        nextLayer.classList.replace("lyric-poster-render-staging", "lyric-poster-render-committed");
+        for (const layer of activeBlock.querySelectorAll(".lyric-poster-render-layer")) {
+          if (layer !== nextLayer) layer.remove();
+        }
+      });
+    });
   });
 
   void playbackMs;
@@ -3919,9 +3951,8 @@ function formatQuad(quad: PosterQuad): string {
   ].join(" | ");
 }
 
-function fitRenderedLyricGlyphsToSourceBoxes(layout: CeilingPosterLayout, controls: CeilingPosterControls): void {
-  const activeBlock = document.querySelector<HTMLElement>("#activeLyricsBlock");
-  if (!activeBlock) return;
+function fitRenderedLyricGlyphsToSourceBoxes(layout: CeilingPosterLayout, controls: CeilingPosterControls, renderRoot: HTMLElement): void {
+  const activeBlock = renderRoot;
 
   const tallModeActive = controls.tallRevealRatio > 0.001;
   const textNodes = Array.from(activeBlock.querySelectorAll<SVGTextElement>(".lyric-poster-row-text"));
@@ -3972,9 +4003,8 @@ function fitRenderedLyricGlyphsToSourceBoxes(layout: CeilingPosterLayout, contro
   });
 }
 
-function getLyricGlyphMonitorLines(layout: CeilingPosterLayout): string[] {
-  const activeBlock = document.querySelector<HTMLElement>("#activeLyricsBlock");
-  if (!activeBlock) return [];
+function getLyricGlyphMonitorLines(layout: CeilingPosterLayout, renderRoot: HTMLElement): string[] {
+  const activeBlock = renderRoot;
 
   const textNodes = Array.from(activeBlock.querySelectorAll<SVGTextElement>(".lyric-poster-row-text"));
   if (!textNodes.length) return [];
@@ -4014,10 +4044,10 @@ function formatDomRect(rect: DOMRect, origin?: DOMRect): string {
   return `x ${left.toFixed(1)}, y ${top.toFixed(1)}, w ${rect.width.toFixed(1)}, h ${rect.height.toFixed(1)}`;
 }
 
-function updateLyricDomDiagnosticOverlay(layout: CeilingPosterLayout, diagnostics: LyricDiagnosticSettings): void {
-  const activeBlock = document.querySelector<HTMLElement>("#activeLyricsBlock");
-  const overlay = document.querySelector<HTMLElement>("#lyricDomDiagnosticOverlay");
-  if (!activeBlock || !overlay) return;
+function updateLyricDomDiagnosticOverlay(layout: CeilingPosterLayout, diagnostics: LyricDiagnosticSettings, renderRoot: HTMLElement): void {
+  const activeBlock = renderRoot;
+  const overlay = renderRoot.querySelector<HTMLElement>("#lyricDomDiagnosticOverlay");
+  if (!overlay) return;
 
   if (overlay.childNodes.length) overlay.replaceChildren();
   if (!diagnostics.showDomBounds) return;
@@ -4043,9 +4073,8 @@ function updateLyricDomDiagnosticOverlay(layout: CeilingPosterLayout, diagnostic
   void layout;
 }
 
-function getLyricDomMonitorLines(layout: CeilingPosterLayout, diagnostics: LyricDiagnosticSettings): string[] {
-  const activeBlock = document.querySelector<HTMLElement>("#activeLyricsBlock");
-  if (!activeBlock) return [];
+function getLyricDomMonitorLines(layout: CeilingPosterLayout, diagnostics: LyricDiagnosticSettings, renderRoot: HTMLElement): string[] {
+  const activeBlock = renderRoot;
 
   const lines = ["", "Final DOM paint monitor:"];
   const origin = activeBlock.getBoundingClientRect();
@@ -4067,6 +4096,7 @@ function updateLyricGeometryMonitor(
   trapezoid: LyricPosterTrapezoid | null,
   controls: CeilingPosterControls | null,
   diagnostics: LyricDiagnosticSettings = readLyricDiagnosticSettings(),
+  renderRoot?: HTMLElement,
 ): void {
   const monitor = document.querySelector<HTMLElement>("#lyricGeometryMonitor");
   if (!monitor) return;
@@ -4103,9 +4133,9 @@ function updateLyricGeometryMonitor(
 
   // Detailed glyph/DOM bounds force extra getBBox()/getBoundingClientRect()
   // passes. Only collect them in the explicit DOM-bounds diagnostic mode.
-  if (diagnostics.showDomBounds) {
-    lines.push(...getLyricGlyphMonitorLines(layout));
-    lines.push(...getLyricDomMonitorLines(layout, diagnostics));
+  if (diagnostics.showDomBounds && renderRoot) {
+    lines.push(...getLyricGlyphMonitorLines(layout, renderRoot));
+    lines.push(...getLyricDomMonitorLines(layout, diagnostics, renderRoot));
   }
   monitor.textContent = lines.join("\n");
 }
