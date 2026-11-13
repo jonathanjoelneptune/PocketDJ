@@ -15259,13 +15259,33 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
 }
 
 #activeLyricsBlock .lyric-poster-render-staging {
-  /* Nonzero opacity prompts Chrome to rasterize the incoming SVG while the
-     previous committed lyric remains visible. */
-  opacity: 0.01;
-  will-change: opacity;
+  /* Staging exists only within one JS task. No semi-visible ghost pixels
+     and no compositor-frame delay are needed before the complete canvas swap. */
+  opacity: 0;
+  will-change: auto;
 }
 
 #activeLyricsBlock .lyric-poster-render-committed {
   opacity: 1;
   will-change: auto;
+}
+
+
+/* v120: Fully rasterized glyph surfaces for Chrome on touch devices.
+   Matrix3d row geometry and calibrated ceiling perspective are unchanged. */
+#activeLyricsBlock .lyric-poster-row-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: auto;
+  pointer-events: none;
+}
+
+@media (pointer: coarse) {
+  #activeLyricsBlock .lyric-poster-html-row {
+    /* Retain overflow clipping, but remove the extra paint containment/layer.
+       The canvas already contains the complete fitted glyph bitmap. */
+    contain: layout !important;
+    will-change: auto !important;
+  }
 }
