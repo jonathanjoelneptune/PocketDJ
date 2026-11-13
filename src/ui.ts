@@ -2524,19 +2524,15 @@ function getEstimatedProgress(track: NormalizedTrack): number {
 }
 
 function runWithoutVisibleLyricPaint(activeBlock: HTMLElement, updateDom: () => void): void {
-  const previousVisibility = activeBlock.style.visibility;
-  const previousContain = activeBlock.style.contain;
-
-  // Build and fit the new lyric DOM while hidden, then reveal it in its final
+   // Build and fit the new lyric DOM while hidden, then reveal it in its final
   // fitted geometry during the same frame. This prevents the browser from
   // painting the raw SVG text for one frame and then snapping it after getBBox()
   // corrections run.
-  activeBlock.style.visibility = "hidden";
-  activeBlock.style.contain = "layout style paint";
+  // Keep the existing projection visible until the replacement is fully fitted.
+  // DOM writes and synchronous SVG measurements happen before the next paint.
+  // Hiding the entire block can expose a blank composited frame on Android WebView.
   updateDom();
   void activeBlock.offsetHeight;
-  activeBlock.style.contain = previousContain;
-  activeBlock.style.visibility = previousVisibility;
 }
 
 
@@ -2745,17 +2741,12 @@ function isLyricLineCurrentlyVisible(
 
   const nextTimedLine = lines.slice(index + 1).find((candidate) => typeof candidate.timeMs === "number");
   const nextStartMs = typeof nextTimedLine?.timeMs === "number" ? nextTimedLine.timeMs : null;
-  const gapToNext = nextStartMs === null ? Number.POSITIVE_INFINITY : Math.max(0, nextStartMs - startMs);
-
   // If the next lyric arrives quickly, keep the current lyric visible until that next line takes over.
   // If there is a long instrumental/singing gap, only hold the current line briefly, then clear the ceiling.
-  const longGapThresholdMs = 8_000;
-  const naturalHoldMs = estimateLyricLineHoldMs(line.text);
-  const visibleUntilMs = gapToNext > longGapThresholdMs
-    ? startMs + naturalHoldMs
-    : (nextStartMs ?? startMs + naturalHoldMs);
-
-  return playbackMs < visibleUntilMs;
+  // Hold each valid lyric until the next timed line replaces it, including
+  // instrumental gaps. A missing next line should not blank the projection.
+  // The caller clears lyrics on track change, pause, disable or unavailable data.
+  return nextStartMs === null || playbackMs < nextStartMs;
 }
 
 function estimateLyricLineHoldMs(text: string): number {
