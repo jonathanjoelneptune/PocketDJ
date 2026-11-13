@@ -12,11 +12,11 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: android-actions/setup-android@v3
-      - name: Install SDK and D8
+      - name: Use runner Android SDK and D8
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -f "$ANDROID_HOME/platforms/android-35/android.jar"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/d8"
       - name: Compile new classes only
         run: bash android-native/tablet-carousel/build_dex.sh
       - name: Verify no compile-only stub reached DEX
