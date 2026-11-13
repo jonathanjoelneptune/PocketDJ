@@ -10536,6 +10536,7 @@ function tick(): void {
     speaking: !useDemo && isSpotifyDjSpeakingForPose(),
     primary: reactiveLightColorsCurrent.primary,
     secondary: reactiveLightColorsCurrent.secondary,
+    wallBarsSwapped: document.documentElement.dataset.roomLightBarSwap === "true",
   });
   updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
   updatePlaybackUi(state.playback, state.debugOpen);

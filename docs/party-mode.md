@@ -32,3 +32,18 @@ No harsh strobes or rapid screen-wide flashes. Native prefers-reduced-motion dis
 4. Play/pause and Spotify AI DJ speech: effects fade to a quiet resting state, without harsh flashes. Song changes fade out before swapping effects; colors follow the established five-second interpolation.
 5. Verify portrait phone, portrait tablet, landscape tablet, normal desktop, enlarged ceiling reveal, window contrast and saved wall light geometry.
 6. Verify reduced motion, speaker assets, room shaders, album artwork, zero console errors, and **no reintroduction of Android WebView flashing**.
+
+
+## Party Mode V2: music-driven variation and compositor stability
+
+- Party lighting intentionally **crosses** the physical light-bar colors. When the left wall bar is red and the right wall bar is blue, party beams originating on the left are blue and beams from the right are red. The separate Wall Bars > Swap Colors control remains respected.
+- Concert beam count and width now vary continuously with tempo, phase, and the stable track seed. Fractional beam alpha prevents pop-in/out. Laser fan count and thickness vary in the same way.
+- Laser sources move to the **lower floor corners** and **just beneath the marquee**, while endpoints sweep around the upper room and stage rather than originating halfway up random wall locations.
+- Disco reflections are larger, brighter, and faceted, with dispersed local halos. Ambient Haze uses substantially wider and denser elliptical clouds so the fog is actually visible without a full-room lightening filter.
+- While Party Mode is on and music is playing, the two physical wall-bar emitters, adjacent wall casts, and bar-local halos operate at **50% of their configured visible intensity**. All existing settings and normal paused behavior are preserved.
+
+### Android compositor protection
+
+The same single Canvas now remains displayed for the full lifetime of the room, including Off/paused/track-change states. It is cleared **once** after an effect fades to rest, rather than cycling display:none/block and forcing Android's GPU compositor to create/release a full-scene texture. Redraw rate is capped at ~11 FPS on coarse-pointer devices (~22 desktop), and the mobile texture is limited to roughly 920 × 700 maximum pixels with a 0.9 DPR cap. Concert beams use two translucent passes instead of four. All rendering remains inside the original Canvas, with no new DOM layers, CSS filters, animation loops, or network calls.
+
+**Regression checklist:** Triple-tap Auto; manual Concert, Disco, Laser, Haze; color side swapping including Wall Bars > Swap; repeated song changes and Auto selection; play/pause; DJ speech; left/right lamp 50% fade; desktop/portrait Android/tablet layouts; skyline clarity, ceiling lyrics, DJ sprites, speaker cabinet rendering; no flicker/flashes of non-party scene elements after 10–15 minutes of testing on Android. Reduced motion should display no Party Mode animation.

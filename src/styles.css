@@ -15158,7 +15158,11 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
   width: 100%;
   height: calc(100% + var(--dynamic-ceiling-reveal-px, 0px));
   pointer-events: none !important;
-  display: none;
+  /* Keep the same transparent compositing surface alive across track changes
+     and play/pause. Repeated display none/block caused Android GPU layer churn. */
+  display: block;
+  contain: paint;
+  image-rendering: auto;
 }
 
 /* A larger, transparent target is necessary for narrow wall fixtures on
@@ -15220,4 +15224,21 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
 
 @media (prefers-reduced-motion: reduce) {
   .room-party-canvas { display: none !important; }
+}
+
+/* Party Mode intentionally dims the TWO wall fixtures (and their local halos)
+   by 50% while music is playing. Their saved brightness, normal pause mode,
+   album-color fade, rare flicker, and existing 1650ms opacity transition are
+   unchanged. No brightness/filter animation on the room or speaker assets. */
+:root.party-mode-active.room-atmosphere-playing.room-light-bars-enabled
+.room-light-bar-emitter {
+  opacity: calc(min(1, var(--room-light-bar-brightness, 1)) * 0.50);
+}
+:root.party-mode-active.room-atmosphere-playing.room-light-bars-enabled
+.room-light-bar::before {
+  opacity: 0.50;
+}
+:root.party-mode-active.room-atmosphere-playing.room-light-bars-enabled
+.room-light-bar-cast {
+  opacity: calc(min(1, var(--room-light-bar-glow, 0.9)) * 0.50);
 }
