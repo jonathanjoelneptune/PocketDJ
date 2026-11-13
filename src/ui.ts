@@ -4,12 +4,6 @@ import { formatMs, qs } from "./utils/dom";
 
 
 let lastLyricsRenderSignature = "";
-let lyricRenderGeneration = 0;
-
-function cancelPendingLyricPresentation(): number {
-  // Reject pending animation-frame callbacks when lyrics are cleared or superseded.
-  return ++lyricRenderGeneration;
-}
 let lastAlbumArtBackgroundUrl: string | null = null;
 
 type MarqueeState = "empty" | "paused" | "playing";
@@ -2637,7 +2631,6 @@ export function updateLyricsCeiling(
     // Paused, missing and pre-first-line states can last thousands of frames.
     // Clear only on the transition to empty, not on every requestAnimationFrame.
     if (lastLyricsRenderSignature || activeBlock.childNodes.length) {
-      cancelPendingLyricPresentation();
       lastLyricsRenderSignature = "";
       updateLyricGeometryMonitor(null, null, null);
       activeBlock.replaceChildren();
@@ -2701,7 +2694,6 @@ export function updateLyricsCeiling(
   const maxRowsValue = testRowsValue || (rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue);
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, "none");
   setNoLyricsFocusActive(false);
-  const renderGeneration = cancelPendingLyricPresentation();
   lastLyricsRenderSignature = renderSignature;
   if (activeBlock.style.getPropertyValue("--lyric-line-visibility") !== "1") {
     activeBlock.style.setProperty("--lyric-line-visibility", "1");
@@ -2777,9 +2769,10 @@ export function updateLyricsCeiling(
     <div id="lyricDomDiagnosticOverlay" class="lyric-dom-diagnostic-overlay" aria-hidden="true"></div>
   `;
 
-  // Build the next complete lyric as a separate composited layer. The old
-  // lyric remains fully visible until Chrome has had multiple paint opportunities
-  // for the new SVG glyphs and their four-corner transforms.
+  // Build and fit the incoming lyric while the previous line remains intact.
+  // Long warped SVG text was sometimes painted in incomplete tiles on Android
+  // Chrome. Flatten the already-fitted SVG text to a single Canvas 2D bitmap
+  // for each row on touch devices. Both rows are ready before presentation.
   activeBlock.querySelectorAll(".lyric-poster-render-staging").forEach((stale) => stale.remove());
   const nextLayer = document.createElement("div");
   nextLayer.className = "lyric-poster-render-layer lyric-poster-render-staging";
@@ -2789,23 +2782,15 @@ export function updateLyricsCeiling(
     fitRenderedLyricGlyphsToSourceBoxes(layout, controls, nextLayer);
     updateLyricDomDiagnosticOverlay(layout, diagnostics, nextLayer);
     updateLyricGeometryMonitor(layout, trapezoid, controls, diagnostics, nextLayer);
-  });
-
-  // A microtask or a single requestAnimationFrame does not guarantee that
-  // Android Chrome has rasterized every SVG tile. Keep the existing committed
-  // layer visible for two compositor frames before the atomic presentation.
-  requestAnimationFrame(() => {
-    if (renderGeneration !== lyricRenderGeneration || !nextLayer.isConnected) return;
-    requestAnimationFrame(() => {
-      if (renderGeneration !== lyricRenderGeneration || !nextLayer.isConnected) return;
-      requestAnimationFrame(() => {
-        if (renderGeneration !== lyricRenderGeneration || !nextLayer.isConnected) return;
-        nextLayer.classList.replace("lyric-poster-render-staging", "lyric-poster-render-committed");
-        for (const layer of activeBlock.querySelectorAll(".lyric-poster-render-layer")) {
-          if (layer !== nextLayer) layer.remove();
-        }
-      });
-    });
+    if (window.matchMedia("(pointer: coarse)").matches) {
+      rasterizeFittedLyricRows(nextLayer, layout);
+    }
+    // No delayed requestAnimationFrame chains: ready pixels replace the old
+    // lyric in the same main-thread task, keeping line timing aligned to audio.
+    nextLayer.classList.replace("lyric-poster-render-staging", "lyric-poster-render-committed");
+    for (const layer of activeBlock.querySelectorAll(".lyric-poster-render-layer")) {
+      if (layer !== nextLayer) layer.remove();
+    }
   });
 
   void playbackMs;
@@ -3949,6 +3934,70 @@ function formatQuad(quad: PosterQuad): string {
     `BR ${formatPoint(quad[2])}`,
     `BL ${formatPoint(quad[3])}`,
   ].join(" | ");
+}
+
+/**
+ * Convert fitted SVG text to stable Canvas 2D pixels before the lyric becomes
+ * visible. Chrome Android can expose partially painted tiles when long SVG
+ * lines are perspective-warped and blended into the ceiling.
+ *
+ * This uses the final fitted SVG font, size, spacing, fill, and textLength.
+ * The original HTML row and its matrix3d remain unchanged. If Canvas 2D is
+ * unavailable, keep the SVG intact as the safe fallback.
+ */
+function rasterizeFittedLyricRows(renderRoot: HTMLElement, layout: CeilingPosterLayout): void {
+  const texts = Array.from(renderRoot.querySelectorAll<SVGTextElement>(".lyric-poster-row-text"));
+  const pixelScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  texts.forEach((textNode) => {
+    const rowIndex = Number(textNode.dataset.lyricRowIndex || 0);
+    const row = layout.rows[rowIndex];
+    const sourceSvg = textNode.ownerSVGElement;
+    if (!row || !sourceSvg || row.sourceWidth <= 0 || row.sourceHeight <= 0) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.className = "lyric-poster-row-canvas";
+    canvas.width = Math.round(row.sourceWidth * pixelScale);
+    canvas.height = Math.round(row.sourceHeight * pixelScale);
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    try {
+      const style = getComputedStyle(textNode);
+      const fontSize = Number(textNode.dataset.fittedFontSize || textNode.getAttribute("font-size") || row.sourceFontSize);
+      const textY = Number(textNode.dataset.fittedY || textNode.getAttribute("y") || row.sourceTextY);
+      const textLength = Number(textNode.dataset.fittedTextLength || textNode.getAttribute("textLength") || row.sourceTextLength);
+      if (![fontSize, textY, textLength].every(Number.isFinite) || fontSize <= 0 || textLength <= 0) return;
+      const text = style.textTransform === "uppercase" ? (textNode.textContent || "").toUpperCase() : (textNode.textContent || "");
+      context.scale(pixelScale, pixelScale);
+      context.font = `${style.fontStyle || "italic"} ${style.fontWeight || "900"} ${fontSize}px ${style.fontFamily || "Arial Black, sans-serif"}`;
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillStyle = style.fill || "#171319";
+      const canvasWithSpacing = context as CanvasRenderingContext2D & { letterSpacing?: string };
+      if (typeof canvasWithSpacing.letterSpacing === "string") canvasWithSpacing.letterSpacing = style.letterSpacing;
+      const nativeWidth = context.measureText(text).width;
+      if (!Number.isFinite(nativeWidth) || nativeWidth <= 0) return;
+      context.translate(row.sourceWidth / 2, 0);
+      // SVG lengthAdjust=spacingAndGlyphs and Canvas scaling produce matching
+      // horizontal glyph widths in Chromium when the source font is identical.
+      context.scale(textLength / nativeWidth, 1);
+      const fillOpacity = Number.parseFloat(style.fillOpacity);
+      if (Number.isFinite(fillOpacity)) context.globalAlpha = Math.max(0, Math.min(1, fillOpacity));
+      // Blink's SVG 'central' baseline differs from Canvas 'middle' by
+      // ~0.07em for the heavy italic display font. Verified in Chromium.
+      const canvasTextY = textY + fontSize * 0.07;
+      const strokeWidth = Number.parseFloat(style.strokeWidth);
+      if (strokeWidth > 0 && style.stroke && style.stroke !== "none") {
+        context.strokeStyle = style.stroke;
+        context.lineWidth = strokeWidth;
+        context.strokeText(text, 0, canvasTextY);
+      }
+      context.fillText(text, 0, canvasTextY);
+      sourceSvg.replaceWith(canvas);
+    } catch {
+      // SVG remains visible if the device rejects a rasterization operation.
+    }
+  });
 }
 
 function fitRenderedLyricGlyphsToSourceBoxes(layout: CeilingPosterLayout, controls: CeilingPosterControls, renderRoot: HTMLElement): void {
