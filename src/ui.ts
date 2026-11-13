@@ -28,8 +28,16 @@ let embedArtistPan: Animation | null = null;
 let embedMarqueeResizeBound = false;
 
 function isSpotifyEmbedMarquee(): boolean {
-  return document.documentElement.classList.contains("spotify-embed-active") &&
-    document.documentElement.classList.contains("spotify-embed-compact");
+  const root = document.documentElement;
+  // The inner Fold/tablet screen keeps the same compact ROOM layout but uses
+  // the full web marquee: labeled title/artist/album and slide transitions.
+  return root.classList.contains("spotify-embed-active") &&
+    root.classList.contains("spotify-embed-compact") &&
+    !root.classList.contains("spotify-embed-tablet-marquee");
+}
+
+function isSpotifyTabletMarquee(): boolean {
+  return document.documentElement.classList.contains("spotify-embed-tablet-marquee");
 }
 
 /**
@@ -2436,7 +2444,9 @@ function configureStaticArtistRow(options: {
   marquee.classList.toggle("marquee-artist-short", !isLong);
 
   // Non-embedded mode retains the original static artist behavior.
-  if (isSpotifyEmbedMarquee() && isLong) {
+  if ((isSpotifyEmbedMarquee() || isSpotifyTabletMarquee()) && isLong) {
+    // The full labeled artist/album line may exceed the narrower embedded
+    // sign; pan it rather than cut off the names on an unfolded tablet.
     const overflow = Math.max(1, measuredWidth - availableWidth + 8);
     element.style.width = "max-content";
     element.style.maxWidth = "none";
