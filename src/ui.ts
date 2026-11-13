@@ -2113,13 +2113,14 @@ function updateFloorControls(track: NormalizedTrack): void {
   modePill.classList.toggle("mode-pill-playing", isPlaying);
   modePill.classList.toggle("mode-pill-paused", isPaused);
   modePill.classList.toggle("mode-pill-idle", !isPlaying && !isPaused);
-  modePill.dataset.state = isPlaying ? "playing" : isPaused ? "paused" : "idle";
+  const stateLabel = isPlaying ? "playing" : isPaused ? "paused" : "idle";
+  if (modePill.dataset.state !== stateLabel) modePill.dataset.state = stateLabel;
   setTextIfChanged(modePill, isPlaying ? "PLAYING" : isPaused ? "PAUSED" : "IDLE");
 
   setTextIfChanged(playIcon, isPlaying ? "||" : "▶");
   setTextIfChanged(panelPlayIcon, isPlaying ? "||" : "▶");
-  playButton.setAttribute("aria-label", isPlaying ? "Pause Spotify" : "Play Spotify");
-  panelPlayButton.setAttribute("aria-label", isPlaying ? "Pause Spotify" : "Play Spotify");
+  setAttributeIfChanged(playButton, "aria-label", isPlaying ? "Pause Spotify" : "Play Spotify");
+  setAttributeIfChanged(panelPlayButton, "aria-label", isPlaying ? "Pause Spotify" : "Play Spotify");
 
   const progressPercent = track.durationMs > 0
     ? Math.min(100, (getEstimatedProgress(track) / track.durationMs) * 100)
@@ -2128,7 +2129,7 @@ function updateFloorControls(track: NormalizedTrack): void {
   qs<HTMLElement>("#floorSeekBar").setAttribute("aria-valuenow", String(Math.round(progressPercent)));
 
   [playButton, prevButton, nextButton, panelPlayButton, panelPrevButton, panelNextButton].forEach((button) => {
-    button.disabled = !canControl;
+    if (button.disabled !== !canControl) button.disabled = !canControl;
     button.classList.toggle("floor-control-disabled", !canControl);
   });
 }
@@ -2531,25 +2532,29 @@ function updateConnectionBanner(track: NormalizedTrack): void {
   const dropdown = qs<HTMLElement>("#connectDropdown");
 
   if (track.source === "demo") {
-    pill.className = "connect-pill demo";
-    pill.textContent = "Demo";
+    if (pill.className !== "connect-pill demo") pill.className = "connect-pill demo";
+    setTextIfChanged(pill, "Demo");
     dropdown.classList.remove("connect-dropdown-open");
     return;
   }
 
   if (track.isAuthenticated) {
-    pill.className = "connect-pill connected";
-    pill.textContent = "Connected";
+    if (pill.className !== "connect-pill connected") pill.className = "connect-pill connected";
+    setTextIfChanged(pill, "Connected");
     return;
   }
 
-  pill.className = "connect-pill disconnected";
-  pill.textContent = "Connect";
+  if (pill.className !== "connect-pill disconnected") pill.className = "connect-pill disconnected";
+  setTextIfChanged(pill, "Connect");
   dropdown.classList.remove("connect-dropdown-open");
 }
 
 function setTextIfChanged(element: Element, value: string): void {
   if (element.textContent !== value) element.textContent = value;
+}
+
+function setAttributeIfChanged(element: Element, name: string, value: string): void {
+  if (element.getAttribute(name) !== value) element.setAttribute(name, value);
 }
 
 function getEstimatedProgress(track: NormalizedTrack): number {
