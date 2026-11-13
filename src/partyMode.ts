@@ -35,7 +35,7 @@ const SMALL_SCREEN = window.matchMedia("(pointer: coarse)").matches;
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 // Limit the dirty Canvas texture on Android WebView: lower pixel resolution
 // and fewer uploads reduce the risk of other scene textures flashing.
-const DRAW_INTERVAL_MS = SMALL_SCREEN ? 92 : 45; // <=11 FPS mobile, <=22 desktop
+const DRAW_INTERVAL_MS = SMALL_SCREEN ? 55 : 35; // ~18 FPS mobile, ~29 desktop; keep the persistent low-DPR canvas
 const REST_AFTER_TRACK_CHANGE_MS = 1350;
 const FADE_IN_MS = 1250;
 const FADE_OUT_MS = 750;
@@ -287,71 +287,103 @@ function drawConcert(t: number, bpm: number, left: Rgb, right: Rgb, seed: number
 function drawDisco(t: number, bpm: number, left: Rgb, right: Rgb, seed: number): void {
   if (!ctx) return;
   const tempo = clamp(bpm / 115, 1, 0.55, 1.55);
-  const count = SMALL_SCREEN ? 70 : 100;
-  // Bigger colored mirror reflections are readable on Android even at
-  // reduced render resolution. Glow is local to individual dots.
-  for (let i = 0; i < count; i++) {
-    const rx = noise(i * 17, seed), ry = noise(i * 29, seed);
-    const spin = t * 0.20 * tempo + ry * Math.PI * 2;
-    const x = (0.02 + 0.95 * rx + 0.09 * Math.cos(spin + i * 0.2)) * w;
-    const y = (0.075 + ry * 0.81 + 0.055 * Math.sin(spin + i)) * h;
-    const size = Math.max(2.4, w * (0.003 + noise(i * 41, seed) * 0.0045));
-    const color = i % 2 ? right : left;
-    const shimmer = 0.70 + 0.30 * (0.5 + 0.5 * Math.sin(t * 0.32 * tempo + i * 1.8));
-    if (i % 4 === 0) {
-      const halo = ctx.createRadialGradient(x, y, 0, x, y, size * 3.5);
-      halo.addColorStop(0, rgba(color, 0.33 * shimmer));
-      halo.addColorStop(0.55, rgba(color, 0.12 * shimmer));
-      halo.addColorStop(1, rgba(color, 0));
-      ctx.fillStyle = halo;
-      ctx.beginPath(); ctx.arc(x, y, size * 3.5, 0, Math.PI * 2); ctx.fill();
+  const ringCount = SMALL_SCREEN ? 5 : 6;
+  const facetsPerRing = 14;
+  const tau = Math.PI * 2;
+  // Every mirror facet is fixed relative to ONE rotating disco ball.
+  // Unlike the old independently wandering dots, they all share this
+  // angular velocity, and trace coordinated light bands across the walls,
+  // ceiling, DJ platform and floor.
+  const rotation = t * 0.25 * tempo + noise(17, seed) * tau;
+  const virtualBallX = w * 0.5;
+  const virtualBallY = h * 0.15;
+  for (let ring = 0; ring < ringCount; ring++) {
+    const depth = ring / Math.max(1, ringCount - 1);
+    const radiusX = w * (0.24 + depth * 0.245);
+    const radiusY = h * (0.17 + depth * 0.27);
+    const mirrorOffset = ring % 2 ? Math.PI / facetsPerRing : 0;
+    for (let facet = 0; facet < facetsPerRing; facet++) {
+      const angle = rotation + facet * tau / facetsPerRing + mirrorOffset;
+      const x = virtualBallX + Math.cos(angle) * radiusX;
+      const y = h * 0.50 + Math.sin(angle) * radiusY;
+      const ordinal = ring * facetsPerRing + facet;
+      const color = ordinal % 2 ? left : right;
+      const shimmer = 0.77 + 0.23 * Math.max(0, Math.cos(angle));
+      const size = Math.max(2.6, w * (0.0034 + 0.003 * noise(ordinal * 41, seed)));
+
+      // A few faint shared-origin rays make the projection read as a real
+      // mirrored-ball light pattern, not independent moving particles.
+      if (ordinal % 14 === 0) {
+        ctx.beginPath();
+        ctx.moveTo(virtualBallX, virtualBallY);
+        ctx.lineTo(x, y);
+        ctx.lineWidth = Math.max(0.65, w * 0.0008);
+        ctx.strokeStyle = rgba(color, 0.065 * shimmer);
+        ctx.stroke();
+      }
+
+      if (ordinal % 5 === 0) {
+        const halo = ctx.createRadialGradient(x, y, 0, x, y, size * 3);
+        halo.addColorStop(0, rgba(color, 0.34 * shimmer));
+        halo.addColorStop(0.65, rgba(color, 0.10 * shimmer));
+        halo.addColorStop(1, rgba(color, 0));
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.arc(x, y, size * 3, 0, tau);
+        ctx.fill();
+      }
+
+      // Discrete mirrored tiles suit PocketDJ's pixel-art room.
+      ctx.fillStyle = rgba(color, (0.34 + 0.17 * noise(ordinal * 23, seed)) * shimmer);
+      ctx.fillRect(x - size * 0.65, y - size * 0.55, size * 1.3, size * 1.1);
     }
-    // Faceted disco reflections rather than sparse, faint round pixels.
-    ctx.fillStyle = rgba(color, (0.36 + 0.18 * noise(i * 23, seed)) * shimmer);
-    ctx.fillRect(x - size * 0.65, y - size * 0.55, size * 1.3, size * 1.1);
   }
 }
-
 function drawLasers(t: number, bpm: number, left: Rgb, right: Rgb, seed: number): void {
   if (!ctx) return;
   const tempo = clamp(bpm / 118, 1, 0.65, 1.70);
   const phase = noise(7, seed) * Math.PI * 2;
-  // Vary 7-16 rays, smoothing the last ray's opacity. A slowly oscillating
-  // width provides energy without hard strobes or abrupt whole-room flashes.
   const density = 7.4 + 7.4 * (0.5 + 0.5 * Math.sin(t * 0.26 * tempo + phase));
   ctx.lineCap = "round";
   for (let i = 0; i < 16; i++) {
     const visibility = beamVisibility(i, density);
     if (visibility < 0.02) continue;
     const source = i % 4;
-    // Rays originate below the floor/corners or just under the marquee,
-    // not from arbitrary points halfway up the wall.
-    const floorSource = source < 2;
+    const fromCeiling = source >= 2;
     const leftSource = source === 0 || source === 2;
-    const sx = floorSource ? w * (leftSource ? -0.045 : 1.045) :
-      w * (leftSource ? 0.37 : 0.63);
-    const sy = floorSource ? h * 1.07 : h * 0.33;
+    // The upper pair is mechanically pinned to the LOWER CORNERS of the
+    // ceiling (above the sign), not floating halfway down the wall.
+    // This is the existing z75 Canvas, above the marquee (z3), so the
+    // thin beams naturally sweep OVER its face and song text. No second
+    // GPU Canvas layer is necessary.
+    const sx = fromCeiling
+      ? w * (leftSource ? 0.255 : 0.745)
+      : w * (leftSource ? -0.045 : 1.045);
+    const sy = fromCeiling ? h * 0.19 : h * 1.07;
     const aim = Math.sin(t * (0.16 + 0.015 * (i % 5)) * tempo + i * 0.69 + phase);
-    const dx = w * (0.50 + 0.53 * aim);
-    const dy = floorSource ? h * (0.03 + 0.42 * noise(i * 19, seed)) :
-      h * (0.58 + 0.32 * noise(i * 13, seed));
+    const dx = w * (0.50 + (fromCeiling ? 0.43 : 0.53) * aim);
+    // The ceiling fans cut directly through the marquee region (y 21-30%)
+    // before reaching the room, with enough length to see the movement.
+    const dy = fromCeiling
+      ? h * (0.43 + 0.24 * noise(i * 13, seed))
+      : h * (0.03 + 0.42 * noise(i * 19, seed));
     const color = leftSource ? left : right;
     const thickness = 0.70 + 0.95 * (0.5 + 0.5 *
       Math.sin(t * 0.43 * tempo + i * 0.72 + phase));
-    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(dx, dy);
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(dx, dy);
     ctx.lineWidth = Math.max(1.8, w * 0.0033) * thickness;
-    ctx.strokeStyle = rgba(color, 0.16 * visibility); ctx.stroke();
+    ctx.strokeStyle = rgba(color, (fromCeiling ? 0.12 : 0.16) * visibility);
+    ctx.stroke();
     ctx.lineWidth = Math.max(0.85, w * 0.0011) * thickness;
-    ctx.strokeStyle = rgba(color, 0.62 * visibility); ctx.stroke();
+    ctx.strokeStyle = rgba(color, (fromCeiling ? 0.49 : 0.62) * visibility);
+    ctx.stroke();
   }
 }
-
 function drawHaze(t: number, bpm: number, left: Rgb, right: Rgb, seed: number): void {
   if (!ctx) return;
   const tempo = clamp(bpm / 108, 1, 0.48, 1.35);
-  // Soft overlapping plumes with real movement. Original haze used an
-  // almost invisible ~0.1-alpha dot near the floor; these larger elliptical
-  // radial clouds are visible, but fade fully before their own bounds.
   const count = SMALL_SCREEN ? 9 : 12;
   for (let i = 0; i < count; i++) {
     const nx = noise(i * 37, seed), ny = noise(i * 53, seed);
@@ -360,6 +392,13 @@ function drawHaze(t: number, bpm: number, left: Rgb, right: Rgb, seed: number): 
     const radius = w * (0.14 + 0.12 * noise(i * 61, seed));
     const scaleY = 0.30 + 0.19 * noise(i * 79, seed);
     const color = i % 2 ? right : left;
+    // Pale edges remain visible against a colored plume. Lighten the hue,
+    // not the entire room: strokes are translucent and confined to fog.
+    const edge: Rgb = [
+      Math.round(120 + color[0] * 0.53),
+      Math.round(120 + color[1] * 0.53),
+      Math.round(120 + color[2] * 0.53),
+    ];
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(1, scaleY);
@@ -369,11 +408,37 @@ function drawHaze(t: number, bpm: number, left: Rgb, right: Rgb, seed: number): 
     cloud.addColorStop(0.82, rgba(color, 0.042));
     cloud.addColorStop(1, rgba(color, 0));
     ctx.fillStyle = cloud;
-    ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Two deliberately angular / stepped broken contours suggest the
+    // illuminated edge of pixel-art smoke. All contour movement follows
+    // the same cloud position, rather than floating independently.
+    ctx.lineJoin = "bevel";
+    ctx.lineCap = "butt";
+    for (let band = 0; band < 2; band++) {
+      const ringRadius = radius * (band === 0 ? 0.82 : 0.55);
+      ctx.beginPath();
+      const segments = 20;
+      for (let k = 0; k <= segments; k++) {
+        const angle = k * 2 * Math.PI / segments;
+        const wobble = 1 + 0.085 * Math.sin(angle * 5 + i * 0.9 + t * 0.14 * tempo)
+                         + 0.045 * Math.cos(angle * 9 - i * 0.7 - t * 0.10 * tempo);
+        const px = Math.round((ringRadius * wobble * Math.cos(angle)) / 4) * 4;
+        const py = Math.round((ringRadius * wobble * Math.sin(angle)) / 4) * 4;
+        if (k === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.setLineDash([radius * (band === 0 ? 0.19 : 0.24), radius * 0.10]);
+      ctx.lineWidth = Math.max(1.4, w * (band === 0 ? 0.002 : 0.0014));
+      ctx.strokeStyle = rgba(edge, band === 0 ? 0.22 : 0.13);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 }
-
 function render(frame: PartyFrame): void {
   if (!canvas || !ctx || !resizeIfNeeded()) return;
   ctx.clearRect(0, 0, w, h);

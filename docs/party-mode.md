@@ -47,3 +47,18 @@ No harsh strobes or rapid screen-wide flashes. Native prefers-reduced-motion dis
 The same single Canvas now remains displayed for the full lifetime of the room, including Off/paused/track-change states. It is cleared **once** after an effect fades to rest, rather than cycling display:none/block and forcing Android's GPU compositor to create/release a full-scene texture. Redraw rate is capped at ~11 FPS on coarse-pointer devices (~22 desktop), and the mobile texture is limited to roughly 920 × 700 maximum pixels with a 0.9 DPR cap. Concert beams use two translucent passes instead of four. All rendering remains inside the original Canvas, with no new DOM layers, CSS filters, animation loops, or network calls.
 
 **Regression checklist:** Triple-tap Auto; manual Concert, Disco, Laser, Haze; color side swapping including Wall Bars > Swap; repeated song changes and Auto selection; play/pause; DJ speech; left/right lamp 50% fade; desktop/portrait Android/tablet layouts; skyline clarity, ceiling lyrics, DJ sprites, speaker cabinet rendering; no flicker/flashes of non-party scene elements after 10–15 minutes of testing on Android. Reduced motion should display no Party Mode animation.
+
+## V3: coherent disco ball, ceiling-corner laser fans, pixel haze and smoother motion
+
+- **Disco Fever:** all reflections share a single, slowly rotating master phase, as if cast by one invisible mirrored disco ball centered overhead. Mirror facets are laid out in stable concentric bands; their locations and small source rays rotate together. No individual wandering-dot velocities.
+- **Laser Show:** top pairs are anchored to the two **bottom corners of the ceiling**, at approximately 25.5%/74.5% horizontal and 19% vertical room coordinates. Those beams travel across the **marquee and its song title** because the existing Party Canvas (z75) is already above the sign (z3). A second Canvas is unnecessary and would increase Android compositing risk. The lower laser sources remain offscreen by the floor.
+- **Motion:** restore the draw cadence to ~18 FPS on touch devices (55 ms), ~29 FPS on desktop (35 ms). Keep the persistent, low-DPR texture, no canvas display toggling, stable lighting layers and no additional RAF loops.
+- **Atmospheric Haze:** each colored fog plume has two subtle, moving, irregular polygon contours with short dashed/pixel-stepped edges. Outline hues are lightened versions of the same current album colors. The contours move as part of the smoke plume, not as disconnected particles.
+- **Scope:** other presets, wall-light dimming, scene lighting, skyline protection, menu controls, Auto selection, song-change rest period and Spotify playback stabilization are unchanged.
+
+### Android acceptance checklist
+1. Confirm disco reflections rotate in coordinated bands from a single optical source, instead of dozens of independently moving squares.
+2. Confirm upper lasers stay anchored to ceiling corners and visibly overlay the top marquee/song title. Floor rays still begin outside lower room edges.
+3. Confirm haze contours are visible but restrained and do not create bright flat regions over the DJ and skyline.
+4. Leave Party Mode on across several tracks for 10-15 minutes, changing modes and pausing/resuming; look for any flashing in the ceiling, speakers or DJ at ~18 FPS.
+5. Compare compact Android Spotify, landscape Fold, desktop and reduced-motion preferences. Avoid regressing the stable Canvas lifetime behavior.
