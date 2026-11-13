@@ -3,6 +3,8 @@ package com.pocketdj.spotifyexperiment;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.graphics.Rect;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -17,6 +19,7 @@ import android.view.ViewPropertyAnimator;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.graphics.drawable.BitmapDrawable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +56,7 @@ public final class SwipePageEffects {
         long lastUpdateMs;
         Drawable originalBackdrop;
         boolean backdropSaved;
+        ImageView artworkGhost;
     }
     private SwipePageEffects() {}
 
@@ -70,20 +74,29 @@ public final class SwipePageEffects {
         return state != null && state.transitioning;
     }
 
-    /** The UI remains driven by the stable native PocketDJ toggle. */
+    /**
+     * The WebView and Spotify artwork must both exist during the 260ms swap.
+     * A temporary, artwork-only bitmap proxy survives Spotify recycling or
+     * hiding its ImageView when the existing toggle is clicked. Do not copy
+     * the entire Now Playing root: it includes controls and metadata.
+     */
     public static synchronized boolean flip(ViewGroup host, Button toggle,
                                             WebView web, boolean show, int direction) {
         if (toggle == null || busy(host)) return false;
         final Scene state = scene(host);
         final int sign = direction < 0 ? -1 : 1;
-        final float distance = Math.max(1f, web == null ? host.getWidth() : web.getWidth());
+        final float distance = Math.max(1f, web == null || web.getWidth() <= 0
+                ? host.getWidth() : web.getWidth());
         state.transitioning = true;
         if (show) {
-            darkenRootBackground(host, state);
             findAndRememberArtwork(host, state);
-            // Toggle first to keep the existing browser, OAuth and native
-            // scroll synchronization. The room itself enters from off-screen.
+            // Create the outgoing proxy BEFORE the native toggle can recycle
+            // or instantly hide Spotify's artwork leaf.
+            ImageView proxy = createArtworkProxy(host, state);
+            darkenRootBackground(host, state);
             if (!toggle.performClick()) {
+                disposeProxy(host, state);
+                restoreRootBackground(host, state);
                 state.transitioning = false;
                 return false;
             }
@@ -92,41 +105,115 @@ public final class SwipePageEffects {
                 web.setTranslationX(-sign * distance);
                 web.animate().translationX(0f).setDuration(SLIDE_MS).start();
             }
+            // Native artwork is hidden immediately; only the proxy moves.
+            // This avoids races with RecyclerView replacement/layout passes.
             for (SavedImage image : state.images) {
-                final View v = image.view.get();
-                if (v == null || v.getParent() == null) continue;
-                v.animate().cancel();
-                // Only real artwork leaves are moved. Never animate the native
-                // progress/metadata parent, which caused earlier regressions.
-                v.animate().translationX(image.translation + sign * distance)
-                        .setDuration(SLIDE_MS).withEndAction(() -> {
-                            v.setAlpha(0f);
-                            v.setTranslationX(image.translation);
-                        }).start();
+                View v = image.view.get();
+                if (v != null && v.getParent() != null) {
+                    v.animate().cancel();
+                    v.setAlpha(0f);
+                    v.setTranslationX(image.translation);
+                }
+            }
+            if (proxy != null) {
+                proxy.animate().translationX(sign * distance)
+                        .setDuration(SLIDE_MS).start();
             }
             host.postDelayed(() -> {
-                state.transitioning = false;
-                reconcile(host, true);
-            }, SLIDE_MS + 30);
+                synchronized (SwipePageEffects.class) {
+                    disposeProxy(host, state);
+                    state.transitioning = false;
+                    reconcile(host, true);
+                }
+            }, SLIDE_MS + 30L);
         } else {
-            restoreRootBackground(host, state);
-            // Restore native album images and bring them in from the opposite
-            // side; web remains visible until its exit animation completes.
-            restoreArtwork(state, sign, distance);
+            // While the WebView still occupies its native position, move a
+            // temporary image of the artwork into view. Calling the toggle at
+            // the start would hide the room before its exit animation.
+            findAndRememberArtwork(host, state);
+            ImageView proxy = createArtworkProxy(host, state);
+            if (proxy != null) {
+                proxy.setTranslationX(-sign * distance);
+                proxy.animate().translationX(0f).setDuration(SLIDE_MS).start();
+            }
             if (web != null && web.getVisibility() == View.VISIBLE) {
                 web.animate().cancel();
                 web.animate().translationX(sign * distance)
-                        .setDuration(SLIDE_MS).withEndAction(() -> {
-                            toggle.performClick();
-                            web.setTranslationX(0f);
-                            state.transitioning = false;
-                        }).start();
-            } else {
-                toggle.performClick();
-                state.transitioning = false;
+                        .setDuration(SLIDE_MS).start();
             }
+            host.postDelayed(() -> {
+                synchronized (SwipePageEffects.class) {
+                    // Reveal the real native page only after its proxy reaches
+                    // the destination, so there is no one-frame artwork pop.
+                    toggle.performClick();
+                    restoreArtworkImmediately(state);
+                    if (web != null) web.setTranslationX(0f);
+                    restoreRootBackground(host, state);
+                    disposeProxy(host, state);
+                    state.transitioning = false;
+                }
+            }, SLIDE_MS);
         }
         return true;
+    }
+
+    private static ImageView createArtworkProxy(ViewGroup host, Scene state) {
+        disposeProxy(host, state);
+        for (int i = state.images.size() - 1; i >= 0; i--) {
+            View artwork = state.images.get(i).view.get();
+            if (!(artwork instanceof ImageView) || artwork.getParent() == null ||
+                    artwork.getWidth() < 80 || artwork.getHeight() < 80 ||
+                    artwork.getWidth() > 2048 || artwork.getHeight() > 2048) continue;
+            try {
+                // draw() uses the leaf drawable, not Spotify's composite page.
+                // Temporarily neutralize alpha solely for bitmap capture.
+                float originalAlpha = artwork.getAlpha();
+                Bitmap bitmap = Bitmap.createBitmap(artwork.getWidth(),
+                        artwork.getHeight(), Bitmap.Config.ARGB_8888);
+                try {
+                    artwork.setAlpha(1f);
+                    artwork.draw(new Canvas(bitmap));
+                } finally {
+                    artwork.setAlpha(originalAlpha);
+                }
+                int[] position = new int[2];
+                int[] origin = new int[2];
+                artwork.getLocationOnScreen(position);
+                host.getLocationOnScreen(origin);
+                ImageView proxy = new ImageView(host.getContext());
+                proxy.setImageDrawable(new BitmapDrawable(host.getResources(), bitmap));
+                proxy.setScaleType(ImageView.ScaleType.FIT_XY);
+                proxy.layout(position[0] - origin[0], position[1] - origin[1],
+                        position[0] - origin[0] + artwork.getWidth(),
+                        position[1] - origin[1] + artwork.getHeight());
+                host.getOverlay().add(proxy);
+                state.artworkGhost = proxy;
+                return proxy;
+            } catch (RuntimeException ex) {
+                Log.w(TAG, "Artwork proxy unavailable; preserving native fallback", ex);
+            }
+        }
+        return null;
+    }
+
+    private static void disposeProxy(ViewGroup host, Scene state) {
+        if (state.artworkGhost != null) {
+            state.artworkGhost.animate().cancel();
+            host.getOverlay().remove(state.artworkGhost);
+            state.artworkGhost = null;
+        }
+    }
+
+    private static void restoreArtworkImmediately(Scene state) {
+        for (SavedImage image : state.images) {
+            View v = image.view.get();
+            if (v != null) {
+                v.animate().cancel();
+                v.setAlpha(image.alpha);
+                v.setTranslationX(image.translation);
+            }
+        }
+        state.images.clear();
     }
 
     /** Hide newly recycled album leaves while PocketDJ is visible. */
@@ -153,6 +240,7 @@ public final class SwipePageEffects {
         Scene state = scenes.remove(host);
         if (state == null) return;
         restoreRootBackground(host, state);
+        disposeProxy(host, state);
         for (SavedImage image : state.images) {
             View v = image.view.get();
             if (v != null) {
