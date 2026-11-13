@@ -2772,7 +2772,7 @@ export function updateLyricsCeiling(
   // Build and fit the incoming lyric while the previous line remains intact.
   // Long warped SVG text was sometimes painted in incomplete tiles on Android
   // Chrome. Flatten the already-fitted SVG text to a single Canvas 2D bitmap
-  // for each row on touch devices. Both rows are ready before presentation.
+  // for each row in every layout. Both rows are ready before presentation.
   activeBlock.querySelectorAll(".lyric-poster-render-staging").forEach((stale) => stale.remove());
   const nextLayer = document.createElement("div");
   nextLayer.className = "lyric-poster-render-layer lyric-poster-render-staging";
@@ -2782,12 +2782,10 @@ export function updateLyricsCeiling(
     fitRenderedLyricGlyphsToSourceBoxes(layout, controls, nextLayer);
     updateLyricDomDiagnosticOverlay(layout, diagnostics, nextLayer);
     updateLyricGeometryMonitor(layout, trapezoid, controls, diagnostics, nextLayer);
-    // Override for visual A/B testing: ?lyricRaster=0 keeps native SVG;
-    // ?lyricRaster=1 forces the canvas path even on a desktop browser.
-    const rasterPreference = new URLSearchParams(window.location.search).get("lyricRaster");
-    if (rasterPreference === "1" || (rasterPreference !== "0" && window.matchMedia("(pointer: coarse)").matches)) {
-      rasterizeFittedLyricRows(nextLayer, layout);
-    }
+    // Production renderer: flatten fitted SVG glyphs into complete Canvas 2D
+    // surfaces before display, on phones, tablets and desktop. The rasterizer
+    // retains the original SVG if the browser cannot create a canvas.
+    rasterizeFittedLyricRows(nextLayer, layout);
     // No delayed requestAnimationFrame chains: ready pixels replace the old
     // lyric in the same main-thread task, keeping line timing aligned to audio.
     nextLayer.classList.replace("lyric-poster-render-staging", "lyric-poster-render-committed");
@@ -3941,7 +3939,7 @@ function formatQuad(quad: PosterQuad): string {
 
 /**
  * Convert fitted SVG text to stable Canvas 2D pixels before the lyric becomes
- * visible. Chrome Android can expose partially painted tiles when long SVG
+ * visible. Some Chromium renderers expose partially painted tiles when long SVG
  * lines are perspective-warped and blended into the ceiling.
  *
  * This uses the final fitted SVG font, size, spacing, fill, and textLength.
