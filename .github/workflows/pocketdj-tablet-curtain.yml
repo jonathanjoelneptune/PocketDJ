@@ -28,11 +28,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Configure current Android SDK
-        uses: android-actions/setup-android@v3
       - name: Install Android API and D8
         run: |
-          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+          echo "ANDROID_HOME=$ANDROID_HOME"\n          yes | sdkmanager --licenses > /dev/null || true\n          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
       - name: Compile tablet classes using Android D8
         run: |
           bash android-native/tablet-curtain/build_dex.sh
