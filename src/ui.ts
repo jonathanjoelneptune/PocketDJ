@@ -107,6 +107,14 @@ export function renderShell(state: AppState): void {
           <div class="room-light-bar room-light-bar-left"><span class="room-light-bar-emitter"></span></div>
           <div class="room-light-bar room-light-bar-right"><span class="room-light-bar-emitter"></span></div>
         </div>
+        <!-- The two transparent hit areas sit OVER the physical wall fixtures.
+             Triple-tap toggles Auto Party Mode without opening the menu. -->
+        <button type="button" id="roomPartyTapLeft" class="room-party-tap-target room-party-tap-left"
+          aria-label="Triple-tap left wall light to toggle Party Mode" aria-pressed="false" title="Triple-tap: Party Mode"></button>
+        <button type="button" id="roomPartyTapRight" class="room-party-tap-target room-party-tap-right"
+          aria-label="Triple-tap right wall light to toggle Party Mode" aria-pressed="false" title="Triple-tap: Party Mode"></button>
+        <!-- One low-FPS Canvas 2D renderer; no full-scene CSS filter or mask. -->
+        <canvas id="roomPartyCanvas" class="room-party-canvas" aria-hidden="true"></canvas>
         <div id="roomParticles" class="room-particles" aria-hidden="true"></div>
         <svg id="sessionAlbumGuideOverlay" class="session-album-guide-overlay" viewBox="0 0 1764 992" preserveAspectRatio="none" aria-hidden="true"></svg>
         <div id="stringLightOverlay" class="string-light-overlay" aria-hidden="true"></div>
@@ -1570,6 +1578,27 @@ export function renderShell(state: AppState): void {
                 </select>
               </label>
               <button id="menu2LightBarsReset" class="menu2-action menu2-wide-action" type="button">Reset Wall Light Bars</button>
+            </details>
+
+            <details class="menu2-room-party">
+              <summary>Party Mode · Hidden light show</summary>
+              <p class="menu2-room-help">Triple-tap either wall light to turn on Auto instantly; triple-tap again to turn it off. In Auto, PocketDJ picks one effect per track using available tempo and track/artist clues. Effects quiet down between songs, when paused, or when DJ NES talks. Only one show runs at once.</p>
+              <label class="menu2-setting">Party Mode effect
+                <select id="menu2PartyModeSelect" class="menu2-select">
+                  <option value="off" selected>Off</option>
+                  <option value="auto">Auto · Match the music</option>
+                  <option value="concert">Concert Lights</option>
+                  <option value="disco">Disco Fever</option>
+                  <option value="lasers">Laser Show</option>
+                  <option value="haze">Atmospheric Haze</option>
+                </select>
+              </label>
+              <label class="menu2-setting menu2-slider-setting">Effect intensity <span id="menu2PartyIntensityValue">0.72</span>
+                <input id="menu2PartyIntensity" type="range" min="0.20" max="1" step="0.05" value="0.72" />
+              </label>
+              <p class="menu2-room-help" id="menu2PartyStatus" role="status">Off · Triple-tap either wall light to start Auto</p>
+              <p class="menu2-room-help">Auto uses genre hints where available and the existing BPM estimate; it does not request new Spotify data. Rapid strobing is intentionally excluded, and reduced-motion settings are respected.</p>
+              <button id="menu2PartyReset" class="menu2-action menu2-wide-action" type="button">Turn Party Mode Off</button>
             </details>
 
             <details class="menu2-room-advanced">
