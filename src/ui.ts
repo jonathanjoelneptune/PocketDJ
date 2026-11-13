@@ -2782,7 +2782,10 @@ export function updateLyricsCeiling(
     fitRenderedLyricGlyphsToSourceBoxes(layout, controls, nextLayer);
     updateLyricDomDiagnosticOverlay(layout, diagnostics, nextLayer);
     updateLyricGeometryMonitor(layout, trapezoid, controls, diagnostics, nextLayer);
-    if (window.matchMedia("(pointer: coarse)").matches) {
+    // Override for visual A/B testing: ?lyricRaster=0 keeps native SVG;
+    // ?lyricRaster=1 forces the canvas path even on a desktop browser.
+    const rasterPreference = new URLSearchParams(window.location.search).get("lyricRaster");
+    if (rasterPreference === "1" || (rasterPreference !== "0" && window.matchMedia("(pointer: coarse)").matches)) {
       rasterizeFittedLyricRows(nextLayer, layout);
     }
     // No delayed requestAnimationFrame chains: ready pixels replace the old
