@@ -10481,8 +10481,12 @@ async function refreshLyricsForCurrentTrack(): Promise<void> {
   updateLyricsCeiling(lyricsState, getEstimatedPlaybackProgress(track), -1, lyricsEnabled, state.playback.isPlaying || state.playback.source === "demo");
   updateMarqueeLyricsAvailability(lyricsState.status, lyricsEnabled);
 
-  lyricsState = await fetchLyricsForTrack(track);
-  const lyricProgressMs = getEstimatedPlaybackProgress(track);
+  const requestedLyrics = await fetchLyricsForTrack(track);
+  // Network responses can complete out of order when tracks are skipped.
+  // A stale result must never replace the new song's lyrics or projection.
+  if (lyricsFetchKey !== key || getLyricsTrackKey(state.playback) !== key) return;
+  lyricsState = requestedLyrics;
+  const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
   updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, state.playback.isPlaying || state.playback.source === "demo");
   updateMarqueeLyricsAvailability(lyricsState.status, lyricsEnabled);
