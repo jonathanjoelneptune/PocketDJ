@@ -1,0 +1,49 @@
+name: Tablet curtain DEX compilation
+
+on:
+  push:
+    branches:
+      - feature/tablet-curtain-transition-v333
+    paths:
+      - "android-native/tablet-curtain/**"
+      - ".github/workflows/pocketdj-tablet-curtain.yml"
+  pull_request:
+    paths:
+      - "android-native/tablet-curtain/**"
+      - ".github/workflows/pocketdj-tablet-curtain.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Configure Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Configure current Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+      - name: Install Android API and D8
+        run: |
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Compile tablet classes using Android D8
+        run: |
+          bash android-native/tablet-curtain/build_dex.sh
+          test -s android-native/tablet-curtain/build/classes20.dex
+          sha256sum android-native/tablet-curtain/build/classes20.dex
+      - name: Upload tablet-only DEX (never APK or signing material)
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketdj-curtain-classes20
+          path: android-native/tablet-curtain/build/classes20.dex
+          if-no-files-found: error
+          retention-days: 7
