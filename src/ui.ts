@@ -77,6 +77,22 @@ function fitEmbeddedMarqueeLine(element: HTMLElement, text: string, availableWid
   return measure(chosen);
 }
 
+/**
+ * An embedded tablet artist/album row is CSS-stretched to 100% by default.
+ * Measuring scrollWidth in that state incorrectly marks even short text as
+ * overflowing, activating the left-anchored pan. Measure its *content* width
+ * first; leave genuinely long rows to use the existing slow pan.
+ */
+function measureSupportingMarqueeLine(element: HTMLElement, text: string, availableWidth: number): number {
+  if (isSpotifyTabletMarquee()) {
+    element.style.width = "max-content";
+    element.style.maxWidth = "none";
+    element.style.overflow = "visible";
+    element.style.alignSelf = "center";
+  }
+  return fitEmbeddedMarqueeLine(element, text, availableWidth);
+}
+
 function clearEmbedArtistPan(): void {
   embedArtistPan?.cancel();
   embedArtistPan = null;
@@ -2262,7 +2278,7 @@ function prepareMarqueeRowsForEntry(marquee: HTMLElement, titleEl: HTMLElement, 
   artistEl.style.transition = "none";
   artistEl.style.transform = "translateX(0)";
 
-  const artistMeasured = fitEmbeddedMarqueeLine(artistEl, artistText, availableWidth);
+  const artistMeasured = measureSupportingMarqueeLine(artistEl, artistText, availableWidth);
   const artistIsLong = artistMeasured > availableWidth + 6;
   marquee.classList.toggle("marquee-artist-long", artistIsLong);
   marquee.classList.toggle("marquee-artist-short", !artistIsLong);
@@ -2437,7 +2453,7 @@ function configureStaticArtistRow(options: {
   element.style.removeProperty("overflow");
   element.style.removeProperty("align-self");
 
-  const measuredWidth = fitEmbeddedMarqueeLine(element, originalText, availableWidth);
+  const measuredWidth = measureSupportingMarqueeLine(element, originalText, availableWidth);
   const isLong = measuredWidth > availableWidth + 6;
 
   marquee.classList.toggle("marquee-artist-long", isLong);
