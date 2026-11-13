@@ -2021,8 +2021,8 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
   updateConnectionBanner(track);
   updateFloorControls(track);
 
-  qs("#progressNow").textContent = formatMs(getEstimatedProgress(track));
-  qs("#progressEnd").textContent = formatMs(track.durationMs);
+  setTextIfChanged(qs("#progressNow"), formatMs(getEstimatedProgress(track)));
+  setTextIfChanged(qs("#progressEnd"), formatMs(track.durationMs));
 
   const percent = track.durationMs > 0 ? Math.min(100, (getEstimatedProgress(track) / track.durationMs) * 100) : 0;
   qs<HTMLDivElement>("#progressFill").style.width = `${percent}%`;
@@ -2031,10 +2031,10 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
   const art = qs<HTMLDivElement>("#albumArt");
   if (track.albumArtUrl) {
     art.style.backgroundImage = `url(${track.albumArtUrl})`;
-    art.innerHTML = "";
+    if (art.childNodes.length) art.replaceChildren();
   } else {
     art.style.backgroundImage = "";
-    art.innerHTML = "<span>♪</span>";
+    if (art.textContent !== "♪") art.textContent = "♪";
   }
   updateAlbumWashCrossfade(track.albumArtUrl || "");
 
@@ -2080,10 +2080,10 @@ function updateFloorControls(track: NormalizedTrack): void {
   modePill.classList.toggle("mode-pill-paused", isPaused);
   modePill.classList.toggle("mode-pill-idle", !isPlaying && !isPaused);
   modePill.dataset.state = isPlaying ? "playing" : isPaused ? "paused" : "idle";
-  modePill.textContent = isPlaying ? "PLAYING" : isPaused ? "PAUSED" : "IDLE";
+  setTextIfChanged(modePill, isPlaying ? "PLAYING" : isPaused ? "PAUSED" : "IDLE");
 
-  playIcon.textContent = isPlaying ? "||" : "▶";
-  panelPlayIcon.textContent = isPlaying ? "||" : "▶";
+  setTextIfChanged(playIcon, isPlaying ? "||" : "▶");
+  setTextIfChanged(panelPlayIcon, isPlaying ? "||" : "▶");
   playButton.setAttribute("aria-label", isPlaying ? "Pause Spotify" : "Play Spotify");
   panelPlayButton.setAttribute("aria-label", isPlaying ? "Pause Spotify" : "Play Spotify");
 
