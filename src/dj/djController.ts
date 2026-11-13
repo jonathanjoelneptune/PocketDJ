@@ -88,6 +88,10 @@ export class DjController {
   private speakingVisualActive = false;
   private nextSpeakingPoseAt = 0;
   private lastSpeakingPose: string | null = null;
+  // Only retain the small record-change pose set. Caching every large sprite
+  // indefinitely would cost far more memory than the benefit on mobile.
+  private readonly cinematicPoseBitmaps = new Map<string, HTMLImageElement>();
+  private readonly decodedCinematicPoses = new Set<string>();
 
   constructor(private readonly poseElement: HTMLElement, private readonly modeElement: HTMLElement) {
     this.preload();
@@ -435,9 +439,11 @@ export class DjController {
 
   private paint(): void {
     if (this.poseElement instanceof HTMLImageElement) {
-      // A held pose must not be assigned again on every animation frame.
-      // Reassigning the src can invalidate an image/compositor layer on Chrome
-      // Android, especially when album art and lyrics update concurrently.
+      // Hold the outgoing image during the record-change cinematic until the
+      // next pose is decoded. Otherwise Chrome can briefly display empty or
+      // incomplete portions of a transparent sprite after an src swap.
+      if (this.cinematicPoseBitmaps.has(this.currentFrame) &&
+          !this.decodedCinematicPoses.has(this.currentFrame)) return;
       const nextSrc = `${POSE_BASE}${this.currentFrame}`;
       if (this.poseElement.getAttribute("src") !== nextSrc) {
         this.poseElement.src = nextSrc;
@@ -501,9 +507,23 @@ export class DjController {
       loop.frames.forEach((frame) => unique.add(frame));
     });
     SPEAKING_POSES.forEach((pose) => unique.add(pose));
+    const cinematicFrames = new Set(cinematicLoops.flatMap((loop) => loop.frames));
     unique.forEach((frame) => {
       const img = new Image();
       img.src = `${POSE_BASE}${frame}`;
+      if (!cinematicFrames.has(frame)) return;
+      this.cinematicPoseBitmaps.set(frame, img);
+      if (typeof img.decode === "function") {
+        void img.decode()
+          .then(() => { this.decodedCinematicPoses.add(frame); })
+          .catch(() => {
+            // On older browsers a valid decoded source can still reject.
+            if (img.complete && img.naturalWidth > 0) this.decodedCinematicPoses.add(frame);
+          });
+      } else {
+        img.onload = () => { this.decodedCinematicPoses.add(frame); };
+        if (img.complete && img.naturalWidth > 0) this.decodedCinematicPoses.add(frame);
+      }
     });
   }
 
