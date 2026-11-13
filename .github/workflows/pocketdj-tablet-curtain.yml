@@ -3,14 +3,14 @@ name: Tablet curtain DEX compilation
 on:
   push:
     branches:
-      - feature/tablet-curtain-snapshot-host
+      - feature/tablet-curtain-transition-v333
     paths:
       - "android-native/tablet-curtain/**"
-      - ".github/workflows/pocketdj-tablet-dex.yml"
+      - ".github/workflows/pocketdj-tablet-curtain.yml"
   pull_request:
     paths:
       - "android-native/tablet-curtain/**"
-      - ".github/workflows/pocketdj-tablet-dex.yml"
+      - ".github/workflows/pocketdj-tablet-curtain.yml"
   workflow_dispatch:
 
 permissions:
@@ -29,9 +29,8 @@ jobs:
           distribution: temurin
           java-version: "17"
       - name: Configure current Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@v3
         with:
-          packages: ''
       - name: Install Android API and D8
         run: |
           sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
