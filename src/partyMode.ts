@@ -370,8 +370,15 @@ export function updatePartyMode(frame: PartyFrame): void {
   opacity += (target - opacity) * Math.min(1, Math.max(0, timeDelta) / duration);
   if (opacity < 0.003) opacity = 0;
 
-  if (settings.mode === "off" && opacity === 0) {
-    if (painted) { ctx.clearRect(0, 0, canvas.width, canvas.height); painted = false; }
+  // Stop all drawing and release the canvas display layer once an effect has
+  // fully faded, including while paused, when DJ speaks, and when switched Off.
+  // The main RAF keeps providing state, so playback can resume immediately.
+  if (opacity === 0 && !active && currentEffect === desiredEffect) {
+    if (painted) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      painted = false;
+    }
     if (canvas.style.display !== "none") canvas.style.display = "none";
     syncStatus();
     return;
