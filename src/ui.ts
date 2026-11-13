@@ -4,6 +4,7 @@ import { formatMs, qs } from "./utils/dom";
 
 
 let lastLyricsRenderSignature = "";
+let lastAlbumArtBackgroundUrl: string | null = null;
 
 type MarqueeState = "empty" | "paused" | "playing";
 
@@ -2058,12 +2059,16 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
   qs<HTMLElement>("#panelSeekBar").setAttribute("aria-valuenow", String(Math.round(percent)));
 
   const art = qs<HTMLDivElement>("#albumArt");
+  // Album artwork is static between track changes. Rewriting the same CSS
+  // background every animation frame invalidates paint on some mobile GPUs.
+  if (lastAlbumArtBackgroundUrl !== track.albumArtUrl) {
+    lastAlbumArtBackgroundUrl = track.albumArtUrl;
+    art.style.backgroundImage = track.albumArtUrl ? `url("${track.albumArtUrl}")` : "";
+  }
   if (track.albumArtUrl) {
-    art.style.backgroundImage = `url(${track.albumArtUrl})`;
     if (art.childNodes.length) art.replaceChildren();
-  } else {
-    art.style.backgroundImage = "";
-    if (art.textContent !== "♪") art.textContent = "♪";
+  } else if (art.textContent !== "♪") {
+    art.textContent = "♪";
   }
   updateAlbumWashCrossfade(track.albumArtUrl || "");
 
@@ -2552,16 +2557,11 @@ function getEstimatedProgress(track: NormalizedTrack): number {
   return Math.min(track.durationMs, track.progressMs + (Date.now() - track.updatedAt));
 }
 
-function runWithoutVisibleLyricPaint(activeBlock: HTMLElement, updateDom: () => void): void {
-   // Build and fit the new lyric DOM while hidden, then reveal it in its final
-  // fitted geometry during the same frame. This prevents the browser from
-  // painting the raw SVG text for one frame and then snapping it after getBBox()
-  // corrections run.
-  // Keep the existing projection visible until the replacement is fully fitted.
-  // DOM writes and synchronous SVG measurements happen before the next paint.
-  // Hiding the entire block can expose a blank composited frame on Android WebView.
+function runWithoutVisibleLyricPaint(updateDom: () => void): void {
+  // SVG glyph fitting uses getBBox(), which already flushes the required
+  // geometry. An extra offsetHeight read forces another global layout flush.
+  // The browser paints once after this synchronous update completes.
   updateDom();
-  void activeBlock.offsetHeight;
 }
 
 
@@ -2613,17 +2613,26 @@ export function updateLyricsCeiling(
   const setNoLyricsFocusActive = (active: boolean) => {
     const root = document.documentElement;
     const shouldActivate = focusEnabled && active;
-    root.style.setProperty("--no-lyrics-focus-runtime-fade", shouldActivate ? "var(--no-lyrics-focus-fade)" : "var(--no-lyrics-focus-fade-out)");
+    const fade = shouldActivate ? "var(--no-lyrics-focus-fade)" : "var(--no-lyrics-focus-fade-out)";
+    if (root.style.getPropertyValue("--no-lyrics-focus-runtime-fade") !== fade) {
+      root.style.setProperty("--no-lyrics-focus-runtime-fade", fade);
+    }
     root.classList.toggle("no-lyrics-focus-active", shouldActivate);
   };
   ceiling.classList.toggle("lyrics-ceiling-hidden", !shouldShow);
   ceiling.classList.toggle("lyrics-ceiling-visible", shouldShow);
 
   const clearLyrics = (focusFallback = false) => {
-    lastLyricsRenderSignature = "";
-    updateLyricGeometryMonitor(null, null, null);
-    activeBlock.style.setProperty("--lyric-line-visibility", "1");
-    activeBlock.innerHTML = "";
+    // Paused, missing and pre-first-line states can last thousands of frames.
+    // Clear only on the transition to empty, not on every requestAnimationFrame.
+    if (lastLyricsRenderSignature || activeBlock.childNodes.length) {
+      lastLyricsRenderSignature = "";
+      updateLyricGeometryMonitor(null, null, null);
+      activeBlock.replaceChildren();
+    }
+    if (activeBlock.style.getPropertyValue("--lyric-line-visibility") !== "1") {
+      activeBlock.style.setProperty("--lyric-line-visibility", "1");
+    }
     setNoLyricsFocusActive(focusFallback);
   };
 
@@ -2653,30 +2662,37 @@ export function updateLyricsCeiling(
     return;
   }
 
-  const rootStyles = getComputedStyle(document.documentElement);
+  // Fast signature: playback ticks don't require computed styles or ~180
+  // lyric-layout CSS variable reads when the same line is still displayed.
+  // Utility changes bump --lyrics-animation-revision; viewport and ceiling
+  // reveal dimensions invalidate the signature on orientation/fullscreen changes.
+  const root = document.documentElement;
+  const maxRowsInput = qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || "";
+  const diagnostics = readLyricDiagnosticSettings();
+  const animationRevision = root.style.getPropertyValue("--lyrics-animation-revision");
+  const structuralSignature = [
+    root.classList.contains("room-fill-stretch") ? "fill" : "normal",
+    root.classList.contains("tall-lyric-guides-enabled") ? "tall-guides" : "no-tall-guides",
+    window.innerWidth, window.innerHeight,
+    root.style.getPropertyValue("--dynamic-ceiling-reveal-coord"),
+    root.style.getPropertyValue("--lyric-ceiling-view-px"),
+  ].join("|");
+  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${lyricTest.active ? lyricTest.mode : "live"}|${maxRowsInput}|${JSON.stringify(diagnostics)}|${animationRevision}|${structuralSignature}`;
+  if (renderSignature === lastLyricsRenderSignature) return;
+
+  // Geometry is only read and built after a real line/layout/setting change.
+  const rootStyles = getComputedStyle(root);
   const ceilingViewHeight = 529 + getDynamicCeilingRevealCoord(rootStyles);
   const trapezoid = readLyricPosterTrapezoid(rootStyles);
-  const rawMaxRowsValue = (qs<HTMLSelectElement>("#lyricPosterMaxRows")?.value || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
+  const rawMaxRowsValue = (maxRowsInput || rootStyles.getPropertyValue("--lyric-poster-max-rows").trim() || "auto") as "auto" | "1" | "2" | "3";
   const testRowsValue = lyricTest.active ? (lyricTest.mode === "two" ? "2" : "1") : null;
   const maxRowsValue = testRowsValue || (rawMaxRowsValue === "3" ? "auto" : rawMaxRowsValue);
-  // Lyric changes are geometry-only. No old/new panels, fades, pulses, or transition classes.
-  const diagnostics = readLyricDiagnosticSettings();
   const controls = readCeilingPosterControls(rootStyles, maxRowsValue, "none");
-  const animationRevision = rootStyles.getPropertyValue("--lyrics-animation-revision").trim();
-  const structuralSignature = [
-    document.documentElement.classList.contains("room-fill-stretch") ? "fill" : "normal",
-    document.documentElement.classList.contains("tall-lyric-guides-enabled") ? "tall-guides" : "no-tall-guides",
-  ].join("|");
-  const renderSignature = `${lyrics.trackKey}|${centerIndex}|${activeLine.text}|${lyricTest.active ? lyricTest.mode : "live"}|${JSON.stringify(trapezoid)}|${JSON.stringify(controls)}|${JSON.stringify(diagnostics)}|${animationRevision}|${structuralSignature}`;
-
-  if (renderSignature === lastLyricsRenderSignature) {
-    activeBlock.style.setProperty("--lyric-line-visibility", "1");
-    return;
-  }
-
   setNoLyricsFocusActive(false);
   lastLyricsRenderSignature = renderSignature;
-  activeBlock.style.setProperty("--lyric-line-visibility", "1");
+  if (activeBlock.style.getPropertyValue("--lyric-line-visibility") !== "1") {
+    activeBlock.style.setProperty("--lyric-line-visibility", "1");
+  }
 
   const ceilingRect = ceiling.getBoundingClientRect();
   const layout = buildCeilingPosterLayout(activeLine.text, trapezoid, controls, ceilingRect.width, ceilingRect.height);
@@ -2748,7 +2764,7 @@ export function updateLyricsCeiling(
     <div id="lyricDomDiagnosticOverlay" class="lyric-dom-diagnostic-overlay" aria-hidden="true"></div>
   `;
 
-  runWithoutVisibleLyricPaint(activeBlock, () => {
+  runWithoutVisibleLyricPaint(() => {
     activeBlock.innerHTML = nextLyricsMarkup;
     fitRenderedLyricGlyphsToSourceBoxes(layout, controls);
     updateLyricDomDiagnosticOverlay(layout, diagnostics);
@@ -3998,7 +4014,7 @@ function updateLyricDomDiagnosticOverlay(layout: CeilingPosterLayout, diagnostic
   const overlay = document.querySelector<HTMLElement>("#lyricDomDiagnosticOverlay");
   if (!activeBlock || !overlay) return;
 
-  overlay.innerHTML = "";
+  if (overlay.childNodes.length) overlay.replaceChildren();
   if (!diagnostics.showDomBounds) return;
 
   const origin = activeBlock.getBoundingClientRect();
@@ -4080,8 +4096,12 @@ function updateLyricGeometryMonitor(
     lines.push(`Applied correction: ${formatQuad(deltas)} | max ${maxDelta.toFixed(2)}`);
   });
 
-  lines.push(...getLyricGlyphMonitorLines(layout));
-  lines.push(...getLyricDomMonitorLines(layout, diagnostics));
+  // Detailed glyph/DOM bounds force extra getBBox()/getBoundingClientRect()
+  // passes. Only collect them in the explicit DOM-bounds diagnostic mode.
+  if (diagnostics.showDomBounds) {
+    lines.push(...getLyricGlyphMonitorLines(layout));
+    lines.push(...getLyricDomMonitorLines(layout, diagnostics));
+  }
   monitor.textContent = lines.join("\n");
 }
 
@@ -4599,7 +4619,7 @@ export function updateLyricsToggleUi(status: LyricsPayload["status"], enabled: b
             ? "unknown"
             : "on";
 
-  toggle.textContent = "LYRICS";
+  setTextIfChanged(toggle, "LYRICS");
   toggle.setAttribute("aria-pressed", String(enabled));
   toggle.setAttribute("title", enabled ? "Hide ceiling lyrics" : "Show ceiling lyrics");
 }
