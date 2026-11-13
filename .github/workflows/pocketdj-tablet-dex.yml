@@ -20,6 +20,8 @@ jobs:
   compile:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -28,11 +30,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Configure Android SDK
-        uses: android-actions/setup-android@v3
-      - name: Install Android API and D8
+      - name: Install Android API and D8 from runner SDK
         run: |
-          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+          "$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager" --install "platforms;android-35" "build-tools;35.0.0"
       - name: Validate Java syntax using local stubs
         run: python3 android-native/tablet-carousel/tests/compile_with_api_stubs.py
       - name: Compile tablet classes using Android D8
