@@ -15145,10 +15145,10 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
 }
 
 
-/* Party Mode is a distinct scene overlay, not a modifier of our carefully
-   calibrated album-reactive lighting. The canvas lives above DJ/speakers
-   (z2/z4) and below the lighting dimmer (z76), floor controls (z80),
-   lyrics (z82) and marquee (z96).
+/* Party Mode is separate from the calibrated room lighting. One stable
+   Canvas sits over the DJ, speakers and marquee (z3), so top-corner lasers
+   can visibly sweep across the sign WITHOUT another costly GPU canvas.
+   The dimmer (z76), floor controls (z80) and lyrics (z82) stay above it.
    No CSS blend modes, full-screen filters, masks, or opacity animations. */
 .room-party-canvas {
   position: absolute;
