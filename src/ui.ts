@@ -84,13 +84,26 @@ function fitEmbeddedMarqueeLine(element: HTMLElement, text: string, availableWid
  * first; leave genuinely long rows to use the existing slow pan.
  */
 function measureSupportingMarqueeLine(element: HTMLElement, text: string, availableWidth: number): number {
-  if (isSpotifyTabletMarquee()) {
-    element.style.width = "max-content";
-    element.style.maxWidth = "none";
-    element.style.overflow = "visible";
-    element.style.alignSelf = "center";
+  if (!isSpotifyTabletMarquee()) {
+    return fitEmbeddedMarqueeLine(element, text, availableWidth);
   }
-  return fitEmbeddedMarqueeLine(element, text, availableWidth);
+
+  // The browser's scrollWidth can report the full viewport (or a stale
+  // animated box) after a marquee entrance. Measure the literal text instead:
+  // short ARTIST/ALBUM lines must not enter the left-anchored pan branch.
+  element.style.removeProperty("font-size");
+  const style = getComputedStyle(element);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const letterSpacing = Number.parseFloat(style.letterSpacing);
+    return ctx.measureText(text).width +
+      Math.max(0, text.length - 1) * (Number.isFinite(letterSpacing) ? letterSpacing : 0);
+  }
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  return range.getBoundingClientRect().width;
 }
 
 function clearEmbedArtistPan(): void {
@@ -2452,12 +2465,24 @@ function configureStaticArtistRow(options: {
   element.style.removeProperty("max-width");
   element.style.removeProperty("overflow");
   element.style.removeProperty("align-self");
+  element.style.removeProperty("text-align");
 
   const measuredWidth = measureSupportingMarqueeLine(element, originalText, availableWidth);
   const isLong = measuredWidth > availableWidth + 6;
 
   marquee.classList.toggle("marquee-artist-long", isLong);
   marquee.classList.toggle("marquee-artist-short", !isLong);
+
+  if (isSpotifyTabletMarquee() && !isLong) {
+    // Hold the entire supporting row at the viewport center after its
+    // enter animation ends, and after every ARTIST/ALBUM alternation.
+    // This is a full-width centered text lane, not a scrolling leaf.
+    element.style.width = "100%";
+    element.style.maxWidth = "100%";
+    element.style.alignSelf = "center";
+    element.style.textAlign = "center";
+    element.style.overflow = "hidden";
+  }
 
   // Non-embedded mode retains the original static artist behavior.
   if ((isSpotifyEmbedMarquee() || isSpotifyTabletMarquee()) && isLong) {
