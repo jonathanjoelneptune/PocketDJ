@@ -1,0 +1,49 @@
+name: Tablet carousel DEX build (source only)
+
+on:
+  push:
+    branches:
+      - feature/tablet-carousel-snapshot-host
+    paths:
+      - "android-native/tablet-carousel/**"
+      - ".github/workflows/pocketdj-tablet-dex.yml"
+  pull_request:
+    paths:
+      - "android-native/tablet-carousel/**"
+      - ".github/workflows/pocketdj-tablet-dex.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Configure Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Configure Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android API and D8
+        run: |
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Validate Java syntax using local stubs
+        run: python3 android-native/tablet-carousel/tests/compile_with_api_stubs.py
+      - name: Compile tablet classes using Android D8
+        run: |
+          bash android-native/tablet-carousel/build_dex.sh
+          test -s android-native/tablet-carousel/build/classes20.dex
+          sha256sum android-native/tablet-carousel/build/classes20.dex
+      - name: Upload tablet-only DEX (never APK or signing material)
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketdj-tablet-carousel-classes20
+          path: android-native/tablet-carousel/build/classes20.dex
+          if-no-files-found: error
+          retention-days: 7
