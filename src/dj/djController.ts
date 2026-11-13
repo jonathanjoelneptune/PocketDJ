@@ -435,7 +435,13 @@ export class DjController {
 
   private paint(): void {
     if (this.poseElement instanceof HTMLImageElement) {
-      this.poseElement.src = `${POSE_BASE}${this.currentFrame}`;
+      // A held pose must not be assigned again on every animation frame.
+      // Reassigning the src can invalidate an image/compositor layer on Chrome
+      // Android, especially when album art and lyrics update concurrently.
+      const nextSrc = `${POSE_BASE}${this.currentFrame}`;
+      if (this.poseElement.getAttribute("src") !== nextSrc) {
+        this.poseElement.src = nextSrc;
+      }
     }
 
     const label = this.speakingVisualActive ? "speaking" : this.controlMode === "normal" ? this.mode : this.controlMode;

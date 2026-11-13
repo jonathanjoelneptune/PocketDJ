@@ -4265,7 +4265,29 @@ function isMenu2FoldDockActive(): boolean {
   return isAppFullscreen() && hasFoldLikeFullscreenCanvas && hasUsefulBottomDockSpace && beyondMidTallRange;
 }
 
+let foldDockCachedLayoutKey = "";
+let foldDockCachedActive = false;
+
+function getCachedMenu2FoldDockActive(): boolean {
+  const root = document.documentElement;
+  const layoutKey = [
+    window.innerWidth,
+    window.innerHeight,
+    isAppFullscreen() ? 1 : 0,
+    menu2FoldDockMode,
+    root.classList.contains("room-fill-stretch") ? 1 : 0,
+    root.style.getPropertyValue("--dynamic-ceiling-reveal-ratio"),
+  ].join("|");
+  if (layoutKey !== foldDockCachedLayoutKey) {
+    foldDockCachedLayoutKey = layoutKey;
+    foldDockCachedActive = isMenu2FoldDockActive();
+  }
+  return foldDockCachedActive;
+}
+
 function applyMenu2Settings(): void {
+  // Menu settings may change room geometry without changing viewport dimensions.
+  foldDockCachedLayoutKey = "";
   updateMenu2RoomAnchor();
   const panel = document.querySelector<HTMLElement>("#menu2Panel");
   if (!panel) return;
@@ -4367,7 +4389,7 @@ function applyMenu2Settings(): void {
     const tabKey = tab.dataset.menu2Tab || "";
     tab.classList.toggle("menu2-tab-active", tabKey === menu2ActiveTab);
     if (menu2PanelMode === "compact" && ["now", "playlists", "search", "devices", "room"].includes(tabKey)) {
-      tab.innerHTML = menu2Icon(tabKey as "now" | "playlists" | "search" | "devices" | "room");
+      setMenu2IconIfChanged(tab, tabKey as "now" | "playlists" | "search" | "devices" | "room");
       tab.setAttribute("aria-label", tabLabels[tabKey] || tabKey);
       tab.setAttribute("title", tabLabels[tabKey] || tabKey);
     } else {
@@ -4438,6 +4460,15 @@ async function refreshMenu2ActiveTab(): Promise<void> {
   if (menu2ActiveTab === "devices") await loadMenu2Devices();
 }
 
+
+// Reuse SVG nodes while the semantic icon stays unchanged.
+// Fold dock synchronization runs every frame, but its icons are static.
+const menu2RenderedIconNames = new WeakMap<HTMLElement, string>();
+function setMenu2IconIfChanged(element: HTMLElement, name: Parameters<typeof menu2Icon>[0]): void {
+  if (menu2RenderedIconNames.get(element) === name) return;
+  element.innerHTML = menu2Icon(name);
+  menu2RenderedIconNames.set(element, name);
+}
 
 function menu2Icon(name: "lyrics" | "play" | "pause" | "prev" | "next" | "volume" | "lock" | "unlock" | "compact" | "fullscreen" | "pip" | "shuffle" | "repeat" | "queue" | "connect" | "openPanel" | "openPanelLeft" | "openPanelRight" | "broadcast" | "now" | "playlists" | "search" | "devices" | "room"): string {
   const paths: Record<typeof name, string> = {
@@ -4645,14 +4676,14 @@ function renderMenu2NowPlaying(): void {
   const repeat = document.querySelector<HTMLElement>("#menu2Repeat");
   const queue = document.querySelector<HTMLElement>("#menu2QueueControl");
   if (lyricsControl) {
-    lyricsControl.innerHTML = menu2Icon("lyrics");
+    setMenu2IconIfChanged(lyricsControl, "lyrics");
     lyricsControl.classList.toggle("menu2-control-active", lyricsEnabled);
   }
-  if (shuffle) shuffle.innerHTML = menu2Icon("shuffle");
-  if (prev) prev.innerHTML = menu2Icon("prev");
-  if (next) next.innerHTML = menu2Icon("next");
-  if (repeat) repeat.innerHTML = menu2Icon("repeat");
-  if (queue) queue.innerHTML = menu2Icon("queue");
+  if (shuffle) setMenu2IconIfChanged(shuffle, "shuffle");
+  if (prev) setMenu2IconIfChanged(prev, "prev");
+  if (next) setMenu2IconIfChanged(next, "next");
+  if (repeat) setMenu2IconIfChanged(repeat, "repeat");
+  if (queue) setMenu2IconIfChanged(queue, "queue");
   syncMenu2Pills();
 }
 
@@ -4707,13 +4738,13 @@ function syncMenu2Pills(): void {
   const pip = document.querySelector<HTMLButtonElement>("#menu2PipPill");
   const fullscreen = document.querySelector<HTMLButtonElement>("#menu2FullscreenPill");
   if (topLyrics) {
-    topLyrics.innerHTML = menu2Icon("lyrics");
+    setMenu2IconIfChanged(topLyrics, "lyrics");
     topLyrics.classList.toggle("menu2-pill-active", lyricsEnabled);
     topLyrics.setAttribute("aria-pressed", String(lyricsEnabled));
     topLyrics.title = lyricsEnabled ? "Hide lyrics" : "Show lyrics";
   }
   if (connect) {
-    connect.innerHTML = menu2Icon("connect");
+    setMenu2IconIfChanged(connect, "connect");
     connect.classList.toggle("menu2-pill-active", state.playback.isAuthenticated);
     connect.title = state.playback.isAuthenticated ? "Connected. Click to disconnect." : "Connect Spotify";
     connect.setAttribute("aria-label", state.playback.isAuthenticated ? "Connected. Open disconnect menu" : "Connect Spotify");
@@ -4725,13 +4756,13 @@ function syncMenu2Pills(): void {
     connectMenu.setAttribute("aria-hidden", "true");
   }
   if (compact) {
-    compact.innerHTML = menu2Icon("compact");
+    setMenu2IconIfChanged(compact, "compact");
     compact.classList.toggle("menu2-pill-active", menu2PanelMode === "compact");
     compact.title = menu2PanelMode === "compact" ? "Switch Menu 2.0 to full panel" : "Switch Menu 2.0 to compact";
     compact.setAttribute("aria-pressed", String(menu2PanelMode === "compact"));
   }
   if (pip) {
-    pip.innerHTML = menu2Icon("pip");
+    setMenu2IconIfChanged(pip, "pip");
     const active = Boolean(pocketDjPipWindow && !pocketDjPipWindow.closed);
     pip.classList.toggle("menu2-pill-active", active);
     pip.classList.toggle("menu2-pill-disabled", !isDocumentPictureInPictureSupported());
@@ -4739,11 +4770,11 @@ function syncMenu2Pills(): void {
     pip.setAttribute("aria-pressed", String(active));
   }
   if (fullscreen) {
-    fullscreen.innerHTML = menu2Icon("fullscreen");
+    setMenu2IconIfChanged(fullscreen, "fullscreen");
     fullscreen.classList.toggle("menu2-pill-active", isAppFullscreen());
   }
   const lock = document.querySelector<HTMLButtonElement>("#menu2LockPill");
-  if (lock) lock.innerHTML = menu2Icon(menu2Locked ? "lock" : "unlock");
+  if (lock) setMenu2IconIfChanged(lock, menu2Locked ? "lock" : "unlock");
   syncMenu2Bubble();
 }
 
@@ -4753,25 +4784,25 @@ function syncMenu2Bubble(): void {
   const lyrics = document.querySelector<HTMLButtonElement>("#menu2BubbleLyrics");
   const play = document.querySelector<HTMLButtonElement>("#menu2BubblePlay");
   if (lyrics) {
-    lyrics.innerHTML = menu2Icon("lyrics");
+    setMenu2IconIfChanged(lyrics, "lyrics");
     lyrics.classList.toggle("menu2-bubble-active", lyricsEnabled);
   }
   const prev = document.querySelector<HTMLButtonElement>("#menu2BubblePrev");
   const next = document.querySelector<HTMLButtonElement>("#menu2BubbleNext");
   const volume = document.querySelector<HTMLButtonElement>("#menu2BubbleVolume");
   const fullscreen = document.querySelector<HTMLButtonElement>("#menu2BubbleFullscreen");
-  if (prev) prev.innerHTML = menu2Icon("prev");
-  if (play) play.innerHTML = state.playback.isPlaying ? menu2Icon("pause") : menu2Icon("play");
-  if (next) next.innerHTML = menu2Icon("next");
-  if (volume) volume.innerHTML = menu2Icon("volume");
+  if (prev) setMenu2IconIfChanged(prev, "prev");
+  if (play) setMenu2IconIfChanged(play, state.playback.isPlaying ? "pause" : "play");
+  if (next) setMenu2IconIfChanged(next, "next");
+  if (volume) setMenu2IconIfChanged(volume, "volume");
   if (fullscreen) {
-    fullscreen.innerHTML = menu2Icon("fullscreen");
+    setMenu2IconIfChanged(fullscreen, "fullscreen");
     fullscreen.classList.toggle("menu2-bubble-active", isAppFullscreen());
     fullscreen.title = isAppFullscreen() ? "Exit fullscreen" : "Enter fullscreen";
     fullscreen.setAttribute("aria-label", isAppFullscreen() ? "Exit fullscreen" : "Enter fullscreen");
   }
   const grab = document.querySelector<HTMLButtonElement>("#menu2BubbleGrab");
-  if (grab) grab.innerHTML = menu2Icon(menu2Side === "left" ? "openPanelLeft" : "openPanelRight");
+  if (grab) setMenu2IconIfChanged(grab, menu2Side === "left" ? "openPanelLeft" : "openPanelRight");
   const bubbleVolumeInput = document.querySelector<HTMLInputElement>("#menu2BubbleVolumeInput");
   if (bubbleVolumeInput) bubbleVolumeInput.value = String(phase2Volume);
 }
@@ -4780,7 +4811,7 @@ function syncMenu2Bubble(): void {
 function syncMenu2Dock(): void {
   const dock = document.querySelector<HTMLElement>("#menu2FoldDock");
   if (!dock) return;
-  const active = isMenu2FoldDockActive();
+  const active = getCachedMenu2FoldDockActive();
   dock.classList.toggle("menu2-fold-dock-visible", active);
   dock.setAttribute("aria-hidden", String(!active));
   const open = document.querySelector<HTMLButtonElement>("#menu2FoldDockOpen");
@@ -4792,19 +4823,19 @@ function syncMenu2Dock(): void {
   const volumeButton = document.querySelector<HTMLButtonElement>("#menu2FoldDockVolumeButton");
   const volume = document.querySelector<HTMLInputElement>("#menu2FoldDockVolume");
   const progress = document.querySelector<HTMLElement>("#menu2FoldDockProgressFill");
-  if (open) open.innerHTML = menu2Icon(menu2Side === "right" ? "openPanelRight" : "openPanelLeft");
+  if (open) setMenu2IconIfChanged(open, menu2Side === "right" ? "openPanelRight" : "openPanelLeft");
   if (lyrics) {
-    lyrics.innerHTML = menu2Icon("lyrics");
+    setMenu2IconIfChanged(lyrics, "lyrics");
     lyrics.classList.toggle("menu2-fold-dock-active", lyricsEnabled);
   }
-  if (prev) prev.innerHTML = menu2Icon("prev");
-  if (play) play.innerHTML = state.playback.isPlaying ? menu2Icon("pause") : menu2Icon("play");
-  if (next) next.innerHTML = menu2Icon("next");
+  if (prev) setMenu2IconIfChanged(prev, "prev");
+  if (play) setMenu2IconIfChanged(play, state.playback.isPlaying ? "pause" : "play");
+  if (next) setMenu2IconIfChanged(next, "next");
   if (fullscreen) {
-    fullscreen.innerHTML = menu2Icon("fullscreen");
+    setMenu2IconIfChanged(fullscreen, "fullscreen");
     fullscreen.classList.toggle("menu2-fold-dock-active", isAppFullscreen());
   }
-  if (volumeButton) volumeButton.innerHTML = menu2Icon("volume");
+  if (volumeButton) setMenu2IconIfChanged(volumeButton, "volume");
   if (volume && document.activeElement !== volume) volume.value = String(phase2Volume);
   if (progress) {
     const percent = state.playback.durationMs > 0 ? Math.min(100, (getEstimatedPlaybackProgress(state.playback) / state.playback.durationMs) * 100) : 0;
@@ -9578,6 +9609,8 @@ function lerp(start: number, end: number, t: number): number {
 }
 
 function applyRoomUtilitySettings(): void {
+  // Migrations and non-slider settings also invalidate lyric layout inputs.
+  lyricAnimationRevision += 1;
   const root = document.documentElement;
 
   root.style.setProperty("--speaker-left-x", `${roomUtility.speakerLeftX}%`);
@@ -10038,7 +10071,7 @@ function updateSongChangeAlbumOverlay(track: AppState["playback"]): void {
     albumCover.src = readyUrl;
   }
 
-  if (!readyUrl) {
+  if (!readyUrl && albumCover.hasAttribute("src")) {
     albumCover.removeAttribute("src");
   }
 
@@ -10110,7 +10143,7 @@ function updatePlacedActiveAlbum(track: AppState["playback"]): void {
   layer.classList.toggle("placed-active-album-has-art", showAlbum);
 
   if (showAlbum && image.getAttribute("src") !== displayUrl) image.src = displayUrl;
-  if (!showAlbum) image.removeAttribute("src");
+  if (!showAlbum && image.hasAttribute("src")) image.removeAttribute("src");
   image.alt = showAlbum ? "Placed album cover on the back shelf" : "";
 }
 
@@ -10448,8 +10481,12 @@ async function refreshLyricsForCurrentTrack(): Promise<void> {
   updateLyricsCeiling(lyricsState, getEstimatedPlaybackProgress(track), -1, lyricsEnabled, state.playback.isPlaying || state.playback.source === "demo");
   updateMarqueeLyricsAvailability(lyricsState.status, lyricsEnabled);
 
-  lyricsState = await fetchLyricsForTrack(track);
-  const lyricProgressMs = getEstimatedPlaybackProgress(track);
+  const requestedLyrics = await fetchLyricsForTrack(track);
+  // Network responses can complete out of order when tracks are skipped.
+  // A stale result must never replace the new song's lyrics or projection.
+  if (lyricsFetchKey !== key || getLyricsTrackKey(state.playback) !== key) return;
+  lyricsState = requestedLyrics;
+  const lyricProgressMs = getEstimatedPlaybackProgress(state.playback);
   const activeLyricIndex = getActiveLyricIndex(lyricsState.syncedLyrics, lyricProgressMs);
   updateLyricsCeiling(lyricsState, lyricProgressMs, activeLyricIndex, lyricsEnabled, state.playback.isPlaying || state.playback.source === "demo");
   updateMarqueeLyricsAvailability(lyricsState.status, lyricsEnabled);
