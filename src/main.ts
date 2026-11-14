@@ -1,4 +1,5 @@
 import "./styles.css";
+import { installSpotifyDesktopBridge, isSpotifyDesktopEmbed } from "./spotify/desktopBridge";
 import { initializeSpotifyEmbed, updateSpotifyEmbedArtwork } from "./spotify/embedMode";
 import { initializeRoomSpotlights, deriveSpotlightAlbumColors, updateSpotlightAlbumColors, type AlbumLightColors } from "./roomSpotlights";
 import { initializeRoomParticles } from "./roomParticles";
@@ -3885,6 +3886,23 @@ async function boot(): Promise<void> {
   // particularly important when Android warms the WebView offscreen: by the
   // first swipe the renderer and sprite poses should already be running.
   requestAnimationFrame(tick);
+
+  // Spotify Desktop supplies trusted playback metadata through Spicetify.
+  // Do not start this iframe's own OAuth, Web Playback SDK, or API poller.
+  if (isSpotifyDesktopEmbed) {
+    installSpotifyDesktopBridge((incoming) => {
+      const previous = state.playback;
+      const trackChanged = previous.trackId !== incoming.trackId ||
+        previous.title !== incoming.title || previous.artist !== incoming.artist ||
+        previous.album !== incoming.album;
+      state.playback = incoming;
+      updateSpotifyEmbedArtwork(incoming.albumArtUrl);
+      updatePlaybackUi(incoming, state.debugOpen);
+      if (trackChanged) void refreshLyricsForCurrentTrack();
+    });
+    updatePlaybackUi(state.playback, state.debugOpen);
+    return;
+  }
 
   if (state.spotifyClientId) {
     try {
@@ -10259,7 +10277,7 @@ function updateNextUpAlbumVisual(): void {
 }
 
 async function refreshNextUpQueue(force = false): Promise<void> {
-  if (nextUpQueueFetchInFlight) return;
+  if (isSpotifyDesktopEmbed || nextUpQueueFetchInFlight) return;
   if (!loadTokens() || useDemo) return;
   const now = Date.now();
   if (!force && now - nextUpQueueLastFetchAt < 10000) return;
@@ -10374,6 +10392,16 @@ function speakerTempoExternalKey(track: AppState["playback"]): string {
 function applySpeakerPulseTempo(track: AppState["playback"]): void {
   const trackKey = track.trackId || `${track.source}:${track.title}:${track.artist}:${track.durationMs}`;
   const externalKey = speakerTempoExternalKey(track);
+
+  // Desktop iframe has no separate Spotify token. Preserve the beat animation
+  // using the local estimate rather than firing authenticated tempo requests.
+  if (isSpotifyDesktopEmbed && track.source === "spotify") {
+    if (speakerTempoTrackKey !== trackKey) {
+      speakerTempoTrackKey = trackKey;
+      setSpeakerTempo(estimateTrackTempoBpm(track), "estimate");
+    }
+    return;
+  }
 
   if (!roomUtility.speakerPulseUseTempo) {
     speakerTempoTrackKey = trackKey;
