@@ -223,7 +223,11 @@ export function initializeSpotifyEmbed(): void {
     enabled = requested;
   }
   if (!enabled) return;
-  document.documentElement.classList.add("spotify-embed-active", "spotify-embed-compact");
+  const desktopExtended = search.get("spotify_desktop") === "1" && search.get("layout") === "extended";
+  document.documentElement.classList.add("spotify-embed-active");
+  // Desktop uses the full web marquee and scene layout; Android keeps its
+  // compact, native-artwork geometry unchanged.
+  document.documentElement.classList.toggle("spotify-embed-compact", !desktopExtended);
   applySpotifyDesktopExtendedLayout();
   updateSpotifyTabletMarquee();
   // Fold, rotate and split-window changes should re-evaluate the marquee only.
