@@ -1,3 +1,5 @@
+import { applySpotifyDesktopExtendedLayout } from "./desktopExtended";
+
 /**
  * Spotify Android embedded-artwork presentation.
  * Activated only when the Android WebView opens /#spotify-embed.
@@ -18,7 +20,8 @@ function updateSpotifyTabletMarquee(): void {
   const root = document.documentElement;
   const shortSide = Math.min(window.screen.width, window.screen.height);
   const fullMarquee = enabled && root.classList.contains("spotify-embed-compact") &&
-    shortSide >= TABLET_MARQUEE_MIN_SHORT_SIDE_CSS_PX;
+    (root.classList.contains("spotify-embed-desktop-extended") ||
+     shortSide >= TABLET_MARQUEE_MIN_SHORT_SIDE_CSS_PX);
   const wasFull = root.classList.contains("spotify-embed-tablet-marquee");
   root.classList.toggle("spotify-embed-tablet-marquee", fullMarquee);
   if (wasFull !== fullMarquee) {
@@ -221,6 +224,7 @@ export function initializeSpotifyEmbed(): void {
   }
   if (!enabled) return;
   document.documentElement.classList.add("spotify-embed-active", "spotify-embed-compact");
+  applySpotifyDesktopExtendedLayout();
   updateSpotifyTabletMarquee();
   // Fold, rotate and split-window changes should re-evaluate the marquee only.
   // Room geometry, native carousel and WebView session remain untouched.
