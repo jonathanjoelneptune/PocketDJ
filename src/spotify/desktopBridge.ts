@@ -12,6 +12,9 @@ const HOST_ORIGINS = new Set([
   "https://desktop.spotify.com"
 ]);
 
+const desktopQuery = new URLSearchParams(window.location.search);
+const isMiniPlayer = desktopQuery.get("surface") === "mini";
+
 export const isSpotifyDesktopEmbed =
   new URLSearchParams(window.location.search).get("spotify_desktop") === "1" &&
   window.parent !== window;
@@ -27,10 +30,16 @@ function finiteMs(value: unknown): number {
 
 export function installSpotifyDesktopBridge(onPlayback: (track: NormalizedTrack) => void): void {
   if (!isSpotifyDesktopEmbed) return;
+  let connectedAcknowledged = false;
   const onMessage = (event: MessageEvent): void => {
     // This accepts playback metadata only from the immediate Spotify parent,
     // never messages from other frames or arbitrary browser origins.
-    if (event.source !== window.parent || !HOST_ORIGINS.has(event.origin)) return;
+    // The PiP window owns the iframe, but Spotify's main window sends the
+    // playback packet. Accept that path only for the explicitly requested
+    // MiniPlayer surface and only from a verified Spotify origin. No tokens
+    // are exchanged. All other surfaces still require their direct parent.
+    if (!HOST_ORIGINS.has(event.origin)) return;
+    if (event.source !== window.parent && !isMiniPlayer) return;
     const packet = event.data as {type?: string; track?: Record<string, unknown>} | null;
     if (!packet || packet.type !== "pocketdj:desktop-playback" || !packet.track) return;
     const received = packet.track;
@@ -59,6 +68,10 @@ export function installSpotifyDesktopBridge(onPlayback: (track: NormalizedTrack)
     };
     onPlayback(incoming);
     document.documentElement.dataset.pocketDjDesktopConnected = "1";
+    if (!connectedAcknowledged) {
+      connectedAcknowledged = true;
+      window.parent.postMessage({type: "pocketdj:desktop-connected"}, "*");
+    }
   };
 
   window.addEventListener("message", onMessage);
