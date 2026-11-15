@@ -1,7 +1,9 @@
 /**
- * Independent, tempo-paced DJ NES head motion. The original full PNG remains
- * the fallback until the matching head and body images are decoded.
+ * Independent DJ NES head motion. Actual track-time beats drive the nod when
+ * available; a BPM grid anchored to track progress is the automatic fallback.
+ * The original full PNG remains visible until the new assets are decoded.
  */
+import { createBeatEvents, nextBeatEvent, type BeatTiming } from "./beatClock";
 type BobFrame = { enabled: boolean; x: number; y: number; tilt: number };
 type HeadBobRig = {
   family: string;
@@ -70,17 +72,23 @@ export class HeadBobController {
   private lastDrawn = '';
   private lastDrawnPosition = -1;
   private lastRenderWasMoving = false;
-  private activeTrackId: string | null = null;
+  private timingTrackKey = "";
+  private timingRevision = "";
+  private timingDiscontinuity = -1;
+  private lastProgress = -1;
+  private lastScheduledBoundary = Number.NEGATIVE_INFINITY;
+  private cachedMap: readonly number[] | null = null;
+  private cachedRate = 1;
+  private cachedBeatEvents: readonly number[] = [];
   private eligibleLastTick = false;
   private motionFrom: HeadMotion = { ...REST_POSE };
   private motionTo: HeadMotion = { ...REST_POSE };
-  private motionStartedAt = 0;
+  private motionStartedProgress = 0;
   private motionDurationMs = 1;
   private position = 0;
   private pair: BobPair = newPair();
   private pairStepsRemaining = 0;
   private flourish: number[] = [];
-  private nextStepAt = 0;
   private rate = 1;
   private rateChangeAfter = 0;
   private beatSteps = 0;
@@ -98,34 +106,43 @@ export class HeadBobController {
     this.ctx = this.canvas.getContext('2d', { alpha: true })!;
     this.ctx.imageSmoothingEnabled = false;
     originalSprite.insertAdjacentElement('afterend', this.canvas);
-    this.resetGroove(Date.now());
+    this.resetGroove();
   }
 
-  /** Runs on the existing requestAnimationFrame tick; scratch poses are not changed. */
-  update(frame: string, enabled: boolean, tempoBpm: number, trackId: string | null, now: number): void {
+  /**
+   * Scratch pose selection stays independent of head movement. Musical events
+   * come from the sampled track timeline, never from a free-running wall timer.
+   */
+  update(frame: string, enabled: boolean, timing: BeatTiming | null, _now: number): void {
     const family = FAMILY_BY_FRAME[frame];
-    if (!enabled || !family) {
-      // Pausing, speaking, a record change, or switching the setting off must
-      // immediately restore the intact source PNG. Resume from neutral later.
+    if (!enabled || !family || !timing) {
       this.eligibleLastTick = false;
-      this.activeTrackId = null;
+      this.timingTrackKey = "";
       this.lastRenderWasMoving = false;
       this.hide();
       return;
     }
 
-    // When returning from a cinematic, speech, or the disabled state, restart
-    // from the original neutral head rather than snapping to a stale nod.
-    if (!this.eligibleLastTick || trackId !== this.activeTrackId) {
-      this.activeTrackId = trackId;
-      this.resetGroove(now);
-      this.lastDrawn = '';
+    const progress = timing.trackProgressMs;
+    const revision = `${timing.phaseSource}:${timing.bpm.toFixed(2)}:${timing.beatOffsetMs.toFixed(1)}:${timing.beatTimesMs?.length ?? 0}`;
+    const resumedOrChanged = !this.eligibleLastTick ||
+      timing.trackKey !== this.timingTrackKey ||
+      timing.discontinuity !== this.timingDiscontinuity ||
+      revision !== this.timingRevision ||
+      (this.lastProgress >= 0 && (progress < this.lastProgress - 160 || progress - this.lastProgress > 2000));
+    if (resumedOrChanged) {
+      this.resetGroove();
+      this.lastDrawn = "";
     }
     this.eligibleLastTick = true;
+    this.timingTrackKey = timing.trackKey;
+    this.timingRevision = revision;
+    this.timingDiscontinuity = timing.discontinuity;
+    this.lastProgress = progress;
 
     if (family !== this.activeFamily) {
       this.activeFamily = family;
-      this.lastDrawn = '';
+      this.lastDrawn = "";
       this.lastDrawnPosition = -1;
       this.hide();
     }
@@ -140,39 +157,47 @@ export class HeadBobController {
       return;
     }
 
-    // Each tempo step selects the next destination. Only the first ~35% of
-    // that interval is spent moving; the remainder is a short natural hold.
-    // This creates multiple intermediate frames without new sprite artwork.
-    if (now >= this.nextStepAt) {
-      const bpm = Math.max(55, Math.min(190, Number.isFinite(tempoBpm) ? tempoBpm : 96));
-      const stepMs = Math.max(160, 60_000 / (bpm * this.rate));
-      const current = this.motionAt(now);
+    // The destination head pose lands ON the beat. Starting the glide before
+    // each beat, instead of on it, produces a more natural musical accent.
+    const subdivisionMs = 60_000 / (timing.bpm * this.rate);
+    const moveMs = Math.max(90, Math.min(280, subdivisionMs * MOTION_PORTION_OF_STEP));
+    if (timing.beatTimesMs !== this.cachedMap || this.rate !== this.cachedRate) {
+      this.cachedMap = timing.beatTimesMs;
+      this.cachedRate = this.rate;
+      this.cachedBeatEvents = timing.beatTimesMs ? createBeatEvents(timing.beatTimesMs, this.rate) : [];
+    }
+    const boundary = nextBeatEvent(timing, this.rate, progress, 42, this.cachedBeatEvents);
+    if (boundary !== null &&
+        boundary > this.lastScheduledBoundary + 35 &&
+        progress >= boundary - moveMs &&
+        progress <= boundary + 42) {
+      const current = this.motionAt(progress);
       this.advanceGroove();
-      const target = rig.rig.headBobFrames[this.position];
-      if (target) {
+      const next = rig.rig.headBobFrames[this.position];
+      if (next) {
         this.motionFrom = current;
-        this.motionTo = { x: target.x, y: target.y, tilt: target.tilt };
-        this.motionStartedAt = now;
-        this.motionDurationMs = Math.max(90, Math.min(280, stepMs * MOTION_PORTION_OF_STEP));
+        this.motionTo = { x: next.x, y: next.y, tilt: next.tilt };
+        this.motionStartedProgress = boundary - moveMs;
+        this.motionDurationMs = moveMs;
+        this.lastScheduledBoundary = boundary;
       }
-      this.nextStepAt = now + stepMs; // Never replay missed beats after backgrounding.
     }
 
-    // The renderer runs every animation frame *during* a glide, even if
-    // the scratch frame and destination pose did not change.
-    const moving = now < this.motionStartedAt + this.motionDurationMs;
-    if (frame !== this.lastDrawn || this.position !== this.lastDrawnPosition || moving || this.lastRenderWasMoving || !this.visible) {
-      this.render(rig, frame, this.motionAt(now));
+    const moving = progress >= this.motionStartedProgress &&
+      progress < this.motionStartedProgress + this.motionDurationMs;
+    if (frame !== this.lastDrawn || this.position !== this.lastDrawnPosition ||
+        moving || this.lastRenderWasMoving || !this.visible) {
+      this.render(rig, frame, this.motionAt(progress));
     }
-    // One last paint after movement ends lands precisely on the target.
+    // Paint once after easing ends to hit the exact approved destination pose.
     this.lastRenderWasMoving = moving;
     if (!this.visible) {
       this.visible = true;
-      this.host.classList.add('dj-headbob-active');
+      this.host.classList.add("dj-headbob-active");
     }
   }
 
-  private resetGroove(now: number): void {
+  private resetGroove(): void {
     this.pair = newPair();
     this.position = 0;
     this.pairStepsRemaining = rand(12, 30);
@@ -182,17 +207,17 @@ export class HeadBobController {
     this.beatSteps = 0;
     this.motionFrom = { ...REST_POSE };
     this.motionTo = { ...REST_POSE };
-    this.motionStartedAt = now;
+    this.motionStartedProgress = Number.NEGATIVE_INFINITY;
     this.motionDurationMs = 1;
     this.lastRenderWasMoving = false;
     this.lastDrawnPosition = -1;
-    this.nextStepAt = now + 450;
+    this.lastScheduledBoundary = Number.NEGATIVE_INFINITY;
+    this.lastProgress = -1;
   }
 
-  /** Smooth X/Y translation and slight tilt using the approved head poses. */
-  private motionAt(now: number): HeadMotion {
-    const progress = (now - this.motionStartedAt) / this.motionDurationMs;
-    const t = easeInOutSine(progress);
+  private motionAt(progress: number): HeadMotion {
+    const fraction = (progress - this.motionStartedProgress) / this.motionDurationMs;
+    const t = easeInOutSine(fraction);
     return {
       x: mix(this.motionFrom.x, this.motionTo.x, t),
       y: mix(this.motionFrom.y, this.motionTo.y, t),
