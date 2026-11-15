@@ -4,6 +4,7 @@
  * No OAuth code, access token, refresh token or Spotify API calls cross this bridge.
  */
 import type { NormalizedTrack } from "../state/types";
+import type { SpotifyCatalogTrack } from "./spotifyClient";
 
 const HOST_ORIGINS = new Set([
   "https://xpui.app.spotify.com",
@@ -28,7 +29,60 @@ function finiteMs(value: unknown): number {
   return Number.isFinite(number) ? Math.max(0, Math.round(number)) : 0;
 }
 
-export function installSpotifyDesktopBridge(onPlayback: (track: NormalizedTrack) => void): void {
+
+export type DesktopAlbumColors = { trackId: string; primary: string; secondary: string };
+
+function artworkUrl(value: unknown): string | null {
+  const raw = text(value, 1200);
+  if (raw.startsWith("https://")) return raw;
+  const match = /^spotify:image:([a-z0-9]+)$/i.exec(raw);
+  return match ? "https://i.scdn.co/image/" + match[1] : null;
+}
+
+function desktopQueue(value: unknown): SpotifyCatalogTrack[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const tracks: SpotifyCatalogTrack[] = [];
+  for (const raw of value.slice(0, 6)) {
+    if (!raw || typeof raw !== "object") continue;
+    const row = raw as Record<string, unknown>;
+    const id = text(row.id, 128);
+    if (!id || !/^[a-zA-Z0-9]+$/.test(id) || seen.has(id)) continue;
+    seen.add(id);
+    tracks.push({
+      kind: "track",
+      id,
+      uri: text(row.uri, 160) || "spotify:track:" + id,
+      name: text(row.name),
+      artists: text(row.artists),
+      artistId: null,
+      album: text(row.album),
+      albumUri: text(row.albumUri, 160) || null,
+      albumArtUrl: artworkUrl(row.albumArtUrl),
+      durationMs: finiteMs(row.durationMs)
+    });
+    if (tracks.length === 4) break;
+  }
+  return tracks;
+}
+
+function desktopColors(value: unknown, trackId: string): DesktopAlbumColors | null {
+  if (!value || typeof value !== "object" || !trackId) return null;
+  const row = value as Record<string, unknown>;
+  if (text(row.trackId, 128) !== trackId) return null;
+  const clean = (value: unknown): string | null => {
+    const raw = text(value, 9);
+    return /^#?[0-9a-f]{6}$/i.test(raw) ? "#" + raw.replace(/^#/, "").toLowerCase() : null;
+  };
+  const primary = clean(row.primary);
+  const secondary = clean(row.secondary);
+  return primary && secondary ? { trackId, primary, secondary } : null;
+}
+
+export function installSpotifyDesktopBridge(
+  onPlayback: (track: NormalizedTrack) => void,
+  onRoomMedia?: (queue: SpotifyCatalogTrack[], colors: DesktopAlbumColors | null) => void
+): void {
   if (!isSpotifyDesktopEmbed) return;
   let connectedAcknowledged = false;
   const onMessage = (event: MessageEvent): void => {
@@ -40,7 +94,7 @@ export function installSpotifyDesktopBridge(onPlayback: (track: NormalizedTrack)
     // are exchanged. All other surfaces still require their direct parent.
     if (!HOST_ORIGINS.has(event.origin)) return;
     if (event.source !== window.parent && !isMiniPlayer) return;
-    const packet = event.data as {type?: string; track?: Record<string, unknown>} | null;
+    const packet = event.data as {type?: string; track?: Record<string, unknown>; queue?: unknown; albumColors?: unknown} | null;
     if (!packet || packet.type !== "pocketdj:desktop-playback" || !packet.track) return;
     const received = packet.track;
     const id = text(received.trackId, 128);
@@ -67,6 +121,9 @@ export function installSpotifyDesktopBridge(onPlayback: (track: NormalizedTrack)
       playbackContextType: text(received.playbackContextType) || null
     };
     onPlayback(incoming);
+    if (onRoomMedia) {
+      onRoomMedia(desktopQueue(packet.queue), desktopColors(packet.albumColors, id));
+    }
     document.documentElement.dataset.pocketDjDesktopConnected = "1";
     if (!connectedAcknowledged) {
       connectedAcknowledged = true;
