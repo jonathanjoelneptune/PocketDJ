@@ -1,5 +1,5 @@
 /**
- * Playback-only bridge from the Spicetify extension to the existing Pocket DJ renderer.
+ * Metadata-only playback bridge and MiniPlayer double-click relay for Spicetify.
  * Loaded only when ?spotify_desktop=1 is used inside a Spotify-owned iframe.
  * No OAuth code, access token, refresh token or Spotify API calls cross this bridge.
  */
@@ -73,6 +73,17 @@ export function installSpotifyDesktopBridge(onPlayback: (track: NormalizedTrack)
       window.parent.postMessage({type: "pocketdj:desktop-connected"}, "*");
     }
   };
+
+  // The room occupies a cross-origin iframe inside Chromium's PiP window.
+  // DOM double-click events do not bubble from that iframe to the PiP parent,
+  // so relay this *intent only* from inside the renderer. No credentials or
+  // privileged instructions are carried in this message.
+  if (isMiniPlayer) {
+    document.addEventListener("dblclick", (event: MouseEvent) => {
+      if (event.button !== 0 || !event.isTrusted) return;
+      window.parent.postMessage({type: "pocketdj:desktop-return-to-spotify"}, "*");
+    }, {capture: true});
+  }
 
   window.addEventListener("message", onMessage);
   window.parent.postMessage({type: "pocketdj:desktop-ready"}, "*");
