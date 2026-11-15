@@ -1,0 +1,147 @@
+{
+  "family": "a47",
+  "variants": [
+    "a47.png",
+    "a47-2.png",
+    "a47-3.png"
+  ],
+  "sourceCanvas": {
+    "width": 582,
+    "height": 652
+  },
+  "headPolygon": [
+    [
+      278,
+      69
+    ],
+    [
+      308,
+      67
+    ],
+    [
+      336,
+      78
+    ],
+    [
+      358,
+      95
+    ],
+    [
+      366,
+      111
+    ],
+    [
+      370,
+      133
+    ],
+    [
+      375,
+      166
+    ],
+    [
+      358,
+      197
+    ],
+    [
+      347,
+      207
+    ],
+    [
+      338,
+      223
+    ],
+    [
+      321,
+      232
+    ],
+    [
+      299,
+      235
+    ],
+    [
+      277,
+      217
+    ],
+    [
+      261,
+      206
+    ],
+    [
+      246,
+      191
+    ],
+    [
+      241,
+      177
+    ],
+    [
+      243,
+      148
+    ],
+    [
+      233,
+      146
+    ],
+    [
+      232,
+      135
+    ],
+    [
+      235,
+      121
+    ],
+    [
+      243,
+      106
+    ],
+    [
+      247,
+      89
+    ],
+    [
+      261,
+      77
+    ]
+  ],
+  "maskPixelOverrides": [],
+  "bodyRepairPixels": [],
+  "rotationPivot": {
+    "x": 295,
+    "y": 216
+  },
+  "headBobFrames": [
+    {
+      "enabled": true,
+      "x": 0,
+      "y": 0,
+      "tilt": 0
+    },
+    {
+      "enabled": true,
+      "x": 0,
+      "y": 2,
+      "tilt": -1.5
+    },
+    {
+      "enabled": true,
+      "x": 1,
+      "y": 0,
+      "tilt": 1.5
+    },
+    {
+      "enabled": true,
+      "x": -1,
+      "y": -2,
+      "tilt": -1.5
+    }
+  ],
+  "preview": {
+    "bpm": 96,
+    "rate": 1,
+    "scratchSpeedMs": 380
+  },
+  "includesSourceImages": false,
+  "schemaVersion": 1,
+  "assetType": "pocketdj-head-bob-rig",
+  "notes": "Head layer and each body layer use the full original 582x652 coordinate system. Render body first, then the shared head with the offsets and rotationPivot in this JSON. No runtime app files are modified."
+}
