@@ -77,6 +77,9 @@ let pollTimer: number | null = null;
 const PLAYBACK_COMMAND_SETTLE_MS = 4_500;
 let playbackCommandIntent: { isPlaying: boolean; until: number; trackId: string; progressMs: number; updatedAt: number } | null = null;
 let dj: DjController;
+const HEAD_NODS_STORAGE_KEY = "pocketdj-head-nods-enabled-v1";
+// Existing users and new installations both start Off unless they explicitly enable it.
+let headNodsEnabled = localStorage.getItem(HEAD_NODS_STORAGE_KEY) === "1";
 let lastPollError = "";
 let panelAutoHiddenAfterConnect = false;
 let compactPanelEnabled = false;
@@ -3863,6 +3866,7 @@ async function boot(): Promise<void> {
   setReactiveRoomPalette(DEFAULT_REACTIVE_ROOM_PALETTE);
   document.documentElement.style.setProperty("--music-room-energy", reactiveRoomRenderedEnergy.toFixed(3));
   dj = new DjController(qs("#djSprite"), qs("#modePill"));
+  dj.setHeadNodsEnabled(headNodsEnabled);
   bindControls();
   bindFloorControlsLock();
   updateFloorControlsLockUi();
@@ -5923,6 +5927,17 @@ function bindMenu2Controls(): void {
     localStorage.setItem("pocketdj-menu2-transparency", menu2Transparency.toFixed(2));
     applyMenu2Settings();
   });
+  // Persistent room utility. Toggling Off immediately restores the original sprite.
+  const headNodsToggle = document.querySelector<HTMLInputElement>("#menu2HeadNodsEnabled");
+  if (headNodsToggle) {
+    headNodsToggle.checked = headNodsEnabled;
+    headNodsToggle.addEventListener("change", () => {
+      headNodsEnabled = headNodsToggle.checked;
+      localStorage.setItem(HEAD_NODS_STORAGE_KEY, headNodsEnabled ? "1" : "0");
+      dj.setHeadNodsEnabled(headNodsEnabled);
+    });
+  }
+
   // Room Lighting: a non-destructive grading layer with independent presets.
   const lightingPreset = document.querySelector<HTMLSelectElement>("#menu2RoomLightingPreset");
   lightingPreset?.addEventListener("change", () => {
