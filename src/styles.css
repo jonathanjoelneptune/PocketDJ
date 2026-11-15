@@ -15299,3 +15299,17 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
   contain: layout !important;
   will-change: auto !important;
 }
+
+
+/* Independent DJ NES head bob: keep the original PNG mounted as a lossless
+   fallback. Only swap opacity after the entire composited frame is ready. */
+.dj-wrap .dj-headbob-canvas {
+  opacity: 0;
+  pointer-events: none;
+}
+.dj-wrap.dj-headbob-active > #djSprite {
+  opacity: 0;
+}
+.dj-wrap.dj-headbob-active > .dj-headbob-canvas {
+  opacity: 1;
+}
