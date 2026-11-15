@@ -1,4 +1,5 @@
 import type { DjMode, NormalizedTrack } from "../state/types";
+import { HeadBobController } from "./headBobController";
 
 type ControlMode = "normal" | "audition" | "cinematic";
 type LoopKind = "quick" | "cinematic" | "idle" | "paused";
@@ -92,8 +93,10 @@ export class DjController {
   // indefinitely would cost far more memory than the benefit on mobile.
   private readonly cinematicPoseBitmaps = new Map<string, HTMLImageElement>();
   private readonly decodedCinematicPoses = new Set<string>();
+  private readonly headBob: HeadBobController | null;
 
   constructor(private readonly poseElement: HTMLElement, private readonly modeElement: HTMLElement) {
+    this.headBob = poseElement instanceof HTMLImageElement ? new HeadBobController(poseElement) : null;
     this.preload();
     this.bindKeyboardControls();
     this.startNormalLoop("idle", Date.now());
@@ -438,6 +441,15 @@ export class DjController {
   }
 
   private paint(): void {
+    // Head motion is independent of scratches and never runs during record moves,
+    // AI DJ speaking, pauses, or manual animation audition.
+    this.headBob?.update(
+      this.currentFrame,
+      this.controlMode === "normal" && (this.mode === "playing" || this.mode === "demo") &&
+        !this.cinematicOnce && !this.pendingSongChangeCinematic &&
+        !this.speakingRequested && !this.speakingVisualActive,
+      this.tempoBpm, this.lastTrackId, Date.now()
+    );
     if (this.poseElement instanceof HTMLImageElement) {
       // Hold the outgoing image during the record-change cinematic until the
       // next pose is decoded. Otherwise Chrome can briefly display empty or

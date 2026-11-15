@@ -1,0 +1,170 @@
+{
+  "family": "a10",
+  "variants": [
+    "a10.png",
+    "a10-2.png"
+  ],
+  "sourceCanvas": {
+    "width": 582,
+    "height": 652
+  },
+  "headPolygon": [
+    [
+      278,
+      69
+    ],
+    [
+      308,
+      67
+    ],
+    [
+      336,
+      78
+    ],
+    [
+      354,
+      96
+    ],
+    [
+      360,
+      115
+    ],
+    [
+      366,
+      133
+    ],
+    [
+      367,
+      176
+    ],
+    [
+      358,
+      197
+    ],
+    [
+      347,
+      207
+    ],
+    [
+      338,
+      223
+    ],
+    [
+      321,
+      232
+    ],
+    [
+      299,
+      235
+    ],
+    [
+      274,
+      227
+    ],
+    [
+      257,
+      214
+    ],
+    [
+      254,
+      204
+    ],
+    [
+      250,
+      196
+    ],
+    [
+      238,
+      197
+    ],
+    [
+      230,
+      194
+    ],
+    [
+      219,
+      188
+    ],
+    [
+      210,
+      188
+    ],
+    [
+      206,
+      184
+    ],
+    [
+      210,
+      177
+    ],
+    [
+      215,
+      169
+    ],
+    [
+      215,
+      161
+    ],
+    [
+      208,
+      141
+    ],
+    [
+      211,
+      114
+    ],
+    [
+      232,
+      98
+    ],
+    [
+      247,
+      89
+    ],
+    [
+      261,
+      77
+    ]
+  ],
+  "maskPixelOverrides": [],
+  "bodyRepairPixels": [],
+  "rotationPivot": {
+    "x": 295,
+    "y": 216
+  },
+  "headBobFrames": [
+    {
+      "enabled": true,
+      "x": 0,
+      "y": 0,
+      "tilt": 0
+    },
+    {
+      "enabled": true,
+      "x": 0,
+      "y": 2,
+      "tilt": -1.5
+    },
+    {
+      "enabled": true,
+      "x": 1,
+      "y": 0,
+      "tilt": 1.5
+    },
+    {
+      "enabled": true,
+      "x": -1,
+      "y": -2,
+      "tilt": -1.5
+    }
+  ],
+  "preview": {
+    "bpm": 96,
+    "rate": 1,
+    "scratchSpeedMs": 380
+  },
+  "includesSourceImages": false,
+  "schemaVersion": 1,
+  "assetType": "pocketdj-head-bob-rig",
+  "notes": "Head layer and each body layer use the full original 582x652 coordinate system. Render body first, then the shared head with the offsets and rotationPivot in this JSON. No runtime app files are modified."
+}
