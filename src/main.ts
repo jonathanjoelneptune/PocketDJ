@@ -1,5 +1,5 @@
 import "./styles.css";
-import { installSpotifyDesktopBridge, isSpotifyDesktopEmbed } from "./spotify/desktopBridge";
+import { installSpotifyDesktopBridge, isSpotifyDesktopEmbed, type DesktopAlbumColors } from "./spotify/desktopBridge";
 import { initializeSpotifyEmbed, updateSpotifyEmbedArtwork } from "./spotify/embedMode";
 import { initializeRoomSpotlights, deriveSpotlightAlbumColors, updateSpotlightAlbumColors, type AlbumLightColors } from "./roomSpotlights";
 import { initializeRoomParticles } from "./roomParticles";
@@ -842,6 +842,11 @@ const DEFAULT_REACTIVE_ROOM_PALETTE: ReactiveRoomPalette = {
 };
 
 const reactiveRoomPaletteCache = new Map<string, ReactiveRoomPalette>();
+/** Live palette supplied by Spicetify's already-authorized Spotify desktop
+ * session. The web/Android renderer still extracts album colors itself. */
+let desktopAlbumColors: DesktopAlbumColors | null = null;
+let desktopQueueLastPopulatedAt = 0;
+
 let reactiveRoomPaletteUrl = "";
 let reactiveRoomPalettePendingUrl = "";
 const REACTIVE_ROOM_CROSSFADE_MS = 5000;
@@ -3899,6 +3904,20 @@ async function boot(): Promise<void> {
       updateSpotifyEmbedArtwork(incoming.albumArtUrl);
       updatePlaybackUi(incoming, state.debugOpen);
       if (trackChanged) void refreshLyricsForCurrentTrack();
+    }, (queue, colors) => {
+      // The desktop embed deliberately has no Spotify Web API token. Use the
+      // same Spotify-owned queue data as the host, without additional login.
+      const key = playbackAlbumTrackKey(state.playback);
+      if (key && (queue.length > 0 || Date.now() - desktopQueueLastPopulatedAt > 5000)) {
+        nextUpQueuePlaybackKey = key;
+        nextUpQueueTracks = filterNextUpQueue(queue, state.playback).slice(0, 4);
+        if (queue.length) desktopQueueLastPopulatedAt = Date.now();
+        nextUpQueueTracks.slice(0, 3).forEach(preloadNextUpAlbumArt);
+        updateNextUpAlbumVisual();
+      }
+      if (colors && colors.trackId === state.playback.trackId) {
+        desktopAlbumColors = colors;
+      }
     });
     updatePlaybackUi(state.playback, state.debugOpen);
     return;
@@ -8139,7 +8158,47 @@ async function extractReactiveRoomPalette(imageUrl: string, seed = imageUrl): Pr
   };
 }
 
+function desktopHexColor(value: string): RgbTriple | null {
+  const match = /^#?([0-9a-f]{6})$/i.exec(value);
+  if (!match) return null;
+  const code = Number.parseInt(match[1], 16);
+  return [(code >> 16) & 255, (code >> 8) & 255, code & 255];
+}
+
+function paletteFromSpotifyDesktopColors(
+  colors: DesktopAlbumColors, track: AppState["playback"]
+): ReactiveRoomPalette | null {
+  const primary = desktopHexColor(colors.primary);
+  const secondary = desktopHexColor(colors.secondary);
+  if (!primary || !secondary) return null;
+  const seed = `${track.title}|${track.artist}|${track.album}`;
+  const warm = makeRoomVibeAnchor(primary, seed + ":primary", 0.68);
+  const cool = makeRoomVibeAnchor(secondary, seed + ":secondary", 0.68);
+  return {
+    core: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.core, warm, 0.70),
+    tint: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.tint, warm, 0.94),
+    ambient: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.ambient, cool, 0.54),
+    roomGlow: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomGlow, cool, 0.92),
+    roomAccent: mixRgb(DEFAULT_REACTIVE_ROOM_PALETTE.roomAccent, warm, 0.96)
+  };
+}
+
 function updateReactiveRoomPalette(track: AppState["playback"]): void {
+  // Spotify's native extractor is the primary source for desktop album lights;
+  // all surfaces still use the standard five-second color crossfade below.
+  const colors = desktopAlbumColors;
+  if (isSpotifyDesktopEmbed && colors && track.trackId === colors.trackId) {
+    const palette = paletteFromSpotifyDesktopColors(colors, track);
+    const colorKey = `desktop:${colors.trackId}:${colors.primary}:${colors.secondary}`;
+    if (palette) {
+      if (reactiveRoomPaletteUrl !== colorKey) {
+        reactiveRoomPaletteUrl = colorKey;
+        queueReactiveRoomPalette(palette, colorKey);
+      }
+      return;
+    }
+  }
+
   const imageUrl = track.albumArtUrl || "";
   if (!imageUrl) {
     reactiveRoomPaletteUrl = "";
@@ -8162,7 +8221,7 @@ function updateReactiveRoomPalette(track: AppState["playback"]): void {
   void extractReactiveRoomPalette(imageUrl, `${track.title}|${track.artist}|${track.album}|${imageUrl}`)
     .then((palette) => {
       reactiveRoomPaletteCache.set(imageUrl, palette);
-      if ((state.playback.albumArtUrl || "") !== imageUrl) return;
+      if ((state.playback.albumArtUrl || "") !== imageUrl || (isSpotifyDesktopEmbed && desktopAlbumColors?.trackId === state.playback.trackId)) return;
       reactiveRoomPaletteUrl = imageUrl;
       queueReactiveRoomPalette(palette, `album:${imageUrl}`);
     })
