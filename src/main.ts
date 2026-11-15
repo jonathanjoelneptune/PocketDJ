@@ -7668,7 +7668,10 @@ function updateDynamicCeilingReveal(): void {
   // Base scene stays 16:9 and bottom-anchored. Extra vertical space becomes ceiling reveal.
   const baseRoomWidth = Math.min(viewportWidth, viewportHeight * (16 / 9));
   const baseRoomHeight = baseRoomWidth * (9 / 16);
-  const availableExtra = Math.max(0, viewportHeight - baseRoomHeight);
+  // The embedded desktop scene must be identical across sidebar, floating
+  // MiniPlayer, and native fullscreen. Extra viewport height belongs to the
+  // host, not to the room's internal ceiling/lyrics coordinate space.
+  const availableExtra = isSpotifyDesktopEmbed ? 0 : Math.max(0, viewportHeight - baseRoomHeight);
   const maxRevealPx = Math.min(260, baseRoomHeight * 0.28);
   const revealPx = Math.round(clamp(availableExtra, 0, maxRevealPx));
   const coordScale = baseRoomWidth > 0 ? ROOM_COORD_WIDTH / baseRoomWidth : 1;
