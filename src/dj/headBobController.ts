@@ -69,6 +69,7 @@ export class HeadBobController {
   private activeFamily = '';
   private lastDrawn = '';
   private lastDrawnPosition = -1;
+  private lastRenderWasMoving = false;
   private activeTrackId: string | null = null;
   private eligibleLastTick = false;
   private motionFrom: HeadMotion = { ...REST_POSE };
@@ -108,6 +109,7 @@ export class HeadBobController {
       // immediately restore the intact source PNG. Resume from neutral later.
       this.eligibleLastTick = false;
       this.activeTrackId = null;
+      this.lastRenderWasMoving = false;
       this.hide();
       return;
     }
@@ -159,9 +161,11 @@ export class HeadBobController {
     // The renderer runs every animation frame *during* a glide, even if
     // the scratch frame and destination pose did not change.
     const moving = now < this.motionStartedAt + this.motionDurationMs;
-    if (frame !== this.lastDrawn || this.position !== this.lastDrawnPosition || moving || !this.visible) {
+    if (frame !== this.lastDrawn || this.position !== this.lastDrawnPosition || moving || this.lastRenderWasMoving || !this.visible) {
       this.render(rig, frame, this.motionAt(now));
     }
+    // One last paint after movement ends lands precisely on the target.
+    this.lastRenderWasMoving = moving;
     if (!this.visible) {
       this.visible = true;
       this.host.classList.add('dj-headbob-active');
@@ -180,6 +184,7 @@ export class HeadBobController {
     this.motionTo = { ...REST_POSE };
     this.motionStartedAt = now;
     this.motionDurationMs = 1;
+    this.lastRenderWasMoving = false;
     this.lastDrawnPosition = -1;
     this.nextStepAt = now + 450;
   }
