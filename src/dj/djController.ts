@@ -94,6 +94,7 @@ export class DjController {
   private readonly cinematicPoseBitmaps = new Map<string, HTMLImageElement>();
   private readonly decodedCinematicPoses = new Set<string>();
   private readonly headBob: HeadBobController | null;
+  private headNodsEnabled = false;
 
   constructor(private readonly poseElement: HTMLElement, private readonly modeElement: HTMLElement) {
     this.headBob = poseElement instanceof HTMLImageElement ? new HeadBobController(poseElement) : null;
@@ -185,6 +186,14 @@ export class DjController {
   setTempoBpm(bpm: number): void {
     if (!Number.isFinite(bpm) || bpm <= 0) return;
     this.tempoBpm = Math.max(55, Math.min(190, bpm));
+  }
+
+  setHeadNodsEnabled(enabled: boolean): void {
+    if (this.headNodsEnabled === enabled) return;
+    this.headNodsEnabled = enabled;
+    // Turning nods off restores the original DJ immediately, even between
+    // playback polls or after the animation frame is throttled.
+    this.paint();
   }
 
   getDebugStatus(): Record<string, string | number | boolean> {
@@ -445,7 +454,8 @@ export class DjController {
     // AI DJ speaking, pauses, or manual animation audition.
     this.headBob?.update(
       this.currentFrame,
-      this.controlMode === "normal" && (this.mode === "playing" || this.mode === "demo") &&
+      this.headNodsEnabled &&
+        this.controlMode === "normal" && (this.mode === "playing" || this.mode === "demo") &&
         !this.cinematicOnce && !this.pendingSongChangeCinematic &&
         !this.speakingRequested && !this.speakingVisualActive,
       this.tempoBpm, this.lastTrackId, Date.now()
