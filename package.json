@@ -6,7 +6,8 @@
   "description": "A GitHub Pages hosted Spotify-reactive pixel DJ room using browser PKCE, with no local backend.",
   "scripts": {
     "build": "tsc && vite build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:beat": "node --experimental-strip-types --test tests/beatClock.test.mjs"
   },
   "dependencies": {
     "vite": "latest",
