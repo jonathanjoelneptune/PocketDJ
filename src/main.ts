@@ -8,10 +8,11 @@ import { initializePerformanceLighting } from "./roomPerformanceLighting";
 import { initializePartyMode, updatePartyMode } from "./partyMode";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
+import { PlaybackBeatClock, type BeatMetadata } from "./dj/beatClock";
 import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, isSpotifyDjSpeakingForPose, observeSpotifyDjSpeech } from "./dj/speechBubble";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
-import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getSpotifyPlaylist, getExternalTrackTempoBpm, getTrackTempoBpm, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyQueue, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
+import { addSpotifyUriToQueue, disconnectSpotify, getArtistTopTracks, getCurrentlyPlaying, getDefaultRedirectUri, getPlaylistTracks, getSpotifyPlaylist, getExternalTrackTempoBpm, getTrackBeatMetadata, getRecentlyPlayed, getSavedTracks, getSpotifyAccessToken, getSpotifyQueue, getSpotifyDevices, getUserPlaylists, handleSpotifyCallback, nextSpotifyTrack, pauseSpotify, playSpotify, playSpotifyContext, playSpotifyContextShuffled, playSpotifyUri, previousSpotifyTrack, searchSpotifyCatalog, seekSpotify, setSpotifyRepeat, setSpotifyShuffle, setSpotifyVolume, startSpotifyLogin, transferSpotifyPlayback, type SpotifyCatalogAlbum, type SpotifyCatalogArtist, type SpotifyCatalogPlaylist, type SpotifyCatalogTrack, type SpotifyDevice } from "./spotify/spotifyClient";
 import { loadClientId, loadTokens, saveClientId } from "./spotify/tokenStore";
 import {
   emptyLyrics,
@@ -822,6 +823,11 @@ let speakerTempoFetchKey = "";
 let speakerTempoBpm: number | null = null;
 let speakerTempoSource: "getsongbpm" | "spotify" | "demo" | "estimate" | "fallback" | "lookup" | "nomatch" = "fallback";
 const speakerTempoCache = new Map<string, number>();
+// Independent of speaker LED lighting: the head bob needs the song's beat phase
+// when analysis is permitted, not just a guessed BPM.
+const playbackBeatClock = new PlaybackBeatClock();
+const trackBeatMetadataCache = new Map<string, BeatMetadata | null>();
+const trackBeatMetadataInFlight = new Set<string>();
 const externalSpeakerTempoCache = new Map<string, number>();
 const externalSpeakerTempoMisses = new Set<string>();
 const ALBUM_REVEAL_MAX_WAIT_MS = 500;
@@ -10466,19 +10472,83 @@ function speakerTempoExternalKey(track: AppState["playback"]): string {
   return `${track.artist.trim().toLowerCase()}::${track.title.trim().toLowerCase()}`;
 }
 
+function ensureTrackBeatMetadata(track: AppState["playback"]): void {
+  const id = track.trackId;
+  if (!id || track.source !== "spotify" || !track.isAuthenticated ||
+      isSpotifyDesktopEmbed || trackBeatMetadataCache.has(id) || trackBeatMetadataInFlight.has(id)) return;
+
+  trackBeatMetadataInFlight.add(id);
+  void getTrackBeatMetadata(state.spotifyClientId, id)
+    .then(metadata => {
+      trackBeatMetadataCache.set(id, metadata);
+      // Keep a bounded cache; the Spotify Audio Analysis API is sometimes unavailable.
+      while (trackBeatMetadataCache.size > 80) {
+        const oldest = trackBeatMetadataCache.keys().next().value;
+        if (oldest) trackBeatMetadataCache.delete(oldest);
+      }
+      // A measured analysis tempo takes precedence over title-based guesses
+      // and third-party match results, without affecting a different song.
+      if (metadata && state.playback.trackId === id && state.playback.isPlaying) {
+        setSpeakerTempo(metadata.tempoBpm, "spotify");
+      }
+    })
+    .catch(() => { trackBeatMetadataCache.set(id, null); })
+    .finally(() => { trackBeatMetadataInFlight.delete(id); });
+}
+
+/** Desktop embedded playback has no Spotify OAuth token, but an independent
+ * GetSongBPM lookup can still give it a real tempo instead of a title guess.
+ */
+function applyDesktopTempo(track: AppState["playback"], trackKey: string, externalKey: string): void {
+  const cached = externalSpeakerTempoCache.get(externalKey);
+  if (cached) {
+    if (speakerTempoTrackKey !== trackKey || speakerTempoSource !== "getsongbpm") {
+      speakerTempoTrackKey = trackKey;
+      setSpeakerTempo(cached, "getsongbpm");
+    }
+    return;
+  }
+  if (speakerTempoTrackKey !== trackKey) {
+    speakerTempoTrackKey = trackKey;
+    setSpeakerTempo(estimateTrackTempoBpm(track), "estimate");
+  }
+  if (!track.isPlaying || !roomUtility.speakerPulseUseTempo ||
+      !roomUtility.speakerPulseUseExternalTempo || !GETSONGBPM_BROWSER_API_KEY ||
+      externalSpeakerTempoMisses.has(externalKey) ||
+      speakerTempoFetchKey === `getsongbpm:${externalKey}`) return;
+  speakerTempoFetchKey = `getsongbpm:${externalKey}`;
+  void getExternalTrackTempoBpm(GETSONGBPM_BROWSER_API_KEY, track.title, track.artist)
+    .then(tempo => {
+      if (speakerTempoTrackKey !== trackKey) return;
+      if (tempo && Number.isFinite(tempo) && tempo > 0) {
+        externalSpeakerTempoCache.set(externalKey, tempo);
+        setSpeakerTempo(tempo, "getsongbpm");
+      } else {
+        externalSpeakerTempoMisses.add(externalKey);
+        setSpeakerTempo(estimateTrackTempoBpm(track), "nomatch");
+      }
+    })
+    .catch(() => {
+      if (speakerTempoTrackKey !== trackKey) return;
+      externalSpeakerTempoMisses.add(externalKey);
+      setSpeakerTempo(estimateTrackTempoBpm(track), "nomatch");
+    });
+}
+
 function applySpeakerPulseTempo(track: AppState["playback"]): void {
   const trackKey = track.trackId || `${track.source}:${track.title}:${track.artist}:${track.durationMs}`;
   const externalKey = speakerTempoExternalKey(track);
 
-  // Desktop iframe has no separate Spotify token. Preserve the beat animation
-  // using the local estimate rather than firing authenticated tempo requests.
+  // No Spotify token in desktop-embed mode. Try the existing GetSongBPM
+  // provider automatically, and retain the estimate if it cannot match.
   if (isSpotifyDesktopEmbed && track.source === "spotify") {
-    if (speakerTempoTrackKey !== trackKey) {
-      speakerTempoTrackKey = trackKey;
-      setSpeakerTempo(estimateTrackTempoBpm(track), "estimate");
-    }
+    applyDesktopTempo(track, trackKey, externalKey);
     return;
   }
+
+  // Probe metadata once per authenticated track for beat-position data,
+  // even when the BPM is already known from GetSongBPM.
+  if (track.isPlaying) ensureTrackBeatMetadata(track);
 
   if (!roomUtility.speakerPulseUseTempo) {
     speakerTempoTrackKey = trackKey;
@@ -10500,6 +10570,15 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
   if (!track.trackId || track.source !== "spotify") {
     speakerTempoTrackKey = trackKey;
     setSpeakerTempo(estimateTrackTempoBpm(track), "estimate");
+    return;
+  }
+
+  const beatMetadata = track.trackId ? trackBeatMetadataCache.get(track.trackId) : null;
+  if (beatMetadata) {
+    speakerTempoTrackKey = trackKey;
+    if (speakerTempoSource !== "spotify" || speakerTempoBpm !== beatMetadata.tempoBpm) {
+      setSpeakerTempo(beatMetadata.tempoBpm, "spotify");
+    }
     return;
   }
 
@@ -10553,20 +10632,9 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
     return;
   }
 
-  if (speakerTempoFetchKey === track.trackId) return;
-  speakerTempoFetchKey = track.trackId;
-  void getTrackTempoBpm(state.spotifyClientId, track.trackId)
-    .then((tempo) => {
-      if (!tempo || speakerTempoTrackKey !== trackKey) return;
-      speakerTempoCache.set(track.trackId || "", tempo);
-      setSpeakerTempo(tempo, "spotify");
-    })
-    .catch(() => {
-      // Keep the local estimate if Spotify tempo/audio-analysis data is unavailable.
-      if (speakerTempoTrackKey === trackKey && speakerTempoSource !== "spotify" && speakerTempoSource !== "getsongbpm") {
-        setSpeakerPulseBpmLabel();
-      }
-    });
+  // Beat metadata fetching is handled once per track by
+  // ensureTrackBeatMetadata(). This path keeps the existing estimate until
+  // an authenticated, higher-confidence source resolves.
 }
 
 async function refreshLyricsForCurrentTrack(): Promise<void> {
@@ -10649,6 +10717,17 @@ function tick(): void {
   const albumRevealReady = primeSongChangeAlbumReveal(state.playback);
 
   dj.setTempoBpm(speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM);
+  const nowForBeat = Date.now();
+  const currentBeatMetadata = state.playback.trackId
+    ? trackBeatMetadataCache.get(state.playback.trackId) ?? null
+    : null;
+  dj.setBeatTiming(playbackBeatClock.read(
+    state.playback,
+    speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM,
+    speakerTempoSource,
+    currentBeatMetadata,
+    nowForBeat,
+  ));
   // Speech is read from the existing Spotify playback poll. Only override
   // the DJ's visual pose; never alter normalized playback or cinematic timing.
   dj.setSpeakingActive(!useDemo && isSpotifyDjSpeakingForPose());
