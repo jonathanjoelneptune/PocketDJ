@@ -207,6 +207,9 @@ export class DjController {
       mode: this.mode,
       controlMode: this.controlMode,
       speakingPoseActive: this.speakingVisualActive,
+      beatPhaseSource: this.beatTiming?.phaseSource || "none",
+      beatTempoSource: this.beatTiming?.tempoSource || "none",
+      beatBpm: this.beatTiming ? Number(this.beatTiming.bpm.toFixed(2)) : 0,
       pose: this.currentFrame,
       loop: this.currentLoop.label,
       quickLoops: quickLoops.length,
@@ -512,7 +515,8 @@ export class DjController {
       `control: ${this.controlMode}`,
       `cinematic: ${cinematicState}`,
       `loop dwell: ${this.currentLoop.minLoopMs}-${this.currentLoop.maxLoopMs} ms`,
-      `order: ${this.shouldUseOrganicScratchOrder(this.currentLoop) ? "organic/random scratch" : "sequential"}`
+      `order: ${this.shouldUseOrganicScratchOrder(this.currentLoop) ? "organic/random scratch" : "sequential"}`,
+      `beat clock: ${this.beatTiming?.phaseSource || "none"} / ${this.beatTiming?.tempoSource || "none"} / ${this.beatTiming?.bpm.toFixed(1) || "--"} BPM`
     ].join("\n");
   }
 
