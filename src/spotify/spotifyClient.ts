@@ -1,6 +1,7 @@
 import { createAuthorizeUrl, readAndClearVerifier, validateState } from "./pkce";
 import { clearTokens, loadTokens, saveClientId, saveTokens, type TokenRecord } from "./tokenStore";
 import type { NormalizedTrack } from "../state/types";
+import type { BeatMetadata } from "../dj/beatClock";
 
 export const spotifyScopes = [
   "user-read-currently-playing",
@@ -251,9 +252,15 @@ export async function getCurrentlyPlaying(clientId: string, onObservation?: (obs
     };
   }
 
+  // Spotify's progress_ms is sampled during the request, not necessarily
+  // when the entire response body finishes downloading. Use the request RTT
+  // midpoint as a closer estimate of when the sample was captured.
+  const requestStartedAt = Date.now();
   const response = await fetch("https://api.spotify.com/v1/me/player", {
     headers: { Authorization: `Bearer ${token}` }
   });
+  const responseReceivedAt = Date.now();
+  const playbackSampleAt = Math.round((requestStartedAt + responseReceivedAt) / 2);
 
   if (response.status === 204) {
     onObservation?.({ httpStatus: 204, isPlaying: false, itemPresent: false, currentlyPlayingType: null });
@@ -328,53 +335,92 @@ export async function getCurrentlyPlaying(clientId: string, onObservation?: (obs
     albumArtUrl: item.album?.images?.[0]?.url || null,
     progressMs: Number(json.progress_ms || 0),
     durationMs: Number(item.duration_ms || 0),
-    updatedAt: Date.now(),
+    updatedAt: playbackSampleAt,
     playbackContextUri: json.context?.uri || null,
     playbackContextType: json.context?.type || null
   };
 }
 
-export async function getTrackTempoBpm(clientId: string, trackId: string): Promise<number | null> {
-  const cleanTrackId = trackId.trim();
-  if (!cleanTrackId) return null;
+// Spotify restricts audio-analysis/audio-features access for many apps.
+// Avoid a repeated 403 for every new song after a definitive denial.
+let beatAnalysisForbidden = false;
+let beatFeaturesForbidden = false;
 
+/** Prefer the actual beat positions when Spotify allows access. Fall back to
+ * audio-features tempo when there is no beat map. No audio capture required.
+ */
+export async function getTrackBeatMetadata(clientId: string, trackId: string): Promise<BeatMetadata | null> {
+  const cleanTrackId = trackId.trim();
+  if (!cleanTrackId || (beatAnalysisForbidden && beatFeaturesForbidden)) return null;
   const token = await getUsableToken(clientId);
   if (!token) return null;
-
   const headers = { Authorization: `Bearer ${token}` };
-  const encodedTrackId = encodeURIComponent(cleanTrackId);
-
-  const readTempo = (value: unknown): number | null => {
-    const tempo = Number(value || 0);
-    return Number.isFinite(tempo) && tempo > 0 ? tempo : null;
+  const encoded = encodeURIComponent(cleanTrackId);
+  const validTempo = (value: unknown): number | null => {
+    const n = Number(value);
+    return Number.isFinite(n) && n >= 30 && n <= 300 ? n : null;
   };
 
-  const featuresResponse = await fetch(`https://api.spotify.com/v1/audio-features/${encodedTrackId}`, { headers });
-
-  if (featuresResponse.status === 401) {
-    markAccessTokenRejected();
-    return null;
+  if (!beatAnalysisForbidden) {
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/audio-analysis/${encoded}`, { headers });
+      if (response.status === 401) {
+        markAccessTokenRejected();
+        return null;
+      }
+      if (response.status === 403 || response.status === 404) {
+        beatAnalysisForbidden = response.status === 403;
+      } else if (response.ok) {
+        const data = await response.json() as SpotifyAudioAnalysisResponse;
+        const tempo = validTempo(data.track?.tempo);
+        const beats = (data.beats || [])
+          .map(beat => Number(beat.start) * 1000)
+          .filter(ms => Number.isFinite(ms) && ms >= 0 && ms < 60 * 60 * 1000)
+          .sort((a, b) => a - b);
+        // Discard duplicate/out-of-order timestamps, and reject empty maps.
+        const uniqueBeats = beats.filter((ms, i) => i === 0 || ms - beats[i - 1] > 35);
+        if (tempo || uniqueBeats.length >= 4) {
+          const derivedPeriod = uniqueBeats.length >= 4
+            ? (uniqueBeats[uniqueBeats.length - 1] - uniqueBeats[0]) / (uniqueBeats.length - 1)
+            : 0;
+          const measuredTempo = tempo || (derivedPeriod > 0 ? 60_000 / derivedPeriod : null);
+          if (measuredTempo && Number.isFinite(measuredTempo)) {
+            return {
+              tempoBpm: measuredTempo,
+              beatOffsetMs: uniqueBeats.length ? uniqueBeats[0] : null,
+              beatTimesMs: uniqueBeats.length >= 4 ? uniqueBeats : null,
+              source: "spotify-analysis",
+            };
+          }
+        }
+      }
+    } catch {
+      // Network failures should not break playback or the fallback BPM path.
+    }
   }
 
-  if (featuresResponse.ok) {
-    const json = (await featuresResponse.json()) as SpotifyAudioFeaturesResponse;
-    const tempo = readTempo(json.tempo);
-    if (tempo) return tempo;
+  if (!beatFeaturesForbidden) {
+    try {
+      const response = await fetch(`https://api.spotify.com/v1/audio-features/${encoded}`, { headers });
+      if (response.status === 401) {
+        markAccessTokenRejected();
+        return null;
+      }
+      if (response.status === 403) beatFeaturesForbidden = true;
+      if (response.ok) {
+        const data = await response.json() as SpotifyAudioFeaturesResponse;
+        const tempo = validTempo(data.tempo);
+        if (tempo) return { tempoBpm: tempo, beatOffsetMs: null, beatTimesMs: null, source: "spotify-features" };
+      }
+    } catch {
+      // Song-level tempo lookup remains optional.
+    }
   }
+  return null;
+}
 
-  // Some Spotify apps/accounts no longer receive audio-features data reliably.
-  // Try audio-analysis as a second source before letting the UI use its local estimate.
-  const analysisResponse = await fetch(`https://api.spotify.com/v1/audio-analysis/${encodedTrackId}`, { headers });
-
-  if (analysisResponse.status === 401) {
-    markAccessTokenRejected();
-    return null;
-  }
-
-  if (!analysisResponse.ok) return null;
-
-  const analysisJson = (await analysisResponse.json()) as SpotifyAudioAnalysisResponse;
-  return readTempo(analysisJson.track?.tempo);
+export async function getTrackTempoBpm(clientId: string, trackId: string): Promise<number | null> {
+  return (await getTrackBeatMetadata(clientId, trackId))?.tempoBpm ?? null;
 }
 
 export function disconnectSpotify(): void {
@@ -450,9 +496,8 @@ type SpotifyAudioFeaturesResponse = {
 };
 
 type SpotifyAudioAnalysisResponse = {
-  track?: {
-    tempo?: number;
-  };
+  track?: { tempo?: number };
+  beats?: Array<{ start?: number; duration?: number; confidence?: number }>;
 };
 
 type GetSongBpmSongCandidate = {

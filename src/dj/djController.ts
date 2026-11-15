@@ -1,5 +1,6 @@
 import type { DjMode, NormalizedTrack } from "../state/types";
 import { HeadBobController } from "./headBobController";
+import type { BeatTiming } from "./beatClock";
 
 type ControlMode = "normal" | "audition" | "cinematic";
 type LoopKind = "quick" | "cinematic" | "idle" | "paused";
@@ -95,6 +96,7 @@ export class DjController {
   private readonly decodedCinematicPoses = new Set<string>();
   private readonly headBob: HeadBobController | null;
   private headNodsEnabled = false;
+  private beatTiming: BeatTiming | null = null;
 
   constructor(private readonly poseElement: HTMLElement, private readonly modeElement: HTMLElement) {
     this.headBob = poseElement instanceof HTMLImageElement ? new HeadBobController(poseElement) : null;
@@ -188,6 +190,10 @@ export class DjController {
     this.tempoBpm = Math.max(55, Math.min(190, bpm));
   }
 
+  setBeatTiming(timing: BeatTiming | null): void {
+    this.beatTiming = timing;
+  }
+
   setHeadNodsEnabled(enabled: boolean): void {
     if (this.headNodsEnabled === enabled) return;
     this.headNodsEnabled = enabled;
@@ -201,6 +207,9 @@ export class DjController {
       mode: this.mode,
       controlMode: this.controlMode,
       speakingPoseActive: this.speakingVisualActive,
+      beatPhaseSource: this.beatTiming?.phaseSource || "none",
+      beatTempoSource: this.beatTiming?.tempoSource || "none",
+      beatBpm: this.beatTiming ? Number(this.beatTiming.bpm.toFixed(2)) : 0,
       pose: this.currentFrame,
       loop: this.currentLoop.label,
       quickLoops: quickLoops.length,
@@ -458,7 +467,7 @@ export class DjController {
         this.controlMode === "normal" && (this.mode === "playing" || this.mode === "demo") &&
         !this.cinematicOnce && !this.pendingSongChangeCinematic &&
         !this.speakingRequested && !this.speakingVisualActive,
-      this.tempoBpm, this.lastTrackId, Date.now()
+      this.beatTiming, Date.now()
     );
     if (this.poseElement instanceof HTMLImageElement) {
       // Hold the outgoing image during the record-change cinematic until the
@@ -506,7 +515,8 @@ export class DjController {
       `control: ${this.controlMode}`,
       `cinematic: ${cinematicState}`,
       `loop dwell: ${this.currentLoop.minLoopMs}-${this.currentLoop.maxLoopMs} ms`,
-      `order: ${this.shouldUseOrganicScratchOrder(this.currentLoop) ? "organic/random scratch" : "sequential"}`
+      `order: ${this.shouldUseOrganicScratchOrder(this.currentLoop) ? "organic/random scratch" : "sequential"}`,
+      `beat clock: ${this.beatTiming?.phaseSource || "none"} / ${this.beatTiming?.tempoSource || "none"} / ${this.beatTiming?.bpm.toFixed(1) || "--"} BPM`
     ].join("\n");
   }
 
