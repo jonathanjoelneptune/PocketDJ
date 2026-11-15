@@ -15,6 +15,9 @@ const HOST_ORIGINS = new Set([
 
 const desktopQuery = new URLSearchParams(window.location.search);
 const isMiniPlayer = desktopQuery.get("surface") === "mini";
+// Opt-in bridge for browser-extension hosted rooms. No OAuth credentials or playback audio.
+const isBrowserExtensionEmbed = desktopQuery.get("spotify_browser") === "1";
+const CHROME_EXTENSION_ORIGIN = /^chrome-extension:\/\/[a-p]{32}$/;
 
 export const isSpotifyDesktopEmbed =
   new URLSearchParams(window.location.search).get("spotify_desktop") === "1" &&
@@ -92,7 +95,12 @@ export function installSpotifyDesktopBridge(
     // playback packet. Accept that path only for the explicitly requested
     // MiniPlayer surface and only from a verified Spotify origin. No tokens
     // are exchanged. All other surfaces still require their direct parent.
-    if (!HOST_ORIGINS.has(event.origin)) return;
+    // Browser mode sits inside a packaged extension viewer, which proxies
+    // metadata from open.spotify.com. Keep the existing Desktop trust rules
+    // unchanged; only opt-in browser embeds accept a Chrome extension parent.
+    const fromSpotify = HOST_ORIGINS.has(event.origin);
+    const fromBrowserExtension = isBrowserExtensionEmbed && CHROME_EXTENSION_ORIGIN.test(event.origin);
+    if (!fromSpotify && !fromBrowserExtension) return;
     if (event.source !== window.parent && !isMiniPlayer) return;
     const packet = event.data as {type?: string; track?: Record<string, unknown>; queue?: unknown; albumColors?: unknown} | null;
     if (!packet || packet.type !== "pocketdj:desktop-playback" || !packet.track) return;
