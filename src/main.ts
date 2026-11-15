@@ -822,7 +822,6 @@ let speakerTempoTrackKey = "";
 let speakerTempoFetchKey = "";
 let speakerTempoBpm: number | null = null;
 let speakerTempoSource: "getsongbpm" | "spotify" | "demo" | "estimate" | "fallback" | "lookup" | "nomatch" = "fallback";
-const speakerTempoCache = new Map<string, number>();
 // Independent of speaker LED lighting: the head bob needs the song's beat phase
 // when analysis is permitted, not just a guessed BPM.
 const playbackBeatClock = new PlaybackBeatClock();
@@ -10589,13 +10588,6 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
     return;
   }
 
-  const cached = speakerTempoCache.get(track.trackId);
-  if (cached) {
-    speakerTempoTrackKey = track.trackId;
-    setSpeakerTempo(cached, "spotify");
-    return;
-  }
-
   if (speakerTempoTrackKey !== trackKey) {
     speakerTempoTrackKey = trackKey;
     setSpeakerTempo(estimateTrackTempoBpm(track), "estimate");
@@ -10612,7 +10604,10 @@ function applySpeakerPulseTempo(track: AppState["playback"]): void {
 
     void getExternalTrackTempoBpm(GETSONGBPM_BROWSER_API_KEY, track.title, track.artist)
       .then((tempo) => {
-        if (speakerTempoTrackKey !== trackKey) return;
+        // An authenticated Spotify result is more authoritative. A slower
+        // external lookup must never downgrade it after resolving.
+        if (speakerTempoTrackKey !== trackKey ||
+            (track.trackId && trackBeatMetadataCache.get(track.trackId))) return;
 
         if (tempo && Number.isFinite(tempo) && tempo > 0) {
           externalSpeakerTempoCache.set(externalKey, tempo);
