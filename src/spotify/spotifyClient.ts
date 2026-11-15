@@ -252,9 +252,15 @@ export async function getCurrentlyPlaying(clientId: string, onObservation?: (obs
     };
   }
 
+  // Spotify's progress_ms is sampled during the request, not necessarily
+  // when the entire response body finishes downloading. Use the request RTT
+  // midpoint as a closer estimate of when the sample was captured.
+  const requestStartedAt = Date.now();
   const response = await fetch("https://api.spotify.com/v1/me/player", {
     headers: { Authorization: `Bearer ${token}` }
   });
+  const responseReceivedAt = Date.now();
+  const playbackSampleAt = Math.round((requestStartedAt + responseReceivedAt) / 2);
 
   if (response.status === 204) {
     onObservation?.({ httpStatus: 204, isPlaying: false, itemPresent: false, currentlyPlayingType: null });
@@ -329,7 +335,7 @@ export async function getCurrentlyPlaying(clientId: string, onObservation?: (obs
     albumArtUrl: item.album?.images?.[0]?.url || null,
     progressMs: Number(json.progress_ms || 0),
     durationMs: Number(item.duration_ms || 0),
-    updatedAt: Date.now(),
+    updatedAt: playbackSampleAt,
     playbackContextUri: json.context?.uri || null,
     playbackContextType: json.context?.type || null
   };
