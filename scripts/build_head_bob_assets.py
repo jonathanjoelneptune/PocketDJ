@@ -11,6 +11,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from head_gap_repair import repair_under_head
 
 ROOT = Path(__file__).resolve().parents[1]
 LIBRARY = ROOT / "public" / "assets" / "DJ NES Pose Library"
@@ -20,6 +21,7 @@ VIBE_FAMILIES = ("i10", "i11", "i12", "a36", "a37", "a38")
 FAMILIES = SCRATCH_FAMILIES + VIBE_FAMILIES
 VIBE_MANIFEST = LAB / "vibe_rigs.json"
 SIZE = (582, 652)
+MANUAL_REPAIR_ROOT = LAB / 'manual_repairs'
 
 
 def selection_mask(rig: dict) -> np.ndarray:
@@ -81,7 +83,24 @@ def vibe_rig(family: str) -> dict:
     }
 
 
-def build_family(family: str) -> None:
+def apply_manual_repairs(body: np.ndarray, family: str, variant: str) -> np.ndarray:
+    """Optional user-painted per-variant corrections exported by Head Gap Repair Studio."""
+    file = MANUAL_REPAIR_ROOT / (family + ".json")
+    if not file.is_file():
+        return body
+    doc = json.loads(file.read_text(encoding="utf-8"))
+    assert doc["schema"] == "pocketdj-head-gap-manual-repair.v1"
+    assert doc["family"] == family
+    if variant not in doc.get("variants", {}):
+        return body
+    out = body.copy()
+    for index, rgba in doc["variants"][variant]:
+        if 0 <= index < SIZE[0] * SIZE[1] and len(rgba) == 4:
+            out.reshape(-1, 4)[index] = rgba
+    return out
+
+
+def build_family(family: str) -> dict:
     folder = LAB / family
     if family in VIBE_FAMILIES:
         folder.mkdir(parents=True, exist_ok=True)
@@ -99,6 +118,7 @@ def build_family(family: str) -> None:
         if 0 <= flat_index < SIZE[0] * SIZE[1]:
             repair.reshape(-1, 4)[flat_index] = rgba
     shared_head = None
+    audit = {'family': family, 'poseCategory': 'vibe' if family in VIBE_FAMILIES else 'scratch', 'variants': {}}
     for name in rig["variants"]:
         source = LIBRARY / name
         # a36 is a reference-only sprite stored in the full Final DJ Poses atlas.
@@ -113,10 +133,17 @@ def build_family(family: str) -> None:
             save_png(shared_head, folder / (family + "_head_shared.png"))
         body = rgba.copy()
         body[mask] = repair[mask]
+        body, metrics = repair_under_head(rgba, shared_head, body, mask, rig)
+        body = apply_manual_repairs(body, family, name)
         save_png(body, folder / (name[:-4] + "_body.png"))
-    print(f"{family}: shared head + {len(rig['variants'])} body layers generated")
+        audit['variants'][name] = metrics
+    print(f"{family}: shared head + {len(rig['variants'])} body layers generated; " +
+          f"{sum(x['underpainted'] for x in audit['variants'].values())} underpaint pixels")
+    return audit
 
 
 if __name__ == "__main__":
-    for family in FAMILIES:
-        build_family(family)
+    audits = [build_family(family) for family in FAMILIES]
+    (LAB / "head_gap_audit.json").write_text(
+        json.dumps({'schema': 'pocketdj-head-gap-audit.v1', 'families': audits}, indent=2) + "\n",
+        encoding='utf-8')
