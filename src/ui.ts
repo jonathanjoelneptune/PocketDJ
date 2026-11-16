@@ -555,7 +555,7 @@ export function renderShell(state: AppState): void {
             </label>
             <label class="utility-checkbox">
               <input id="speakerPulseUseTempo" type="checkbox" />
-              Pulse speakers to song BPM
+              Sync speaker drivers to each song beat
             </label>
             <label class="utility-checkbox">
               <input id="speakerPulseUseExternalTempo" type="checkbox" />
