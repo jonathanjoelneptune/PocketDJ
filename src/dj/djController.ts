@@ -195,7 +195,9 @@ export class DjController {
   }
 
   setVinylPlayback(track: NormalizedTrack): void {
-    this.headBob?.setVinylPlayback(track);
+    // DJ cinematic state, not album decode or song elapsed time, determines
+    // when the newly assigned vinyl can actually appear on the platter.
+    this.headBob?.setVinylPlayback(track, this.pendingSongChangeCinematic || this.cinematicOnce);
   }
 
   setHeadNodsEnabled(enabled: boolean): void {
