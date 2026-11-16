@@ -21,7 +21,7 @@
 <main class="card editor-panel"><div class="editor-head"><div><h2 style="margin-bottom:2px">Pixel-cut editor</h2><div class="small" id="canvasInfo">I10 · 582 × 652 source pixels</div></div><div class="row"><span class="pill" id="zoomTag">100%</span><span class="pill" id="pointTag">x: — y: —</span></div></div><div class="stage-wrap"><canvas id="editorCanvas" width="880" height="800" aria-label="Editable source sprite and head-selection mask"></canvas><div class="stage-label" id="stageLabel">MASK · drag polygon control points</div></div><div class="stage-bottom"><div class="legend"><span><b>Amber</b> polygon cut line</span><span style="color:#6de9e0">Cyan</span> selected pixels</div><span class="small">The head cut applies only to the selected pose or scratch family</span></div><div class="divider"></div><div class="row space"><div><h3>Export assets</h3><div class="small">Full-canvas, exactly aligned transparent PNGs</div></div><button class="primary" id="exportZip">Export family ZIP</button></div><div class="row" style="margin-top:9px"><button id="exportHead">Head PNG</button><button id="exportBody">Body PNG</button><button id="exportBob">Bob frame PNG</button><button id="saveProject">Save project JSON</button><button id="openProject">Open project</button><input type="file" class="fileinput" id="projectFile" accept="application/json,.json"></div><div class="hint" style="margin-top:10px">The ZIP contains the common head, individual body layers, the mask, recomposed test frames, and a JSON rig with offsets, tilt, pivot, loop variants, and pixel edits. It is not installed into PocketDJ automatically.</div></main>
 <aside class="stack right">
 <section class="card" id="gapRepairSection"><div class="card-header"><div><h2>Head gap repair</h2><div class="small">Only the head, collar, and upper hood are inspected.</div></div><span class="pill">12 rig families</span></div>
-<div class="row"><button id="autoUnderpaint" class="primary">Re-run auto repair</button><button id="resetUnderpaint">Remove new repairs</button><button id="exportManualPatch">Export manual corrections</button><button id="importManualPatch">Import corrections</button><input id="manualPatchInput" class="fileinput" type="file" accept=".json,application/json"></div>
+<div class="row"><button id="autoUnderpaint" class="primary">Re-run auto repair</button><button id="resetUnderpaint">Restore approved rig</button><button id="exportManualPatch">Export manual corrections</button><button id="importManualPatch">Import corrections</button><input id="manualPatchInput" class="fileinput" type="file" accept=".json,application/json"></div>
 <p class="hint">Pink is a diagnostic background, never exported as artwork. The initial underpainting is generated automatically. Select <strong>Body repair</strong> to paint individual pixels; use <strong>Shift + paint</strong> to erase, <strong>Alt + paint</strong> to pick a source color, or use the Undo button. To inspect a nod on the large editor, choose <strong>Recomposed bob frame</strong>.</p>
 <div class="grid2" id="nodPreviews" style="margin-top:12px">
 <div class="preview"><div class="preview-title">BASE · 0</div><canvas id="gapNod0" width="210" height="200" style="width:100%;image-rendering:pixelated;aspect-ratio:210/200"></canvas><div class="preview-label" id="gapLabel0">Waiting for pose</div></div>
@@ -72,6 +72,8 @@ function compareHead(){const base=state.frames[FAMILIES[state.family]?.[0]];if(!
 function syncSources(){const old=state.variant;$('variant').replaceChildren(...FAMILIES[state.family].map(n=>{const op=document.createElement('option');op.value=n;op.textContent=n+(state.frames[n]?' · loaded':' · missing');op.disabled=!state.frames[n];return op}));state.variant=state.frames[old]?old:(FAMILIES[state.family].find(n=>state.frames[n])||FAMILIES[state.family][0]);$('variant').value=state.variant;$('fileCount').textContent=`${Object.keys(state.frames).length}/${FAMILIES[state.family].length} frames`;$('canvasInfo').textContent=`${state.variant} · ${W} × ${H} source pixels`;$('scratchMotion').disabled=FAMILIES[state.family].length===1;$('scratchMotion').checked=FAMILIES[state.family].length>1;state.scratchMotion=FAMILIES[state.family].length>1;$('scratchSpeed').disabled=FAMILIES[state.family].length===1;}
 async function loadFamilyRemote(){if(state.loading)return;state.loading=true;const version=++state.loadVersion;state.loaded=false;const family=state.family,frameNames=FAMILIES[family];status(`Fetching ${frameNames.length} ${family.toUpperCase()} sprites…`);$('reload').disabled=true;let frames={};const out=await Promise.allSettled(frameNames.map(n=>fetchSprite(n)));if(version!==state.loadVersion)return;out.forEach((r,i)=>{if(r.status==='fulfilled')frames[frameNames[i]]=r.value;});state.frames=frames;state.loaded=Object.keys(frames).length>0;state.loading=false;$('reload').disabled=false;syncSources();if(!state.loaded){status('GitHub could not be reached. Click Upload PNG(s) and select your source sprite files.',true);drawEditor();drawPreviews();return}const missing=frameNames.filter(n=>!frames[n]);status(missing.length?`Loaded ${Object.keys(frames).length} of ${frameNames.length}. Upload missing PNGs if needed.`:`Loaded all ${frameNames.length} original ${family.toUpperCase()} poses.`);if(state.activeProjectFamily[family]){
   await applySavedFamily(state.activeProjectFamily[family]);
+  state.autoBaseRepair=state.autoBaseByFamily[family]||new Uint8ClampedArray(state.repair);
+  state.autoBaselineFamily=family;
 } else {
   try {
     const r=await fetch(RIG_ROOT+family+'/head_bob_rig.json',{cache:'no-store'});
@@ -81,6 +83,7 @@ async function loadFamilyRemote(){if(state.loading)return;state.loading=true;con
     console.warn('Using starting head selection: ',e);
     resetCut(false);recompute();
   }
+  state.approvedByFamily[family]=new Uint8ClampedArray(state.repair);
   autoUnderpaint(true);
 }state.dirty=false;$('dirtyStatus').textContent='None';focusHead();}
 function storeCurrentFamily(){if(!state.loaded)return;state.activeProjectFamily[state.family]=serializeFamily(false)}
@@ -134,6 +137,8 @@ const scanCanvas=$makeCanvas(),scanCtx=scanCanvas.getContext('2d',{willReadFrequ
 const scanImage=scanCtx.createImageData(W,H);
 state.autoBaseRepair=null;
 state.autoBaselineFamily='';
+state.approvedByFamily={};
+state.autoBaseByFamily={};
 function compositeNod(n){
   scanCtx.clearRect(0,0,W,H);scanCtx.imageSmoothingEnabled=false;
   if(state.loaded&&state.bodies[state.variant]){
@@ -231,6 +236,7 @@ function autoUnderpaint(silent=false){
   recompute();
   if(silent||state.autoBaselineFamily!==state.family){
     state.autoBaseRepair=new Uint8ClampedArray(state.repair);
+    state.autoBaseByFamily[state.family]=new Uint8ClampedArray(state.repair);
     state.autoBaselineFamily=state.family;
   } else noteDirty();
   $('repairStatus').textContent='Auto underpaint: '+painted+' pixels added; '+exposed+' potential exposure pixels. The pink previews are the final check.';
@@ -288,8 +294,8 @@ async function loadFamilyAudit(){
 }
 $('autoUnderpaint').onclick=()=>autoUnderpaint(false);
 $('resetUnderpaint').onclick=()=>{if(!state.loaded)return;snapshot();
-  state.repair=new Uint8ClampedArray(N*4);recompute();noteDirty();
-  $('repairStatus').textContent='All body repair pixels cleared in this editor session. Originals remain unchanged.'};
+  state.repair=new Uint8ClampedArray(state.approvedByFamily[state.family]||new Uint8ClampedArray(N*4));recompute();noteDirty();
+  $('repairStatus').textContent='Auto-generated repair reset to the approved original rig settings. Source artwork is unchanged.'};
 $('exportManualPatch').onclick=exportManualPatch;
 $('importManualPatch').onclick=()=>$('manualPatchInput').click();
 $('manualPatchInput').onchange=e=>{void importManualPatchFile(e.target.files[0]);e.target.value=''};
