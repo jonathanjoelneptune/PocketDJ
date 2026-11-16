@@ -40,7 +40,7 @@ def repair_under_head(source: np.ndarray, head: np.ndarray, body: np.ndarray,
                       mask: np.ndarray, rig: dict) -> tuple[np.ndarray, dict]:
     h, w = mask.shape
     yy, xx = np.mgrid[:h, :w]
-    region = (mask & (source[:, :, 3] >= 128) & (yy >= 178) &
+    region = (mask & (source[:, :, 3] >= 128) & (yy >= 176) &
               (yy <= 255) & (xx >= 205) & (xx <= 390))
     missing = np.zeros_like(mask)
     positions = [f for f in rig["headBobFrames"] if f["enabled"]]
@@ -48,13 +48,13 @@ def repair_under_head(source: np.ndarray, head: np.ndarray, body: np.ndarray,
     for frame in positions:
         if frame["x"] == frame["y"] == frame["tilt"] == 0:
             continue
-        motion.extend((frame, t) for t in (0.25, 0.5, 0.75, 1.0))
+        motion.extend((frame, t) for t in (i / 10 for i in range(1, 11)))
     # The live groove also moves directly between non-base nod positions.
     for a in positions[1:]:
         for b in positions[1:]:
             if a is b:
                 continue
-            for t in (0.25, 0.5, 0.75):
+            for t in (i / 10 for i in range(1, 10)):
                 between = {k: a[k] * (1-t) + b[k] * t for k in ("x", "y", "tilt")}
                 motion.append((between, 1.0))
     for frame, t in motion:
