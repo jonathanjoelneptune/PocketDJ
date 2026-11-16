@@ -8,6 +8,7 @@ import { initializePerformanceLighting } from "./roomPerformanceLighting";
 import { initializePartyMode, updatePartyMode } from "./partyMode";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
+import { HeldRecordOverlay } from "./dj/heldRecordOverlay";
 import { PlaybackBeatClock, type BeatMetadata, type BeatTiming } from "./dj/beatClock";
 import { speakerPulseScale } from "./dj/speakerPulse";
 import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, isSpotifyDjSpeakingForPose, observeSpotifyDjSpeech } from "./dj/speechBubble";
@@ -812,6 +813,7 @@ let albumRevealPreloadUrl = "";
 let albumRevealLoadedUrl = "";
 let albumRevealPreloadStartedAt = 0;
 let albumRevealPreloadImage: HTMLImageElement | null = null;
+let heldRecordOverlay: HeldRecordOverlay | null = null;
 let placedAlbumCommittedTrackKey = "";
 let placedAlbumCommittedUrl = "";
 let placedAlbumPendingTrackKey = "";
@@ -10203,6 +10205,20 @@ function updateSongChangeAlbumOverlay(track: AppState["playback"]): void {
   }
 
   albumCover.alt = readyUrl ? `${track.title} album cover` : "";
+
+  // Reuse the already-decoded Spotify image and the real DJ pose. This
+  // renders the EXACT Lab v2 coordinates, including four-corner perspective
+  // on A11-2 / A11-2m. It never flashes a partially loaded cover, and
+  // reference poses marked invisible leave no floating artwork.
+  if (!heldRecordOverlay) heldRecordOverlay = new HeldRecordOverlay();
+  const heldCinematic = roomUtility.songChangeMode
+    ? { side: "right" as const, pose: "a41.png" }
+    : dj.getHeldRecordCinematic();
+  heldRecordOverlay.update(
+    heldCinematic?.side ?? null,
+    heldCinematic?.pose ?? null,
+    readyUrl ? albumRevealPreloadImage : null,
+  );
   updatePlacedActiveAlbum(track);
   updateNextUpAlbumVisual();
 }
