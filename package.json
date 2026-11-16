@@ -7,7 +7,9 @@
   "scripts": {
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
-    "test:beat": "node --experimental-strip-types --test tests/beatClock.test.mjs"
+    "test:beat": "node --experimental-strip-types --test tests/beatClock.test.mjs",
+    "test:scratch": "node --experimental-strip-types --test tests/scratchBlend.test.mjs",
+    "test:animation": "node --experimental-strip-types --test tests/beatClock.test.mjs tests/scratchBlend.test.mjs"
   },
   "dependencies": {
     "vite": "latest",

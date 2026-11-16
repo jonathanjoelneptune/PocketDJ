@@ -4,6 +4,7 @@
  * The original full PNG remains visible until the new assets are decoded.
  */
 import { createBeatEvents, nextBeatEvent, type BeatTiming } from "./beatClock";
+import { blendSpritePixels, changedPixelBounds, scratchEase, scratchTransitionDuration, type PixelBounds } from "./scratchBlend";
 type BobFrame = { enabled: boolean; x: number; y: number; tilt: number };
 type HeadBobRig = {
   family: string;
@@ -13,6 +14,13 @@ type HeadBobRig = {
   headBobFrames: BobFrame[];
 };
 type DecodedRig = { rig: HeadBobRig; head: HTMLImageElement; bodies: Map<string, HTMLImageElement> };
+type ScratchBlend = {
+  bounds: PixelBounds;
+  from: Uint8ClampedArray;
+  to: Uint8ClampedArray;
+  working: ImageData;
+};
+type SpriteRenderMode = "detached-head" | "original";
 type BobPair = readonly [number, number];
 type HeadMotion = { x: number; y: number; tilt: number };
 const REST_POSE: Readonly<HeadMotion> = { x: 0, y: 0, tilt: 0 };
@@ -68,7 +76,17 @@ export class HeadBobController {
   private readonly host: HTMLElement;
   private readonly pending = new Map<string, Promise<DecodedRig | null>>();
   private readonly ready = new Map<string, DecodedRig>();
+  private readonly rawPending = new Map<string, Promise<void>>();
+  private readonly rawReady = new Map<string, Map<string, HTMLImageElement>>();
+  private readonly rawFailed = new Set<string>();
+  private readonly readCanvas: HTMLCanvasElement;
+  private readonly readCtx: CanvasRenderingContext2D;
   private activeFamily = '';
+  private activeRenderMode: SpriteRenderMode = "detached-head";
+  private lastScratchFrame = '';
+  private scratchBlend: ScratchBlend | null = null;
+  private scratchStartedAt = 0;
+  private scratchDurationMs = 0;
   private lastDrawn = '';
   private lastDrawnPosition = -1;
   private lastRenderWasMoving = false;
@@ -105,21 +123,85 @@ export class HeadBobController {
     this.canvas.setAttribute('aria-hidden', 'true');
     this.ctx = this.canvas.getContext('2d', { alpha: true })!;
     this.ctx.imageSmoothingEnabled = false;
+    // One reusable readback surface. Only compute a changed-pixel patch when
+    // the scratch destination changes, never on every animation frame.
+    this.readCanvas = document.createElement("canvas");
+    this.readCanvas.width = 582;
+    this.readCanvas.height = 652;
+    this.readCtx = this.readCanvas.getContext("2d", { willReadFrequently: true })!;
+    this.readCtx.imageSmoothingEnabled = false;
     originalSprite.insertAdjacentElement('afterend', this.canvas);
     this.resetGroove();
   }
 
   /**
-   * Scratch pose selection stays independent of head movement. Musical events
-   * come from the sampled track timeline, never from a free-running wall timer.
+   * Scratch frames glide independently of head motion. With head nods enabled
+   * we blend only the changed body pixels and draw the common head once above
+   * them. With head nods disabled we blend the original complete PNGs instead.
    */
-  update(frame: string, enabled: boolean, timing: BeatTiming | null, _now: number): void {
+  update(
+    frame: string,
+    headEnabled: boolean,
+    scratchEligible: boolean,
+    timing: BeatTiming | null,
+    now: number,
+    nextScratchFrameHoldMs: number,
+  ): void {
     const family = FAMILY_BY_FRAME[frame];
-    if (!enabled || !family || !timing) {
-      this.eligibleLastTick = false;
-      this.timingTrackKey = "";
-      this.lastRenderWasMoving = false;
+    if (!scratchEligible || !family) {
+      this.resetHeadEligibility();
+      this.resetScratchTransition();
       this.hide();
+      return;
+    }
+
+    const useHead = headEnabled && timing !== null;
+    const rig = this.ready.get(family) ?? null;
+    if (useHead && !rig) this.ensureFamily(family);
+    if (!useHead && !this.rawReady.has(family)) this.ensureOriginalFamily(family);
+    const renderMode: SpriteRenderMode = useHead ? "detached-head" : "original";
+    const spriteFrames = useHead ? rig?.bodies : this.rawReady.get(family);
+    if (!spriteFrames?.has(frame)) {
+      // Keep the original `#djSprite` visible until every needed bitmap
+      // is decoded; no partially rendered / floating-head frames.
+      this.resetHeadEligibility();
+      this.resetScratchTransition();
+      this.hide();
+      return;
+    }
+
+    if (family !== this.activeFamily || renderMode !== this.activeRenderMode) {
+      this.activeFamily = family;
+      this.activeRenderMode = renderMode;
+      this.lastDrawn = "";
+      this.lastDrawnPosition = -1;
+      this.resetScratchTransition();
+      this.hide();
+    }
+
+    if (frame !== this.lastScratchFrame) {
+      // Skip cross-family and first-frame changes. In-family variations are
+      // already small: this is where a short eased dissolve is useful.
+      const previous = spriteFrames.get(this.lastScratchFrame);
+      const incoming = spriteFrames.get(frame);
+      this.scratchBlend = previous && incoming
+        ? this.prepareScratchBlend(previous, incoming) : null;
+      this.scratchStartedAt = now;
+      this.scratchDurationMs = scratchTransitionDuration(Math.max(0, nextScratchFrameHoldMs));
+      this.lastScratchFrame = frame;
+    }
+    const scratchMoving = this.scratchBlend !== null &&
+      now < this.scratchStartedAt + this.scratchDurationMs;
+
+    // Disabled nodding must not stop the body scratch interpolation.
+    if (!useHead || !rig || !timing) {
+      const previouslyMoving = this.lastRenderWasMoving;
+      this.resetHeadEligibility();
+      if (frame !== this.lastDrawn || scratchMoving || previouslyMoving || !this.visible) {
+        this.paintComposed(spriteFrames, frame, scratchMoving, null, now);
+      }
+      this.lastRenderWasMoving = scratchMoving;
+      if (!this.visible) this.show();
       return;
     }
 
@@ -139,23 +221,6 @@ export class HeadBobController {
     this.timingRevision = revision;
     this.timingDiscontinuity = timing.discontinuity;
     this.lastProgress = progress;
-
-    if (family !== this.activeFamily) {
-      this.activeFamily = family;
-      this.lastDrawn = "";
-      this.lastDrawnPosition = -1;
-      this.hide();
-    }
-    if (!this.ready.has(family)) {
-      this.ensureFamily(family);
-      this.hide();
-      return;
-    }
-    const rig = this.ready.get(family)!;
-    if (!rig.bodies.has(frame)) {
-      this.hide();
-      return;
-    }
 
     // The destination head pose lands ON the beat. Starting the glide before
     // each beat, instead of on it, produces a more natural musical accent.
@@ -186,15 +251,12 @@ export class HeadBobController {
     const moving = progress >= this.motionStartedProgress &&
       progress < this.motionStartedProgress + this.motionDurationMs;
     if (frame !== this.lastDrawn || this.position !== this.lastDrawnPosition ||
-        moving || this.lastRenderWasMoving || !this.visible) {
-      this.render(rig, frame, this.motionAt(progress));
+        moving || scratchMoving || this.lastRenderWasMoving || !this.visible) {
+      this.paintComposed(spriteFrames, frame, scratchMoving, { rig, motion: this.motionAt(progress) }, now);
     }
-    // Paint once after easing ends to hit the exact approved destination pose.
-    this.lastRenderWasMoving = moving;
-    if (!this.visible) {
-      this.visible = true;
-      this.host.classList.add("dj-headbob-active");
-    }
+    // One final redraw lands both the scratch and nod at their exact target.
+    this.lastRenderWasMoving = moving || scratchMoving;
+    if (!this.visible) this.show();
   }
 
   private resetGroove(): void {
@@ -255,20 +317,105 @@ export class HeadBobController {
     this.position = this.position === this.pair[0] ? this.pair[1] : this.pair[0];
   }
 
-  private render(loaded: DecodedRig, frame: string, motion: HeadMotion): void {
-    const { rig, head, bodies } = loaded;
+  private paintComposed(
+    sprites: Map<string, HTMLImageElement>,
+    frame: string,
+    scratchMoving: boolean,
+    detached: { rig: DecodedRig; motion: HeadMotion } | null,
+    now: number,
+  ): void {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(bodies.get(frame)!, 0, 0);
-    ctx.save();
-    ctx.translate(rig.rotationPivot.x + motion.x, rig.rotationPivot.y + motion.y);
-    ctx.rotate(motion.tilt * Math.PI / 180);
-    ctx.translate(-rig.rotationPivot.x, -rig.rotationPivot.y);
-    ctx.drawImage(head, 0, 0);
-    ctx.restore();
+    ctx.drawImage(sprites.get(frame)!, 0, 0);
+    if (scratchMoving && this.scratchBlend) {
+      const progress = scratchEase((now - this.scratchStartedAt) / this.scratchDurationMs);
+      const { from, to, bounds, working } = this.scratchBlend;
+      blendSpritePixels(from, to, working.data, progress);
+      ctx.putImageData(working, bounds.x, bounds.y);
+    }
+    if (detached) {
+      const { rig, motion } = detached;
+      ctx.save();
+      ctx.translate(rig.rig.rotationPivot.x + motion.x, rig.rig.rotationPivot.y + motion.y);
+      ctx.rotate(motion.tilt * Math.PI / 180);
+      ctx.translate(-rig.rig.rotationPivot.x, -rig.rig.rotationPivot.y);
+      ctx.drawImage(rig.head, 0, 0);
+      ctx.restore();
+    }
     this.lastDrawn = frame;
     this.lastDrawnPosition = this.position;
+  }
+
+  private prepareScratchBlend(from: HTMLImageElement, to: HTMLImageElement): ScratchBlend | null {
+    const ctx = this.readCtx;
+    try {
+      ctx.clearRect(0, 0, 582, 652);
+      ctx.drawImage(from, 0, 0);
+      const before = ctx.getImageData(0, 0, 582, 652);
+      ctx.clearRect(0, 0, 582, 652);
+      ctx.drawImage(to, 0, 0);
+      const after = ctx.getImageData(0, 0, 582, 652);
+      const bounds = changedPixelBounds(before.data, after.data, 582, 652);
+      if (!bounds) return null;
+      const fromRegion = new Uint8ClampedArray(bounds.width * bounds.height * 4);
+      const toRegion = new Uint8ClampedArray(fromRegion.length);
+      for (let y = 0; y < bounds.height; y++) {
+        const index = ((y + bounds.y) * 582 + bounds.x) * 4;
+        const start = y * bounds.width * 4;
+        fromRegion.set(before.data.subarray(index, index + bounds.width * 4), start);
+        toRegion.set(after.data.subarray(index, index + bounds.width * 4), start);
+      }
+      return {
+        bounds,
+        from: fromRegion,
+        to: toRegion,
+        working: ctx.createImageData(bounds.width, bounds.height),
+      };
+    } catch (error) {
+      // A transient failed readback should never disrupt the original scratch
+      // pose animation. Return to the immediate full sprite as a fallback.
+      console.warn("Scratch interpolation unavailable", error);
+      return null;
+    }
+  }
+
+  private resetHeadEligibility(): void {
+    this.eligibleLastTick = false;
+    this.timingTrackKey = "";
+    this.lastRenderWasMoving = false;
+  }
+
+  private resetScratchTransition(): void {
+    this.lastScratchFrame = "";
+    this.scratchBlend = null;
+    this.scratchStartedAt = 0;
+    this.scratchDurationMs = 0;
+  }
+
+  private show(): void {
+    this.visible = true;
+    this.host.classList.add("dj-headbob-active");
+  }
+
+  private ensureOriginalFamily(family: string): void {
+    if (this.rawReady.has(family) || this.rawPending.has(family) || this.rawFailed.has(family)) return;
+    const promise = Promise.all(FAMILIES[family].map(frame =>
+      loadImage("./assets/poses/final/" + frame)))
+      .then(images => {
+        this.rawReady.delete(family);
+        this.rawReady.set(family, new Map(FAMILIES[family].map((frame, i) => [frame, images[i]])));
+        while (this.rawReady.size > this.maxCachedFamilies) {
+          const oldest = this.rawReady.keys().next().value;
+          if (oldest) this.rawReady.delete(oldest);
+        }
+      })
+      .catch(error => {
+        this.rawFailed.add(family);
+        console.warn("Smooth scratch assets unavailable; keeping original sprite", error);
+      })
+      .finally(() => { this.rawPending.delete(family); });
+    this.rawPending.set(family, promise);
   }
 
   private ensureFamily(family: string): void {

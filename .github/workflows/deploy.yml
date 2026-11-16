@@ -62,7 +62,7 @@ jobs:
           python scripts/build_head_bob_assets.py
 
       - name: Test song-anchored beat clock
-        run: pnpm run test:beat
+        run: pnpm run test:animation
 
       - name: Build site
         run: pnpm run build
