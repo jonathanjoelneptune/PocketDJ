@@ -171,9 +171,9 @@ export class VinylDeckStage {
         this.generation++;
       })
       .catch(() => {
-        // Never replace a working DJ pose with a broken image. The original
-        // black platter remains visible if artwork is blocked or unavailable.
-        if (this.requestVersions[side] === version) this.coverUrls[side] = null;
+        // Keep the failed URL recorded so the 60fps render loop does not
+        // repeatedly retry an unavailable Spotify cover.
+        // The original black platter stays visible underneath.
       });
   }
 
