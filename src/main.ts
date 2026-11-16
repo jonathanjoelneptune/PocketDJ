@@ -79,8 +79,8 @@ const PLAYBACK_COMMAND_SETTLE_MS = 4_500;
 let playbackCommandIntent: { isPlaying: boolean; until: number; trackId: string; progressMs: number; updatedAt: number } | null = null;
 let dj: DjController;
 const HEAD_NODS_STORAGE_KEY = "pocketdj-head-nods-enabled-v1";
-// Existing users and new installations both start Off unless they explicitly enable it.
-let headNodsEnabled = localStorage.getItem(HEAD_NODS_STORAGE_KEY) === "1";
+// New installs default On. An explicitly saved Off (0) remains respected.
+let headNodsEnabled = localStorage.getItem(HEAD_NODS_STORAGE_KEY) !== "0";
 let lastPollError = "";
 let panelAutoHiddenAfterConnect = false;
 let compactPanelEnabled = false;
