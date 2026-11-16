@@ -5,6 +5,8 @@
  */
 import { createBeatEvents, nextBeatEvent, type BeatTiming } from "./beatClock";
 import { blendSpritePixels, changedPixelBounds, scratchEase, scratchTransitionDuration, type PixelBounds } from "./scratchBlend";
+import { VinylDeckStage } from "./vinylDecks";
+import type { NormalizedTrack } from "../state/types";
 type BobFrame = { enabled: boolean; x: number; y: number; tilt: number };
 type HeadBobRig = {
   family: string;
@@ -79,8 +81,15 @@ export class HeadBobController {
   private readonly rawPending = new Map<string, Promise<void>>();
   private readonly rawReady = new Map<string, Map<string, HTMLImageElement>>();
   private readonly rawFailed = new Set<string>();
+  private readonly staticPoses = new Map<string, HTMLImageElement>();
+  private readonly staticPending = new Set<string>();
+  private readonly staticFailed = new Set<string>();
+  private readonly vinyl = new VinylDeckStage();
+  private lastVinylRevision = -1;
   private readonly readCanvas: HTMLCanvasElement;
   private readonly readCtx: CanvasRenderingContext2D;
+  private readonly scratchCanvas: HTMLCanvasElement;
+  private readonly scratchCtx: CanvasRenderingContext2D;
   private activeFamily = '';
   private activeRenderMode: SpriteRenderMode = "detached-head";
   private lastScratchFrame = '';
@@ -134,8 +143,24 @@ export class HeadBobController {
     this.readCanvas.height = 652;
     this.readCtx = this.readCanvas.getContext("2d", { willReadFrequently: true })!;
     this.readCtx.imageSmoothingEnabled = false;
+    // The alpha-blended scratch patch is assembled offscreen, then composited
+    // ABOVE the table and vinyl. putImageData directly on the final canvas
+    // would punch transparent rectangles through the moving records.
+    this.scratchCanvas = document.createElement("canvas");
+    this.scratchCanvas.width = 582;
+    this.scratchCanvas.height = 652;
+    this.scratchCtx = this.scratchCanvas.getContext("2d", { alpha: true })!;
+    this.scratchCtx.imageSmoothingEnabled = false;
     originalSprite.insertAdjacentElement('afterend', this.canvas);
     this.resetGroove();
+  }
+
+  setVinylPlayback(playback: NormalizedTrack): void {
+    this.vinyl.setPlayback(playback);
+  }
+
+  getVinylStatus(): string {
+    return this.vinyl.status;
   }
 
   /**
@@ -155,7 +180,8 @@ export class HeadBobController {
     if (!scratchEligible || !family) {
       this.resetHeadEligibility();
       this.resetScratchTransition();
-      this.hide();
+      if (this.vinyl.ready) this.paintStaticPose(frame, now);
+      else this.hide();
       return;
     }
 
@@ -189,14 +215,16 @@ export class HeadBobController {
       const previous = spriteFrames.get(this.lastScratchFrame);
       const incoming = spriteFrames.get(frame);
       if (previous && incoming) {
-        const cacheKey = `${renderMode}:${family}:${this.lastScratchFrame}>${frame}`;
+        const cacheKey = `${this.vinyl.ready ? "layered" : "legacy"}:${renderMode}:${family}:${this.lastScratchFrame}>${frame}`;
         const cached = this.scratchBlendCache.get(cacheKey);
         if (cached !== undefined) {
           this.scratchBlendCache.delete(cacheKey);
           this.scratchBlendCache.set(cacheKey, cached);
           this.scratchBlend = cached;
         } else {
-          this.scratchBlend = this.prepareScratchBlend(previous, incoming);
+          this.scratchBlend = this.prepareScratchBlend(
+            this.vinyl.foreground(previous), this.vinyl.foreground(incoming),
+          );
           this.scratchBlendCache.set(cacheKey, this.scratchBlend);
           while (this.scratchBlendCache.size > this.maxScratchBlendCacheEntries) {
             const oldest = this.scratchBlendCache.keys().next().value;
@@ -217,7 +245,8 @@ export class HeadBobController {
     if (!useHead || !rig || !timing) {
       const previouslyMoving = this.lastRenderWasMoving;
       this.resetHeadEligibility();
-      if (frame !== this.lastDrawn || scratchMoving || previouslyMoving || !this.visible) {
+      if (frame !== this.lastDrawn || scratchMoving || previouslyMoving || !this.visible ||
+          this.vinyl.moving || this.lastVinylRevision !== this.vinyl.revision) {
         this.paintComposed(spriteFrames, frame, scratchMoving, null, now);
       }
       this.lastRenderWasMoving = scratchMoving;
@@ -271,7 +300,8 @@ export class HeadBobController {
     const moving = progress >= this.motionStartedProgress &&
       progress < this.motionStartedProgress + this.motionDurationMs;
     if (frame !== this.lastDrawn || this.position !== this.lastDrawnPosition ||
-        moving || scratchMoving || this.lastRenderWasMoving || !this.visible) {
+        moving || scratchMoving || this.lastRenderWasMoving || !this.visible ||
+        this.vinyl.moving || this.lastVinylRevision !== this.vinyl.revision) {
       this.paintComposed(spriteFrames, frame, scratchMoving, { rig, motion: this.motionAt(progress) }, now);
     }
     // One final redraw lands both the scratch and nod at their exact target.
@@ -347,12 +377,18 @@ export class HeadBobController {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(sprites.get(frame)!, 0, 0);
+    if (this.vinyl.ready) this.vinyl.paintBackground(ctx, now);
+    const foreground = this.vinyl.foreground(sprites.get(frame)!);
     if (scratchMoving && this.scratchBlend) {
       const progress = scratchEase((now - this.scratchStartedAt) / this.scratchDurationMs);
       const { from, to, bounds, working } = this.scratchBlend;
       blendSpritePixels(from, to, working.data, progress);
-      ctx.putImageData(working, bounds.x, bounds.y);
+      this.scratchCtx.clearRect(0, 0, this.scratchCanvas.width, this.scratchCanvas.height);
+      this.scratchCtx.drawImage(foreground, 0, 0);
+      this.scratchCtx.putImageData(working, bounds.x, bounds.y);
+      ctx.drawImage(this.scratchCanvas, 0, 0);
+    } else {
+      ctx.drawImage(foreground, 0, 0);
     }
     if (detached) {
       const { rig, motion } = detached;
@@ -365,9 +401,51 @@ export class HeadBobController {
     }
     this.lastDrawn = frame;
     this.lastDrawnPosition = this.position;
+    this.lastVinylRevision = this.vinyl.revision;
   }
 
-  private prepareScratchBlend(from: HTMLImageElement, to: HTMLImageElement): ScratchBlend | null {
+  private paintStaticPose(frame: string, now: number): void {
+    const image = this.staticPoses.get(frame);
+    if (!image) {
+      this.ensureStaticPose(frame);
+      this.hide();
+      return;
+    }
+    // Keep the previous pose on the canvas when nothing changes; paused
+    // albums remain visible and frozen without forcing a redraw every RAF.
+    if (frame === this.lastDrawn && this.visible &&
+        !this.vinyl.moving && this.vinyl.revision === this.lastVinylRevision) return;
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.imageSmoothingEnabled = false;
+    this.vinyl.paintBackground(this.ctx, now);
+    this.ctx.drawImage(this.vinyl.foreground(image), 0, 0);
+    this.lastDrawn = frame;
+    this.lastDrawnPosition = -1;
+    this.lastVinylRevision = this.vinyl.revision;
+    if (!this.visible) this.show();
+  }
+
+  private ensureStaticPose(frame: string): void {
+    if (this.staticPoses.has(frame) || this.staticPending.has(frame) || this.staticFailed.has(frame)) return;
+    this.staticPending.add(frame);
+    void loadImage("./assets/poses/final/" + frame)
+      .then(img => {
+        this.staticPoses.delete(frame);
+        this.staticPoses.set(frame, img);
+        // Bounded per-frame memory, including idle, speaking and cinematics.
+        while (this.staticPoses.size > 10) {
+          const oldest = this.staticPoses.keys().next().value;
+          if (oldest) this.staticPoses.delete(oldest);
+        }
+      })
+      .catch(error => {
+        this.staticFailed.add(frame);
+        console.warn("Static DJ pose unavailable; using the original PNG", error);
+      })
+      .finally(() => this.staticPending.delete(frame));
+  }
+
+  private prepareScratchBlend(from: HTMLImageElement | HTMLCanvasElement, to: HTMLImageElement | HTMLCanvasElement): ScratchBlend | null {
     const ctx = this.readCtx;
     try {
       ctx.clearRect(0, 0, 582, 652);

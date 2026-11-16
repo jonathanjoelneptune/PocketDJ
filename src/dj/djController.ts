@@ -194,6 +194,10 @@ export class DjController {
     this.beatTiming = timing;
   }
 
+  setVinylPlayback(track: NormalizedTrack): void {
+    this.headBob?.setVinylPlayback(track);
+  }
+
   setHeadNodsEnabled(enabled: boolean): void {
     if (this.headNodsEnabled === enabled) return;
     this.headNodsEnabled = enabled;
@@ -210,6 +214,7 @@ export class DjController {
       beatPhaseSource: this.beatTiming?.phaseSource || "none",
       beatTempoSource: this.beatTiming?.tempoSource || "none",
       beatBpm: this.beatTiming ? Number(this.beatTiming.bpm.toFixed(2)) : 0,
+      vinyl: this.headBob?.getVinylStatus() ?? "unavailable",
       pose: this.currentFrame,
       loop: this.currentLoop.label,
       quickLoops: quickLoops.length,
@@ -524,7 +529,8 @@ export class DjController {
       `cinematic: ${cinematicState}`,
       `loop dwell: ${this.currentLoop.minLoopMs}-${this.currentLoop.maxLoopMs} ms`,
       `order: ${this.shouldUseOrganicScratchOrder(this.currentLoop) ? "organic/random scratch" : "sequential"}`,
-      `beat clock: ${this.beatTiming?.phaseSource || "none"} / ${this.beatTiming?.tempoSource || "none"} / ${this.beatTiming?.bpm.toFixed(1) || "--"} BPM`
+      `beat clock: ${this.beatTiming?.phaseSource || "none"} / ${this.beatTiming?.tempoSource || "none"} / ${this.beatTiming?.bpm.toFixed(1) || "--"} BPM`,
+      `vinyl: ${this.headBob?.getVinylStatus() ?? "unavailable"}`
     ].join("\n");
   }
 
