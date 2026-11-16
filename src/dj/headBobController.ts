@@ -88,6 +88,8 @@ export class HeadBobController {
   private lastVinylRevision = -1;
   private readonly readCanvas: HTMLCanvasElement;
   private readonly readCtx: CanvasRenderingContext2D;
+  private readonly scratchCanvas: HTMLCanvasElement;
+  private readonly scratchCtx: CanvasRenderingContext2D;
   private activeFamily = '';
   private activeRenderMode: SpriteRenderMode = "detached-head";
   private lastScratchFrame = '';
@@ -141,6 +143,14 @@ export class HeadBobController {
     this.readCanvas.height = 652;
     this.readCtx = this.readCanvas.getContext("2d", { willReadFrequently: true })!;
     this.readCtx.imageSmoothingEnabled = false;
+    // The alpha-blended scratch patch is assembled offscreen, then composited
+    // ABOVE the table and vinyl. putImageData directly on the final canvas
+    // would punch transparent rectangles through the moving records.
+    this.scratchCanvas = document.createElement("canvas");
+    this.scratchCanvas.width = 582;
+    this.scratchCanvas.height = 652;
+    this.scratchCtx = this.scratchCanvas.getContext("2d", { alpha: true })!;
+    this.scratchCtx.imageSmoothingEnabled = false;
     originalSprite.insertAdjacentElement('afterend', this.canvas);
     this.resetGroove();
   }
@@ -368,12 +378,17 @@ export class HeadBobController {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.imageSmoothingEnabled = false;
     if (this.vinyl.ready) this.vinyl.paintBackground(ctx, now);
-    ctx.drawImage(this.vinyl.foreground(sprites.get(frame)!), 0, 0);
+    const foreground = this.vinyl.foreground(sprites.get(frame)!);
     if (scratchMoving && this.scratchBlend) {
       const progress = scratchEase((now - this.scratchStartedAt) / this.scratchDurationMs);
       const { from, to, bounds, working } = this.scratchBlend;
       blendSpritePixels(from, to, working.data, progress);
-      ctx.putImageData(working, bounds.x, bounds.y);
+      this.scratchCtx.clearRect(0, 0, this.scratchCanvas.width, this.scratchCanvas.height);
+      this.scratchCtx.drawImage(foreground, 0, 0);
+      this.scratchCtx.putImageData(working, bounds.x, bounds.y);
+      ctx.drawImage(this.scratchCanvas, 0, 0);
+    } else {
+      ctx.drawImage(foreground, 0, 0);
     }
     if (detached) {
       const { rig, motion } = detached;
