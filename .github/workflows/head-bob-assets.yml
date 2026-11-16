@@ -7,6 +7,8 @@ on:
       - feature/organic-head-bob
     paths:
       - 'scripts/build_head_bob_assets.py'
+      - 'scripts/head_gap_repair.py'
+      - 'public/assets/DJ NES Pose Library/Head Bob lab/manual_repairs/**'
       - 'public/assets/DJ NES Pose Library/Head Bob lab/vibe_rigs.json'
       - 'public/assets/DJ NES Pose Library/Head Bob lab/**/head_bob_rig.json'
       - '.github/workflows/head-bob-assets.yml'
