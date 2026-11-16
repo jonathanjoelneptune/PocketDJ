@@ -459,15 +459,23 @@ export class DjController {
   }
 
   private paint(): void {
-    // Head motion is independent of scratches and never runs during record moves,
-    // AI DJ speaking, pauses, or manual animation audition.
+    // The composite renderer works on scratch loops only. Its body-pixel
+    // transitions continue even if head nods are switched Off. It never
+    // interpolates record changes, speaking, idle, or paused poses.
+    const now = Date.now();
+    const scratchEligible =
+      this.controlMode === "normal" &&
+      this.currentLoop.kind === "quick" &&
+      (this.mode === "playing" || this.mode === "demo") &&
+      !this.cinematicOnce && !this.pendingSongChangeCinematic &&
+      !this.speakingRequested && !this.speakingVisualActive;
     this.headBob?.update(
       this.currentFrame,
-      this.headNodsEnabled &&
-        this.controlMode === "normal" && (this.mode === "playing" || this.mode === "demo") &&
-        !this.cinematicOnce && !this.pendingSongChangeCinematic &&
-        !this.speakingRequested && !this.speakingVisualActive,
-      this.beatTiming, Date.now()
+      this.headNodsEnabled,
+      scratchEligible,
+      this.beatTiming,
+      now,
+      Math.max(0, this.nextFrameAt - now),
     );
     if (this.poseElement instanceof HTMLImageElement) {
       // Hold the outgoing image during the record-change cinematic until the
