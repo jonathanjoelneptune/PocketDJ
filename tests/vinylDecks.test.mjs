@@ -79,9 +79,11 @@ test("the destination is the ONLY empty vinyl deck during an active change", () 
       assert.equal(shouldHideCinematicPlatter("active", side, side), true, frame);
       assert.equal(shouldHideCinematicPlatter("active", side, opposite), false, frame);
     }
-    // The new spinning record appears after the final placing pose.
-    assert.equal(shouldHideCinematicPlatter("none", side, side), false);
+    // Keep the platter bare until the staged new album has decoded and is
+    // committed. Once the stage is cleared, the new record becomes visible.
+    assert.equal(shouldHideCinematicPlatter("none", side, side), true, "awaiting placement/decode");
     assert.equal(shouldHideCinematicPlatter("none", side, opposite), false);
+    assert.equal(shouldHideCinematicPlatter("none", null, side), false, "new album placed");
   }
   assert.equal(shouldHideCinematicPlatter("active", null, "left"), false);
   assert.equal(shouldHideCinematicPlatter("active", null, "right"), false);
@@ -99,8 +101,9 @@ test("new album is not placed before the cinematic finishes, even if artwork loa
 test("a quick cancelled change does not leave the destination permanently hidden", () => {
   assert.equal(shouldHideCinematicPlatter("pending", "left", "left"), false);
   assert.equal(shouldHideCinematicPlatter("active", "left", "left"), true);
-  assert.equal(shouldHideCinematicPlatter("none", "left", "left"), false);
+  assert.equal(shouldHideCinematicPlatter("none", "left", "left"), true, "wait until the new album is committed");
   assert.equal(canPlaceIncomingVinyl("none", false), true);
+  assert.equal(shouldHideCinematicPlatter("none", null, "left"), false, "restore when placed");
 });
 
 test("alternating deck assignment occurs before reveal without resetting existing disc on pause", () => {
