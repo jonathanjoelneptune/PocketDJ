@@ -1,6 +1,6 @@
 import type { NormalizedTrack } from "../state/types";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
-import { canPlaceIncomingVinyl, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide } from "./vinylMath";
+import { canRevealIncomingVinyl, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
 
 const W = VINYL_SPRITE_WIDTH;
 const H = VINYL_SPRITE_HEIGHT;
@@ -41,33 +41,38 @@ export class VinylDeckStage {
   private readonly deckKeys: Record<DeckSide, string | null> = { left: null, right: null };
   private readonly requestVersions: Record<DeckSide, number> = { left: 0, right: 0 };
   private readonly angles: Record<DeckSide, number> = { left: 0, right: 0 };
-  // A record being held during A41/A11/A12 is not on the platter yet.
-  // Keep the outgoing platter image intact until the cinematic finishes.
+  // Keep the outgoing platter while the cinematic is QUEUED. Switch to the
+  // incoming record from the first actual cinematic pose, not the last.
   private stagedRecord: StagedRecord | null = null;
   private releaseStagedRecord = false;
+  private readonly placeholderTexture: HTMLCanvasElement;
   private playing = false;
   private lastFrameTime = 0;
   private generation = 0;
   private disabled = new URLSearchParams(window.location.search).get("vinyl") === "0";
 
   constructor() {
+    // Draw the blank-deck album locally: no remote image, extra network request
+    // or startup flicker. It spins even when only one song is loaded.
+    this.placeholderTexture = this.makePlaceholderDiscTexture();
     if (!this.disabled) void this.loadTable();
   }
 
   get ready(): boolean { return this.table !== null && this.pixels !== null; }
   get revision(): number { return this.generation; }
-  get moving(): boolean { return this.playing && Boolean(this.textures.left || this.textures.right); }
+  get moving(): boolean { return this.playing && this.ready; }
   get status(): string {
     return this.disabled ? "disabled" : !this.ready ? "loading/table fallback" :
-      `layered (left:${this.deckKeys.left ? "loaded" : "empty"}, right:${this.deckKeys.right ? "loaded" : "empty"}${this.stagedRecord ? ", staged:" + this.stagedRecord.side : ""})`;
+      `layered (left:${this.textures.left ? "album" : "placeholder"}, right:${this.textures.right ? "album" : "placeholder"}${this.stagedRecord ? ", queued:" + this.stagedRecord.side : ""})`;
   }
 
   /**
-   * The DJ controller owns cinematic timing. An incoming song is assigned to
-   * its future deck immediately, but its artwork is only committed once the
-   * record-placement sequence has FINISHED. The previous disc stays visible.
+   * The DJ controller owns cinematic timing. While it is waiting to launch a
+   * sequence, preload the next cover without altering the destination deck.
+   * As soon as the first record-change pose is active, put that new album on
+   * the platter. It stays there through A41, A11/A12 and placement poses.
    */
-  setPlayback(playback: NormalizedTrack, recordChangeInProgress = false): void {
+  setPlayback(playback: NormalizedTrack, cinematicPhase: VinylCinematicPhase = "none"): void {
     this.playing = playback.isPlaying;
     const change = this.assignments.accept(playback);
     if (change) {
@@ -75,7 +80,7 @@ export class VinylDeckStage {
       // ignored through StagedRecord identity checks.
       this.stagedRecord = null;
       this.releaseStagedRecord = false;
-      if (recordChangeInProgress) {
+      if (cinematicPhase !== "none") {
         const staged: StagedRecord = {
           side: change.side,
           trackKey: change.trackKey,
@@ -100,7 +105,9 @@ export class VinylDeckStage {
         staged.loading = true;
         this.loadStagedCover(staged, playback.albumArtUrl);
       }
-      this.releaseStagedRecord = !recordChangeInProgress;
+      // A queued cinematic is not yet visible; an active cinematic is.
+      // After a cancellation, allow normal placement as well.
+      this.releaseStagedRecord = canRevealIncomingVinyl(cinematicPhase, staged.loading);
       this.tryReleaseStagedRecord();
       return;
     }
@@ -132,7 +139,7 @@ export class VinylDeckStage {
 
   private tryReleaseStagedRecord(): void {
     const staged = this.stagedRecord;
-    if (!staged || !canPlaceIncomingVinyl(this.releaseStagedRecord, staged.loading)) return;
+    if (!staged || !this.releaseStagedRecord || staged.loading) return;
     this.stagedRecord = null;
     this.releaseStagedRecord = false;
     this.commitDeck(staged.side, staged.trackKey, staged.coverUrl, staged.texture);
@@ -193,8 +200,7 @@ export class VinylDeckStage {
   }
 
   private paintDisc(ctx: CanvasRenderingContext2D, side: DeckSide): void {
-    const texture = this.textures[side];
-    if (!texture) return;
+    const texture = this.textures[side] ?? this.placeholderTexture;
     const deck = DECK_CALIBRATION[side];
     ctx.save();
     ctx.translate(deck.x, deck.y);
@@ -247,6 +253,44 @@ export class VinylDeckStage {
         // repeatedly retry an unavailable Spotify cover.
         // The original black platter stays visible underneath.
       });
+  }
+
+  /** Stylized PocketDJ album used on decks with no loaded song.
+   * It has a visible label and grooves, so a newly opened session always
+   * displays two records instead of an empty platter beside the first song.
+   */
+  private makePlaceholderDiscTexture(): HTMLCanvasElement {
+    const c = document.createElement("canvas");
+    c.width = c.height = 280;
+    const ctx = c.getContext("2d")!;
+    const mid = 140;
+    ctx.fillStyle = "#080c13";
+    ctx.beginPath(); ctx.arc(mid, mid, 139, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#68797f";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(mid, mid, 136, 0, Math.PI * 2); ctx.stroke();
+    for (let i = 0; i < 22; i++) {
+      ctx.strokeStyle = i % 3 === 0 ? "rgba(123,168,181,0.22)" : "rgba(168,188,199,0.10)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(mid, mid, 127 - i * 3.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#1f5054";
+    ctx.beginPath(); ctx.arc(mid, mid, 49, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#c4a56e";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(mid, mid, 47, 0, Math.PI * 2); ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#f7dfad";
+    ctx.font = "bold 15px monospace";
+    ctx.fillText("POCKET", mid, mid - 11);
+    ctx.font = "bold 26px monospace";
+    ctx.fillText("DJ", mid, mid + 13);
+    ctx.fillStyle = "#050b11";
+    ctx.beginPath(); ctx.arc(mid, mid, 4, 0, Math.PI * 2); ctx.fill();
+    return c;
   }
 
   private makeDiscTexture(img: HTMLImageElement): HTMLCanvasElement {

@@ -204,10 +204,13 @@ export class DjController {
       this.controlMode === "normal" && this.speakingRequested &&
       this.lastTrackId && track.trackId && this.lastTrackId !== track.trackId
     );
-    this.headBob?.setVinylPlayback(
-      track,
-      this.pendingSongChangeCinematic || this.cinematicOnce || trackStillAwaitingSpeechHandoff,
-    );
+    const cinematicPhase =
+      this.cinematicOnce || (this.controlMode === "cinematic" && this.currentLoop.kind === "cinematic")
+        ? "active"
+        : (this.pendingSongChangeCinematic || trackStillAwaitingSpeechHandoff)
+          ? "pending"
+          : "none";
+    this.headBob?.setVinylPlayback(track, cinematicPhase);
   }
 
   setHeadNodsEnabled(enabled: boolean): void {

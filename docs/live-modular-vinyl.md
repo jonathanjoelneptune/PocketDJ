@@ -32,16 +32,24 @@ patch never punches a transparent hole in a record or the static table.
 - First real song is assigned to the **right** deck; subsequent song IDs
   alternate left/right. Pausing, seeking, polling, or temporary AI DJ
   commentary does **not** count as a song change.
-- On later song changes, new cover art is **staged off the platter** for the
-  complete A41 → A11/A12/A11-2 (or mirrored) record-change cinematic. The
-  previously placed record remains visible on that deck until the sequence
-  finishes and the new artwork has decoded. Only then does the new record
-  appear on its platter and start spinning.
-- The existing A41 held-album artwork layer is clipped to a **circle** over
-  the held vinyl, using the already-calibrated X/Y/size controls. The separate
-  A41 hands layer stays above it so fingers remain visible on the record.
-- Spotify DJ commentary that delays pose updates also delays album placement,
-  preventing a new track from arriving on the platter before its cinematic.
+- On song changes, the incoming cover is **preloaded while the cinematic
+  is queued** and appears on the assigned platter **as soon as the cinematic
+  starts**, during the A41 → A11/A12/A11-2 (or mirrored) sequence. An incoming
+  cover that has not decoded yet is revealed later in the same sequence as
+  soon as it is ready, avoiding partially decoded images.
+- If the active song is the **first track of the session**, the other empty
+  deck displays a custom PocketDJ placeholder record with dark grooves and
+  a center label. The placeholder spins at the normal 16.2 RPM during music
+  and freezes on pause. If a later track uses that deck, the incoming artwork
+  replaces the placeholder when ready. There is no extra network asset.
+- The A41 held-album layer remains a circular crop at the user-calibrated
+  position, with the independent A41 fingers over it. Matching circular
+  overlays are positioned over held vinyl in **A11, A12, A11m, A12m**; poses
+  with hands already on the platter (A10, A11-2, A13) use the platter artwork
+  only. The existing cinematic frame sequence and scratch routines are intact.
+- Spotify DJ commentary can delay the cinematic; the next record stays
+  preloaded off the platter during that delay, then becomes visible when
+  the actual cinematic starts.
 - Existing album artwork remains on both decks during pauses, with rotation
   frozen until playback resumes.
 - Artwork loads asynchronously and is discarded if a newer track takes that
@@ -69,10 +77,11 @@ patch never punches a transparent hole in a record or the static table.
 1. Compare A44/A47 scratch poses against the standalone prototype:
    table stays fixed, albums rotate, hands cover the records and the detached
    head continues nodding on the beat.
-2. Change songs repeatedly: left/right alternate without losing the opposite
-   deck's previous cover.
-3. Pause/resume in a scratch pose and an idle pose: both album images remain
-   visible and frozen, then resume.
+2. Change songs repeatedly: left/right alternate; the new record shows
+   from the first A41 pose through the complete mirrored/non-mirrored sequence.
+3. Start a new session with only one song loaded: the blank deck should show
+   the spinning PocketDJ placeholder; both records stop on pause and resume
+   without losing their angle.
 4. Trigger Spotify DJ commentary and A11/A11m record-change cinematics; the
    original animations continue and the table is not duplicated.
 5. Test Chrome, Spotify desktop embed and Android WebView. If any regression

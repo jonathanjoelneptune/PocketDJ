@@ -6,6 +6,7 @@
 import { createBeatEvents, nextBeatEvent, type BeatTiming } from "./beatClock";
 import { blendSpritePixels, changedPixelBounds, scratchEase, scratchTransitionDuration, type PixelBounds } from "./scratchBlend";
 import { VinylDeckStage } from "./vinylDecks";
+import type { VinylCinematicPhase } from "./vinylMath";
 import type { NormalizedTrack } from "../state/types";
 type BobFrame = { enabled: boolean; x: number; y: number; tilt: number };
 type HeadBobRig = {
@@ -155,8 +156,8 @@ export class HeadBobController {
     this.resetGroove();
   }
 
-  setVinylPlayback(playback: NormalizedTrack, recordChangeInProgress: boolean): void {
-    this.vinyl.setPlayback(playback, recordChangeInProgress);
+  setVinylPlayback(playback: NormalizedTrack, cinematicPhase: VinylCinematicPhase): void {
+    this.vinyl.setPlayback(playback, cinematicPhase);
   }
 
   getVinylStatus(): string {
