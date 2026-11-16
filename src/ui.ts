@@ -1529,9 +1529,9 @@ export function renderShell(state: AppState): void {
             <button id="menu2RoomLightingReset" class="menu2-action menu2-wide-action" type="button">Restore Classic Lighting</button>
             <div class="menu2-section-head menu2-subsection-head"><h3>DJ Animation</h3><span>Head movement</span></div>
             <label class="menu2-setting menu2-toggle-setting">
-              <input id="menu2HeadNodsEnabled" type="checkbox" /> Enable head nods
+              <input id="menu2HeadNodsEnabled" type="checkbox" checked /> Enable head nods
             </label>
-            <p class="menu2-room-help">Off by default. When enabled, DJ NES glides between subtle head poses in time with the BPM while scratching. Pauses during record changes and DJ speech.</p>
+            <p class="menu2-room-help">On by default. Head nods and smooth scratch pose transitions move independently. Turning head nods Off keeps scratch transitions active. Both effects pause during record changes and DJ speech.</p>
             <details class="menu2-room-spotlights" open>
               <summary>Living Atmosphere · Moving Spotlights</summary>
               <p class="menu2-room-help">Choose independent color sweeps for the shelves, three zones, or the entire room. In Full Room, one color sweeps left to right, then the other sweeps right to left. Each pass uses the selected sweep duration. At 15 seconds per pass, the complete alternating cycle takes 30 seconds. Spotlights and dust appear only during playback.</p>
