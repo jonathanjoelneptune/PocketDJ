@@ -1,6 +1,7 @@
 import type { DjMode, NormalizedTrack } from "../state/types";
 import { HeadBobController } from "./headBobController";
 import type { BeatTiming } from "./beatClock";
+import type { HeldRecordSide } from "./heldRecordCalibration";
 
 type ControlMode = "normal" | "audition" | "cinematic";
 type LoopKind = "quick" | "vibe" | "cinematic" | "idle" | "paused";
@@ -223,6 +224,24 @@ export class DjController {
           ? "pending"
           : "none";
     this.headBob?.setVinylPlayback(track, cinematicPhase);
+  }
+
+  /** Use the *visible* sprite (not the next undecoded target frame) to
+   * keep the held album in the correct location through pose transitions.
+   * Only the true record-change loop may display these overlays.
+   */
+  getHeldRecordCinematic(): { side: HeldRecordSide; pose: string } | null {
+    const inCinematic = this.cinematicOnce ||
+      (this.controlMode === "cinematic" && this.currentLoop.kind === "cinematic");
+    if (!inCinematic) return null;
+    const side: HeldRecordSide | null =
+      this.currentLoop.id === "place-record-right" ? "right" :
+      this.currentLoop.id === "place-record-left" ? "left" : null;
+    if (!side) return null;
+    const pose = this.poseElement instanceof HTMLImageElement
+      ? this.poseElement.dataset.pose || this.currentFrame
+      : this.currentFrame;
+    return { side, pose };
   }
 
   setHeadNodsEnabled(enabled: boolean): void {
