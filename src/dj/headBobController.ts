@@ -246,7 +246,7 @@ export class HeadBobController {
       const previouslyMoving = this.lastRenderWasMoving;
       this.resetHeadEligibility();
       if (frame !== this.lastDrawn || scratchMoving || previouslyMoving || !this.visible ||
-          this.lastVinylRevision !== this.vinyl.revision) {
+          this.vinyl.moving || this.lastVinylRevision !== this.vinyl.revision) {
         this.paintComposed(spriteFrames, frame, scratchMoving, null, now);
       }
       this.lastRenderWasMoving = scratchMoving;
@@ -301,7 +301,7 @@ export class HeadBobController {
       progress < this.motionStartedProgress + this.motionDurationMs;
     if (frame !== this.lastDrawn || this.position !== this.lastDrawnPosition ||
         moving || scratchMoving || this.lastRenderWasMoving || !this.visible ||
-        this.lastVinylRevision !== this.vinyl.revision) {
+        this.vinyl.moving || this.lastVinylRevision !== this.vinyl.revision) {
       this.paintComposed(spriteFrames, frame, scratchMoving, { rig, motion: this.motionAt(progress) }, now);
     }
     // One final redraw lands both the scratch and nod at their exact target.
