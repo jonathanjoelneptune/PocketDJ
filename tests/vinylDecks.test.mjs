@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_WIDTH, VINYL_SPRITE_HEIGHT } from "../src/dj/tableRegion.ts";
-import { canRevealIncomingVinyl, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM } from "../src/dj/vinylMath.ts";
+import { canPlaceIncomingVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM } from "../src/dj/vinylMath.ts";
 
 test("exported a8 table region retains the exact approved pixels", () => {
   const mask = decodeTableRegion();
@@ -67,15 +67,40 @@ test("only identical RGBA table pixels inside the approved mask are removed", ()
 });
 
 
-test("incoming album becomes visible at cinematic start and stays through every placement frame", () => {
-  assert.equal(canRevealIncomingVinyl("pending", true), false, "waiting for cinematic and artwork");
-  assert.equal(canRevealIncomingVinyl("pending", false), false, "preloaded artwork stays hidden before first pose");
-  assert.equal(canRevealIncomingVinyl("active", true), false, "never show a partially decoded album");
-  assert.equal(canRevealIncomingVinyl("active", false), true, "A41 first pose reveals decoded new album");
-  assert.equal(canRevealIncomingVinyl("active", false), true, "A11/A12 hands continue over already placed disc");
-  assert.equal(canRevealIncomingVinyl("active", false), true, "A11-2 placement keeps disc visible");
-  assert.equal(canRevealIncomingVinyl("none", false), true, "finished or cancelled cinematic must not hide album");
-  assert.equal(canRevealIncomingVinyl("none", true), false, "background album waits for decode too");
+test("the destination is the ONLY empty vinyl deck during an active change", () => {
+  for (const side of ["left", "right"]) {
+    const opposite = side === "left" ? "right" : "left";
+    // The old record remains playing until the first cinematic frame.
+    assert.equal(shouldHideCinematicPlatter("pending", side, side), false);
+    assert.equal(shouldHideCinematicPlatter("pending", side, opposite), false);
+    // The album is held in A41/A11/A12 and warped onto A11-2. The platter
+    // must remain bare under ALL of those poses.
+    for (const frame of ["a41", "a11", "a12", "a11-2"]) {
+      assert.equal(shouldHideCinematicPlatter("active", side, side), true, frame);
+      assert.equal(shouldHideCinematicPlatter("active", side, opposite), false, frame);
+    }
+    // The new spinning record appears after the final placing pose.
+    assert.equal(shouldHideCinematicPlatter("none", side, side), false);
+    assert.equal(shouldHideCinematicPlatter("none", side, opposite), false);
+  }
+  assert.equal(shouldHideCinematicPlatter("active", null, "left"), false);
+  assert.equal(shouldHideCinematicPlatter("active", null, "right"), false);
+});
+
+test("new album is not placed before the cinematic finishes, even if artwork loads early", () => {
+  for (const phase of ["pending", "active"]) {
+    assert.equal(canPlaceIncomingVinyl(phase, false), false, phase + ": cover decoded");
+    assert.equal(canPlaceIncomingVinyl(phase, true), false, phase + ": still loading");
+  }
+  assert.equal(canPlaceIncomingVinyl("none", true), false, "wait for late cover decode");
+  assert.equal(canPlaceIncomingVinyl("none", false), true, "place album after cinematic + decode");
+});
+
+test("a quick cancelled change does not leave the destination permanently hidden", () => {
+  assert.equal(shouldHideCinematicPlatter("pending", "left", "left"), false);
+  assert.equal(shouldHideCinematicPlatter("active", "left", "left"), true);
+  assert.equal(shouldHideCinematicPlatter("none", "left", "left"), false);
+  assert.equal(canPlaceIncomingVinyl("none", false), true);
 });
 
 test("alternating deck assignment occurs before reveal without resetting existing disc on pause", () => {
