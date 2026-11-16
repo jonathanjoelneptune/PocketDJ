@@ -1,6 +1,6 @@
 import type { NormalizedTrack } from "../state/types";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
-import { canRevealIncomingVinyl, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
+import { canPlaceIncomingVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
 
 const W = VINYL_SPRITE_WIDTH;
 const H = VINYL_SPRITE_HEIGHT;
@@ -41,10 +41,13 @@ export class VinylDeckStage {
   private readonly deckKeys: Record<DeckSide, string | null> = { left: null, right: null };
   private readonly requestVersions: Record<DeckSide, number> = { left: 0, right: 0 };
   private readonly angles: Record<DeckSide, number> = { left: 0, right: 0 };
-  // Keep the outgoing platter while the cinematic is QUEUED. Switch to the
-  // incoming record from the first actual cinematic pose, not the last.
+  // Keep the outgoing record on its platter while a cinematic is queued.
+  // During the actual cinematic, render the bare destination platter under
+  // the calibrated held-record artwork. Place the incoming disc when done.
   private stagedRecord: StagedRecord | null = null;
-  private releaseStagedRecord = false;
+  private cinematicPhase: VinylCinematicPhase = "none";
+  private activeTrackKey: string | null = null;
+  private hiddenDeckDuringCinematic: DeckSide | null = null;
   private readonly placeholderTexture: HTMLCanvasElement;
   private playing = false;
   private lastFrameTime = 0;
@@ -63,23 +66,23 @@ export class VinylDeckStage {
   get moving(): boolean { return this.playing && this.ready; }
   get status(): string {
     return this.disabled ? "disabled" : !this.ready ? "loading/table fallback" :
-      `layered (left:${this.textures.left ? "album" : "placeholder"}, right:${this.textures.right ? "album" : "placeholder"}${this.stagedRecord ? ", queued:" + this.stagedRecord.side : ""})`;
+      `layered (left:${this.hiddenDeckDuringCinematic === "left" ? "bare" : this.textures.left ? "album" : "placeholder"}, right:${this.hiddenDeckDuringCinematic === "right" ? "bare" : this.textures.right ? "album" : "placeholder"}${this.stagedRecord ? ", staged:" + this.stagedRecord.side : ""})`;
   }
 
   /**
-   * The DJ controller owns cinematic timing. While it is waiting to launch a
-   * sequence, preload the next cover without altering the destination deck.
-   * As soon as the first record-change pose is active, put that new album on
-   * the platter. It stays there through A41, A11/A12 and placement poses.
+   * Preload the next album without touching the outgoing record. Once A41
+   * begins, hide only the destination deck's vinyl (not the static table),
+   * then restore it with the new artwork AFTER the final placement pose.
    */
   setPlayback(playback: NormalizedTrack, cinematicPhase: VinylCinematicPhase = "none"): void {
     this.playing = playback.isPlaying;
+    this.cinematicPhase = cinematicPhase;
+    this.activeTrackKey = playback.trackId ? `${playback.source}:${playback.trackId}` : null;
     const change = this.assignments.accept(playback);
     if (change) {
       // A fast skip may interrupt a previous change; stale image promises are
       // ignored through StagedRecord identity checks.
       this.stagedRecord = null;
-      this.releaseStagedRecord = false;
       if (cinematicPhase !== "none") {
         const staged: StagedRecord = {
           side: change.side,
@@ -95,9 +98,8 @@ export class VinylDeckStage {
       }
     }
 
-    const key = playback.trackId ? `${playback.source}:${playback.trackId}` : null;
     const staged = this.stagedRecord;
-    if (staged && staged.trackKey === key) {
+    if (staged && staged.trackKey === this.activeTrackKey) {
       // Album art may arrive later than track metadata in the desktop embed.
       if (playback.albumArtUrl && staged.coverUrl !== playback.albumArtUrl) {
         staged.coverUrl = playback.albumArtUrl;
@@ -105,19 +107,31 @@ export class VinylDeckStage {
         staged.loading = true;
         this.loadStagedCover(staged, playback.albumArtUrl);
       }
-      // A queued cinematic is not yet visible; an active cinematic is.
-      // After a cancellation, allow normal placement as well.
-      this.releaseStagedRecord = canRevealIncomingVinyl(cinematicPhase, staged.loading);
+      // Keep the target platter bare for every held/placing frame, even
+      // when the incoming album art has already decoded.
+      this.syncCinematicDeckVisibility();
       this.tryReleaseStagedRecord();
       return;
     }
 
-    if (key && playback.albumArtUrl) {
+    this.syncCinematicDeckVisibility();
+    if (this.activeTrackKey && playback.albumArtUrl) {
       for (const side of ["left", "right"] as const) {
-        if (this.deckKeys[side] === key && this.coverUrls[side] !== playback.albumArtUrl) {
-          this.setCover(side, playback.albumArtUrl, key);
+        if (this.deckKeys[side] === this.activeTrackKey && this.coverUrls[side] !== playback.albumArtUrl) {
+          this.setCover(side, playback.albumArtUrl, this.activeTrackKey);
         }
       }
+    }
+  }
+
+  /** A phase change itself invalidates the canvas, including when paused. */
+  private syncCinematicDeckVisibility(): void {
+    const stagedSide = this.stagedRecord?.trackKey === this.activeTrackKey
+      ? this.stagedRecord.side : null;
+    const next = this.cinematicPhase === "active" ? stagedSide : null;
+    if (next !== this.hiddenDeckDuringCinematic) {
+      this.hiddenDeckDuringCinematic = next;
+      this.generation++;
     }
   }
 
@@ -139,10 +153,14 @@ export class VinylDeckStage {
 
   private tryReleaseStagedRecord(): void {
     const staged = this.stagedRecord;
-    if (!staged || !this.releaseStagedRecord || staged.loading) return;
+    if (!staged || staged.trackKey !== this.activeTrackKey ||
+        !canPlaceIncomingVinyl(this.cinematicPhase, staged.loading)) return;
     this.stagedRecord = null;
-    this.releaseStagedRecord = false;
+    // Incoming vinyl begins its own rotation at placement, rather than
+    // continuing a hidden rotation from when the DJ picked it up.
+    this.angles[staged.side] = 0;
     this.commitDeck(staged.side, staged.trackKey, staged.coverUrl, staged.texture);
+    this.syncCinematicDeckVisibility();
   }
 
   private commitDeck(
@@ -195,11 +213,15 @@ export class VinylDeckStage {
     const elapsed = this.lastFrameTime === 0 ? 0 : Math.min(250, Math.max(0, now - this.lastFrameTime));
     this.lastFrameTime = now;
     for (const side of ["left", "right"] as const) {
+      if (shouldHideCinematicPlatter(this.cinematicPhase, this.hiddenDeckDuringCinematic, side)) continue;
       this.angles[side] = stepVinylAngle(this.angles[side], elapsed, this.playing);
     }
   }
 
   private paintDisc(ctx: CanvasRenderingContext2D, side: DeckSide): void {
+    // Do NOT draw the old album, incoming artwork or the default placeholder
+    // under the DJ's held record. The a8 reference still paints the platter.
+    if (shouldHideCinematicPlatter(this.cinematicPhase, this.hiddenDeckDuringCinematic, side)) return;
     const texture = this.textures[side] ?? this.placeholderTexture;
     const deck = DECK_CALIBRATION[side];
     ctx.save();
