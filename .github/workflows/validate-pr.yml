@@ -33,7 +33,7 @@ jobs:
           python -m pip install --disable-pip-version-check Pillow numpy
           python scripts/build_head_bob_assets.py
 
-      - name: Test song-anchored beat clock
+      - name: Test beat clock, scratch blends, and speaker pulse
         run: pnpm run test:animation
 
       - name: Build site
