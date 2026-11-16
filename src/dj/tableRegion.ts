@@ -16,3 +16,25 @@ export function decodeTableRegion(): Uint8Array {
   }
   return mask;
 }
+
+/** Remove only pixels that exactly match the approved static table.
+ * Different pixels within the region remain foreground hands/body. Pixels
+ * outside the region are never modified, even if they share a table color.
+ */
+export function removeMatchingTablePixels(
+  source: Uint8ClampedArray,
+  reference: Uint8ClampedArray,
+  region: Uint8Array,
+): void {
+  if (source.length !== reference.length || source.length !== region.length * 4) {
+    throw new Error("Table and DJ source dimensions do not match");
+  }
+  for (let i = 0; i < region.length; i++) {
+    if (!region[i]) continue;
+    const p = i * 4;
+    if (source[p] === reference[p] && source[p + 1] === reference[p + 1] &&
+        source[p + 2] === reference[p + 2] && source[p + 3] === reference[p + 3]) {
+      source[p + 3] = 0;
+    }
+  }
+}
