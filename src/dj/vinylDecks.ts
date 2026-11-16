@@ -1,6 +1,6 @@
 import type { NormalizedTrack } from "../state/types";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
-import { DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide } from "./vinylMath";
+import { canPlaceIncomingVinyl, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide } from "./vinylMath";
 
 const W = VINYL_SPRITE_WIDTH;
 const H = VINYL_SPRITE_HEIGHT;
@@ -132,7 +132,7 @@ export class VinylDeckStage {
 
   private tryReleaseStagedRecord(): void {
     const staged = this.stagedRecord;
-    if (!this.releaseStagedRecord || !staged || staged.loading) return;
+    if (!staged || !canPlaceIncomingVinyl(this.releaseStagedRecord, staged.loading)) return;
     this.stagedRecord = null;
     this.releaseStagedRecord = false;
     this.commitDeck(staged.side, staged.trackKey, staged.coverUrl, staged.texture);
