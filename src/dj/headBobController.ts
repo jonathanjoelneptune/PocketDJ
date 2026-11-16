@@ -222,23 +222,6 @@ export class HeadBobController {
     this.timingDiscontinuity = timing.discontinuity;
     this.lastProgress = progress;
 
-    if (family !== this.activeFamily) {
-      this.activeFamily = family;
-      this.lastDrawn = "";
-      this.lastDrawnPosition = -1;
-      this.hide();
-    }
-    if (!this.ready.has(family)) {
-      this.ensureFamily(family);
-      this.hide();
-      return;
-    }
-    const rig = this.ready.get(family)!;
-    if (!rig.bodies.has(frame)) {
-      this.hide();
-      return;
-    }
-
     // The destination head pose lands ON the beat. Starting the glide before
     // each beat, instead of on it, produces a more natural musical accent.
     const subdivisionMs = 60_000 / (timing.bpm * this.rate);
