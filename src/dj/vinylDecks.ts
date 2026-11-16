@@ -1,5 +1,5 @@
 import type { NormalizedTrack } from "../state/types";
-import { decodeTableRegion, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
+import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
 import { DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide } from "./vinylMath";
 
 const W = VINYL_SPRITE_WIDTH;
@@ -86,15 +86,7 @@ export class VinylDeckStage {
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(image, 0, 0);
       const data = ctx.getImageData(0, 0, W, H);
-      const source = data.data;
-      const table = this.pixels;
-      for (let i = 0; i < this.region.length; i++) {
-        if (!this.region[i]) continue;
-        const at = i * 4;
-        if (table[at + 3] !== source[at + 3]) continue;
-        if (source[at] === table[at] && source[at + 1] === table[at + 1] &&
-            source[at + 2] === table[at + 2]) source[at + 3] = 0;
-      }
+      removeMatchingTablePixels(data.data, this.pixels, this.region);
       ctx.putImageData(data, 0, 0);
       this.stripped.set(image, canvas);
       return canvas;
