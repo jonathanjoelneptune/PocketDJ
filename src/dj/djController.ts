@@ -197,7 +197,17 @@ export class DjController {
   setVinylPlayback(track: NormalizedTrack): void {
     // DJ cinematic state, not album decode or song elapsed time, determines
     // when the newly assigned vinyl can actually appear on the platter.
-    this.headBob?.setVinylPlayback(track, this.pendingSongChangeCinematic || this.cinematicOnce);
+    // During Spotify DJ commentary, handleTrackTiming intentionally waits
+    // until the commentary ends to detect the following song. If its track ID
+    // already arrived, keep the vinyl staged rather than dropping it early.
+    const trackStillAwaitingSpeechHandoff = Boolean(
+      this.controlMode === "normal" && this.speakingRequested &&
+      this.lastTrackId && track.trackId && this.lastTrackId !== track.trackId
+    );
+    this.headBob?.setVinylPlayback(
+      track,
+      this.pendingSongChangeCinematic || this.cinematicOnce || trackStillAwaitingSpeechHandoff,
+    );
   }
 
   setHeadNodsEnabled(enabled: boolean): void {
