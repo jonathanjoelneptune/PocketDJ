@@ -15322,3 +15322,25 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
   animation: none !important;
   transform-origin: center center;
 }
+
+
+/* A41 held-vinyl reveal: fit the album art to the ROUND center of the record,
+   not a square album sleeve. Keep the existing calibrated X/Y/size settings
+   and the separate A41 hands PNG over the cover to preserve finger occlusion.
+   Shelf albums and crate artwork remain square. */
+.dj-wrap .song-change-album-layer {
+  border-radius: 50% !important;
+  overflow: hidden;
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 2px rgba(11, 16, 20, 0.9) !important;
+}
+.dj-wrap .song-change-album-cover {
+  border-radius: 50%;
+}
+.dj-wrap .song-change-album-layer::after {
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 2px rgba(13, 20, 25, 0.74),
+    inset 0 -8px 12px rgba(0, 0, 0, 0.15);
+}
