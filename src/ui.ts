@@ -231,6 +231,13 @@ export function renderShell(state: AppState): void {
           <div id="songChangeAlbumLayer" class="song-change-album-layer" aria-hidden="true">
             <img id="songChangeAlbumCover" class="song-change-album-cover" src="" alt="" draggable="false" />
           </div>
+          <canvas
+            id="songChangeHeldCanvas"
+            class="dj-held-record-canvas dj-nes-frame-img"
+            width="582"
+            height="652"
+            aria-hidden="true"
+          ></canvas>
           <img
             id="songChangeHands"
             class="song-change-hands"
