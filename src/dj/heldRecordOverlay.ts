@@ -73,7 +73,7 @@ export class HeldRecordOverlay {
       // This is the crucial occlusion pass. The new cover goes on the disc
       // FIRST; then the DJ's ORIGINAL hand pixels come back over its edges.
       // The mask excludes the source's black vinyl, preserving new artwork.
-      const fingers = this.fingerLayers.get(pose);
+      const fingers = pose ? this.fingerLayers.get(pose) : null;
       if (fingers) ctx.drawImage(fingers.canvas, fingers.x, fingers.y);
       this.lastPoseKey = poseKey;
       this.lastCover = cover;
@@ -104,7 +104,8 @@ export class HeldRecordOverlay {
           throw new Error("Unexpected cinematic sprite dimensions for " + pose);
         }
         const w = HELD_RECORD_SPRITE.width;
-        let minX = w, minY = HELD_RECORD_SPRITE.height, maxX = -1, maxY = -1;
+        let minX: number = w, minY: number = HELD_RECORD_SPRITE.height;
+        let maxX = -1, maxY = -1;
         for (let index = 0; index < mask.length; index++) {
           if (!mask[index]) continue;
           const x = index % w, y = (index - x) / w;
