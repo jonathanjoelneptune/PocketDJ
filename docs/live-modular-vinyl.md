@@ -32,6 +32,16 @@ patch never punches a transparent hole in a record or the static table.
 - First real song is assigned to the **right** deck; subsequent song IDs
   alternate left/right. Pausing, seeking, polling, or temporary AI DJ
   commentary does **not** count as a song change.
+- On later song changes, new cover art is **staged off the platter** for the
+  complete A41 → A11/A12/A11-2 (or mirrored) record-change cinematic. The
+  previously placed record remains visible on that deck until the sequence
+  finishes and the new artwork has decoded. Only then does the new record
+  appear on its platter and start spinning.
+- The existing A41 held-album artwork layer is clipped to a **circle** over
+  the held vinyl, using the already-calibrated X/Y/size controls. The separate
+  A41 hands layer stays above it so fingers remain visible on the record.
+- Spotify DJ commentary that delays pose updates also delays album placement,
+  preventing a new track from arriving on the platter before its cinematic.
 - Existing album artwork remains on both decks during pauses, with rotation
   frozen until playback resumes.
 - Artwork loads asynchronously and is discarded if a newer track takes that
