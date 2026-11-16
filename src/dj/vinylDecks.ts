@@ -128,7 +128,10 @@ export class VinylDeckStage {
   private syncCinematicDeckVisibility(): void {
     const stagedSide = this.stagedRecord?.trackKey === this.activeTrackKey
       ? this.stagedRecord.side : null;
-    const next = this.cinematicPhase === "active" ? stagedSide : null;
+    // The destination remains bare after the last cinematic frame if its
+    // artwork is still decoding. The stage is cleared only upon placement.
+    const next = stagedSide && shouldHideCinematicPlatter(this.cinematicPhase, stagedSide, stagedSide)
+      ? stagedSide : null;
     if (next !== this.hiddenDeckDuringCinematic) {
       this.hiddenDeckDuringCinematic = next;
       this.generation++;
@@ -213,7 +216,7 @@ export class VinylDeckStage {
     const elapsed = this.lastFrameTime === 0 ? 0 : Math.min(250, Math.max(0, now - this.lastFrameTime));
     this.lastFrameTime = now;
     for (const side of ["left", "right"] as const) {
-      if (shouldHideCinematicPlatter(this.cinematicPhase, this.hiddenDeckDuringCinematic, side)) continue;
+      if (side === this.hiddenDeckDuringCinematic) continue;
       this.angles[side] = stepVinylAngle(this.angles[side], elapsed, this.playing);
     }
   }
@@ -221,7 +224,7 @@ export class VinylDeckStage {
   private paintDisc(ctx: CanvasRenderingContext2D, side: DeckSide): void {
     // Do NOT draw the old album, incoming artwork or the default placeholder
     // under the DJ's held record. The a8 reference still paints the platter.
-    if (shouldHideCinematicPlatter(this.cinematicPhase, this.hiddenDeckDuringCinematic, side)) return;
+    if (side === this.hiddenDeckDuringCinematic) return;
     const texture = this.textures[side] ?? this.placeholderTexture;
     const deck = DECK_CALIBRATION[side];
     ctx.save();
