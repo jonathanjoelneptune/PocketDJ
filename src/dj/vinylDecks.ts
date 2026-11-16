@@ -36,6 +36,7 @@ export class VinylDeckStage {
   private readonly angles: Record<DeckSide, number> = { left: 0, right: 0 };
   private playing = false;
   private lastFrameTime = 0;
+  private generation = 0;
   private disabled = new URLSearchParams(window.location.search).get("vinyl") === "0";
 
   constructor() {
@@ -43,6 +44,7 @@ export class VinylDeckStage {
   }
 
   get ready(): boolean { return this.table !== null && this.pixels !== null; }
+  get revision(): number { return this.generation; }
   get moving(): boolean { return this.playing && Boolean(this.textures.left || this.textures.right); }
   get status(): string {
     return this.disabled ? "disabled" : !this.ready ? "loading/table fallback" :
@@ -57,6 +59,7 @@ export class VinylDeckStage {
       this.textures[change.side] = null;
       this.coverUrls[change.side] = null;
       this.requestVersions[change.side]++;
+      this.generation++;
       if (change.coverUrl) this.setCover(change.side, change.coverUrl, change.trackKey);
     } else if (playback.trackId && playback.albumArtUrl) {
       // Spicetify/Spotify can deliver artwork after the track ID arrives.
@@ -152,6 +155,7 @@ export class VinylDeckStage {
       target.putImageData(new ImageData(out, W, H), 0, 0);
       this.pixels = out;
       this.table = stable;
+      this.generation++;
     } catch (error) {
       console.warn("Vinyl reference table failed; preserving original full DJ sprites", error);
     }
@@ -164,6 +168,7 @@ export class VinylDeckStage {
       .then(img => {
         if (this.requestVersions[side] !== version || this.deckKeys[side] !== trackKey) return;
         this.textures[side] = this.makeDiscTexture(img);
+        this.generation++;
       })
       .catch(() => {
         // Never replace a working DJ pose with a broken image. The original
