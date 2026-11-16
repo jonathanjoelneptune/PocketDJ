@@ -78,6 +78,7 @@ export class HeadBobController {
   private readonly ready = new Map<string, DecodedRig>();
   private readonly rawPending = new Map<string, Promise<void>>();
   private readonly rawReady = new Map<string, Map<string, HTMLImageElement>>();
+  private readonly rawFailed = new Set<string>();
   private readonly readCanvas: HTMLCanvasElement;
   private readonly readCtx: CanvasRenderingContext2D;
   private activeFamily = '';
@@ -194,8 +195,11 @@ export class HeadBobController {
 
     // Disabled nodding must not stop the body scratch interpolation.
     if (!useHead || !rig || !timing) {
+      const previouslyMoving = this.lastRenderWasMoving;
       this.resetHeadEligibility();
-      this.paintComposed(spriteFrames, frame, scratchMoving, null);
+      if (frame !== this.lastDrawn || scratchMoving || previouslyMoving || !this.visible) {
+        this.paintComposed(spriteFrames, frame, scratchMoving, null, now);
+      }
       this.lastRenderWasMoving = scratchMoving;
       if (!this.visible) this.show();
       return;
@@ -265,7 +269,7 @@ export class HeadBobController {
       progress < this.motionStartedProgress + this.motionDurationMs;
     if (frame !== this.lastDrawn || this.position !== this.lastDrawnPosition ||
         moving || scratchMoving || this.lastRenderWasMoving || !this.visible) {
-      this.paintComposed(spriteFrames, frame, scratchMoving, { rig, motion: this.motionAt(progress) });
+      this.paintComposed(spriteFrames, frame, scratchMoving, { rig, motion: this.motionAt(progress) }, now);
     }
     // One final redraw lands both the scratch and nod at their exact target.
     this.lastRenderWasMoving = moving || scratchMoving;
@@ -335,13 +339,14 @@ export class HeadBobController {
     frame: string,
     scratchMoving: boolean,
     detached: { rig: DecodedRig; motion: HeadMotion } | null,
+    now: number,
   ): void {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(sprites.get(frame)!, 0, 0);
     if (scratchMoving && this.scratchBlend) {
-      const progress = scratchEase((Date.now() - this.scratchStartedAt) / this.scratchDurationMs);
+      const progress = scratchEase((now - this.scratchStartedAt) / this.scratchDurationMs);
       const { from, to, bounds, working } = this.scratchBlend;
       blendSpritePixels(from, to, working.data, progress);
       ctx.putImageData(working, bounds.x, bounds.y);
@@ -411,7 +416,7 @@ export class HeadBobController {
   }
 
   private ensureOriginalFamily(family: string): void {
-    if (this.rawReady.has(family) || this.rawPending.has(family)) return;
+    if (this.rawReady.has(family) || this.rawPending.has(family) || this.rawFailed.has(family)) return;
     const promise = Promise.all(FAMILIES[family].map(frame =>
       loadImage("./assets/poses/final/" + frame)))
       .then(images => {
@@ -422,7 +427,10 @@ export class HeadBobController {
           if (oldest) this.rawReady.delete(oldest);
         }
       })
-      .catch(error => console.warn("Smooth scratch assets unavailable; keeping original sprite", error))
+      .catch(error => {
+        this.rawFailed.add(family);
+        console.warn("Smooth scratch assets unavailable; keeping original sprite", error);
+      })
       .finally(() => { this.rawPending.delete(family); });
     this.rawPending.set(family, promise);
   }
