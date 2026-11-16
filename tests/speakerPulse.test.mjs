@@ -20,7 +20,7 @@ test("BPM grid yields exactly one complete driver pulse per beat", () => {
   assert.equal(speakerBeatPhase(timing(500)), 0);
   assert.equal(speakerBeatPhase(timing(1_000)), 0);
   assert.equal(speakerBeatPhase(timing(1_250)), 0.5);
-  assert.equal(speakerBeatPhase(timing(100, { bpm: 60 })), 0.1);
+  assert.ok(Math.abs(speakerBeatPhase(timing(100, { bpm: 60 })) - 0.1) < 1e-10);
   assert.equal(speakerBeatPhase(timing(1_000, { bpm: 60 })), 0);
 });
 
