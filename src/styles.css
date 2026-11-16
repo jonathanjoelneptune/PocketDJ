@@ -15404,3 +15404,11 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
 .dj-wrap.held-record-canvas-ready > #songChangeAlbumLayer {
   display: none !important;
 }
+
+
+/* The old a41-Hands.png is a rectangular crop containing the ORIGINAL black
+   record as well as fingers. Once the calibrated canvas carries its own
+   fingertip-only cutouts, don't draw that black record over new album art. */
+.dj-wrap.held-record-canvas-ready > #songChangeHands {
+  opacity: 0 !important;
+}
