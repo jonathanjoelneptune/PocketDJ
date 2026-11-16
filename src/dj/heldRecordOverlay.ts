@@ -6,9 +6,16 @@ import {
   type HeldRecordSide,
   type QuadCorners,
 } from "./heldRecordCalibration";
+import { getHeldRecordFingerMask } from "./heldRecordFingerMasks";
 
 const TEXTURE_SIZE = 256;
 const WARP_SUBDIVISIONS = 12;
+const POSE_ASSET_PATH = "./assets/poses/final/";
+type FingerLayer = { canvas: HTMLCanvasElement; x: number; y: number };
+const FINGER_POSES = [
+  "a41.png", "a11.png", "a12.png", "a11m.png", "a12m.png",
+  "a11-2.png", "a11-2m.png",
+] as const;
 
 /**
  * Draw the incoming cover on a single transparent sprite-aligned canvas.
@@ -22,6 +29,9 @@ export class HeldRecordOverlay {
   private lastCover: HTMLImageElement | null = null;
   private cachedWarpTexture: HTMLCanvasElement | null = null;
   private cachedTextureCover: HTMLImageElement | null = null;
+  private readonly fingerLayers = new Map<string, FingerLayer>();
+  private readonly loadingFingerLayers = new Set<string>();
+  private readonly failedFingerLayers = new Set<string>();
 
   constructor() {
     this.canvas = document.querySelector<HTMLCanvasElement>("#songChangeHeldCanvas");
@@ -30,6 +40,10 @@ export class HeldRecordOverlay {
       this.canvas.width = HELD_RECORD_SPRITE.width;
       this.canvas.height = HELD_RECORD_SPRITE.height;
       this.canvas.closest(".dj-wrap")?.classList.add("held-record-canvas-ready");
+      // DJ Controller already preloads the exact same seven cinematic PNGs.
+      // Build compact, pose-specific fingertip layers from those cached images
+      // so no source color is inferred from the incoming Spotify cover.
+      for (const pose of FINGER_POSES) this.prepareFingerLayer(pose);
     }
   }
 
@@ -56,6 +70,11 @@ export class HeldRecordOverlay {
       } else {
         this.paintRound(ctx, cover, placement);
       }
+      // This is the crucial occlusion pass. The new cover goes on the disc
+      // FIRST; then the DJ's ORIGINAL hand pixels come back over its edges.
+      // The mask excludes the source's black vinyl, preserving new artwork.
+      const fingers = this.fingerLayers.get(pose);
+      if (fingers) ctx.drawImage(fingers.canvas, fingers.x, fingers.y);
       this.lastPoseKey = poseKey;
       this.lastCover = cover;
       this.canvas.classList.add("held-record-visible");
@@ -65,6 +84,69 @@ export class HeldRecordOverlay {
       this.canvas.classList.remove("held-record-visible");
       console.warn("DJ held-record overlay unavailable; keeping original pose", error);
     }
+  }
+
+  /** Build a compact pixel-exact cutout for each held-record pose. A
+   * finger layer is painted once over a cover, never reclassified per frame.
+   * Cropping to the mask bounds avoids seven full-size retained canvases.
+   */
+  private prepareFingerLayer(pose: string): void {
+    if (this.fingerLayers.has(pose) || this.loadingFingerLayers.has(pose) ||
+        this.failedFingerLayers.has(pose)) return;
+    const mask = getHeldRecordFingerMask(pose);
+    if (!mask) return;
+    this.loadingFingerLayers.add(pose);
+    const source = new Image();
+    source.onload = () => {
+      try {
+        if (source.naturalWidth !== HELD_RECORD_SPRITE.width ||
+            source.naturalHeight !== HELD_RECORD_SPRITE.height) {
+          throw new Error("Unexpected cinematic sprite dimensions for " + pose);
+        }
+        const w = HELD_RECORD_SPRITE.width;
+        let minX = w, minY = HELD_RECORD_SPRITE.height, maxX = -1, maxY = -1;
+        for (let index = 0; index < mask.length; index++) {
+          if (!mask[index]) continue;
+          const x = index % w, y = (index - x) / w;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+        if (maxX < minX || maxY < minY) throw new Error("Empty hand mask: " + pose);
+        const canvas = document.createElement("canvas");
+        canvas.width = maxX - minX + 1;
+        canvas.height = maxY - minY + 1;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        if (!ctx) throw new Error("No 2D context for hand mask");
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(source, -minX, -minY);
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            if (!mask[(y + minY) * w + (x + minX)]) {
+              pixels.data[(y * canvas.width + x) * 4 + 3] = 0;
+            }
+          }
+        }
+        ctx.putImageData(pixels, 0, 0);
+        this.fingerLayers.set(pose, { canvas, x: minX, y: minY });
+        // If the current frame was shown while this PNG was decoding,
+        // repaint it with the fingertips on the next animation tick.
+        this.lastPoseKey = "";
+      } catch (error) {
+        this.failedFingerLayers.add(pose);
+        console.warn("Could not extract held-record fingertips", pose, error);
+      } finally {
+        this.loadingFingerLayers.delete(pose);
+      }
+    };
+    source.onerror = () => {
+      this.loadingFingerLayers.delete(pose);
+      this.failedFingerLayers.add(pose);
+      console.warn("Could not load held-record finger sprite", pose);
+    };
+    source.src = POSE_ASSET_PATH + pose;
   }
 
   private paintRound(
