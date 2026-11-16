@@ -15344,3 +15344,38 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
     inset 0 0 0 2px rgba(13, 20, 25, 0.74),
     inset 0 -8px 12px rgba(0, 0, 0, 0.15);
 }
+
+
+/* Held-record continuity across the right and left album-change cinematics.
+ * A41 has independent user-calibrated controls. A11/A12 and their mirrored
+ * variants hold the record at a different position, so use sprite-relative
+ * coordinates for those four poses only. The circle stays inside the visible
+ * black vinyl rim, leaving fingers at its edges unobscured. A10, A11-2,
+ * A13 and other placement/scratch poses show the album on the platter only.
+ */
+.dj-frame-img[data-pose="a11.png"] ~ .song-change-album-layer.song-change-album-has-art,
+.dj-frame-img[data-pose="a12.png"] ~ .song-change-album-layer.song-change-album-has-art,
+.dj-frame-img[data-pose="a11m.png"] ~ .song-change-album-layer.song-change-album-has-art,
+.dj-frame-img[data-pose="a12m.png"] ~ .song-change-album-layer.song-change-album-has-art {
+  opacity: 1;
+}
+.dj-frame-img[data-pose="a11.png"] ~ .song-change-album-layer {
+  left: 70%;
+  top: 37%;
+  width: 13.5%;
+}
+.dj-frame-img[data-pose="a12.png"] ~ .song-change-album-layer {
+  left: 74.2%;
+  top: 29.6%;
+  width: 13.5%;
+}
+.dj-frame-img[data-pose="a11m.png"] ~ .song-change-album-layer {
+  left: 34.7%;
+  top: 37%;
+  width: 13.5%;
+}
+.dj-frame-img[data-pose="a12m.png"] ~ .song-change-album-layer {
+  left: 30.4%;
+  top: 29.6%;
+  width: 13.5%;
+}
