@@ -1,0 +1,182 @@
+{
+  "schema": "pocketdj-head-gap-audit.v1",
+  "families": [
+    {
+      "family": "a10",
+      "poseCategory": "scratch",
+      "variants": {
+        "a10.png": {
+          "exposedBefore": 382,
+          "underpainted": 751,
+          "exposedAfter": 0
+        },
+        "a10-2.png": {
+          "exposedBefore": 382,
+          "underpainted": 751,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "a4",
+      "poseCategory": "scratch",
+      "variants": {
+        "a4.png": {
+          "exposedBefore": 428,
+          "underpainted": 784,
+          "exposedAfter": 0
+        },
+        "a4-2.png": {
+          "exposedBefore": 428,
+          "underpainted": 784,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "a14",
+      "poseCategory": "scratch",
+      "variants": {
+        "a14.png": {
+          "exposedBefore": 410,
+          "underpainted": 773,
+          "exposedAfter": 0
+        },
+        "a14-2.png": {
+          "exposedBefore": 410,
+          "underpainted": 773,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "a44",
+      "poseCategory": "scratch",
+      "variants": {
+        "a44.png": {
+          "exposedBefore": 391,
+          "underpainted": 699,
+          "exposedAfter": 0
+        },
+        "a44-2.png": {
+          "exposedBefore": 391,
+          "underpainted": 699,
+          "exposedAfter": 0
+        },
+        "a44-3.png": {
+          "exposedBefore": 391,
+          "underpainted": 699,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "a47",
+      "poseCategory": "scratch",
+      "variants": {
+        "a47.png": {
+          "exposedBefore": 384,
+          "underpainted": 672,
+          "exposedAfter": 0
+        },
+        "a47-2.png": {
+          "exposedBefore": 384,
+          "underpainted": 672,
+          "exposedAfter": 0
+        },
+        "a47-3.png": {
+          "exposedBefore": 384,
+          "underpainted": 672,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "a48",
+      "poseCategory": "scratch",
+      "variants": {
+        "a48.png": {
+          "exposedBefore": 372,
+          "underpainted": 667,
+          "exposedAfter": 0
+        },
+        "a48-2.png": {
+          "exposedBefore": 372,
+          "underpainted": 667,
+          "exposedAfter": 0
+        },
+        "a48-3.png": {
+          "exposedBefore": 372,
+          "underpainted": 667,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "i10",
+      "poseCategory": "vibe",
+      "variants": {
+        "i10.png": {
+          "exposedBefore": 344,
+          "underpainted": 650,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "i11",
+      "poseCategory": "vibe",
+      "variants": {
+        "i11.png": {
+          "exposedBefore": 368,
+          "underpainted": 678,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "i12",
+      "poseCategory": "vibe",
+      "variants": {
+        "i12.png": {
+          "exposedBefore": 378,
+          "underpainted": 679,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "a36",
+      "poseCategory": "vibe",
+      "variants": {
+        "a36.png": {
+          "exposedBefore": 364,
+          "underpainted": 686,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "a37",
+      "poseCategory": "vibe",
+      "variants": {
+        "a37.png": {
+          "exposedBefore": 371,
+          "underpainted": 682,
+          "exposedAfter": 0
+        }
+      }
+    },
+    {
+      "family": "a38",
+      "poseCategory": "vibe",
+      "variants": {
+        "a38.png": {
+          "exposedBefore": 370,
+          "underpainted": 681,
+          "exposedAfter": 0
+        }
+      }
+    }
+  ]
+}
