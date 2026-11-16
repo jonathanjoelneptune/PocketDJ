@@ -44,15 +44,24 @@ export function stepVinylAngle(currentRadians: number, elapsedMs: number, playin
 }
 
 
-/** DJ state is explicit: a queued cinematic holds the outgoing platter;
- * an active cinematic shows the NEW album as soon as its cover is decoded.
- * If a cinematic is cancelled, the incoming song is still placed normally.
+/** The DJ's record-change sequence controls when a deck's album can appear.
+ * pending: keep the outgoing album spinning while cover art preloads
+ * active:  show the bare platter while DJ holds/places the incoming album
+ * none:    restore a real spinning record after the cinematic ends
  */
 export type VinylCinematicPhase = "none" | "pending" | "active";
 
-export function canRevealIncomingVinyl(
-  cinematicPhase: VinylCinematicPhase,
+export function shouldHideCinematicPlatter(
+  phase: VinylCinematicPhase,
+  incomingSide: DeckSide | null,
+  deck: DeckSide,
+): boolean {
+  return phase === "active" && incomingSide === deck;
+}
+
+export function canPlaceIncomingVinyl(
+  phase: VinylCinematicPhase,
   artworkStillLoading: boolean,
 ): boolean {
-  return cinematicPhase !== "pending" && !artworkStillLoading;
+  return phase === "none" && !artworkStillLoading;
 }
