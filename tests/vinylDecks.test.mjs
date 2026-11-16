@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_WIDTH, VINYL_SPRITE_HEIGHT } from "../src/dj/tableRegion.ts";
-import { canPlaceIncomingVinyl, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM } from "../src/dj/vinylMath.ts";
+import { canRevealIncomingVinyl, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM } from "../src/dj/vinylMath.ts";
 
 test("exported a8 table region retains the exact approved pixels", () => {
   const mask = decodeTableRegion();
@@ -67,13 +67,15 @@ test("only identical RGBA table pixels inside the approved mask are removed", ()
 });
 
 
-test("incoming album stays off the platter for every cinematic frame, then reveals when cover is decoded", () => {
-  // Both the complete A41/A11/A12/A11-2 sequence AND artwork must be ready.
-  assert.equal(canPlaceIncomingVinyl(false, true), false, "album loading while DJ holds A41 record");
-  assert.equal(canPlaceIncomingVinyl(false, false), false, "A41 cover decoded, but DJ still holds record");
-  assert.equal(canPlaceIncomingVinyl(false, false), false, "A11/A12 placement animation still ongoing");
-  assert.equal(canPlaceIncomingVinyl(true, true), false, "cinematic ended but cover decoding is still pending");
-  assert.equal(canPlaceIncomingVinyl(true, false), true, "DJ has finished; cover may appear on the assigned deck");
+test("incoming album becomes visible at cinematic start and stays through every placement frame", () => {
+  assert.equal(canRevealIncomingVinyl("pending", true), false, "waiting for cinematic and artwork");
+  assert.equal(canRevealIncomingVinyl("pending", false), false, "preloaded artwork stays hidden before first pose");
+  assert.equal(canRevealIncomingVinyl("active", true), false, "never show a partially decoded album");
+  assert.equal(canRevealIncomingVinyl("active", false), true, "A41 first pose reveals decoded new album");
+  assert.equal(canRevealIncomingVinyl("active", false), true, "A11/A12 hands continue over already placed disc");
+  assert.equal(canRevealIncomingVinyl("active", false), true, "A11-2 placement keeps disc visible");
+  assert.equal(canRevealIncomingVinyl("none", false), true, "finished or cancelled cinematic must not hide album");
+  assert.equal(canRevealIncomingVinyl("none", true), false, "background album waits for decode too");
 });
 
 test("alternating deck assignment occurs before reveal without resetting existing disc on pause", () => {
@@ -85,4 +87,15 @@ test("alternating deck assignment occurs before reveal without resetting existin
   assert.equal(decks.accept({ source: "spotify", trackId: "second", albumArtUrl: "second.jpg" }), null);
   assert.equal(decks.current("right"), first.trackKey);
   assert.equal(decks.current("left"), second.trackKey);
+});
+
+test("first song has exactly one assigned deck, with independent rotation for placeholder deck", () => {
+  const decks = new DeckAssignment();
+  const first = decks.accept({ source: "spotify", trackId: "first", albumArtUrl: "first.jpg" });
+  assert.equal(first.side, "right");
+  assert.equal(decks.current("left"), null, "left deck has no album and should render the placeholder");
+  assert.equal(decks.current("right"), "spotify:first");
+  const step = stepVinylAngle(0, 1000, true);
+  assert.ok(step > 0, "empty deck's placeholder disc can spin at the same RPM");
+  assert.equal(stepVinylAngle(step, 1000, false), step, "placeholder freezes while playback is paused");
 });
