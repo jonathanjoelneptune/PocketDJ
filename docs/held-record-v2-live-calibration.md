@@ -35,6 +35,38 @@ homography, matching the same algorithm used in Held-Record Alignment Lab v2.
 The held cover is composited over the corresponding sprite; A41 still uses the
 existing separate finger-overlay PNG.
 
+## Fingertip occlusion over the album (November 16 update)
+
+The circle and perspective-warp calibration are unchanged. The held-record
+canvas now finishes each frame with a **foreground-only pixel pass**:
+
+1. Draw the calibrated circular or projective album cover.
+2. Retrieve the matching original DJ NES sprite's cached fingertip cutout.
+3. Paint **only the DJ's original visible finger pixels above the cover**.
+   The source record's black center and label are excluded from the mask.
+
+`src/dj/heldRecordFingerMasks.ts` contains a tiny, reproducible base36
+run-length encoding of each original pose's finger-region pixels. Masks are
+derived from the existing 582×652 originals and follow both gripping sides
+in A41, A11, A12, A11m, A12m, plus the downward fingertips in A11-2 and
+A11-2m. Those seven masks occupy less than 5KB of RLE text and introduce
+no new sprite PNG downloads. The renderer loads the same final pose assets
+already preloaded by the DJ controller, extracts masked color/alpha one time
+per pose into **small cropped canvases**, then reuses them throughout the
+song change. The old a41-Hands.png crop is disabled when the new calibrated
+canvas is active, because it includes the original black record and could
+cover the new album.
+
+The new painter doesn't change the position or size of the user's calibrated
+albums, the four-corner warps, head nodding, scratching, or the rules that
+leave the destination platter bare until the cinematic finishes.
+
+**Visual check:** Fingers should appear to grip each side of the circular
+album in A41/A11/A12 and the mirrored frames. In A11-2/A11-2m, the DJ's
+downward fingers must appear above the warped album as he places it. The
+album artwork must remain visible between the fingers without any old
+black-record fragments reappearing.
+
 ## Runtime and performance
 
 - `src/dj/heldRecordCalibration.ts` stores the exact calibration and pure
