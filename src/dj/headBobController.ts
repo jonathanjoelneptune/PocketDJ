@@ -40,6 +40,13 @@ const FAMILIES: Record<string, readonly string[]> = {
   a44: ['a44.png', 'a44-2.png', 'a44-3.png'],
   a47: ['a47.png', 'a47-2.png', 'a47-3.png'],
   a48: ['a48.png', 'a48-2.png', 'a48-3.png'],
+  // Calibrated single-frame standing poses. Their head uses the same beat
+  // scheduler, while the body remains static. a36 stays reference-only.
+  i10: ['i10.png'],
+  i11: ['i11.png'],
+  i12: ['i12.png'],
+  a37: ['a37.png'],
+  a38: ['a38.png'],
 };
 const FAMILY_BY_FRAME: Record<string, string> = {};
 for (const [family, frames] of Object.entries(FAMILIES)) {
@@ -172,13 +179,13 @@ export class HeadBobController {
   update(
     frame: string,
     headEnabled: boolean,
-    scratchEligible: boolean,
+    performanceEligible: boolean,
     timing: BeatTiming | null,
     now: number,
     nextScratchFrameHoldMs: number,
   ): void {
     const family = FAMILY_BY_FRAME[frame];
-    if (!scratchEligible || !family) {
+    if (!performanceEligible || !family) {
       this.resetHeadEligibility();
       this.resetScratchTransition();
       if (this.vinyl.ready) this.paintStaticPose(frame, now);

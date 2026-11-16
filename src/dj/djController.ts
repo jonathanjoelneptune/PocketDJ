@@ -3,7 +3,7 @@ import { HeadBobController } from "./headBobController";
 import type { BeatTiming } from "./beatClock";
 
 type ControlMode = "normal" | "audition" | "cinematic";
-type LoopKind = "quick" | "cinematic" | "idle" | "paused";
+type LoopKind = "quick" | "vibe" | "cinematic" | "idle" | "paused";
 
 type AnimationLoop = {
   id: string;
@@ -27,9 +27,9 @@ const ALBUM_REVEAL_FRAME_HOLD_MULTIPLIER = 2;
 
 /*
  * Important split:
- * - active/playing/demo lives mainly in calm scratch loops that can dwell for short or long organic stretches
+ * - active/playing/demo alternates calm scratch loops and head-bobbing standing/vibe poses
  * - the A11/A11m cinematic record moves are used only when the active track changes
- * - idle/no-track uses only the approved calm idle poses: i6, i7, i9, i1, i10, i11, i12
+ * - idle/no-track keeps the existing calm idle poses; the vibe rigs are active playback only
  * - paused uses the same calm pose family by default so the DJ clearly stops performing
  */
 const quickLoops: AnimationLoop[] = [
@@ -40,6 +40,18 @@ const quickLoops: AnimationLoop[] = [
   makeLoop("two-hand-scratch-b", "Two-hand scratch B", ["a47.png", "a47-2.png", "a47-3.png"], "quick", 140, 640, 0, 650, 7_000, 34_000),
   makeLoop("two-hand-scratch-c", "Two-hand scratch C", ["a48.png", "a48-2.png", "a48-3.png"], "quick", 140, 640, 0, 650, 7_000, 34_000)
 ];
+
+// Single-frame standing poses: body/hands hold still while the independently
+// cut head follows the same beat clock as the scratching families.
+// a36 is explicitly reference-only and must not enter the runtime pool.
+const vibeLoops: AnimationLoop[] = [
+  makeLoop("vibe-i10", "Standing vibe I10", ["i10.png"], "vibe", 500, 900, 0, 0, 8_000, 18_000),
+  makeLoop("vibe-i11", "Standing vibe I11", ["i11.png"], "vibe", 500, 900, 0, 0, 8_000, 18_000),
+  makeLoop("vibe-i12", "Standing vibe I12", ["i12.png"], "vibe", 500, 900, 0, 0, 8_000, 18_000),
+  makeLoop("vibe-a37", "Standing vibe A37", ["a37.png"], "vibe", 500, 900, 0, 0, 8_000, 18_000),
+  makeLoop("vibe-a38", "Standing vibe A38", ["a38.png"], "vibe", 500, 900, 0, 0, 8_000, 18_000)
+];
+const activeLoops = [...quickLoops, ...vibeLoops];
 
 const cinematicLoops: AnimationLoop[] = [
   makeLoop("place-record-right", "Near-change record move right", ["a41.png", "a11.png", "a12.png", "a11-2.png"], "cinematic", 420, 780, 700, 1400),
@@ -233,6 +245,7 @@ export class DjController {
       pose: this.currentFrame,
       loop: this.currentLoop.label,
       quickLoops: quickLoops.length,
+      vibeLoops: vibeLoops.length,
       cinematicLoops: cinematicLoops.length,
       cinematicOnce: this.cinematicOnce,
       cinematicLabel: this.cinematicOnce ? this.currentLoop.label : ""
@@ -419,12 +432,15 @@ export class DjController {
     this.frameIndex = 0;
     this.previousFrame = "";
     this.currentFrame = this.currentLoop.frames[0] || this.currentFrame;
-    this.nextFrameAt = now + this.frameDuration(this.currentLoop, 1);
     this.loopEndsAt = now + this.loopDurationForMode(mode);
+    // A standing pose has no body frames to cycle; only its separate head moves.
+    this.nextFrameAt = this.currentLoop.kind === "vibe"
+      ? this.loopEndsAt
+      : now + this.frameDuration(this.currentLoop, 1);
   }
 
   private poolForMode(mode: DjMode): AnimationLoop[] {
-    if (mode === "playing" || mode === "demo") return quickLoops;
+    if (mode === "playing" || mode === "demo") return activeLoops;
     if (mode === "paused") return pausedLoops;
     return idleLoops;
   }
@@ -444,7 +460,7 @@ export class DjController {
 
   private enterAuditionMode(): void {
     this.controlMode = "audition";
-    this.currentLoop = quickLoops[this.auditionIndex] || quickLoops[0];
+    this.currentLoop = activeLoops[this.auditionIndex] || activeLoops[0];
     this.frameIndex = 0;
     this.nextFrameAt = 0;
     this.loopEndsAt = Number.POSITIVE_INFINITY;
@@ -463,8 +479,8 @@ export class DjController {
       this.cinematicIndex = wrapIndex(this.cinematicIndex + delta, cinematicLoops.length);
       this.currentLoop = cinematicLoops[this.cinematicIndex] || this.currentLoop;
     } else if (this.controlMode === "audition") {
-      this.auditionIndex = wrapIndex(this.auditionIndex + delta, quickLoops.length);
-      this.currentLoop = quickLoops[this.auditionIndex] || this.currentLoop;
+      this.auditionIndex = wrapIndex(this.auditionIndex + delta, activeLoops.length);
+      this.currentLoop = activeLoops[this.auditionIndex] || this.currentLoop;
     } else {
       const pool = this.poolForMode(this.mode);
       this.normalLoopIndex = wrapIndex(this.normalLoopIndex + delta, pool.length);
@@ -479,20 +495,21 @@ export class DjController {
   }
 
   private paint(): void {
-    // The composite renderer works on scratch loops only. Its body-pixel
-    // transitions continue even if head nods are switched Off. It never
-    // interpolates record changes, speaking, idle, or paused poses.
+    // The composite renderer handles both scratch and standing-vibe loops.
+    // Scratch body transitions still work with head nods Off; standing bodies
+    // remain static while their heads move on the existing beat clock.
+    // Never bob record changes, AI commentary, idle or paused poses.
     const now = Date.now();
-    const scratchEligible =
+    const performanceEligible =
       this.controlMode === "normal" &&
-      this.currentLoop.kind === "quick" &&
+      (this.currentLoop.kind === "quick" || this.currentLoop.kind === "vibe") &&
       (this.mode === "playing" || this.mode === "demo") &&
       !this.cinematicOnce && !this.pendingSongChangeCinematic &&
       !this.speakingRequested && !this.speakingVisualActive;
     this.headBob?.update(
       this.currentFrame,
       this.headNodsEnabled,
-      scratchEligible,
+      performanceEligible,
       this.beatTiming,
       now,
       Math.max(0, this.nextFrameAt - now),
@@ -564,7 +581,7 @@ export class DjController {
 
   private preload(): void {
     const unique = new Set<string>();
-    [...quickLoops, ...cinematicLoops, ...idleLoops, ...pausedLoops].forEach((loop) => {
+    [...activeLoops, ...cinematicLoops, ...idleLoops, ...pausedLoops].forEach((loop) => {
       loop.frames.forEach((frame) => unique.add(frame));
     });
     SPEAKING_POSES.forEach((pose) => unique.add(pose));

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rebuild lossless DJ NES head/body layers from the six approved Head Bob Lab rigs.
+"""Rebuild lossless DJ NES head/body layers from approved scratch and vibe rigs.
 
 Run: python3 scripts/build_head_bob_assets.py
 Requires Pillow and numpy. The original sprite PNGs are never modified.
@@ -15,7 +15,10 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 LIBRARY = ROOT / "public" / "assets" / "DJ NES Pose Library"
 LAB = LIBRARY / "Head Bob lab"
-FAMILIES = ("a10", "a4", "a14", "a44", "a47", "a48")
+SCRATCH_FAMILIES = ("a10", "a4", "a14", "a44", "a47", "a48")
+VIBE_FAMILIES = ("i10", "i11", "i12", "a36", "a37", "a38")
+FAMILIES = SCRATCH_FAMILIES + VIBE_FAMILIES
+VIBE_MANIFEST = LAB / "vibe_rigs.json"
 SIZE = (582, 652)
 
 
@@ -50,9 +53,43 @@ def save_png(pixels: np.ndarray, path: Path) -> None:
     Image.fromarray(pixels, mode="RGBA").save(path, format="PNG", optimize=True)
 
 
+def vibe_rig(family: str) -> dict:
+    """Expand the exact approved single-pose calibration into the standard rig schema."""
+    manifest = json.loads(VIBE_MANIFEST.read_text(encoding="utf-8"))
+    calibration = manifest["poses"][family]
+    repair = []
+    for first, last in calibration.get("bodyRepairRuns", []):
+        assert 0 <= first <= last < SIZE[0] * SIZE[1]
+        color = calibration["bodyRepairColor"]
+        repair.extend([[pixel, color] for pixel in range(first, last + 1)])
+    return {
+        "family": family,
+        "variants": [family + ".png"],
+        "sourceCanvas": {"width": SIZE[0], "height": SIZE[1]},
+        "poseCategory": "vibe",
+        "runtimeRole": calibration["runtimeRole"],
+        "headPolygon": calibration.get("headPolygon", manifest["sharedHeadPolygon"]),
+        "maskPixelOverrides": [],
+        "bodyRepairPixels": repair,
+        "rotationPivot": manifest["rotationPivot"],
+        "headBobFrames": manifest["headBobFrames"],
+        "preview": {"bpm": 96, "rate": 1, "scratchSpeedMs": 380},
+        "includesSourceImages": False,
+        "schemaVersion": 1,
+        "assetType": "pocketdj-head-bob-rig",
+        "notes": "Calibrated from the user's Head Rig Studio v2 export. Base head and body align in the original 582x652 coordinates."
+    }
+
+
 def build_family(family: str) -> None:
     folder = LAB / family
-    rig = json.loads((folder / "head_bob_rig.json").read_text(encoding="utf-8"))
+    if family in VIBE_FAMILIES:
+        folder.mkdir(parents=True, exist_ok=True)
+        rig = vibe_rig(family)
+        (folder / "head_bob_rig.json").write_text(
+            json.dumps(rig, indent=2) + "\n", encoding="utf-8")
+    else:
+        rig = json.loads((folder / "head_bob_rig.json").read_text(encoding="utf-8"))
     assert rig["family"] == family
     assert (rig["sourceCanvas"]["width"], rig["sourceCanvas"]["height"]) == SIZE
     assert len(rig["headBobFrames"]) == 4
@@ -64,6 +101,9 @@ def build_family(family: str) -> None:
     shared_head = None
     for name in rig["variants"]:
         source = LIBRARY / name
+        # a36 is a reference-only sprite stored in the full Final DJ Poses atlas.
+        if not source.is_file():
+            source = ROOT / "Final DJ Poses" / name
         with Image.open(source) as img:
             assert img.size == SIZE, source
             rgba = np.asarray(img.convert("RGBA")).copy()

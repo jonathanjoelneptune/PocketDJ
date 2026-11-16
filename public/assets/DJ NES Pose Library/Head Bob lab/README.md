@@ -46,3 +46,19 @@ currently estimated BPM; it does **not** claim true audio downbeat detection.
 The A47 source variants have four pixel discrepancies at the head/hood seam
 inside the approved polygon. That minor input difference does not alter the
 user's selected shared head, and the originals remain available as fallback.
+
+## Standing / vibing poses (Head Rig Studio v2)
+
+The user-approved non-scratching head rigs are `i10`, `i11`, `i12`,
+`a36`, `a37`, and `a38`. Their calibration is stored compactly in
+`vibe_rigs.json` and the Python asset builder materializes the exact
+standard JSON schema and full-size PNG layers for each. All four nod
+positions follow the existing beat-clock/head-motion controller. The I10 cut
+includes the manually adjusted polygon and 79 opaque repair pixels.
+
+**A36 is reference-only:** its layers are generated for inspection but
+`a36.png` is not part of the live active animation pool. The other five
+poses join the existing scratching loops during active music playback; their
+bodies hold still while their heads move. Paused, idle, speech and record-change
+states retain their prior behavior. Generated assets are deterministic and
+original source sprites remain untouched.
