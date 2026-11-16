@@ -10752,6 +10752,9 @@ function tick(): void {
     nowForBeat,
   );
   dj.setBeatTiming(beatTiming);
+  // Album-art vinyl shares the same render tick as the DJ, retaining artwork
+  // across pauses and alternating decks only when the track identity changes.
+  dj.setVinylPlayback(state.playback);
   // Speech is read from the existing Spotify playback poll. Only override
   // the DJ's visual pose; never alter normalized playback or cinematic timing.
   dj.setSpeakingActive(!useDemo && isSpotifyDjSpeakingForPose());
