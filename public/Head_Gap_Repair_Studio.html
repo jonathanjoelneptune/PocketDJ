@@ -159,7 +159,7 @@ function drawGapNods(){
     // Full neck/hood region 205..385, y82..255; no distracting full body.
     target.drawImage(scanCanvas,205,72,180,185,0,0,210,200);
     let gaps=0;
-    for(let y=178;y<=255;y++)for(let x=205;x<=390;x++){
+    for(let y=176;y<=255;y++)for(let x=205;x<=390;x++){
       let i=y*W+x,k=i*4;
       if(state.mask[i]&&original.data[k+3]>=128&&composite[k+3]<16)gaps++;
     }
@@ -179,16 +179,16 @@ function autoUnderpaint(silent=false){
   const source=state.frames[FAMILIES[state.family][0]] || state.frames[state.variant];
   if(!source)return;
   const need=new Uint8Array(N),region=new Uint8Array(N);
-  for(let y=178;y<=255;y++)for(let x=205;x<=390;x++){
+  for(let y=176;y<=255;y++)for(let x=205;x<=390;x++){
     let i=y*W+x;
     if(state.mask[i]&&source.data[i*4+3]>=128&&state.repair[i*4+3]<16)region[i]=1;
   }
   const enabled=state.bobs.filter(b=>b.enabled);
   const moves=[];
   for(const b of enabled)if(b.x||b.y||b.tilt)
-    for(const t of [0.25,0.5,0.75,1])moves.push({x:b.x*t,y:b.y*t,tilt:b.tilt*t});
+    for(const t of [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])moves.push({x:b.x*t,y:b.y*t,tilt:b.tilt*t});
   for(let i=1;i<enabled.length;i++)for(let j=1;j<enabled.length;j++)if(i!==j)
-    for(const t of [0.25,0.5,0.75])moves.push({
+    for(const t of [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9])moves.push({
       x:enabled[i].x*(1-t)+enabled[j].x*t,
       y:enabled[i].y*(1-t)+enabled[j].y*t,
       tilt:enabled[i].tilt*(1-t)+enabled[j].tilt*t
@@ -196,13 +196,13 @@ function autoUnderpaint(silent=false){
   let exposed=0;
   for(const b of moves){
     const alpha=headAlphaAt(b);
-    for(let y=178;y<=255;y++)for(let x=205;x<=390;x++){
+    for(let y=176;y<=255;y++)for(let x=205;x<=390;x++){
       const i=y*W+x;if(region[i]&&!need[i]&&alpha[i*4+3]<16){need[i]=1;exposed++}
     }
   }
   for(let iter=0;iter<2;iter++){
     const grown=need.slice();
-    for(let y=178;y<=255;y++)for(let x=205;x<=390;x++){
+    for(let y=176;y<=255;y++)for(let x=205;x<=390;x++){
       let i=y*W+x;if(region[i]&&(need[i-1]||need[i+1]||need[i-W]||need[i+W]))grown[i]=1;
     }
     need.set(grown);
@@ -218,7 +218,7 @@ function autoUnderpaint(silent=false){
   if(!donors.length){$('repairStatus').textContent='No matching hoodie donor pixels found. Use Body repair to paint manually.';return}
   if(!silent)snapshot();
   let painted=0;
-  for(let y=178;y<=255;y++)for(let x=205;x<=390;x++){
+  for(let y=176;y<=255;y++)for(let x=205;x<=390;x++){
     const i=y*W+x,k=i*4;
     if(!need[i]||state.repair[k+3]>=16)continue;
     let best=-1,bestDist=Infinity;
