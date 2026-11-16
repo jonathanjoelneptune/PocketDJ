@@ -56,7 +56,10 @@ export function shouldHideCinematicPlatter(
   incomingSide: DeckSide | null,
   deck: DeckSide,
 ): boolean {
-  return phase === "active" && incomingSide === deck;
+  // An unfinished artwork decode can outlive the last cinematic frame.
+  // Keep the platter bare until the stage is actually committed. Callers
+  // provide null once placement finishes.
+  return phase !== "pending" && incomingSide === deck;
 }
 
 export function canPlaceIncomingVinyl(
