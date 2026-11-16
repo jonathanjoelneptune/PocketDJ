@@ -40,8 +40,8 @@ patch never punches a transparent hole in a record or the static table.
   opposite deck's album continues spinning normally.
 - Only after the final placement pose ends, commit the decoded new album to
   the destination turntable and begin its 16.2 RPM rotation from angle zero.
-  If decoding finishes late, keep the previous album artwork staged offscreen
-  until it is ready; do not flash a partially loaded album onto the platter.
+  If decoding finishes late, keep the destination platter bare until the
+  incoming artwork is ready; never flash the old album back onto that deck.
 - If the active song is the **first track of the session**, the other empty
   deck displays a custom PocketDJ placeholder record with dark grooves and
   a center label. The placeholder spins at the normal 16.2 RPM during music
