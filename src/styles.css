@@ -15313,3 +15313,12 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
 .dj-wrap.dj-headbob-active > .dj-headbob-canvas {
   opacity: 1;
 }
+
+
+/* Shared song-position beat clock for speaker drivers.
+   The JS renderer writes only the two driver transforms; no root-level style
+   invalidation and no free-running CSS keyframe that could lose beat phase. */
+.room-speaker.playing.speaker-clock-sync .speaker-driver {
+  animation: none !important;
+  transform-origin: center center;
+}
