@@ -8,7 +8,8 @@ import { initializePerformanceLighting } from "./roomPerformanceLighting";
 import { initializePartyMode, updatePartyMode } from "./partyMode";
 import { WALL_ALBUM_MASTER_LIST, type WallAlbumMasterItem } from "./data/wallAlbumMasterList";
 import { DjController } from "./dj/djController";
-import { PlaybackBeatClock, type BeatMetadata } from "./dj/beatClock";
+import { PlaybackBeatClock, type BeatMetadata, type BeatTiming } from "./dj/beatClock";
+import { speakerPulseScale } from "./dj/speakerPulse";
 import { clearSpotifyDjSpeechBubble, initializeSpotifyDjSpeechBubble, isSpotifyDjSpeakingForPose, observeSpotifyDjSpeech } from "./dj/speechBubble";
 import { getDemoTrack, stopDemo, toggleDemo } from "./demo";
 import { emptyTrack, type AppState } from "./state/types";
@@ -1909,11 +1910,35 @@ function scheduleVinylClockDecorTick(): void {
   loop();
 }
 
-function updateSpeakerPulse(isPlaying: boolean): void {
+let cachedSpeakerDrivers: HTMLElement[] | null = null;
+let lastSpeakerDriverTransform = "";
+
+function updateSpeakerPulse(isPlaying: boolean, beat: BeatTiming | null): void {
   const left = qs<HTMLElement>("#leftSpeaker");
   const right = qs<HTMLElement>("#rightSpeaker");
   left.classList.toggle("playing", isPlaying);
   right.classList.toggle("playing", isPlaying);
+
+  // The speaker uses exactly ONE pulse on each beat from the same song-time
+  // clock as the DJ's head. The DJ's half/double-time rate never changes it.
+  const beatLocked = isPlaying && roomUtility.speakerPulseUseTempo && beat !== null;
+  left.classList.toggle("speaker-clock-sync", beatLocked);
+  right.classList.toggle("speaker-clock-sync", beatLocked);
+  if (!cachedSpeakerDrivers || cachedSpeakerDrivers.some(driver => !driver.isConnected)) {
+    cachedSpeakerDrivers = [...document.querySelectorAll<HTMLElement>(".room-speaker .speaker-driver")];
+  }
+  if (!beatLocked) {
+    if (lastSpeakerDriverTransform) {
+      cachedSpeakerDrivers.forEach(driver => driver.style.removeProperty("transform"));
+      lastSpeakerDriverTransform = "";
+    }
+    return;
+  }
+  const transform = `scale(${speakerPulseScale(beat, roomUtility.speakerPulse).toFixed(4)})`;
+  if (transform !== lastSpeakerDriverTransform) {
+    cachedSpeakerDrivers.forEach(driver => { driver.style.transform = transform; });
+    lastSpeakerDriverTransform = transform;
+  }
 }
 
 
@@ -10711,18 +10736,22 @@ function tick(): void {
 
   const albumRevealReady = primeSongChangeAlbumReveal(state.playback);
 
+  // Update tempo before sampling the beat clock so both DJ and speaker
+  // drivers use one coherent timing snapshot within this animation frame.
+  applySpeakerPulseTempo(state.playback);
   dj.setTempoBpm(speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM);
   const nowForBeat = Date.now();
   const currentBeatMetadata = state.playback.trackId
     ? trackBeatMetadataCache.get(state.playback.trackId) ?? null
     : null;
-  dj.setBeatTiming(playbackBeatClock.read(
+  const beatTiming = playbackBeatClock.read(
     state.playback,
     speakerTempoBpm || SPEAKER_PULSE_FALLBACK_BPM,
     speakerTempoSource,
     currentBeatMetadata,
     nowForBeat,
-  ));
+  );
+  dj.setBeatTiming(beatTiming);
   // Speech is read from the existing Spotify playback poll. Only override
   // the DJ's visual pose; never alter normalized playback or cinematic timing.
   dj.setSpeakingActive(!useDemo && isSpotifyDjSpeakingForPose());
@@ -10738,7 +10767,6 @@ function tick(): void {
   updateNextUpAlbumVisual();
   updateNextUpQueueForPlaybackChange(state.playback);
   void refreshNextUpQueue(false);
-  applySpeakerPulseTempo(state.playback);
   updateReactiveRoomPalette(state.playback);
   applyReactiveRoomPaletteFrame(state.playback);
   syncMusicReactiveEnvironment(state.playback);
@@ -10756,7 +10784,7 @@ function tick(): void {
     secondary: reactiveLightColorsCurrent.secondary,
     wallBarsSwapped: document.documentElement.dataset.roomLightBarSwap === "true",
   });
-  updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo");
+  updateSpeakerPulse(state.playback.isPlaying || state.playback.source === "demo", beatTiming);
   updatePlaybackUi(state.playback, state.debugOpen);
   refreshMenu2NowPlayingIfNeeded();
   syncMenu2Dock();
