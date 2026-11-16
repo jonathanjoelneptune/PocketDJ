@@ -15379,3 +15379,28 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
   top: 29.6%;
   width: 13.5%;
 }
+
+
+/* Held-Record Alignment Lab v2: transparent 582×652 overlay scales and
+   centers exactly like the underlying DJ PNG. The existing A41 hands layer
+   stays above the artwork. The old CSS-percentage cover is a fallback only
+   if the new canvas cannot initialize. */
+.dj-wrap .dj-held-record-canvas {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: auto;
+  height: 100%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  user-select: none;
+  image-rendering: auto;
+  z-index: 2;
+  opacity: 0;
+}
+.dj-wrap .dj-held-record-canvas.held-record-visible {
+  opacity: 1;
+}
+.dj-wrap.held-record-canvas-ready > #songChangeAlbumLayer {
+  display: none !important;
+}
