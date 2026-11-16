@@ -10752,9 +10752,6 @@ function tick(): void {
     nowForBeat,
   );
   dj.setBeatTiming(beatTiming);
-  // Album-art vinyl shares the same render tick as the DJ, retaining artwork
-  // across pauses and alternating decks only when the track identity changes.
-  dj.setVinylPlayback(state.playback);
   // Speech is read from the existing Spotify playback poll. Only override
   // the DJ's visual pose; never alter normalized playback or cinematic timing.
   dj.setSpeakingActive(!useDemo && isSpotifyDjSpeakingForPose());
@@ -10765,6 +10762,11 @@ function tick(): void {
   } else {
     state.djMode = dj.update(state.playback, Date.now(), albumRevealReady);
   }
+  // The DJ has now evaluated whether the album-change cinematic is queued,
+  // playing or complete. Gate vinyl placement on that actual animation state.
+  // This prevents artwork showing on the new platter while A41 holds the
+  // record and while the A11/A12 placing frames are still being performed.
+  dj.setVinylPlayback(state.playback);
 
   updateSongChangeAlbumOverlay(state.playback);
   updateNextUpAlbumVisual();

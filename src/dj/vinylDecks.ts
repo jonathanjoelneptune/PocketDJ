@@ -1,11 +1,18 @@
 import type { NormalizedTrack } from "../state/types";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
-import { DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide } from "./vinylMath";
+import { canPlaceIncomingVinyl, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide } from "./vinylMath";
 
 const W = VINYL_SPRITE_WIDTH;
 const H = VINYL_SPRITE_HEIGHT;
 const TABLE_REFERENCE = "./assets/poses/final/a8.png";
 type SpriteBitmap = HTMLImageElement | HTMLCanvasElement;
+type StagedRecord = {
+  side: DeckSide;
+  trackKey: string;
+  coverUrl: string | null;
+  texture: HTMLCanvasElement | null;
+  loading: boolean;
+};
 
 const makeCanvas = (): HTMLCanvasElement => {
   const canvas = document.createElement("canvas");
@@ -34,6 +41,10 @@ export class VinylDeckStage {
   private readonly deckKeys: Record<DeckSide, string | null> = { left: null, right: null };
   private readonly requestVersions: Record<DeckSide, number> = { left: 0, right: 0 };
   private readonly angles: Record<DeckSide, number> = { left: 0, right: 0 };
+  // A record being held during A41/A11/A12 is not on the platter yet.
+  // Keep the outgoing platter image intact until the cinematic finishes.
+  private stagedRecord: StagedRecord | null = null;
+  private releaseStagedRecord = false;
   private playing = false;
   private lastFrameTime = 0;
   private generation = 0;
@@ -48,28 +59,97 @@ export class VinylDeckStage {
   get moving(): boolean { return this.playing && Boolean(this.textures.left || this.textures.right); }
   get status(): string {
     return this.disabled ? "disabled" : !this.ready ? "loading/table fallback" :
-      `layered (left:${this.deckKeys.left ? "loaded" : "empty"}, right:${this.deckKeys.right ? "loaded" : "empty"})`;
+      `layered (left:${this.deckKeys.left ? "loaded" : "empty"}, right:${this.deckKeys.right ? "loaded" : "empty"}${this.stagedRecord ? ", staged:" + this.stagedRecord.side : ""})`;
   }
 
-  setPlayback(playback: NormalizedTrack): void {
+  /**
+   * The DJ controller owns cinematic timing. An incoming song is assigned to
+   * its future deck immediately, but its artwork is only committed once the
+   * record-placement sequence has FINISHED. The previous disc stays visible.
+   */
+  setPlayback(playback: NormalizedTrack, recordChangeInProgress = false): void {
     this.playing = playback.isPlaying;
     const change = this.assignments.accept(playback);
     if (change) {
-      this.deckKeys[change.side] = change.trackKey;
-      this.textures[change.side] = null;
-      this.coverUrls[change.side] = null;
-      this.requestVersions[change.side]++;
-      this.generation++;
-      if (change.coverUrl) this.setCover(change.side, change.coverUrl, change.trackKey);
-    } else if (playback.trackId && playback.albumArtUrl) {
-      // Spicetify/Spotify can deliver artwork after the track ID arrives.
-      const key = `${playback.source}:${playback.trackId}`;
+      // A fast skip may interrupt a previous change; stale image promises are
+      // ignored through StagedRecord identity checks.
+      this.stagedRecord = null;
+      this.releaseStagedRecord = false;
+      if (recordChangeInProgress) {
+        const staged: StagedRecord = {
+          side: change.side,
+          trackKey: change.trackKey,
+          coverUrl: change.coverUrl,
+          texture: null,
+          loading: Boolean(change.coverUrl),
+        };
+        this.stagedRecord = staged;
+        if (change.coverUrl) this.loadStagedCover(staged, change.coverUrl);
+      } else {
+        this.commitDeck(change.side, change.trackKey, change.coverUrl, null);
+      }
+    }
+
+    const key = playback.trackId ? `${playback.source}:${playback.trackId}` : null;
+    const staged = this.stagedRecord;
+    if (staged && staged.trackKey === key) {
+      // Album art may arrive later than track metadata in the desktop embed.
+      if (playback.albumArtUrl && staged.coverUrl !== playback.albumArtUrl) {
+        staged.coverUrl = playback.albumArtUrl;
+        staged.texture = null;
+        staged.loading = true;
+        this.loadStagedCover(staged, playback.albumArtUrl);
+      }
+      this.releaseStagedRecord = !recordChangeInProgress;
+      this.tryReleaseStagedRecord();
+      return;
+    }
+
+    if (key && playback.albumArtUrl) {
       for (const side of ["left", "right"] as const) {
         if (this.deckKeys[side] === key && this.coverUrls[side] !== playback.albumArtUrl) {
           this.setCover(side, playback.albumArtUrl, key);
         }
       }
     }
+  }
+
+  private loadStagedCover(staged: StagedRecord, url: string): void {
+    void this.loadImage(url)
+      .then(img => {
+        if (this.stagedRecord !== staged || staged.coverUrl !== url) return;
+        staged.texture = this.makeDiscTexture(img);
+        staged.loading = false;
+        this.tryReleaseStagedRecord();
+      })
+      .catch(() => {
+        if (this.stagedRecord !== staged || staged.coverUrl !== url) return;
+        staged.loading = false;
+        // A failed image should not trap the song in a permanent pending state.
+        this.tryReleaseStagedRecord();
+      });
+  }
+
+  private tryReleaseStagedRecord(): void {
+    const staged = this.stagedRecord;
+    if (!staged || !canPlaceIncomingVinyl(this.releaseStagedRecord, staged.loading)) return;
+    this.stagedRecord = null;
+    this.releaseStagedRecord = false;
+    this.commitDeck(staged.side, staged.trackKey, staged.coverUrl, staged.texture);
+  }
+
+  private commitDeck(
+    side: DeckSide,
+    trackKey: string,
+    coverUrl: string | null,
+    readyTexture: HTMLCanvasElement | null,
+  ): void {
+    this.deckKeys[side] = trackKey;
+    this.requestVersions[side]++;
+    this.coverUrls[side] = coverUrl;
+    this.textures[side] = readyTexture;
+    this.generation++;
+    if (coverUrl && !readyTexture) this.setCover(side, coverUrl, trackKey);
   }
 
   /** Extract a transparent DJ pose from the identical reference-table pixels.

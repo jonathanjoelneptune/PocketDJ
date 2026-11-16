@@ -155,8 +155,8 @@ export class HeadBobController {
     this.resetGroove();
   }
 
-  setVinylPlayback(playback: NormalizedTrack): void {
-    this.vinyl.setPlayback(playback);
+  setVinylPlayback(playback: NormalizedTrack, recordChangeInProgress: boolean): void {
+    this.vinyl.setPlayback(playback, recordChangeInProgress);
   }
 
   getVinylStatus(): string {

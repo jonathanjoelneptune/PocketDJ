@@ -42,3 +42,12 @@ export function stepVinylAngle(currentRadians: number, elapsedMs: number, playin
   const delta = (elapsedMs * rpm * Math.PI * 2) / 60_000;
   return ((currentRadians + delta) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
 }
+
+
+/** A new record is placed only after the *full* DJ cinematic and its
+ * incoming cover decode have finished. The outgoing platter remains visible
+ * until both conditions hold.
+ */
+export function canPlaceIncomingVinyl(cinematicFinished: boolean, artworkStillLoading: boolean): boolean {
+  return cinematicFinished && !artworkStillLoading;
+}
