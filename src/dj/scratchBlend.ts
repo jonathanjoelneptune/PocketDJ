@@ -10,13 +10,16 @@ export type PixelBounds = { x: number; y: number; width: number; height: number 
 
 export function scratchEase(progress: number): number {
   const t = Math.max(0, Math.min(1, Number.isFinite(progress) ? progress : 0));
-  return t * t * (3 - 2 * t);
+  // Quintic smootherstep removes the small acceleration discontinuities at
+  // either end of a crossfade. This reads more like an actual hand movement.
+  return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
 export function scratchTransitionDuration(holdMs: number): number {
-  // Keep more than half a frame steady for faster scratches; slow scratches
-  // settle quickly rather than appearing to dissolve for their full hold.
-  return Math.max(55, Math.min(115, holdMs * 0.42));
+  // Extend the motion to about 62% of the next pose's dwell time while
+  // preserving a distinct settled hold. Clamp long blends to limit ghosts.
+  if (!Number.isFinite(holdMs) || holdMs <= 0) return 0;
+  return Math.min(190, holdMs * 0.62);
 }
 
 export function changedPixelBounds(

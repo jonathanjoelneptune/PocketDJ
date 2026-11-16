@@ -15,9 +15,11 @@ test("scratch easing has exact endpoints and no overshoot", () => {
 });
 
 test("scratch durations leave a stable hold for fast and slow frame timing", () => {
-  assert.equal(scratchTransitionDuration(120), 55);
-  assert.equal(scratchTransitionDuration(240), 100.8);
-  assert.equal(scratchTransitionDuration(620), 115);
+  assert.equal(scratchTransitionDuration(0), 0);
+  assert.equal(scratchTransitionDuration(120), 74.4);
+  assert.equal(scratchTransitionDuration(240), 148.8);
+  assert.equal(scratchTransitionDuration(620), 190);
+  assert.ok(scratchTransitionDuration(240) < 240, "leave time to hold the destination pose");
 });
 
 test("different pixel region excludes static pixels", () => {

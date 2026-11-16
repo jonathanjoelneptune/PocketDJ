@@ -85,6 +85,10 @@ export class HeadBobController {
   private activeRenderMode: SpriteRenderMode = "detached-head";
   private lastScratchFrame = '';
   private scratchBlend: ScratchBlend | null = null;
+  // Decode/crop each recurring scratch pair once. Repeated getImageData
+  // readbacks were causing avoidable main-thread stalls during performances.
+  private readonly scratchBlendCache = new Map<string, ScratchBlend | null>();
+  private readonly maxScratchBlendCacheEntries = 18;
   private scratchStartedAt = 0;
   private scratchDurationMs = 0;
   private lastDrawn = '';
@@ -184,8 +188,24 @@ export class HeadBobController {
       // already small: this is where a short eased dissolve is useful.
       const previous = spriteFrames.get(this.lastScratchFrame);
       const incoming = spriteFrames.get(frame);
-      this.scratchBlend = previous && incoming
-        ? this.prepareScratchBlend(previous, incoming) : null;
+      if (previous && incoming) {
+        const cacheKey = `${renderMode}:${family}:${this.lastScratchFrame}>${frame}`;
+        const cached = this.scratchBlendCache.get(cacheKey);
+        if (cached !== undefined) {
+          this.scratchBlendCache.delete(cacheKey);
+          this.scratchBlendCache.set(cacheKey, cached);
+          this.scratchBlend = cached;
+        } else {
+          this.scratchBlend = this.prepareScratchBlend(previous, incoming);
+          this.scratchBlendCache.set(cacheKey, this.scratchBlend);
+          while (this.scratchBlendCache.size > this.maxScratchBlendCacheEntries) {
+            const oldest = this.scratchBlendCache.keys().next().value;
+            if (oldest) this.scratchBlendCache.delete(oldest);
+          }
+        }
+      } else {
+        this.scratchBlend = null;
+      }
       this.scratchStartedAt = now;
       this.scratchDurationMs = scratchTransitionDuration(Math.max(0, nextScratchFrameHoldMs));
       this.lastScratchFrame = frame;
