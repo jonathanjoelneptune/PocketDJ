@@ -1,0 +1,139 @@
+{
+  "family": "i12",
+  "variants": [
+    "i12.png"
+  ],
+  "sourceCanvas": {
+    "width": 582,
+    "height": 652
+  },
+  "poseCategory": "vibe",
+  "runtimeRole": "runtime-candidate",
+  "headPolygon": [
+    [
+      278,
+      69
+    ],
+    [
+      308,
+      67
+    ],
+    [
+      336,
+      78
+    ],
+    [
+      354,
+      96
+    ],
+    [
+      360,
+      115
+    ],
+    [
+      366,
+      133
+    ],
+    [
+      367,
+      176
+    ],
+    [
+      358,
+      197
+    ],
+    [
+      347,
+      207
+    ],
+    [
+      338,
+      223
+    ],
+    [
+      321,
+      232
+    ],
+    [
+      299,
+      235
+    ],
+    [
+      274,
+      227
+    ],
+    [
+      257,
+      214
+    ],
+    [
+      245,
+      204
+    ],
+    [
+      235,
+      190
+    ],
+    [
+      232,
+      145
+    ],
+    [
+      235,
+      121
+    ],
+    [
+      243,
+      106
+    ],
+    [
+      247,
+      89
+    ],
+    [
+      261,
+      77
+    ]
+  ],
+  "maskPixelOverrides": [],
+  "bodyRepairPixels": [],
+  "rotationPivot": {
+    "x": 295,
+    "y": 216
+  },
+  "headBobFrames": [
+    {
+      "enabled": true,
+      "x": 0,
+      "y": 0,
+      "tilt": 0
+    },
+    {
+      "enabled": true,
+      "x": 0,
+      "y": 2,
+      "tilt": -1.5
+    },
+    {
+      "enabled": true,
+      "x": 1,
+      "y": 0,
+      "tilt": 1.5
+    },
+    {
+      "enabled": true,
+      "x": -1,
+      "y": -2,
+      "tilt": -1.5
+    }
+  ],
+  "preview": {
+    "bpm": 96,
+    "rate": 1,
+    "scratchSpeedMs": 380
+  },
+  "includesSourceImages": false,
+  "schemaVersion": 1,
+  "assetType": "pocketdj-head-bob-rig",
+  "notes": "Calibrated from the user's Head Rig Studio v2 export. Base head and body align in the original 582x652 coordinates."
+}
