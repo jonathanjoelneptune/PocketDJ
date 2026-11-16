@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { decodeTableRegion, VINYL_SPRITE_WIDTH, VINYL_SPRITE_HEIGHT } from "../src/dj/tableRegion.ts";
+import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_WIDTH, VINYL_SPRITE_HEIGHT } from "../src/dj/tableRegion.ts";
 import { DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM } from "../src/dj/vinylMath.ts";
 
 test("exported a8 table region retains the exact approved pixels", () => {
@@ -47,4 +47,21 @@ test("vinyl rotates at 16.2 RPM and freezes exactly while paused", () => {
   const full = stepVinylAngle(0, 60_000 / VINYL_RPM, true);
   assert.ok(Math.abs(full) < 1e-9 || Math.abs(full - Math.PI * 2) < 1e-9);
   assert.equal(stepVinylAngle(moved, Number.NaN, true), moved);
+});
+
+test("only identical RGBA table pixels inside the approved mask are removed", () => {
+  const original = new Uint8ClampedArray([
+    12, 34, 56, 255,  // exact table match -> transparent
+    12, 34, 57, 255,  // different DJ pixel under table -> visible
+    12, 34, 56, 255,  // same color OUTSIDE table mask -> visible
+    12, 34, 56, 128,  // differs in alpha -> preserved
+  ]);
+  const reference = new Uint8ClampedArray([
+    12, 34, 56, 255,
+    12, 34, 56, 255,
+    12, 34, 56, 255,
+    12, 34, 56, 255,
+  ]);
+  removeMatchingTablePixels(original, reference, new Uint8Array([1, 1, 0, 1]));
+  assert.deepEqual([...original.filter((_, i) => i % 4 === 3)], [0, 255, 255, 128]);
 });
