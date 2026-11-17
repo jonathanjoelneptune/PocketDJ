@@ -1,6 +1,6 @@
 import type { NormalizedTrack } from "../state/types";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
-import { canPlaceIncomingVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
+import { canReleaseStagedVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
 
 const W = VINYL_SPRITE_WIDTH;
 const H = VINYL_SPRITE_HEIGHT;
@@ -198,8 +198,10 @@ export class VinylDeckStage {
 
   private tryReleaseStagedRecord(): void {
     const staged = this.stagedRecord;
-    if (!staged || (!staged.preRoll && staged.trackKey !== this.activeTrackKey) ||
-        !canPlaceIncomingVinyl(this.cinematicPhase, staged.loading)) return;
+    if (!staged || !canReleaseStagedVinyl(
+      this.cinematicPhase, staged.loading, staged.trackKey,
+      this.activeTrackKey, Boolean(staged.preRoll),
+    )) return;
     this.stagedRecord = null;
     // Incoming vinyl begins its own rotation at placement, rather than
     // continuing a hidden rotation from when the DJ picked it up.
