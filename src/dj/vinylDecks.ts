@@ -12,6 +12,8 @@ type StagedRecord = {
   coverUrl: string | null;
   texture: HTMLCanvasElement | null;
   loading: boolean;
+  /** Predicted next song; its deck assignment remains unconsumed. */
+  preRoll?: boolean;
 };
 
 const makeCanvas = (): HTMLCanvasElement => {
@@ -70,6 +72,27 @@ export class VinylDeckStage {
   }
 
   /**
+   * Prepare the expected next song without changing the actual playback or
+   * consuming DeckAssignment. The current record stays in place until the
+   * early A41 cinematic starts, and the predicted side remains stable.
+   */
+  prepareUpcoming(playback: NormalizedTrack): void {
+    if (!playback.trackId || !playback.albumArtUrl) return;
+    const key = `${playback.source}:${playback.trackId}`;
+    const side = this.assignments.peekNextSide();
+    if ((this.deckKeys[side] === key && this.coverUrls[side] === playback.albumArtUrl) ||
+        (this.stagedRecord?.preRoll && this.stagedRecord.trackKey === key &&
+          this.stagedRecord.coverUrl === playback.albumArtUrl)) return;
+    const staged: StagedRecord = {
+      side, trackKey: key, coverUrl: playback.albumArtUrl,
+      texture: null, loading: true, preRoll: true,
+    };
+    this.stagedRecord = staged;
+    this.loadStagedCover(staged, playback.albumArtUrl);
+    this.syncCinematicDeckVisibility();
+  }
+
+  /**
    * Preload the next album without touching the outgoing record. Once A41
    * begins, hide only the destination deck's vinyl (not the static table),
    * then restore it with the new artwork AFTER the final placement pose.
@@ -80,21 +103,35 @@ export class VinylDeckStage {
     this.activeTrackKey = playback.trackId ? `${playback.source}:${playback.trackId}` : null;
     const change = this.assignments.accept(playback);
     if (change) {
-      // A fast skip may interrupt a previous change; stale image promises are
-      // ignored through StagedRecord identity checks.
+      const preloaded = this.stagedRecord?.trackKey === change.trackKey &&
+        this.stagedRecord.coverUrl === change.coverUrl ? this.stagedRecord : null;
+      // A skip can invalidate predicted queue art. Never place that artwork
+      // on the new track's platter unless its identity really matches.
       this.stagedRecord = null;
       if (cinematicPhase !== "none") {
-        const staged: StagedRecord = {
-          side: change.side,
-          trackKey: change.trackKey,
-          coverUrl: change.coverUrl,
-          texture: null,
-          loading: Boolean(change.coverUrl),
-        };
+        const staged: StagedRecord = preloaded
+          ? { ...preloaded, side: change.side, preRoll: false }
+          : {
+              side: change.side,
+              trackKey: change.trackKey,
+              coverUrl: change.coverUrl,
+              texture: null,
+              loading: Boolean(change.coverUrl),
+            };
         this.stagedRecord = staged;
-        if (change.coverUrl) this.loadStagedCover(staged, change.coverUrl);
+        if (staged.coverUrl && !staged.texture && !staged.loading) {
+          staged.loading = true;
+          this.loadStagedCover(staged, staged.coverUrl);
+        } else if (staged.coverUrl && !preloaded) {
+          this.loadStagedCover(staged, staged.coverUrl);
+        }
+      } else if (this.deckKeys[change.side] === change.trackKey &&
+                 this.coverUrls[change.side] === change.coverUrl &&
+                 this.textures[change.side]) {
+        // Pre-roll placement already finished before the actual track began.
+        // Keep its texture and angle; don't briefly replace it with a black disc.
       } else {
-        this.commitDeck(change.side, change.trackKey, change.coverUrl, null);
+        this.commitDeck(change.side, change.trackKey, change.coverUrl, preloaded?.texture ?? null);
       }
     }
 
@@ -126,8 +163,9 @@ export class VinylDeckStage {
 
   /** A phase change itself invalidates the canvas, including when paused. */
   private syncCinematicDeckVisibility(): void {
-    const stagedSide = this.stagedRecord?.trackKey === this.activeTrackKey
-      ? this.stagedRecord.side : null;
+    const stagedSide = (this.stagedRecord?.preRoll ||
+      this.stagedRecord?.trackKey === this.activeTrackKey)
+      ? this.stagedRecord?.side ?? null : null;
     // The destination remains bare after the last cinematic frame if its
     // artwork is still decoding. The stage is cleared only upon placement.
     const next = stagedSide && shouldHideCinematicPlatter(this.cinematicPhase, stagedSide, stagedSide)
@@ -156,7 +194,7 @@ export class VinylDeckStage {
 
   private tryReleaseStagedRecord(): void {
     const staged = this.stagedRecord;
-    if (!staged || staged.trackKey !== this.activeTrackKey ||
+    if (!staged || (!staged.preRoll && staged.trackKey !== this.activeTrackKey) ||
         !canPlaceIncomingVinyl(this.cinematicPhase, staged.loading)) return;
     this.stagedRecord = null;
     // Incoming vinyl begins its own rotation at placement, rather than
@@ -208,6 +246,16 @@ export class VinylDeckStage {
     if (!this.table) return;
     this.advanceRotation(now);
     ctx.drawImage(this.table, 0, 0);
+    this.paintDiscOverlays(ctx);
+  }
+
+  /** Paint only the moving discs over DJ-table artwork. The outer platter
+   * remains on the permanent bottom canvas; scratch hands render above this.
+   * This uses the SAME rotation sampled by paintBackground, never a second
+   * animation clock or a full sprite that can flash during pose switches.
+   */
+  paintDiscOverlays(ctx: CanvasRenderingContext2D): void {
+    if (!this.ready) return;
     this.paintDisc(ctx, "left");
     this.paintDisc(ctx, "right");
   }
