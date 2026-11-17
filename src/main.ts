@@ -10752,12 +10752,50 @@ function scheduleNextPoll(delayMs: number): void {
   pollTimer = window.setTimeout(() => void pollSpotifyNow(), delayMs);
 }
 
+/**
+ * At the end of a song, the current queue can identify the next record.
+ * Only pre-roll artwork for the exact next track from a queue associated
+ * with the CURRENT playback. Unknown, stale, or changed queues fall back
+ * to the normal on-track-change cinematic.
+ */
+function queuedEarlyCinematicTrack(
+  current: AppState["playback"],
+  now: number,
+): AppState["playback"] | null {
+  if (!current.isPlaying || !current.trackId || current.durationMs < 35_000 ||
+      !current.albumArtUrl || nextUpQueuePlaybackKey !== playbackAlbumTrackKey(current)) return null;
+  const remaining = current.durationMs - getEstimatedPlaybackProgress(current);
+  if (remaining <= 300 || remaining > 5_000) return null;
+  const next = nextUpQueueTracks[0];
+  if (!next?.id || !next.albumArtUrl || sameSpotifyTrack(next, current)) return null;
+  return {
+    ...current,
+    trackId: next.id,
+    title: next.name,
+    artist: next.artists,
+    album: next.album,
+    albumArtUrl: next.albumArtUrl,
+    progressMs: 0,
+    durationMs: next.durationMs || 0,
+    updatedAt: now,
+  };
+}
+
 function tick(): void {
   if (useDemo) {
     state.playback = getDemoTrack();
   }
 
-  const albumRevealReady = primeSongChangeAlbumReveal(state.playback);
+  const frameNow = Date.now();
+  const upcoming = queuedEarlyCinematicTrack(state.playback, frameNow);
+  // When a pre-roll has begun, preserve the incoming artwork even if the
+  // old song reaches its nominal end while Spotify reports its last packet.
+  const revealTarget = dj.getEarlyCinematicArtworkTrack(state.playback)
+    || upcoming || state.playback;
+  const albumRevealReady = primeSongChangeAlbumReveal(revealTarget, frameNow);
+  const upcomingArtworkDecoded = Boolean(
+    upcoming?.albumArtUrl && albumRevealLoadedUrl === upcoming.albumArtUrl
+  );
 
   // Update tempo before sampling the beat clock so both DJ and speaker
   // drivers use one coherent timing snapshot within this animation frame.
@@ -10783,7 +10821,10 @@ function tick(): void {
     dj.setPose("a41.png");
     state.djMode = "playing";
   } else {
-    state.djMode = dj.update(state.playback, Date.now(), albumRevealReady);
+    state.djMode = dj.update(
+      state.playback, frameNow, albumRevealReady,
+      upcoming, upcomingArtworkDecoded,
+    );
   }
   // The DJ has now evaluated whether the album-change cinematic is queued,
   // playing or complete. Gate vinyl placement on that actual animation state.
@@ -10791,7 +10832,9 @@ function tick(): void {
   // record and while the A11/A12 placing frames are still being performed.
   dj.setVinylPlayback(state.playback);
 
-  updateSongChangeAlbumOverlay(state.playback);
+  updateSongChangeAlbumOverlay(
+    dj.getEarlyCinematicArtworkTrack(state.playback) || state.playback
+  );
   updateNextUpAlbumVisual();
   updateNextUpQueueForPlaybackChange(state.playback);
   void refreshNextUpQueue(false);
