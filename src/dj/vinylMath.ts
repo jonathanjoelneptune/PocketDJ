@@ -30,6 +30,9 @@ export class DeckAssignment {
     return { side, trackKey: key, coverUrl: track.albumArtUrl };
   }
 
+  /** Destination side for the next genuine track; does not advance the deck. */
+  peekNextSide(): DeckSide { return this.next; }
+
   current(side: DeckSide): string | null {
     return this.lastByDeck[side];
   }
