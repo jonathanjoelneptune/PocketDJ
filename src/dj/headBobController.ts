@@ -96,6 +96,11 @@ export class HeadBobController {
   private readonly vinyl = new VinylDeckStage();
   private readonly vinylCanvas: HTMLCanvasElement;
   private readonly vinylCtx: CanvasRenderingContext2D;
+  // Continuous record-art plane above sprite/table pixels, below moving hands.
+  private readonly discCanvas: HTMLCanvasElement;
+  private readonly discCtx: CanvasRenderingContext2D;
+  private readonly armCanvas: HTMLCanvasElement;
+  private readonly armCtx: CanvasRenderingContext2D;
   private vinylLastRevision = -1;
   private readonly scratchRigs = new ScratchRigLibrary();
   private readonly scratchGroove = new ScratchGrooveController();
@@ -177,6 +182,24 @@ export class HeadBobController {
     this.vinylCtx.imageSmoothingEnabled = false;
     originalSprite.insertAdjacentElement('afterend', this.vinylCanvas);
     this.vinylCanvas.insertAdjacentElement('afterend', this.canvas);
+    this.discCanvas = document.createElement('canvas');
+    this.discCanvas.id = 'djVinylDiscCanvas';
+    this.discCanvas.className = 'dj-frame-img dj-nes-frame-img dj-vinyl-disc-canvas';
+    this.discCanvas.width = 582;
+    this.discCanvas.height = 652;
+    this.discCanvas.setAttribute('aria-hidden', 'true');
+    this.discCtx = this.discCanvas.getContext('2d', { alpha: true })!;
+    this.discCtx.imageSmoothingEnabled = false;
+    this.canvas.insertAdjacentElement('afterend', this.discCanvas);
+    this.armCanvas = document.createElement('canvas');
+    this.armCanvas.id = 'djScratchArmCanvas';
+    this.armCanvas.className = 'dj-frame-img dj-nes-frame-img dj-scratch-arm-canvas';
+    this.armCanvas.width = 582;
+    this.armCanvas.height = 652;
+    this.armCanvas.setAttribute('aria-hidden', 'true');
+    this.armCtx = this.armCanvas.getContext('2d', { alpha: true })!;
+    this.armCtx.imageSmoothingEnabled = false;
+    this.discCanvas.insertAdjacentElement('afterend', this.armCanvas);
     this.resetGroove();
   }
 
@@ -198,6 +221,12 @@ export class HeadBobController {
     if (this.vinyl.moving || this.vinyl.revision !== this.vinylLastRevision) {
       this.vinylCtx.clearRect(0, 0, 582, 652);
       this.vinyl.paintBackground(this.vinylCtx, now);
+      // The old sprite contains bits of static record/table pixels that don't
+      // exactly match a8 and survive foreground extraction. Overlay the real
+      // records above those pixels, then put scratch arms ABOVE the records.
+      // Both canvases share a single VinylDeckStage rotation sample.
+      this.discCtx.clearRect(0, 0, 582, 652);
+      this.vinyl.paintDiscOverlays(this.discCtx);
       this.vinylLastRevision = this.vinyl.revision;
     }
     this.host.classList.add('dj-vinyl-active');
@@ -446,23 +475,25 @@ export class HeadBobController {
   ): void {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.armCtx.clearRect(0, 0, 582, 652);
     ctx.imageSmoothingEnabled = false;
-    // The vinylCanvas persists below this transparent foreground.
+    // Persistent vinyl is BELOW body; the foreground record plane is ABOVE
+    // body but BELOW the independently animated scratching arms.
     if (independentArms) {
-      // Fixed torso → movable arms → existing independent nodding head.
-      // The vinyl layer below is always the canonical a8 static table with
-      // spinning album-art textures, never the i10 calibration table.
+      // Fixed torso and nodding head on the body canvas. The records are
+      // painted by discCanvas above it; independent hands sit on armCanvas
+      // above the discs. They can scratch without hiding the album texture.
       const { rig: armRig, motion } = independentArms;
       ctx.drawImage(this.vinyl.foreground(armRig.body), 0, 0);
       for (const side of ["left", "right"] as const) {
         const pivot = armRig.rig.pivots[side];
         const arm = motion[side];
-        ctx.save();
-        ctx.translate(pivot.x + arm.x, pivot.y + arm.y);
-        ctx.rotate(arm.tilt * Math.PI / 180);
-        ctx.translate(-pivot.x, -pivot.y);
-        ctx.drawImage(this.vinyl.foreground(armRig[side]), 0, 0);
-        ctx.restore();
+        this.armCtx.save();
+        this.armCtx.translate(pivot.x + arm.x, pivot.y + arm.y);
+        this.armCtx.rotate(arm.tilt * Math.PI / 180);
+        this.armCtx.translate(-pivot.x, -pivot.y);
+        this.armCtx.drawImage(this.vinyl.foreground(armRig[side]), 0, 0);
+        this.armCtx.restore();
       }
       // With nodding disabled, the same approved head remains on the body,
       // but stays in its original resting position.
@@ -509,6 +540,7 @@ export class HeadBobController {
     if (frame === this.lastDrawn && this.visible &&
         !this.vinyl.moving && this.vinyl.revision === this.lastVinylRevision) return;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.armCtx.clearRect(0, 0, 582, 652);
     this.ctx.imageSmoothingEnabled = false;
     this.ctx.drawImage(this.vinyl.foreground(image), 0, 0);
     this.lastDrawn = frame;
