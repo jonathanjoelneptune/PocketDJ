@@ -195,3 +195,22 @@ Proposed production timing: **roughly 280–620 ms for a hand-authored cross-fam
 - Save per-edge disposition, method and notes; export an individual ZIP with PNGs and a metadata JSON, plus a machine-readable full graph / CSV and audit JSON.
 
 **What it cannot claim:** The utility does not automatically produce anatomically correct intermediate animation. Existing poses in the waypoint preview are references only. Human-authored or properly isolated/rigged motion is required before any transition is approved for live playback.
+
+## Rule-based intermediate generation (v2 prototype)
+
+The Pixel bridge editor now offers **Generate 25% · 50% · 75%** for a selected directed pair.
+The generator estimates head, shoulder, torso, left-hand and right-hand centroids
+from both original sprites. Each intermediary samples one intact endpoint PNG
+using nearest-neighbor pixel sampling and a region-constrained displacement
+field; the static table and legs remain fixed, so it cannot introduce a second
+transparent face or an animated tabletop. Its appearance-switch control selects
+when source art changes to destination art, and a motion slider scales the
+inferred displacement.
+
+The result is an **editable prototype, not finished animation**. Human review
+is required for the face, hands, sleeve gaps, and hood seams. Large silhouette
+or leg changes, crossed arms, and cinematic vinyl movements are flagged high
+risk and blocked by default. An explicit preview-only override is available.
+The export manifest records frame percentages, anchor displacement, method and
+review status. For the initial A44 → A47 pilot, use 25/50/75 keyframes and compare
+at quarter speed, then paint any missing in-between anatomy before approval.
