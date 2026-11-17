@@ -6,7 +6,7 @@
 import { createBeatEvents, nextBeatEvent, type BeatTiming } from "./beatClock";
 import { blendSpritePixels, changedPixelBounds, scratchEase, scratchTransitionDuration, type PixelBounds } from "./scratchBlend";
 import { VinylDeckStage } from "./vinylDecks";
-import { ScratchRigLibrary, SCRATCH_FAMILIES, scratchMotionForPlayback, type DecodedScratchRig, type ScratchRigMotion } from "./scratchRig";
+import { ScratchGrooveController, ScratchRigLibrary, SCRATCH_FAMILIES, type DecodedScratchRig, type ScratchRigMotion } from "./scratchRig";
 import type { VinylCinematicPhase } from "./vinylMath";
 import type { NormalizedTrack } from "../state/types";
 type BobFrame = { enabled: boolean; x: number; y: number; tilt: number };
@@ -95,6 +95,7 @@ export class HeadBobController {
   private readonly staticFailed = new Set<string>();
   private readonly vinyl = new VinylDeckStage();
   private readonly scratchRigs = new ScratchRigLibrary();
+  private readonly scratchGroove = new ScratchGrooveController();
   private lastVinylRevision = -1;
   private readonly readCanvas: HTMLCanvasElement;
   private readonly readCtx: CanvasRenderingContext2D;
@@ -188,6 +189,7 @@ export class HeadBobController {
   ): void {
     const family = FAMILY_BY_FRAME[frame];
     if (!performanceEligible || !family) {
+      this.scratchGroove.reset();
       this.resetHeadEligibility();
       this.resetScratchTransition();
       if (this.vinyl.ready) this.paintStaticPose(frame, now);
@@ -195,6 +197,7 @@ export class HeadBobController {
       return;
     }
 
+    if (!SCRATCH_FAMILIES[family]) this.scratchGroove.reset();
     const useHead = headEnabled && timing !== null;
     const rig = this.ready.get(family) ?? null;
     // Scratch rigs and nod rigs share one 582x652 compositing surface.
@@ -264,7 +267,7 @@ export class HeadBobController {
       now < this.scratchStartedAt + this.scratchDurationMs;
     const independentArms = scratchRig && rig ? {
       rig: scratchRig,
-      motion: scratchMotionForPlayback(scratchRig.rig, timing, now),
+      motion: this.scratchGroove.update(scratchRig.rig, frame, now, nextScratchFrameHoldMs),
       head: rig.head,
     } : null;
 
