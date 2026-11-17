@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { shouldBeginEarlyCinematic, EARLY_CINEMATIC_LEAD_MS } from '../src/dj/earlyCinematicPolicy.ts';
-import { DeckAssignment } from '../src/dj/vinylMath.ts';
+import { DeckAssignment, canReleaseStagedVinyl } from '../src/dj/vinylMath.ts';
 
 const current = { trackId: 'old-song', progressMs: 175_000, durationMs: 180_000, isPlaying: true };
 const upcoming = { trackId: 'next-song', albumArtUrl: 'https://example.com/album.jpg' };
@@ -27,4 +27,15 @@ test('early pre-roll never consumes the next record deck assignment', () => {
   assert.equal(decks.accept({source:'spotify',trackId:'old-song',albumArtUrl:'old'}), null);
   assert.equal(decks.accept({source:'spotify',trackId:'next-song',albumArtUrl:'next'}).side, 'left');
   assert.equal(decks.peekNextSide(), 'right');
+});
+
+test('predicted next album commits after cinematic but before track ID changes', () => {
+  const outgoing = 'spotify:outgoing';
+  const incoming = 'spotify:incoming';
+  assert.equal(canReleaseStagedVinyl('active', false, incoming, outgoing, true), false);
+  assert.equal(canReleaseStagedVinyl('none', true, incoming, outgoing, true), false);
+  assert.equal(canReleaseStagedVinyl('none', false, incoming, outgoing, true), true);
+  assert.equal(canReleaseStagedVinyl('none', false, incoming, outgoing, false), false);
+  assert.equal(canReleaseStagedVinyl('none', false, incoming, incoming, false), true);
+  assert.equal(canReleaseStagedVinyl('pending', false, incoming, incoming, false), false);
 });
