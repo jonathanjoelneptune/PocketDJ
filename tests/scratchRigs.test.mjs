@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { scratchMotionAt, SCRATCH_FAMILIES, validateScratchRig } from '../src/dj/scratchRig.ts';
+import {
+  ScratchGrooveController, scratchPositionForFrame,
+  SCRATCH_FAMILIES, validateScratchRig,
+} from '../src/dj/scratchRig.ts';
 
 const states = [
   { x: 0, y: 0, tilt: 0 },
@@ -8,44 +11,76 @@ const states = [
   { x: -8, y: 8, tilt: -4 },
   { x: 4, y: -3, tilt: 2 },
 ];
-const rig = { schema: 'pocketdj-scratch-rig.v1', family: 'a44',
+const rig = {
+  schema: 'pocketdj-scratch-rig.v1', family: 'a44',
   sourceCanvas: { width: 582, height: 652 },
   pivots: { left: { x: 220, y: 200 }, right: { x: 380, y: 200 } },
   scratchFrames: { left: states, right: states },
 };
+const rng = () => 0.5;
 
-test('all six scratching families have expected legacy variants', () => {
+test('all six scratching families retain their legacy frame scheduler', () => {
   assert.equal(Object.keys(SCRATCH_FAMILIES).length, 6);
   assert.equal(SCRATCH_FAMILIES.a10.length, 2);
   assert.equal(SCRATCH_FAMILIES.a44.length, 3);
 });
 
-test('rig validation rejects malformed and missing arm states', () => {
+test('rig validation rejects malformed or missing arm states', () => {
   assert.ok(validateScratchRig(rig, 'a44'));
   assert.ok(!validateScratchRig(rig, 'a10'));
   assert.ok(!validateScratchRig({ ...rig, scratchFrames: { ...rig.scratchFrames, right: [] } }, 'a44'));
 });
 
-test('scratch poses arrive on beats, transition without dissolves', () => {
-  const at = t => scratchMotionAt(rig, t, 120);
-  assert.equal(at(0).left.x, 0);
-  assert.equal(at(200).left.x, 0);
-  assert.ok(at(400).left.x > 0 && at(400).left.x < 10);
-  assert.equal(at(500).left.x, 10);
-  assert.equal(at(1000).left.x, 0);
-  assert.equal(at(1500).left.x, -8);
-  assert.equal(at(2500).left.x, 4);
-  assert.equal(at(3000).left.x, 0);
+test('arms remain at rest across beats until the organic scheduler changes frames', () => {
+  const groove = new ScratchGrooveController(rng);
+  assert.equal(groove.update(rig, 'a44.png', 100, 350).left.x, 0);
+  assert.equal(groove.update(rig, 'a44.png', 600, 350).left.x, 0);
+  assert.equal(groove.update(rig, 'a44.png', 1200, 350).left.x, 0);
+  assert.equal(groove.update(rig, 'a44.png', 1700, 350).moving, false);
 });
 
-test('repeated samples and seeking remain deterministic', () => {
-  assert.deepEqual(scratchMotionAt(rig, 789, 110), scratchMotionAt(rig, 789, 110));
-  const withOffset = scratchMotionAt(rig, 600, 120, 100);
-  assert.equal(withOffset.left.x, 10);
+test('frame changes produce smooth gestures at arbitrary offbeat times', () => {
+  const groove = new ScratchGrooveController(rng);
+  groove.update(rig, 'a44.png', 0, 350);
+  assert.equal(groove.update(rig, 'a44-2.png', 873, 360).left.x, 0);
+  const mid = groove.update(rig, 'a44-2.png', 973, 260);
+  assert.ok(mid.left.x > 0 && mid.left.x < 10);
+  assert.ok(mid.moving);
+  const settled = groove.update(rig, 'a44-2.png', 1100, 0);
+  assert.equal(settled.left.x, 10);
+  assert.equal(settled.moving, false);
+  assert.equal(groove.update(rig, 'a44-2.png', 1550, 0).left.x, 10);
 });
 
-test('real beat-map phase tracks measured beats', () => {
-  const beats = [100, 600, 1100, 1600, 2100, 2600, 3100];
-  assert.equal(scratchMotionAt(rig, 600, 120, 0, beats).left.x, 10);
-  assert.ok(scratchMotionAt(rig, 550, 120, 0, beats).left.x > 0);
+test('organic two- and three-frame patterns select calibrated poses with occasional accents', () => {
+  assert.equal(scratchPositionForFrame('a44', 'a44.png', rng), 0);
+  assert.equal(scratchPositionForFrame('a44', 'a44-2.png', rng), 1);
+  assert.equal(scratchPositionForFrame('a44', 'a44-3.png', rng), 2);
+  assert.equal(scratchPositionForFrame('a44', 'a44-2.png', () => 0.01), 3);
+  assert.equal(scratchPositionForFrame('a10', 'a10-2.png', () => 0.5), 1);
+  assert.equal(scratchPositionForFrame('a10', 'a10-2.png', () => 0.85), 2);
+  assert.equal(scratchPositionForFrame('a10', 'a10-2.png', () => 0.98), 3);
+});
+
+test('interrupting a scratch starts the next glide from the current arm position', () => {
+  const groove = new ScratchGrooveController(rng);
+  groove.update(rig, 'a44.png', 0, 350);
+  groove.update(rig, 'a44-2.png', 1000, 400);
+  const interrupted = groove.update(rig, 'a44-2.png', 1100, 300);
+  assert.ok(interrupted.left.x > 0 && interrupted.left.x < 10);
+  const startReturn = groove.update(rig, 'a44.png', 1100, 400);
+  assert.ok(Math.abs(startReturn.left.x - interrupted.left.x) < 1e-8);
+  const returnMotion = groove.update(rig, 'a44.png', 1200, 300);
+  assert.ok(returnMotion.left.x > 0 && returnMotion.left.x < interrupted.left.x);
+  assert.equal(groove.update(rig, 'a44.png', 1400, 100).left.x, 0);
+});
+
+test('controller reset returns to rest and holds without generating beat-driven motion', () => {
+  const groove = new ScratchGrooveController(rng);
+  groove.update(rig, 'a44.png', 0, 300);
+  groove.update(rig, 'a44-3.png', 400, 300);
+  assert.equal(groove.update(rig, 'a44-3.png', 900, 0).left.x, -8);
+  groove.reset();
+  assert.equal(groove.update(rig, 'a44.png', 1000, 400).left.x, 0);
+  assert.equal(groove.update(rig, 'a44.png', 1400, 400).left.x, 0);
 });
