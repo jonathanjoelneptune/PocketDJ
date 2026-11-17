@@ -45,7 +45,7 @@ label{display:block;margin-bottom:4px;color:var(--muted);font-size:12px}input,se
 <div class="row" style="margin-top:9px"><button id="reload" class="primary">Reload originals</button><button id="uploadBtn">Upload PNGs</button></div>
 <input id="upload" type="file" accept=".png,image/png" multiple hidden>
 <div id="status" class="status">Loading configurations…</div>
-<div class="help">Reference sprites are only calibration guides. The exported rig uses the original base sprite plus independently animated arm layers.</div>
+<div class="help">Reference sprites are only calibration guides. The exported rig keeps the approved head-bob cut, a stable torso, and independently animated arm layers.</div>
 </section>
 <section class="card">
 <h2>2 · Isolate and repair</h2>
@@ -94,7 +94,7 @@ label{display:block;margin-bottom:4px;color:var(--muted);font-size:12px}input,se
 <div class="row"><button id="downloadZip" class="primary">Export rig ZIP</button><button id="downloadJson">Export JSON</button></div>
 <div class="row" style="margin-top:8px"><button id="saveProject">Save calibration locally</button><button id="importBtn">Import calibration</button></div>
 <input id="importFile" type="file" accept=".json,application/json" hidden>
-<div class="help" style="margin-top:8px">ZIP contains family-specific <code>body.png</code>, <code>arm_left.png</code>, <code>arm_right.png</code>, <code>scratch_rig.json</code> and <code>README.txt</code>. Same source coordinate system as the existing head rig (582×652).</div>
+<div class="help" style="margin-top:8px">ZIP contains family-specific headless <code>body.png</code>, <code>arm_left.png</code>, <code>arm_right.png</code>, <code>scratch_rig.json</code> and <code>README.txt</code>. Same source coordinate system as the existing head rig (582×652).</div>
 </section>
 </aside>
 <main style="min-width:0">
@@ -127,11 +127,12 @@ label{display:block;margin-bottom:4px;color:var(--muted);font-size:12px}input,se
 'use strict';
 const W=582,H=652,N=W*H,ROOT='https://raw.githubusercontent.com/jonathanjoelneptune/PocketDJ/main/Final%20DJ%20Poses/';
 const CONFIG='./assets/DJ%20NES%20Pose%20Library/Scratch%20Rig%20lab/starter_rigs.json';
+const HEAD_ROOT='./assets/DJ%20NES%20Pose%20Library/Head%20Bob%20lab/';
 const PINK='#ff2fb1',CROP={x:85,y:160,w:430,h:325};
 const $=id=>document.getElementById(id);
 const canvas=(w=W,h=H)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),smooth=t=>.5-.5*Math.cos(Math.PI*clamp(t,0,1));
-let presets=null,project=null,images={},refData={},layers=null,undo=[],busy=false;
+let presets=null,project=null,images={},refData={},layers=null,undo=[],busy=false,headlessBody=null,sharedHead=null;
 let selectedSide='left',tool='maskAdd',playing=true,started=performance.now(),posePhase=0;
 const storagePrefix='pocketdj.scratchstudio.v1.';
 function note(txt,bad=false){$('status').textContent=txt;$('status').className='status'+(bad?' bad':'')}
@@ -211,6 +212,12 @@ async function load(){
  const f=$('family').value,config=presets.families[f];busy=true;note('Loading '+f.toUpperCase()+' source and old scratch references…');
  try{
   const pairs=await Promise.all(config.references.map(async name=>[name,await getImage(ROOT+encodeURIComponent(name))]));
+  const [headlessSource,headSource]=await Promise.all([
+   getImage(HEAD_ROOT+f+'/'+f+'_body.png'),
+   getImage(HEAD_ROOT+f+'/'+f+'_head_shared.png')
+  ]);
+  headlessBody=imgData(headlessSource).pixels;
+  sharedHead=imgData(headSource).c;
   images={};refData={};
   for(const [name,img] of pairs){const entry=imgData(img);images[name]=entry.c;refData[name]=entry.pixels}
   project=newProject(f);
@@ -221,14 +228,22 @@ async function load(){
   }
   updatePoseControls();regenerate();
   note('Loaded '+f.toUpperCase()+': isolated both arms and aligned '+(config.references.length-1)+' old scratch reference pose(s). Review seams and hand alignment.');
- }catch(e){note('Source load failed: '+e.message+'. Upload the original family PNG files instead.',true);
-   images={};refData={};project=newProject(f);
+ }catch(e){note('Source or approved head-rig assets unavailable: '+e.message+'. Upload original family PNGs to inspect; production export needs the approved head assets.',true);
+   images={};refData={};project=newProject(f);headlessBody=null;sharedHead=null;
    updatePoseControls();
  }finally{busy=false}
 }
 async function upload(files){
  const config=presets.families[$('family').value],allowed=new Set(config.references);
  images={};refData={};
+ // Retain the approved independent head layers when users load local source sprites.
+ try {
+  const f=project?.family||$('family').value;
+  const [body,head]=await Promise.all([
+   getImage(HEAD_ROOT+f+'/'+f+'_body.png'),getImage(HEAD_ROOT+f+'/'+f+'_head_shared.png')
+  ]);
+  headlessBody=imgData(body).pixels;sharedHead=imgData(head).c;
+ }catch(e){headlessBody=null;sharedHead=null;console.warn('Approved head assets missing',e)}
  for(const file of files){if(!allowed.has(file.name))continue;const url=URL.createObjectURL(file);try{const img=await getImage(url);const entry=imgData(img);images[file.name]=entry.c;refData[file.name]=entry.pixels;}finally{URL.revokeObjectURL(url)}}
  if(!images[config.base]){note('Select the original base PNG and matching -2/-3 reference PNGs.',true);return}
  project=newProject($('family').value);autoMasks();autoUnderpaint();autoFitAll();updatePoseControls();regenerate();
@@ -262,7 +277,7 @@ function buildArm(side){
  ctx.putImageData(id,0,0);return c;
 }
 function buildBody(){
- const src=refData[project.basePose];if(!src)return canvas();
+ const src=headlessBody||refData[project.basePose];if(!src)return canvas();
  const maskL=maskArray('left'),maskR=maskArray('right');
  const c=canvas(),ctx=c.getContext('2d'),id=ctx.createImageData(W,H),out=id.data;
  out.set(src);
@@ -304,7 +319,7 @@ function autoUnderpaint(){
  project.bodyRepairPixels=repair;
 }
 function getLayers(){
- return {body:buildBody(),left:buildArm('left'),right:buildArm('right')};
+ return {body:buildBody(),left:buildArm('left'),right:buildArm('right'),head:sharedHead};
 }
 function transformArm(ctx,side,state,asset){
  const a=project.arms[side],p=a.pivot;
@@ -317,6 +332,8 @@ function composite(ctx,stL,stR,assets=layers){
  ctx.drawImage(assets.body,0,0);
  transformArm(ctx,'left',stL,assets.left);
  transformArm(ctx,'right',stR,assets.right);
+ // Production composites the approved head with its existing nod controller.
+ if(assets.head)ctx.drawImage(assets.head,0,0);
 }
 function assessFit(side,refName,angle,dx,dy){
  // Skin-only alignment error. No body changes or whole-sprite crossfade.
@@ -544,13 +561,14 @@ function zipFile(entries){
 }
 async function exportZip(){
  if(!project||!layers){note('Load source sprites before exporting.',true);return}
+ if(!headlessBody||!sharedHead){note('Approved headless body/head assets are required for runtime export. Reload the family from PocketDJ GitHub Pages.',true);return}
  const folder=project.family+'_scratch_rig/',base=project.family;
  const files=[
  [folder+base+'_body.png',new Uint8Array(await(await toBlob(layers.body)).arrayBuffer())],
  [folder+base+'_arm_left.png',new Uint8Array(await(await toBlob(layers.left)).arrayBuffer())],
  [folder+base+'_arm_right.png',new Uint8Array(await(await toBlob(layers.right)).arrayBuffer())],
  [folder+'scratch_rig.json',new TextEncoder().encode(JSON.stringify(manifest(),null,2)+'\n')],
- [folder+'README.txt',new TextEncoder().encode('PocketDJ Scratch Rig v1\nGenerated from the original '+project.basePose+'.\nDraw the fixed body, then transform the left and right arm layers using their pivots and state-specific x/y/tilt.\nInterpolate transforms smoothly between states; NEVER blend two full sprite PNGs.\nScratch 1/2 match the old -2/-3 poses when their respective references exist. Synthesized states have no exact legacy reference.\nComposite this beneath the independent head-bob layer, retaining the approved head cut and body neck repair. Source PNGs are unchanged.\n')]
+ [folder+'README.txt',new TextEncoder().encode('PocketDJ Scratch Rig v1\nGenerated from the original '+project.basePose+'.\nThe fixed body in this package is HEADLESS and preserves the approved hoodie/neck repair from the PocketDJ head-bob rig. Draw that fixed body, then transform left/right arm layers using their pivots and state-specific x/y/tilt. Finally overlay the approved head-bob shared head using the existing beat-synchronized nod controller.\nInterpolate arm transforms smoothly; NEVER blend complete original scratch sprites.\nScratch 1/2 match legacy -2/-3 targets when those frames exist; missing states are synthesized and editable. Original source PNGs are unchanged.\n')]
  ];
  fileBlob('PocketDJ_'+base.toUpperCase()+'_Scratch_Rig.zip',zipFile(files));
  note('Exported '+base.toUpperCase()+' body + both arm PNG layers + editable scratch rig JSON.');
