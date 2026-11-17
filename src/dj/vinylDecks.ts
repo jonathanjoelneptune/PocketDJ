@@ -136,9 +136,13 @@ export class VinylDeckStage {
     }
 
     const staged = this.stagedRecord;
-    if (staged && staged.trackKey === this.activeTrackKey) {
-      // Album art may arrive later than track metadata in the desktop embed.
-      if (playback.albumArtUrl && staged.coverUrl !== playback.albumArtUrl) {
+    if (staged && (staged.trackKey === this.activeTrackKey || staged.preRoll)) {
+      // The pre-rolled record belongs to the known next track, not the still
+      // playing outgoing track. Release it when the EARLY cinematic finishes,
+      // even though the Spotify playback ID has not changed yet.
+      // For real current-track staging, late Spotify art can still update.
+      if (!staged.preRoll && playback.albumArtUrl &&
+          staged.coverUrl !== playback.albumArtUrl) {
         staged.coverUrl = playback.albumArtUrl;
         staged.texture = null;
         staged.loading = true;
