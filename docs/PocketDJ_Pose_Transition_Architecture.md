@@ -19,7 +19,7 @@ Do **not** deploy generic mesh warps of the DJ, free-form body stretching, alpha
 
 ## 2 · What PocketDJ can actually transition between
 
-The [machine-readable directed graph](./pose-transition-graph.v1.json) is a snapshot of the live animation scheduler. The interactive Pose Transition Studio visualizes it as a source/destination matrix.
+The [machine-readable directed graph](./pose-transition-graph.v1.json) is a snapshot of the live animation scheduler. **Every directed edge also includes a specific art-work checklist, an estimated number of intermediate frames, a relative effort label, and a suggested reusable hub** based on the actual source/target morphology. The interactive Pose Transition Studio visualizes it as a source/destination matrix.
 
 There are **23 distinct curated base image nodes** and **440 directed, state-specific transition cases** representing **279 distinct ordered source/destination image pairs**. The 440 figure includes multiple distinct state changes that happen to have identical source/destination images. Same-image transitions are not counted because there is no visual jump. It excludes **I6** (explicitly requested) and **A36** (reference-only). It also excludes keyboard audition/manual debug jumps, which are not automatic playback edges.
 
