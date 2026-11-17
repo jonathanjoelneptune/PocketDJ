@@ -144,6 +144,10 @@ export class HeadBobController {
   private beatSteps = 0;
   private readonly maxCachedFamilies = 2;
   private visible = false;
+  private nodWasAllowed = false;
+  private nodReleaseFrom: HeadMotion = { ...REST_POSE };
+  private nodReleaseStartedAt = 0;
+  private readonly nodReleaseDurationMs = 260;
 
   constructor(originalSprite: HTMLImageElement) {
     this.host = originalSprite.parentElement as HTMLElement;
@@ -244,6 +248,7 @@ export class HeadBobController {
     timing: BeatTiming | null,
     now: number,
     nextScratchFrameHoldMs: number,
+    nodAllowed = true,
   ): void {
     // Vinyl continues independently while the next pose decodes.
     this.paintVinyl(now);
@@ -363,6 +368,44 @@ export class HeadBobController {
     this.timingDiscontinuity = timing.discontinuity;
     this.lastProgress = progress;
 
+    // Music intros/outros and 35% of mid-song phrases keep the nodding head
+    // resting naturally. Ease the current motion back to neutral rather than
+    // snapping the face while scratching arms keep moving independently.
+    if (!nodAllowed) {
+      if (this.nodWasAllowed) {
+        this.nodReleaseFrom = this.motionAt(progress);
+        this.nodReleaseStartedAt = now;
+      }
+      this.nodWasAllowed = false;
+      const fraction = this.nodReleaseStartedAt
+        ? clamp01((now - this.nodReleaseStartedAt) / this.nodReleaseDurationMs)
+        : 1;
+      const t = easeInOutSine(fraction);
+      const relaxing = t < 1;
+      const restMotion: HeadMotion = {
+        x: mix(this.nodReleaseFrom.x, 0, t),
+        y: mix(this.nodReleaseFrom.y, 0, t),
+        tilt: mix(this.nodReleaseFrom.tilt, 0, t),
+      };
+      if (frame !== this.lastDrawn || relaxing || scratchMoving ||
+          independentArms?.motion.moving || this.lastRenderWasMoving ||
+          !this.visible || this.vinyl.moving ||
+          this.lastVinylRevision !== this.vinyl.revision) {
+        this.paintComposed(spriteFrames, frame, scratchMoving,
+          { rig, motion: restMotion }, now, independentArms);
+      }
+      this.lastRenderWasMoving = relaxing || scratchMoving ||
+        !!independentArms?.motion.moving;
+      if (!this.visible) this.show();
+      return;
+    }
+    if (!this.nodWasAllowed) {
+      // Restart phrases from the neutral position. Preserve the head rig
+      // and underlying decks; only the head motion scheduler restarts.
+      this.resetGroove();
+      this.nodWasAllowed = true;
+    }
+
     // The destination head pose lands ON the beat. Starting the glide before
     // each beat, instead of on it, produces a more natural musical accent.
     const subdivisionMs = 60_000 / (timing.bpm * this.rate);
@@ -415,6 +458,9 @@ export class HeadBobController {
     this.motionTo = { ...REST_POSE };
     this.motionStartedProgress = Number.NEGATIVE_INFINITY;
     this.motionDurationMs = 1;
+    this.nodWasAllowed = false;
+    this.nodReleaseFrom = { ...REST_POSE };
+    this.nodReleaseStartedAt = 0;
     this.lastRenderWasMoving = false;
     this.lastDrawnPosition = -1;
     this.lastScheduledBoundary = Number.NEGATIVE_INFINITY;
@@ -603,6 +649,9 @@ export class HeadBobController {
   }
 
   private resetHeadEligibility(): void {
+    this.nodWasAllowed = false;
+    this.nodReleaseFrom = { ...REST_POSE };
+    this.nodReleaseStartedAt = 0;
     this.eligibleLastTick = false;
     this.timingTrackKey = "";
     this.lastRenderWasMoving = false;
