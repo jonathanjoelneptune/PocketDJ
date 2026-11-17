@@ -89,7 +89,10 @@ export class ScratchGrooveController {
   private to: ArmPair = restPair();
   private startedAt = 0;
   private durationMs = 0;
-  constructor(private readonly random: () => number = Math.random) {}
+  private readonly random: () => number;
+  constructor(random: () => number = Math.random) {
+    this.random = random;
+  }
 
   reset(): void {
     this.family = '';
