@@ -71,3 +71,18 @@ export function canPlaceIncomingVinyl(
 ): boolean {
   return phase === "none" && !artworkStillLoading;
 }
+
+/** A queue-predicted album can be placed while the previous song is still
+ * reported as playing. Unpredicted albums require a matching playback key.
+ * Either way, the record cannot appear while the DJ is still holding it.
+ */
+export function canReleaseStagedVinyl(
+  phase: VinylCinematicPhase,
+  artworkStillLoading: boolean,
+  stagedTrackKey: string,
+  actualTrackKey: string | null,
+  preRoll: boolean,
+): boolean {
+  return (preRoll || stagedTrackKey === actualTrackKey) &&
+    canPlaceIncomingVinyl(phase, artworkStillLoading);
+}
