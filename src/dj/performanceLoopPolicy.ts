@@ -2,7 +2,7 @@
  * Head nods remain beat-driven; full-body poses change on longer phrases.
  * The last performance type survives short record-change cinematics.
  */
-export type PerformancePose = { id: string; kind: "quick" | "vibe" };
+export type PerformancePose = { id: string; kind: string };
 export const VIBE_PROBABILITY = 0.14;
 export const VIBE_MIN_MS = 27_000;
 export const VIBE_MAX_MS = 33_000;
