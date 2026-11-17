@@ -211,6 +211,12 @@ export class HeadBobController {
     this.vinyl.setPlayback(playback, cinematicPhase);
   }
 
+  /** Preload queue artwork on the next alternating deck without changing
+   * the current Spotify track or consuming the next deck assignment. */
+  prepareUpcomingVinyl(upcoming: NormalizedTrack): void {
+    this.vinyl.prepareUpcoming(upcoming);
+  }
+
   getVinylStatus(): string {
     return this.vinyl.status;
   }
