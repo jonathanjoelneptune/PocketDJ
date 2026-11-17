@@ -60,13 +60,14 @@ label{display:block;margin-bottom:4px;color:var(--muted);font-size:12px}input,se
 <button data-tool="repairErase">Erase fill</button>
 <button data-tool="pick">Pick color</button>
 <button data-tool="pivot">Set pivot</button>
+<button data-tool="move">Drag arm</button><button id="undoBtn">Undo edit</button>
 </div>
 <div class="grid2" style="margin-top:8px">
 <div><label>Brush radius <span id="brushVal">5</span> px</label><input id="brush" type="range" min="1" max="22" value="5"></div>
 <div><label>Fill color</label><input id="color" type="color" value="#444d41"></div>
 </div>
 <div class="row" style="margin-top:8px"><button id="resetCut">Reset first-pass cut</button><button id="autoFill">Regenerate underpaint</button></div>
-<div class="help">The cut follows the shoulder/hoodie seam. Paint/erase the arm mask at pixel resolution. Fill painting adds opaque hoodie/deck pixels behind the removed arms. Pink reveals transparency.</div>
+<div class="help">The cut follows the shoulder/hoodie seam. Paint/erase the arm mask at pixel resolution. Fill painting adds opaque hoodie/deck pixels behind the removed arms. Use Drag arm to reposition the selected scratch state directly and Undo edit (or Ctrl+Z) if needed. Pink reveals transparency.</div>
 <div id="maskCount" class="mono" style="margin-top:6px"></div>
 </section>
 <section class="card">
@@ -516,11 +517,14 @@ function drawAnimated(now){
  drawPreview('moving',temp);drawPreview('rig',temp);
  $('rigName').textContent='Interpolating '+a+' → '+b;
 }
+function eventPoint(evt){
+ const rect=$('editor').getBoundingClientRect(),zoom=num('zoom'),sw=CROP.w/zoom,sh=CROP.h/zoom;
+ return {x:clamp(Math.round(CROP.x+(CROP.w-sw)/2+(evt.clientX-rect.left)/rect.width*sw),0,W-1),
+  y:clamp(Math.round(CROP.y+(CROP.h-sh)/2+(evt.clientY-rect.top)/rect.height*sh),0,H-1)};
+}
 function paintAt(evt){
  if(!project||!refData[project.basePose])return;
- const rect=$('editor').getBoundingClientRect(),zoom=num('zoom'),sw=CROP.w/zoom,sh=CROP.h/zoom;
- const x=clamp(Math.round(CROP.x+(CROP.w-sw)/2+(evt.clientX-rect.left)/rect.width*sw),0,W-1);
- const y=clamp(Math.round(CROP.y+(CROP.h-sh)/2+(evt.clientY-rect.top)/rect.height*sh),0,H-1);
+ const {x,y}=eventPoint(evt);
  if(tool==='pivot'){
   project.arms[selectedSide].pivot={x,y};regenerate();return;
  }
@@ -614,10 +618,26 @@ function initUi(){
    $('family').value=imported.family;await load();project=imported;updatePoseControls();regenerate();persist();note('Imported '+project.family.toUpperCase()+' rig for refinement.');
   }catch(err){note('Import error: '+err.message,true)}
  };
- const ed=$('editor');let down=false;
- ed.addEventListener('pointerdown',e=>{if(!project||busy||e.button!==0)return;down=true;saveUndo();ed.setPointerCapture(e.pointerId);paintAt(e);persist()});
- ed.addEventListener('pointermove',e=>{if(!down)return;paintAt(e)});
- ed.addEventListener('pointerup',()=>{down=false;persist()});ed.addEventListener('pointercancel',()=>{down=false;persist()});
+ const ed=$('editor');let down=false,drag=null;
+ ed.addEventListener('pointerdown',e=>{
+  if(!project||busy||e.button!==0)return;down=true;saveUndo();ed.setPointerCapture(e.pointerId);
+  if(tool==='move'){
+   const k=num('scratch'),point=eventPoint(e),pose=project.arms[selectedSide].states[k];
+   drag={point,x:pose.x,y:pose.y,k};
+  }else paintAt(e);
+ });
+ ed.addEventListener('pointermove',e=>{
+  if(!down)return;
+  if(tool==='move'&&drag){
+   const point=eventPoint(e),pose=project.arms[selectedSide].states[drag.k];
+   pose.x=Math.round((drag.x+point.x-drag.point.x)*10)/10;
+   pose.y=Math.round((drag.y+point.y-drag.point.y)*10)/10;
+   pose.provenance=drag.k?'manual':'source';updateMotion();drawAll();
+  }else paintAt(e);
+ });
+ ed.addEventListener('pointerup',()=>{down=false;drag=null;persist()});
+ ed.addEventListener('pointercancel',()=>{down=false;drag=null;persist()});
+ $('undoBtn').onclick=()=>{if(undo.length){project=JSON.parse(undo.pop());updatePoseControls();regenerate();persist()}};
  window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&undo.length){
   e.preventDefault();project=JSON.parse(undo.pop());updatePoseControls();regenerate();persist()
  }});
