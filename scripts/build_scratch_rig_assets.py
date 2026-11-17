@@ -108,10 +108,21 @@ def build_family(family: str, region: np.ndarray, table_refs: tuple[np.ndarray, 
     base = read_png(SRC / f"{family}.png")
     source_hash = hashlib.sha256(base.tobytes()).hexdigest()
     if source_hash != info["sourceSha256"]:
-        raise ValueError(
-            f"Original source pixels changed for {family}: {source_hash}. "
-            "Do not apply calibrated pixel patches to a mismatched sprite."
-        )
+        # The laboratory read source pixels through Canvas getImageData().
+        # Browser premultiplied-alpha round trips can change only RGB at
+        # semi-transparent antialiasing edges relative to raw PIL decoding.
+        # Demand identical alpha coverage and fully opaque pixels before
+        # applying the user's edited layer deltas to the source image.
+        alpha_hash = hashlib.sha256(base[:, :, 3].tobytes()).hexdigest()
+        opaque_hash = hashlib.sha256(base[base[:, :, 3] == 255].tobytes()).hexdigest()
+        if (alpha_hash != info.get("sourceAlphaSha256") or
+                opaque_hash != info.get("sourceOpaqueSha256")):
+            raise ValueError(
+                f"Original source pixels changed materially for {family}. "
+                f"Raw sha256={source_hash}, alpha sha256={alpha_hash}, "
+                f"opaque sha256={opaque_hash}. Cannot safely reconstruct the edited rig."
+            )
+        print(f"Scratch rig {family}: normalized Canvas alpha edge RGB differences")
 
     target = {name: apply_patch(base, info["layers"][name]) for name in LAYER_NAMES}
     # The v4 user-calibrated body still contains the original (stationary)
