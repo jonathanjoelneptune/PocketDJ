@@ -371,7 +371,13 @@ export class DjController {
         !this.cinematicOnce && !this.pendingSongChangeCinematic &&
         !this.speakingRequested && trackId &&
         this.earlyCinematicAttemptedFor !== trackId &&
-        shouldBeginEarlyCinematic(playback, upcoming, upcomingArtworkDecoded) &&
+        shouldBeginEarlyCinematic({
+          ...playback,
+          progressMs: Math.min(
+            playback.durationMs || playback.progressMs,
+            playback.progressMs + Math.max(0, now - playback.updatedAt),
+          ),
+        }, upcoming, upcomingArtworkDecoded) &&
         upcoming) {
       this.earlyCinematicSourceId = trackId;
       this.earlyCinematicTarget = upcoming;
