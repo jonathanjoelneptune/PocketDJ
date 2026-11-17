@@ -3880,6 +3880,37 @@ async function boot(): Promise<void> {
   updateDynamicCeilingReveal();
   window.addEventListener("resize", updateDynamicCeilingReveal, { passive: true });
   renderShell(state);
+  // Register the Spicetify bridge before graphics/room setup. If a later
+  // optional visual initializer throws or stalls, playback can still connect.
+  // This is intentionally Spotify metadata only, with no OAuth token exchange.
+  // Spotify Desktop supplies trusted playback metadata through Spicetify.
+  // Do not start this iframe's own OAuth, Web Playback SDK, or API poller.
+  if (isSpotifyDesktopEmbed) {
+    installSpotifyDesktopBridge((incoming) => {
+      const previous = state.playback;
+      const trackChanged = previous.trackId !== incoming.trackId ||
+        previous.title !== incoming.title || previous.artist !== incoming.artist ||
+        previous.album !== incoming.album;
+      state.playback = incoming;
+      updateSpotifyEmbedArtwork(incoming.albumArtUrl);
+      updatePlaybackUi(incoming, state.debugOpen);
+      if (trackChanged) void refreshLyricsForCurrentTrack();
+    }, (queue, colors) => {
+      // The desktop embed deliberately has no Spotify Web API token. Use the
+      // same Spotify-owned queue data as the host, without additional login.
+      const key = playbackAlbumTrackKey(state.playback);
+      if (key && (queue.length > 0 || Date.now() - desktopQueueLastPopulatedAt > 5000)) {
+        nextUpQueuePlaybackKey = key;
+        nextUpQueueTracks = filterNextUpQueue(queue, state.playback).slice(0, 4);
+        if (queue.length) desktopQueueLastPopulatedAt = Date.now();
+        nextUpQueueTracks.slice(0, 3).forEach(preloadNextUpAlbumArt);
+        updateNextUpAlbumVisual();
+      }
+      if (colors && colors.trackId === state.playback.trackId) {
+        desktopAlbumColors = colors;
+      }
+    });
+  }
   initializeSpotifyEmbed();
   initializeRoomSpotlights();
   initializeRoomParticles();
@@ -3928,33 +3959,9 @@ async function boot(): Promise<void> {
   // first swipe the renderer and sprite poses should already be running.
   requestAnimationFrame(tick);
 
-  // Spotify Desktop supplies trusted playback metadata through Spicetify.
-  // Do not start this iframe's own OAuth, Web Playback SDK, or API poller.
+  // Desktop metadata listener was installed immediately after renderShell,
+  // before heavy room initialization or asset preloads.
   if (isSpotifyDesktopEmbed) {
-    installSpotifyDesktopBridge((incoming) => {
-      const previous = state.playback;
-      const trackChanged = previous.trackId !== incoming.trackId ||
-        previous.title !== incoming.title || previous.artist !== incoming.artist ||
-        previous.album !== incoming.album;
-      state.playback = incoming;
-      updateSpotifyEmbedArtwork(incoming.albumArtUrl);
-      updatePlaybackUi(incoming, state.debugOpen);
-      if (trackChanged) void refreshLyricsForCurrentTrack();
-    }, (queue, colors) => {
-      // The desktop embed deliberately has no Spotify Web API token. Use the
-      // same Spotify-owned queue data as the host, without additional login.
-      const key = playbackAlbumTrackKey(state.playback);
-      if (key && (queue.length > 0 || Date.now() - desktopQueueLastPopulatedAt > 5000)) {
-        nextUpQueuePlaybackKey = key;
-        nextUpQueueTracks = filterNextUpQueue(queue, state.playback).slice(0, 4);
-        if (queue.length) desktopQueueLastPopulatedAt = Date.now();
-        nextUpQueueTracks.slice(0, 3).forEach(preloadNextUpAlbumArt);
-        updateNextUpAlbumVisual();
-      }
-      if (colors && colors.trackId === state.playback.trackId) {
-        desktopAlbumColors = colors;
-      }
-    });
     updatePlaybackUi(state.playback, state.debugOpen);
     return;
   }

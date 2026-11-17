@@ -1,5 +1,6 @@
 import type { DjMode, NormalizedTrack } from "../state/types";
 import { HeadBobController } from "./headBobController";
+import { choosePerformancePose, performancePoseHoldMs, type PerformancePose } from "./performanceLoopPolicy";
 import type { BeatTiming } from "./beatClock";
 import type { HeldRecordSide } from "./heldRecordCalibration";
 
@@ -91,6 +92,8 @@ export class DjController {
   private auditionIndex = 0;
   private cinematicIndex = 0;
   private normalLoopIndex = -1;
+  // Keep the previous playing performance across record-change cinematics.
+  private lastPlayingLoop: PerformancePose | null = null;
   private lastTrackId: string | null = null;
   private cinematicFiredForTrack = false;
   private cinematicForCurrentTrack = 0;
@@ -438,16 +441,15 @@ export class DjController {
     const pool = this.poolForMode(mode);
     if (!pool.length) return;
 
-    let index: number;
     if (mode === "playing" || mode === "demo") {
-      index = randomInt(0, pool.length - 1);
+      this.currentLoop = choosePerformancePose(quickLoops, vibeLoops, this.lastPlayingLoop);
+      this.lastPlayingLoop = this.currentLoop;
     } else {
-      // Idle/paused should feel like a natural jump to a calm resting pose, not a predictable sequence.
-      index = randomInt(0, pool.length - 1);
-      this.normalLoopIndex = index;
+      // Idle and paused retain their independent, calm random selection.
+      this.currentLoop = pool[randomInt(0, pool.length - 1)];
+      this.lastPlayingLoop = null;
     }
-
-    this.currentLoop = pool[index];
+    this.normalLoopIndex = pool.indexOf(this.currentLoop);
     this.frameIndex = 0;
     this.previousFrame = "";
     this.currentFrame = this.currentLoop.frames[0] || this.currentFrame;
@@ -465,9 +467,10 @@ export class DjController {
   }
 
   private loopDurationForMode(mode: DjMode): number {
-    if (mode === "playing" || mode === "demo" || mode === "burst") {
-      return randomInt(this.currentLoop.minLoopMs, this.currentLoop.maxLoopMs);
+    if (mode === "playing" || mode === "demo") {
+      return performancePoseHoldMs(this.currentLoop.kind === "vibe" ? "vibe" : "quick", this.currentLoop.maxLoopMs);
     }
+    if (mode === "burst") return randomInt(this.currentLoop.minLoopMs, this.currentLoop.maxLoopMs);
     if (mode === "paused") return randomInt(25_000, 50_000);
     return randomInt(30_000, 60_000);
   }

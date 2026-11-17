@@ -15307,6 +15307,19 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
   opacity: 0;
   pointer-events: none;
 }
+/* Albums own a persistent canvas below the pose canvas. Switching heads,
+   bodies or arms must never unmount or clear spinning records. */
+.dj-wrap .dj-vinyl-canvas {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.dj-wrap.dj-vinyl-active > .dj-vinyl-canvas {
+  opacity: 1;
+}
+.dj-wrap .dj-headbob-canvas {
+  z-index: 2;
+}
 .dj-wrap.dj-headbob-active > #djSprite {
   opacity: 0;
 }

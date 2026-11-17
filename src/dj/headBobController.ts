@@ -94,6 +94,9 @@ export class HeadBobController {
   private readonly staticPending = new Set<string>();
   private readonly staticFailed = new Set<string>();
   private readonly vinyl = new VinylDeckStage();
+  private readonly vinylCanvas: HTMLCanvasElement;
+  private readonly vinylCtx: CanvasRenderingContext2D;
+  private vinylLastRevision = -1;
   private readonly scratchRigs = new ScratchRigLibrary();
   private readonly scratchGroove = new ScratchGrooveController();
   private lastVinylRevision = -1;
@@ -162,7 +165,18 @@ export class HeadBobController {
     this.scratchCanvas.height = 652;
     this.scratchCtx = this.scratchCanvas.getContext("2d", { alpha: true })!;
     this.scratchCtx.imageSmoothingEnabled = false;
-    originalSprite.insertAdjacentElement('afterend', this.canvas);
+    // Keep the static table and spinning album art mounted independently
+    // from DJ poses. A sprite/rig swap can now never clear the deck canvas.
+    this.vinylCanvas = document.createElement('canvas');
+    this.vinylCanvas.id = 'djVinylCanvas';
+    this.vinylCanvas.className = 'dj-frame-img dj-nes-frame-img dj-vinyl-canvas';
+    this.vinylCanvas.width = 582;
+    this.vinylCanvas.height = 652;
+    this.vinylCanvas.setAttribute('aria-hidden', 'true');
+    this.vinylCtx = this.vinylCanvas.getContext('2d', { alpha: true })!;
+    this.vinylCtx.imageSmoothingEnabled = false;
+    originalSprite.insertAdjacentElement('afterend', this.vinylCanvas);
+    this.vinylCanvas.insertAdjacentElement('afterend', this.canvas);
     this.resetGroove();
   }
 
@@ -172,6 +186,21 @@ export class HeadBobController {
 
   getVinylStatus(): string {
     return this.vinyl.status;
+  }
+
+  /**
+   * Persistent table/vinyl plane. Updated before pose selection so it keeps
+   * rotating even while a new family rig or static pose is still decoding.
+   * This surface is never cleared as part of a DJ pose transition.
+   */
+  private paintVinyl(now: number): void {
+    if (!this.vinyl.ready) return;
+    if (this.vinyl.moving || this.vinyl.revision !== this.vinylLastRevision) {
+      this.vinylCtx.clearRect(0, 0, 582, 652);
+      this.vinyl.paintBackground(this.vinylCtx, now);
+      this.vinylLastRevision = this.vinyl.revision;
+    }
+    this.host.classList.add('dj-vinyl-active');
   }
 
   /**
@@ -187,6 +216,8 @@ export class HeadBobController {
     now: number,
     nextScratchFrameHoldMs: number,
   ): void {
+    // Vinyl continues independently while the next pose decodes.
+    this.paintVinyl(now);
     const family = FAMILY_BY_FRAME[frame];
     if (!performanceEligible || !family) {
       this.scratchGroove.reset();
@@ -212,11 +243,11 @@ export class HeadBobController {
       useHead ? "detached-head" : "original";
     const spriteFrames = scratchRig?.bodies ?? (useHead ? rig?.bodies : this.rawReady.get(family));
     if (!spriteFrames?.has(frame)) {
-      // Keep the original `#djSprite` visible until every needed bitmap
-      // is decoded; no partially rendered / floating-head frames.
+      // Retain the last complete DJ pose rather than switching back to the
+      // original PNG (which can cover or flash the spinning vinyl).
       this.resetHeadEligibility();
       this.resetScratchTransition();
-      this.hide();
+      if (!this.visible) this.hide();
       return;
     }
 
@@ -226,7 +257,8 @@ export class HeadBobController {
       this.lastDrawn = "";
       this.lastDrawnPosition = -1;
       this.resetScratchTransition();
-      this.hide();
+      // Keep the existing canvas visible until the next composited frame
+      // has been painted. This prevents a frame of legacy black records.
     }
 
     if (scratchRig) {
@@ -415,7 +447,7 @@ export class HeadBobController {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.imageSmoothingEnabled = false;
-    if (this.vinyl.ready) this.vinyl.paintBackground(ctx, now);
+    // The vinylCanvas persists below this transparent foreground.
     if (independentArms) {
       // Fixed torso → movable arms → existing independent nodding head.
       // The vinyl layer below is always the canonical a8 static table with
@@ -467,7 +499,9 @@ export class HeadBobController {
     const image = this.staticPoses.get(frame);
     if (!image) {
       this.ensureStaticPose(frame);
-      this.hide();
+      // Preserve the last DJ frame above the independently spinning decks
+      // until the new static/cinematic image has decoded.
+      if (!this.visible) this.hide();
       return;
     }
     // Keep the previous pose on the canvas when nothing changes; paused
@@ -476,7 +510,6 @@ export class HeadBobController {
         !this.vinyl.moving && this.vinyl.revision === this.lastVinylRevision) return;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.imageSmoothingEnabled = false;
-    this.vinyl.paintBackground(this.ctx, now);
     this.ctx.drawImage(this.vinyl.foreground(image), 0, 0);
     this.lastDrawn = frame;
     this.lastDrawnPosition = -1;

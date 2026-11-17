@@ -88,6 +88,20 @@ export function installSpotifyDesktopBridge(
 ): void {
   if (!isSpotifyDesktopEmbed) return;
   let connectedAcknowledged = false;
+  document.documentElement.dataset.pocketDjDesktopBridge = "waiting";
+  // Spicetify may attach the host listener after the iframe has initialized.
+  // Retry only the readiness handshake; never repeat playback commands.
+  let readyAttempts = 0;
+  let readyTimer = 0;
+  const sendReady = (): void => {
+    if (connectedAcknowledged || readyAttempts >= 12) return;
+    readyAttempts++;
+    window.parent.postMessage({type: "pocketdj:desktop-ready"}, "*");
+    if (readyAttempts === 12) {
+      document.documentElement.dataset.pocketDjDesktopBridge = "no-playback-packet";
+      console.warn("[PocketDJ] Spicetify host has not supplied playback after readiness retries");
+    }
+  };
   const onMessage = (event: MessageEvent): void => {
     // This accepts playback metadata only from the immediate Spotify parent,
     // never messages from other frames or arbitrary browser origins.
@@ -133,8 +147,10 @@ export function installSpotifyDesktopBridge(
       onRoomMedia(desktopQueue(packet.queue), desktopColors(packet.albumColors, id));
     }
     document.documentElement.dataset.pocketDjDesktopConnected = "1";
+    document.documentElement.dataset.pocketDjDesktopBridge = "connected";
     if (!connectedAcknowledged) {
       connectedAcknowledged = true;
+      window.clearInterval(readyTimer);
       window.parent.postMessage({type: "pocketdj:desktop-connected"}, "*");
     }
   };
@@ -151,6 +167,17 @@ export function installSpotifyDesktopBridge(
   }
 
   window.addEventListener("message", onMessage);
-  window.parent.postMessage({type: "pocketdj:desktop-ready"}, "*");
+  window.addEventListener("pageshow", sendReady);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) sendReady();
+  });
+  sendReady();
+  readyTimer = window.setInterval(() => {
+    if (connectedAcknowledged || readyAttempts >= 12) {
+      window.clearInterval(readyTimer);
+      return;
+    }
+    sendReady();
+  }, 1800);
   console.info("[PocketDJ] Spotify Desktop bridge listening");
 }
