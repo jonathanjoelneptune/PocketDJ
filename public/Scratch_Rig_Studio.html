@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PocketDJ · Scratch Rig Studio</title>
+<style>
+:root{--bg:#0d131b;--panel:#19232f;--panel2:#222f3b;--edge:#405163;--ink:#eff6fe;--muted:#a9bdcc;--cyan:#70e3df;--amber:#f2be73;--pink:#ff2fb1;--green:#a2e6b2}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.48 system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}
+button{border-radius:7px;border:1px solid #4e6274;color:var(--ink);background:#293c4d;padding:7px 10px;cursor:pointer}button:hover{background:#39556b}button.primary{background:#136c79;border-color:#5ed2d3;font-weight:700}button:disabled{opacity:.45;cursor:not-allowed}
+input[type=number],select{background:#0f1822;color:var(--ink);border:1px solid #4c6578;border-radius:6px;padding:5px;max-width:100%}input[type=range]{width:100%;accent-color:var(--cyan)}input[type=color]{background:transparent;height:33px;padding:1px;width:48px;border:1px solid #415568}
+h1{font-size:22px;margin:0 0 3px}h2{font-size:15px;margin:0 0 10px}h3{font-size:13px;margin:7px 0}
+header{padding:14px 20px;background:#111c26;border-bottom:1px solid #405568;display:flex;justify-content:space-between;gap:18px;align-items:center}
+.help{font-size:12px;color:var(--muted)}.pill{border-radius:20px;border:1px solid #415669;background:#152433;padding:4px 8px;display:inline-block;color:#c7e3e7}
+.layout{display:grid;grid-template-columns:minmax(340px,380px) minmax(640px,1fr);gap:14px;padding:14px}
+.controls{display:grid;gap:12px;align-content:start}.card{background:var(--panel);border:1px solid #354657;border-radius:11px;padding:12px;min-width:0}
+.row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.row>*{flex:1 1 auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+label{display:block;margin-bottom:4px;color:var(--muted);font-size:12px}input,select{width:100%}input[type=checkbox]{width:auto}
+.status{border:1px solid #3a6274;border-radius:7px;padding:7px 9px;margin:8px 0;background:#10232c;color:#d2e8ed}
+.status.bad{border-color:#94516b;background:#2a1825;color:#ffd8e5}.status.good{border-color:#2e7359;color:#b6f1cf}
+.preview{background:#111b26;padding:8px;border-radius:8px;border:1px solid #3b4c5e}
+.preview canvas{display:block;width:100%;image-rendering:pixelated;border-radius:5px;background:#ff2fb1;aspect-ratio:1.28}
+.preview-head{display:flex;justify-content:space-between;align-items:center;gap:5px;margin-bottom:5px}
+.preview-head b{font-size:12px}canvas{image-rendering:pixelated}#editor{width:100%;aspect-ratio:900/680;display:block;background:#ff2fb1;border-radius:7px;border:1px solid #536475;touch-action:none;cursor:crosshair}
+.tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tools button{padding:6px 4px}.tools .active{background:#217e81;border-color:var(--cyan);font-weight:bold}
+.swatch{width:46px;flex:0 0 46px}.sm{font-size:11px;color:#a7bbc9}
+#swipe{width:100%}.bar{height:1px;background:#394d5f;margin:10px 0}
+.refpair{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#timeline{width:100%}.mono{font:12px ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:1080px){.layout{grid-template-columns:1fr}.controls{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.controls{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}.refpair{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<div><h1>Scratch Rig Studio</h1><div class="help">Six families · fixed torso · independent arms · reference-matched scratch states · editable repair pixels</div></div>
+<span class="pill">Phase 1–3 · staging only · live animations unchanged</span>
+</header>
+<div class="layout">
+<aside class="controls">
+<section class="card">
+<h2>1 · Load a scratch family</h2>
+<label for="family">Scratch family</label><select id="family"></select>
+<div class="row" style="margin-top:9px"><button id="reload" class="primary">Reload originals</button><button id="uploadBtn">Upload PNGs</button></div>
+<input id="upload" type="file" accept=".png,image/png" multiple hidden>
+<div id="status" class="status">Loading configurations…</div>
+<div class="help">Reference sprites are only calibration guides. The exported rig uses the original base sprite plus independently animated arm layers.</div>
+</section>
+<section class="card">
+<h2>2 · Isolate and repair</h2>
+<div class="grid2">
+<div><label for="side">Arm</label><select id="side"><option value="left">Screen-left arm</option><option value="right">Screen-right arm</option></select></div>
+<div><label for="view">Canvas layer</label><select id="view"><option value="edit">Source + editable mask</option><option value="composite">Composed rig</option><option value="body">Body without arms</option><option value="left">Left arm only</option><option value="right">Right arm only</option><option value="reference">Old reference overlay</option><option value="difference">Reference difference</option></select></div>
+</div>
+<div class="tools" style="margin-top:8px">
+<button data-tool="maskAdd" class="active">+ Arm</button>
+<button data-tool="maskErase">− Arm</button>
+<button data-tool="paint">Paint fill</button>
+<button data-tool="repairErase">Erase fill</button>
+<button data-tool="pick">Pick color</button>
+<button data-tool="pivot">Set pivot</button>
+</div>
+<div class="grid2" style="margin-top:8px">
+<div><label>Brush radius <span id="brushVal">5</span> px</label><input id="brush" type="range" min="1" max="22" value="5"></div>
+<div><label>Fill color</label><input id="color" type="color" value="#444d41"></div>
+</div>
+<div class="row" style="margin-top:8px"><button id="resetCut">Reset first-pass cut</button><button id="autoFill">Regenerate underpaint</button></div>
+<div class="help">The cut follows the shoulder/hoodie seam. Paint/erase the arm mask at pixel resolution. Fill painting adds opaque hoodie/deck pixels behind the removed arms. Pink reveals transparency.</div>
+<div id="maskCount" class="mono" style="margin-top:6px"></div>
+</section>
+<section class="card">
+<h2>3 · Set Scratch 1 / 2 / 3</h2>
+<div class="grid2">
+<div><label for="scratch">Scratch state</label><select id="scratch"><option value="0">Base (original)</option><option value="1">Scratch 1</option><option value="2">Scratch 2</option><option value="3">Scratch 3</option></select></div>
+<div><label for="reference">Old comparison pose</label><select id="reference"></select></div>
+</div>
+<div id="stateTag" class="status">Base</div>
+<div class="grid3">
+<div><label for="dx">X (px)</label><input id="dx" type="number" min="-70" max="70" step="0.5"></div>
+<div><label for="dy">Y (px)</label><input id="dy" type="number" min="-70" max="70" step="0.5"></div>
+<div><label for="tilt">Rotation (°)</label><input id="tilt" type="number" min="-30" max="30" step="0.5"></div>
+</div>
+<div class="row" style="margin-top:8px"><button id="fitOne" class="primary">Match reference hand</button><button id="fitAll">Auto-fit family</button></div>
+<div class="grid2" style="margin-top:8px">
+<div><label for="bpm">Preview BPM</label><input id="bpm" type="number" min="55" max="190" value="100"></div>
+<div><label for="beatRate">Scratch beat rate</label><select id="beatRate"><option value=".5">½ beat</option><option value="1" selected>1 beat</option><option value="2">2 beats</option></select></div>
+</div>
+<div class="row" style="margin-top:8px"><button id="animate" class="primary">Pause animation</button><button id="resetMotion">Reset transforms</button></div>
+<div class="help">Use the old <code>-2</code> and <code>-3</code> poses as exact hand-position targets. Every family uses its own pivots, cut masks, and transforms. Scratch states lacking a legacy reference are marked <em>synthesized</em>.</div>
+</section>
+<section class="card">
+<h2>4 · Save rig for implementation</h2>
+<div class="row"><button id="downloadZip" class="primary">Export rig ZIP</button><button id="downloadJson">Export JSON</button></div>
+<div class="row" style="margin-top:8px"><button id="saveProject">Save calibration locally</button><button id="importBtn">Import calibration</button></div>
+<input id="importFile" type="file" accept=".json,application/json" hidden>
+<div class="help" style="margin-top:8px">ZIP contains family-specific <code>body.png</code>, <code>arm_left.png</code>, <code>arm_right.png</code>, <code>scratch_rig.json</code> and <code>README.txt</code>. Same source coordinate system as the existing head rig (582×652).</div>
+</section>
+</aside>
+<main style="min-width:0">
+<section class="card">
+<div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Rig editor · upper body and turntables</h2><span id="canvasHint" class="pill">Pink transparency diagnostic</span></div>
+<canvas id="editor" width="900" height="680"></canvas>
+<div class="grid2" style="margin-top:7px">
+<div><label>Reference overlay opacity</label><input id="refOpacity" type="range" min="0" max="100" value="45"></div>
+<div><label>Zoom (centered on hands)</label><input id="zoom" type="range" min="1" max="2.4" step=".1" value="1"></div>
+</div>
+<div class="help">Canvas displays a cropped 582×652 source at nearest-neighbor pixel scale. Use the mask brushes for arm separation, fill brush for hiding pink gaps, and “Set pivot” to reposition the shoulder joint. Changes apply to this family only.</div>
+</section>
+<section class="card" style="margin-top:12px">
+<h2>Compare against the old sprites</h2>
+<div class="refpair">
+<div class="preview"><div class="preview-head"><b>Legacy reference</b><span id="refName" class="sm"></span></div><canvas id="legacy" width="480" height="360"></canvas><div class="sm" id="refHand">Old hand locations</div></div>
+<div class="preview"><div class="preview-head"><b>New Scratch Rig</b><span id="rigName" class="sm"></span></div><canvas id="rig" width="480" height="360"></canvas><div class="sm" id="rigHand">Movable hand layers</div></div>
+</div>
+<div class="bar"></div>
+<div class="grid3">
+<div class="preview"><div class="preview-head"><b>Arms only</b><span class="sm">isolated</span></div><canvas id="armsOnly" width="310" height="265"></canvas></div>
+<div class="preview"><div class="preview-head"><b>Body only</b><span class="sm">underpainted</span></div><canvas id="bodyOnly" width="310" height="265"></canvas></div>
+<div class="preview"><div class="preview-head"><b>Moving composite</b><span class="sm">no fading</span></div><canvas id="moving" width="310" height="265"></canvas></div>
+</div>
+</section>
+</main>
+</div>
+<script>
+(() => {
+'use strict';
+const W=582,H=652,N=W*H,ROOT='https://raw.githubusercontent.com/jonathanjoelneptune/PocketDJ/main/Final%20DJ%20Poses/';
+const CONFIG='./assets/DJ%20NES%20Pose%20Library/Scratch%20Rig%20lab/starter_rigs.json';
+const PINK='#ff2fb1',CROP={x:85,y:160,w:430,h:325};
+const $=id=>document.getElementById(id);
+const canvas=(w=W,h=H)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),smooth=t=>.5-.5*Math.cos(Math.PI*clamp(t,0,1));
+let presets=null,project=null,images={},refData={},layers=null,undo=[],busy=false;
+let selectedSide='left',tool='maskAdd',playing=true,started=performance.now(),posePhase=0;
+const storagePrefix='pocketdj.scratchstudio.v1.';
+function note(txt,bad=false){$('status').textContent=txt;$('status').className='status'+(bad?' bad':'')}
+function fileBlob(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+function rgb(hex){return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16),255]}
+function hex(rgba){return '#'+rgba.slice(0,3).map(n=>n.toString(16).padStart(2,'0')).join('')}
+function num(id){return Number($(id).value)}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function sourceName(f){return presets.families[f].base}
+function newProject(f){
+ const config=presets.families[f],arms={};
+ for(const side of ['left','right']){
+   const p=config[side];
+   arms[side]={pivot:{x:p.pivot[0],y:p.pivot[1]},handAnchor:{x:p.hand[0],y:p.hand[1]},maskRuns:[],
+    states:p.seeds.map((v,i)=>({id:i?'scratch'+i:'base',x:v[0],y:v[1],tilt:v[2],
+      reference:i<config.references.length?config.references[i]:null,
+      provenance:i?'seed':'source'})),seedPolygon:p.polygon};
+ }
+ return {schema:'pocketdj-scratch-rig.v1',family:f,basePose:config.base,referencePoses:config.references,
+ sourceCanvas:{width:W,height:H},arms,bodyRepairPixels:[],animation:{bpm:100,rate:1},
+ notes:'Staged Scratch Rig for detached-head/independent-arms rendering. Base torso must remain fixed; do not crossfade complete original scratch sprites.'};
+}
+function polyTest(x,y,points){
+ let inside=false;
+ for(let i=0,j=points.length-1;i<points.length;j=i++){
+  const a=points[i],b=points[j];
+  if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])inside=!inside;
+ }
+ return inside;
+}
+function skin(c,i){
+ const p=i*4,r=c[p],g=c[p+1],b=c[p+2],a=c[p+3];
+ return a>110&&r>67&&r<237&&g>34&&g<191&&b<139&&r>g*1.12&&g>b*1.10;
+}
+function armHue(c,i,y){
+ if(skin(c,i))return true;
+ const p=i*4,r=c[p],g=c[p+1],b=c[p+2];
+ return c[p+3]>64&&r>=25&&r<149&&g>=26&&g<149&&b<130&&g>=r*.68&&g>=b*.73&&(y<372||r>50);
+}
+function maskArray(side){return unpack(project.arms[side].maskRuns)}
+function unpack(runs){const a=new Uint8Array(N);for(const [start,end] of runs||[])a.fill(1,Math.max(0,start),Math.min(N,end+1));return a}
+function pack(a){const runs=[];for(let i=0;i<N;){if(!a[i]){i++;continue}const start=i;while(i+1<N&&a[i+1])i++;runs.push([start,i]);i++}return runs}
+function autoMasks(){
+ const src=refData[project.basePose];if(!src)return;
+ let count=0;
+ for(const side of ['left','right']){
+  const mask=new Uint8Array(N),poly=project.arms[side].seedPolygon;
+  const minX=Math.max(0,Math.min(...poly.map(v=>v[0]))-1),maxX=Math.min(W-1,Math.max(...poly.map(v=>v[0]))+1);
+  const minY=Math.max(0,Math.min(...poly.map(v=>v[1]))-1),maxY=Math.min(H-1,Math.max(...poly.map(v=>v[1]))+1);
+  for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++){
+   const i=y*W+x;
+   if(polyTest(x+.5,y+.5,poly)&&armHue(src,i,y))mask[i]=1;
+  }
+  // Pick up narrow dark outlines immediately adjacent to selected sleeve/hand pixels.
+  for(let pass=0;pass<2;pass++){
+   const grown=mask.slice();
+   for(let y=minY;y<=maxY;y++)for(let x=minX+1;x<maxX;x++){
+    const i=y*W+x;
+    if(!grown[i]&&polyTest(x+.5,y+.5,poly)&&src[4*i+3]>128&&
+       (mask[i-1]||mask[i+1]||mask[i-W]||mask[i+W]))grown[i]=1;
+   }
+   mask.set(grown);
+  }
+  project.arms[side].maskRuns=pack(mask);count+=mask.reduce((a,b)=>a+b,0);
+ }
+ project.bodyRepairPixels=[];
+ return count;
+}
+function getImage(url){
+ return new Promise((resolve,reject)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Could not load '+url));img.src=url})
+}
+function imgData(img){
+ if(img.width!==W||img.height!==H)throw Error('Expected 582×652 source');
+ const c=canvas();const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);return {c,pixels:ctx.getImageData(0,0,W,H).data};
+}
+async function load(){
+ const f=$('family').value,config=presets.families[f];busy=true;note('Loading '+f.toUpperCase()+' source and old scratch references…');
+ try{
+  const pairs=await Promise.all(config.references.map(async name=>[name,await getImage(ROOT+encodeURIComponent(name))]));
+  images={};refData={};
+  for(const [name,img] of pairs){const entry=imgData(img);images[name]=entry.c;refData[name]=entry.pixels}
+  project=newProject(f);
+  autoMasks();autoUnderpaint();autoFitAll();
+  const local=localStorage.getItem(storagePrefix+f);
+  if(local){
+   try{const p=JSON.parse(local);if(p.schema==='pocketdj-scratch-rig.v1'&&p.family===f)project=p}catch(e){console.warn(e)}
+  }
+  updatePoseControls();regenerate();
+  note('Loaded '+f.toUpperCase()+': isolated both arms and aligned '+(config.references.length-1)+' old scratch reference pose(s). Review seams and hand alignment.');
+ }catch(e){note('Source load failed: '+e.message+'. Upload the original family PNG files instead.',true);
+   images={};refData={};project=newProject(f);
+   updatePoseControls();
+ }finally{busy=false}
+}
+async function upload(files){
+ const config=presets.families[$('family').value],allowed=new Set(config.references);
+ images={};refData={};
+ for(const file of files){if(!allowed.has(file.name))continue;const url=URL.createObjectURL(file);try{const img=await getImage(url);const entry=imgData(img);images[file.name]=entry.c;refData[file.name]=entry.pixels;}finally{URL.revokeObjectURL(url)}}
+ if(!images[config.base]){note('Select the original base PNG and matching -2/-3 reference PNGs.',true);return}
+ project=newProject($('family').value);autoMasks();autoUnderpaint();autoFitAll();updatePoseControls();regenerate();
+ note('Imported '+Object.keys(images).length+' original sprites. Refine masks and scratch states.');
+}
+function candidateHand(name,side){
+ const c=refData[name];if(!c)return null;
+ const hint=presets.families[project.family][side].hand;
+ const search=[hint[0]-48,hint[0]+48,hint[1]-41,hint[1]+46];
+ let n=0,sx=0,sy=0;
+ for(let y=Math.max(300,search[2]);y<=Math.min(H-1,search[3]);y++)
+  for(let x=Math.max(70,search[0]);x<=Math.min(W-70,search[1]);x++){
+   const i=y*W+x;if(!skin(c,i))continue;
+   // Prefer the area near the hand and not the forearm or torso.
+   const distance=Math.abs(y-hint[1])*1.35+Math.abs(x-hint[0])*.60;
+   const weight=Math.max(.2,1.7-distance/70);
+   n+=weight;sx+=x*weight;sy+=y*weight;
+  }
+ return n>8?{x:sx/n,y:sy/n}:null;
+}
+function rotatePoint(pt,pivot,deg){const a=deg*Math.PI/180,s=Math.sin(a),c=Math.cos(a),x=pt.x-pivot.x,y=pt.y-pivot.y;return {x:pivot.x+x*c-y*s,y:pivot.y+x*s+y*c}}
+function handAt(side,state){
+ const a=project.arms[side],p=rotatePoint(a.handAnchor,a.pivot,state.tilt);
+ return {x:p.x+state.x,y:p.y+state.y};
+}
+function statesToRefIndex(state){if(state===0)return 0;return Math.min(state,project.referencePoses.length-1)}
+function buildArm(side){
+ const src=refData[project.basePose];if(!src)return canvas();
+ const mask=maskArray(side),c=canvas(),ctx=c.getContext('2d'),id=ctx.createImageData(W,H);
+ for(let i=0;i<N;i++)if(mask[i]){const p=i*4;id.data[p]=src[p];id.data[p+1]=src[p+1];id.data[p+2]=src[p+2];id.data[p+3]=src[p+3]}
+ ctx.putImageData(id,0,0);return c;
+}
+function buildBody(){
+ const src=refData[project.basePose];if(!src)return canvas();
+ const maskL=maskArray('left'),maskR=maskArray('right');
+ const c=canvas(),ctx=c.getContext('2d'),id=ctx.createImageData(W,H),out=id.data;
+ out.set(src);
+ for(let i=0;i<N;i++)if(maskL[i]||maskR[i]){const p=i*4;out[p]=0;out[p+1]=0;out[p+2]=0;out[p+3]=0}
+ for(const [index,color] of project.bodyRepairPixels){const p=index*4;out[p]=color[0];out[p+1]=color[1];out[p+2]=color[2];out[p+3]=color[3]}
+ ctx.putImageData(id,0,0);return c;
+}
+function autoUnderpaint(){
+ if(!refData[project.basePose])return;
+ const src=refData[project.basePose],mL=maskArray('left'),mR=maskArray('right'),both=new Uint8Array(N),repair=[];
+ for(let i=0;i<N;i++)both[i]=mL[i]||mR[i]?1:0;
+ for(let y=180;y<435;y++)for(let x=105;x<510;x++){
+  const i=y*W+x;if(!both[i]||src[4*i+3]<80)continue;
+  // Prefer replacement pixel at same coordinates in old reference, where the hand moved away.
+  let donor=-1;
+  for(let n=1;n<project.referencePoses.length;n++){
+   const ref=refData[project.referencePoses[n]];if(!ref||ref[4*i+3]<128)continue;
+   if(y>350&&!skin(ref,i)&&(!armHue(ref,i,y)||y>394)){donor=i;break}
+  }
+  let color;
+  if(donor>=0){
+    const ref=refData[project.referencePoses.find((name,n)=>n>0&&refData[name]&&refData[name][4*i+3]>128&&!skin(refData[name],i)&&(!armHue(refData[name],i,y)||y>394))];
+    color=Array.from(ref.slice(4*i,4*i+4));
+  }else{
+    // Interior torso / deck donor. Never fill the exterior transparent background.
+    const dir=x<295?1:-1;let target=-1;
+    if(y>=370){
+      for(let sy=y+6;sy<=Math.min(452,y+65);sy+=3){const j=sy*W+x;if(!both[j]&&src[4*j+3]>180){target=j;break}}
+    }
+    if(target<0)for(let d=1;d<=68;d++){
+       const sx=x+dir*d;if(sx<0||sx>=W)break;
+       const j=y*W+sx;if(!both[j]&&src[4*j+3]>180&&(!skin(src,j)||y>=384)){target=j;break}
+    }
+    if(target<0)continue;
+    color=Array.from(src.slice(target*4,target*4+4));
+  }
+  if(color[3]>50)repair.push([i,color]);
+ }
+ project.bodyRepairPixels=repair;
+}
+function getLayers(){
+ return {body:buildBody(),left:buildArm('left'),right:buildArm('right')};
+}
+function transformArm(ctx,side,state,asset){
+ const a=project.arms[side],p=a.pivot;
+ ctx.save();ctx.translate(p.x+state.x,p.y+state.y);ctx.rotate(state.tilt*Math.PI/180);ctx.translate(-p.x,-p.y);
+ ctx.drawImage(asset,0,0);ctx.restore();
+}
+function composite(ctx,stL,stR,assets=layers){
+ if(!assets)return;
+ ctx.imageSmoothingEnabled=false;
+ ctx.drawImage(assets.body,0,0);
+ transformArm(ctx,'left',stL,assets.left);
+ transformArm(ctx,'right',stR,assets.right);
+}
+function assessFit(side,refName,angle,dx,dy){
+ // Skin-only alignment error. No body changes or whole-sprite crossfade.
+ const target=refData[refName],a=project.arms[side],hand=candidateHand(refName,side);
+ const fit=canvas();const ctx=fit.getContext('2d',{willReadFrequently:true});
+ const state={x:dx,y:dy,tilt:angle};transformArm(ctx,side,state,layers[side]);
+ const data=ctx.getImageData(0,0,W,H).data;
+ let mismatch=0,n=0;
+ const cx=Math.round(hand.x),cy=Math.round(hand.y);
+ for(let y=Math.max(320,cy-35);y<Math.min(433,cy+35);y+=2)
+ for(let x=Math.max(100,cx-45);x<Math.min(500,cx+45);x+=2){
+  const i=y*W+x,t=skin(target,i),p=skin(data,i);
+  if(t!==p)mismatch+=4;
+  else if(t){mismatch+=(Math.abs(target[i*4]-data[i*4])+Math.abs(target[i*4+1]-data[i*4+1]))/170}
+  n++;
+ }
+ return mismatch/Math.max(n,1);
+}
+function fitSide(side,stateIndex,reference){
+ const config=presets.families[project.family],a=project.arms[side],states=a.states;
+ if(!refData[reference])return false;
+ const start=candidateHand(config.base,side),target=candidateHand(reference,side);
+ if(!start||!target)return false;
+ a.handAnchor={x:start.x,y:start.y};
+ let best={score:Infinity,x:0,y:0,tilt:0};
+ // Estimate pivoted rotation then solve translation so the hand lands on the old reference.
+ for(let tilt=-14;tilt<=14;tilt+=2){
+  const shifted=rotatePoint(start,a.pivot,tilt),dx=target.x-shifted.x,dy=target.y-shifted.y;
+  const score=assessFit(side,reference,tilt,dx,dy)+Math.abs(tilt)*.00006;
+  if(score<best.score)best={score,x:dx,y:dy,tilt};
+ }
+ const p=states[stateIndex];
+ p.x=Math.round(best.x*10)/10;p.y=Math.round(best.y*10)/10;p.tilt=best.tilt;
+ p.reference=reference;p.provenance='legacy-aligned';
+ return true;
+}
+function syntheticStates(){
+ for(const side of ['left','right']){
+  const states=project.arms[side].states,real=Math.min(2,project.referencePoses.length-1);
+  if(real===1){
+   // An old -2 frame exists, but there are no -3/-4 frames. Keep extra states
+   // as plausible, editable intermediates rather than claiming legacy alignment.
+   for(let s=2;s<=3;s++){
+    const factor=s===2?.55:-.22;
+    states[s]={id:'scratch'+s,x:Math.round(states[1].x*factor*10)/10,
+      y:Math.round(states[1].y*factor*10)/10,tilt:states[1].tilt*factor,
+      reference:null,provenance:'synthesized'};
+   }
+  }else{
+   const s=states[3],a=states[1],b=states[2];
+   s.x=Math.round((a.x+b.x)*.4*10)/10;s.y=Math.round((a.y+b.y)*.4*10)/10;
+   s.tilt=Math.round((a.tilt+b.tilt)*.4*10)/10;s.reference=null;s.provenance='synthesized';
+  }
+ }
+}
+function autoFitAll(){
+ if(!project||!refData[project.basePose])return;
+ layers=getLayers();
+ for(let i=1;i<project.referencePoses.length;i++)
+  for(const side of ['left','right'])fitSide(side,i,project.referencePoses[i]);
+ syntheticStates();
+}
+function fitOne(){
+ const i=num('scratch'),ref=$('reference').value;
+ if(!i){note('Select Scratch 1, 2, or 3 to calibrate.',true);return}
+ if(!refData[ref]){note('Load the selected old reference sprite first.',true);return}
+ saveUndo();layers=getLayers();
+ fitSide(selectedSide,i,ref);project.arms[selectedSide].states[i].provenance='legacy-aligned';
+ updateMotion();regenerate();persist();
+}
+function saveUndo(){if(!project)return;undo.push(JSON.stringify(project));if(undo.length>12)undo.shift()}
+function persist(){if(project)try{localStorage.setItem(storagePrefix+project.family,JSON.stringify(project))}catch(e){console.warn(e)}}
+function regenerate(){
+ if(!project||!refData[project.basePose])return;
+ layers=getLayers();updateCount();drawAll();
+}
+function updateCount(){
+ if(!project)return;
+ $('maskCount').textContent='Arm pixels: left '+maskArray('left').reduce((s,v)=>s+v,0).toLocaleString()+
+ ' · right '+maskArray('right').reduce((s,v)=>s+v,0).toLocaleString()+
+ ' · underpaint '+project.bodyRepairPixels.length.toLocaleString();
+}
+function updatePoseControls(){
+ const refs=project.referencePoses,selected=$('reference').value;
+ $('reference').replaceChildren(...refs.map((r,i)=>{const o=document.createElement('option');o.value=r;o.textContent=i?'Old '+r:'Base '+r;return o}));
+ const st=num('scratch');
+ const wanted=refs[Math.min(st,refs.length-1)];
+ $('reference').value=refs.includes(selected)&&st===0?selected:wanted;
+ updateMotion();
+}
+function updateMotion(){
+ if(!project)return;
+ const st=clamp(num('scratch'),0,3),p=project.arms[selectedSide].states[st];
+ for(const key of ['dx','dy','tilt'])$(key).value=String(p[key==='dx'?'x':key==='dy'?'y':'tilt']);
+ const name=p.reference||'no old frame';
+ $('stateTag').textContent=(st?'Scratch '+st:'Base')+' · '+selectedSide+' arm · '+p.provenance+' · '+name;
+ $('stateTag').className='status'+(p.provenance==='legacy-aligned'?' good':'');
+ $('refName').textContent=$('reference').value;
+ $('rigName').textContent=st?'Scratch '+st:'Base';
+}
+function scratchState(st){return project.arms.left.states[st]}
+function poseFrame(st){
+ const v=Number(st),c=canvas(),ctx=c.getContext('2d');composite(ctx,project.arms.left.states[v],project.arms.right.states[v]);return c;
+}
+function pink(ctx){ctx.fillStyle=PINK;ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height)}
+function crop(ctx,source,zoom=1){
+ ctx.save();ctx.imageSmoothingEnabled=false;const {x,y,w,h}=CROP,sw=w/zoom,sh=h/zoom;
+ ctx.drawImage(source,x+(w-sw)/2,y+(h-sh)/2,sw,sh,0,0,ctx.canvas.width,ctx.canvas.height);ctx.restore();
+}
+function drawPreview(id,source){const ctx=$(id).getContext('2d');pink(ctx);if(source)crop(ctx,source)}
+function drawEditor(timeMs=0){
+ const c=$('editor'),ctx=c.getContext('2d');pink(ctx);if(!layers)return;
+ const st=clamp(num('scratch'),0,3),view=$('view').value;
+ let image=null;
+ if(view==='body')image=layers.body;
+ else if(view==='left')image=layers.left;
+ else if(view==='right')image=layers.right;
+ else if(view==='composite'||view==='reference'||view==='difference')image=poseFrame(st);
+ else image=images[project.basePose];
+ if(!image)return;
+ crop(ctx,image,num('zoom'));
+ if(view==='edit'){
+  const m=maskArray(selectedSide),overlay=canvas(),cx=overlay.getContext('2d');
+  const im=cx.createImageData(W,H);
+  for(let i=0;i<N;i++)if(m[i]){const p=i*4;im.data[p]=15;im.data[p+1]=233;im.data[p+2]=199;im.data[p+3]=100}
+  cx.putImageData(im,0,0);crop(ctx,overlay,num('zoom'));
+ }
+ if((view==='reference'||view==='difference')&&images[$('reference').value]){
+  if(view==='reference'){
+    ctx.save();ctx.globalAlpha=num('refOpacity')/100;crop(ctx,images[$('reference').value],num('zoom'));ctx.restore();
+  }else{
+    const a=refData[$('reference').value];
+    const rendered=image.getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data;
+    const diff=canvas(),dc=diff.getContext('2d'),im=dc.createImageData(W,H);
+    for(let i=0;i<N;i++){
+      let p=i*4,v=Math.min(255,(Math.abs(a[p]-rendered[p])+Math.abs(a[p+1]-rendered[p+1])+Math.abs(a[p+2]-rendered[p+2])+Math.abs(a[p+3]-rendered[p+3]))*.8);
+      im.data[p]=255;im.data[p+1]=40;im.data[p+2]=130;im.data[p+3]=v;
+    }dc.putImageData(im,0,0);crop(ctx,diff,num('zoom'));
+  }
+ }
+ // Draw shoulder pivot, matched hand anchor and legacy target locations.
+ const map=(p)=>{const zoom=num('zoom'),{x,y,w,h}=CROP,sw=w/zoom,sh=h/zoom;
+ return {x:(p.x-(x+(w-sw)/2))*c.width/sw,y:(p.y-(y+(h-sh)/2))*c.height/sh}};
+ const arm=project.arms[selectedSide],pivot=map(arm.pivot);
+ ctx.save();ctx.strokeStyle='#7dfdff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(pivot.x,pivot.y,7,0,Math.PI*2);ctx.moveTo(pivot.x-12,pivot.y);ctx.lineTo(pivot.x+12,pivot.y);ctx.moveTo(pivot.x,pivot.y-12);ctx.lineTo(pivot.x,pivot.y+12);ctx.stroke();
+ const hand=map(handAt(selectedSide,arm.states[st]));ctx.strokeStyle='#83ffa2';ctx.beginPath();ctx.arc(hand.x,hand.y,6,0,Math.PI*2);ctx.stroke();
+ const target=candidateHand($('reference').value,selectedSide);
+ if(target){const p=map(target);ctx.strokeStyle='#ffd77e';ctx.beginPath();ctx.arc(p.x,p.y,8,0,Math.PI*2);ctx.stroke()}ctx.restore();
+}
+function drawAll(){
+ if(!layers)return;
+ drawEditor();
+ const st=clamp(num('scratch'),0,3),ref=$('reference').value;
+ drawPreview('legacy',images[ref]);drawPreview('rig',poseFrame(st));
+ drawPreview('armsOnly',(()=>{
+  const c=canvas(),ctx=c.getContext('2d');transformArm(ctx,'left',project.arms.left.states[st],layers.left);transformArm(ctx,'right',project.arms.right.states[st],layers.right);return c
+ })());
+ drawPreview('bodyOnly',layers.body);
+ drawPreview('moving',poseFrame(st));
+ const handDescriptions=['left','right'].map(side=>{
+  const old=candidateHand(ref,side),actual=handAt(side,project.arms[side].states[st]);
+  return side+': '+(old?'old ('+old.x.toFixed(1)+','+old.y.toFixed(1)+')':'no old target')+
+   '  rig ('+actual.x.toFixed(1)+','+actual.y.toFixed(1)+')'+(old?'  Δ'+Math.hypot(old.x-actual.x,old.y-actual.y).toFixed(1)+'px':'');
+ });
+ $('refHand').textContent=handDescriptions.join(' · ');
+ $('rigHand').textContent='The body is static. Both arm layers use only transforms and never crossfade full sprites.';
+}
+function drawAnimated(now){
+ if(!project||!layers||!playing)return;
+ const rate=num('beatRate'),bpm=clamp(num('bpm'),55,190),step=60000/(bpm*rate);
+ const t=(now-started)/step,whole=Math.floor(t),phase=t-whole;
+ // Include base and the three scratch states; smooth travel between neighboring states.
+ const seq=[0,1,0,2,0,3,1,2,3,0],idx=((whole%seq.length)+seq.length)%seq.length;
+ const a=seq[idx],b=seq[(idx+1)%seq.length],u=smooth(clamp(phase/.42,0,1));
+ const interpolate=(side)=>{
+  const f=project.arms[side].states[a],g=project.arms[side].states[b];
+  return {x:f.x+(g.x-f.x)*u,y:f.y+(g.y-f.y)*u,tilt:f.tilt+(g.tilt-f.tilt)*u};
+ };
+ const temp=canvas(),ctx=temp.getContext('2d');composite(ctx,interpolate('left'),interpolate('right'));
+ drawPreview('moving',temp);drawPreview('rig',temp);
+ $('rigName').textContent='Interpolating '+a+' → '+b;
+}
+function paintAt(evt){
+ if(!project||!refData[project.basePose])return;
+ const rect=$('editor').getBoundingClientRect(),zoom=num('zoom'),sw=CROP.w/zoom,sh=CROP.h/zoom;
+ const x=clamp(Math.round(CROP.x+(CROP.w-sw)/2+(evt.clientX-rect.left)/rect.width*sw),0,W-1);
+ const y=clamp(Math.round(CROP.y+(CROP.h-sh)/2+(evt.clientY-rect.top)/rect.height*sh),0,H-1);
+ if(tool==='pivot'){
+  project.arms[selectedSide].pivot={x,y};regenerate();return;
+ }
+ if(tool==='pick'){
+  $('color').value=hex(Array.from(refData[project.basePose].subarray((y*W+x)*4,(y*W+x)*4+4)));return;
+ }
+ const radius=num('brush'),mask=maskArray(selectedSide);
+ let repairs=new Map(project.bodyRepairPixels.map(v=>[v[0],v[1]]));
+ for(let yy=Math.max(0,y-radius);yy<=Math.min(H-1,y+radius);yy++)
+ for(let xx=Math.max(0,x-radius);xx<=Math.min(W-1,x+radius);xx++){
+  const dx=xx-x,dy=yy-y;if(dx*dx+dy*dy>radius*radius)continue;
+  const i=yy*W+xx;
+  if(tool==='maskAdd')mask[i]=1;
+  if(tool==='maskErase')mask[i]=0;
+  if(tool==='paint')repairs.set(i,rgb($('color').value));
+  if(tool==='repairErase')repairs.delete(i);
+ }
+ project.arms[selectedSide].maskRuns=pack(mask);
+ project.bodyRepairPixels=Array.from(repairs.entries()).sort((a,b)=>a[0]-b[0]);
+ regenerate();
+}
+function manifest(){return clone(project)}
+async function toBlob(c){return new Promise(resolve=>c.toBlob(resolve,'image/png'))}
+function u16(v){return [v&255,(v>>>8)&255]}function u32(v){return[v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255]}
+function crc32(bytes){let crc=-1;for(let i=0;i<bytes.length;i++){crc^=bytes[i];for(let j=0;j<8;j++)crc=(crc>>>1)^((crc&1)?0xedb88320:0)}return(crc^-1)>>>0}
+function zipFile(entries){
+ const encoder=new TextEncoder(),locals=[],central=[],offsets=[];let offset=0;
+ for(const [name,bytes] of entries){
+  const file=encoder.encode(name),crc=crc32(bytes),size=bytes.length;
+  const local=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(size),...u32(size),...u16(file.length),...u16(0),...file]);
+  locals.push(local,bytes);
+  const centralHeader=new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(size),...u32(size),...u16(file.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset),...file]);
+  central.push(centralHeader);offset+=local.length+size;
+ }
+ const centralSize=central.reduce((s,b)=>s+b.length,0);
+ const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(entries.length),...u16(entries.length),...u32(centralSize),...u32(offset),...u16(0)]);
+ return new Blob([...locals,...central,end],{type:'application/zip'});
+}
+async function exportZip(){
+ if(!project||!layers){note('Load source sprites before exporting.',true);return}
+ const folder=project.family+'_scratch_rig/',base=project.family;
+ const files=[
+ [folder+base+'_body.png',new Uint8Array(await(await toBlob(layers.body)).arrayBuffer())],
+ [folder+base+'_arm_left.png',new Uint8Array(await(await toBlob(layers.left)).arrayBuffer())],
+ [folder+base+'_arm_right.png',new Uint8Array(await(await toBlob(layers.right)).arrayBuffer())],
+ [folder+'scratch_rig.json',new TextEncoder().encode(JSON.stringify(manifest(),null,2)+'\n')],
+ [folder+'README.txt',new TextEncoder().encode('PocketDJ Scratch Rig v1\nGenerated from the original '+project.basePose+'.\nDraw the fixed body, then transform the left and right arm layers using their pivots and state-specific x/y/tilt.\nInterpolate transforms smoothly between states; NEVER blend two full sprite PNGs.\nScratch 1/2 match the old -2/-3 poses when their respective references exist. Synthesized states have no exact legacy reference.\nComposite this beneath the independent head-bob layer, retaining the approved head cut and body neck repair. Source PNGs are unchanged.\n')]
+ ];
+ fileBlob('PocketDJ_'+base.toUpperCase()+'_Scratch_Rig.zip',zipFile(files));
+ note('Exported '+base.toUpperCase()+' body + both arm PNG layers + editable scratch rig JSON.');
+}
+function exportJson(){if(project)fileBlob('PocketDJ_'+project.family.toUpperCase()+'_Scratch_Rig.json',new Blob([JSON.stringify(manifest(),null,2)],{type:'application/json'}))}
+function initUi(){
+ for(const key of Object.keys(presets.families)){const o=document.createElement('option');o.value=key;o.textContent=key.toUpperCase()+' · '+(presets.families[key].references.length===3?'3':'2')+' original frames';$('family').append(o)}
+ $('family').onchange=()=>{undo=[];void load()};
+ $('reload').onclick=()=>{if(confirm('Reload original images and reset this family from the saved calibration or first-pass presets?'))void load()};
+ $('uploadBtn').onclick=()=>$('upload').click();
+ $('upload').onchange=e=>{void upload(Array.from(e.target.files));e.target.value=''};
+ $('side').onchange=e=>{selectedSide=e.target.value;updateMotion();drawAll()};
+ $('scratch').onchange=()=>{const st=num('scratch');$('reference').value=project.referencePoses[Math.min(st,project.referencePoses.length-1)];updateMotion();drawAll()};
+ $('reference').onchange=()=>{updateMotion();drawAll()};
+ $('view').onchange=()=>drawAll();
+ for(const key of ['dx','dy','tilt'])$(key).oninput=()=>{
+  if(!project)return;
+  const st=num('scratch'),p=project.arms[selectedSide].states[st];
+  p[key==='dx'?'x':key==='dy'?'y':'tilt']=num(key);
+  p.provenance=st?'manual':'source';
+  updateMotion();drawAll();persist();
+ };
+ $('fitOne').onclick=fitOne;
+ $('fitAll').onclick=()=>{if(!project)return;saveUndo();autoFitAll();updateMotion();regenerate();persist();note('Refit Scratch 1 / 2 to the actual hand positions in the legacy reference PNGs.')};
+ $('resetMotion').onclick=()=>{if(!project)return;saveUndo();const f=project.family;
+  for(const side of ['left','right'])project.arms[side].states=clone(newProject(f).arms[side].states);
+  autoFitAll();updateMotion();regenerate();persist()};
+ $('resetCut').onclick=()=>{if(!project)return;saveUndo();autoMasks();autoUnderpaint();regenerate();persist();note('Restored first-pass cut and body underpaint.')};
+ $('autoFill').onclick=()=>{if(!project)return;saveUndo();autoUnderpaint();regenerate();persist();note('Regenerated first-pass hoodie/deck underpaint. Manual fill edits on this family were replaced.')};
+ $('zoom').oninput=()=>drawEditor();$('refOpacity').oninput=()=>drawEditor();
+ $('brush').oninput=()=>$('brushVal').textContent=$('brush').value;
+ document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{tool=b.dataset.tool;
+  document.querySelectorAll('[data-tool]').forEach(el=>el.classList.toggle('active',el.dataset.tool===tool))});
+ $('animate').onclick=()=>{playing=!playing;$('animate').textContent=playing?'Pause animation':'Play animation';started=performance.now();drawAll()};
+ $('downloadZip').onclick=()=>void exportZip();$('downloadJson').onclick=exportJson;
+ $('saveProject').onclick=()=>{persist();exportJson();note('Calibration saved in this browser and downloaded as JSON.')};
+ $('importBtn').onclick=()=>$('importFile').click();
+ $('importFile').onchange=async e=>{
+  const file=e.target.files[0];e.target.value='';if(!file)return;
+  try{
+   const imported=JSON.parse(await file.text());if(imported.schema!=='pocketdj-scratch-rig.v1'||!presets.families[imported.family])throw Error('Invalid scratch rig format');
+   if(imported.sourceCanvas?.width!==W||imported.sourceCanvas?.height!==H)throw Error('Wrong source dimensions');
+   $('family').value=imported.family;await load();project=imported;updatePoseControls();regenerate();persist();note('Imported '+project.family.toUpperCase()+' rig for refinement.');
+  }catch(err){note('Import error: '+err.message,true)}
+ };
+ const ed=$('editor');let down=false;
+ ed.addEventListener('pointerdown',e=>{if(!project||busy||e.button!==0)return;down=true;saveUndo();ed.setPointerCapture(e.pointerId);paintAt(e);persist()});
+ ed.addEventListener('pointermove',e=>{if(!down)return;paintAt(e)});
+ ed.addEventListener('pointerup',()=>{down=false;persist()});ed.addEventListener('pointercancel',()=>{down=false;persist()});
+ window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&undo.length){
+  e.preventDefault();project=JSON.parse(undo.pop());updatePoseControls();regenerate();persist()
+ }});
+ let prev=0;const tick=now=>{if(now-prev>33){drawAnimated(now);prev=now}requestAnimationFrame(tick)};requestAnimationFrame(tick);
+}
+async function start(){
+ try{
+  const response=await fetch(CONFIG,{cache:'no-store'});if(!response.ok)throw Error('Configuration HTTP '+response.status);
+  presets=await response.json();if(!presets?.families?.a10)throw Error('Invalid starter rigs');
+  initUi();await load();
+ }catch(e){note('Cannot load starter configurations. Serve this HTML from PocketDJ GitHub Pages. '+e.message,true)}
+}
+void start();
+})();
+</script>
+</body></html>
