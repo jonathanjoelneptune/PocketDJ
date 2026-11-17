@@ -15425,3 +15425,21 @@ html.spotify-embed-active.spotify-embed-compact .room-performance-wash {
 .dj-wrap.held-record-canvas-ready > #songChangeHands {
   opacity: 0 !important;
 }
+
+
+/* Stable multi-plane DJ composition.
+   The vinyl record textures must paint OVER the static record pixels still
+   present in original pose artwork. Calibrated scratch hands paint above them.
+   The calibrated cinematic held album/fingers remain the topmost overlays. */
+.dj-wrap > .dj-vinyl-disc-canvas,
+.dj-wrap > .dj-scratch-arm-canvas {
+  opacity: 0;
+  pointer-events: none;
+}
+.dj-wrap > .dj-vinyl-disc-canvas { z-index: 3; }
+.dj-wrap > .dj-scratch-arm-canvas { z-index: 4; }
+.dj-wrap.dj-vinyl-active > .dj-vinyl-disc-canvas { opacity: 1; }
+.dj-wrap.dj-headbob-active > .dj-scratch-arm-canvas { opacity: 1; }
+.dj-wrap > #songChangeAlbumLayer { z-index: 5; }
+.dj-wrap > #songChangeHands { z-index: 6; }
+.dj-wrap > .dj-held-record-canvas { z-index: 7; }
