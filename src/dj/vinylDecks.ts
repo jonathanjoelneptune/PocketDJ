@@ -109,15 +109,15 @@ export class VinylDeckStage {
       // on the new track's platter unless its identity really matches.
       this.stagedRecord = null;
       if (cinematicPhase !== "none") {
-        const staged: StagedRecord = preloaded
-          ? { ...preloaded, side: change.side, preRoll: false }
-          : {
-              side: change.side,
-              trackKey: change.trackKey,
-              coverUrl: change.coverUrl,
-              texture: null,
-              loading: Boolean(change.coverUrl),
-            };
+        // Preserve the exact staged object: any in-flight image decoder holds
+        // its identity and must still be allowed to finish the pre-roll.
+        const staged: StagedRecord = preloaded ?? {
+          side: change.side, trackKey: change.trackKey,
+          coverUrl: change.coverUrl, texture: null,
+          loading: Boolean(change.coverUrl),
+        };
+        staged.side = change.side;
+        staged.preRoll = false;
         this.stagedRecord = staged;
         if (staged.coverUrl && !staged.texture && !staged.loading) {
           staged.loading = true;
