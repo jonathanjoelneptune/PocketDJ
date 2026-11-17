@@ -61,6 +61,9 @@ jobs:
           python -m pip install --disable-pip-version-check Pillow numpy
           python scripts/build_head_bob_assets.py
 
+      - name: Reconstruct final calibrated scratching rigs
+        run: python scripts/build_scratch_rig_assets.py
+
       - name: Test beat clock, scratch blends, and speaker pulse
         run: pnpm run test:animation
 
