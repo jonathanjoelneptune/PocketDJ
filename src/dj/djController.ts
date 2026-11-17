@@ -1,5 +1,7 @@
 import type { DjMode, NormalizedTrack } from "../state/types";
 import { HeadBobController } from "./headBobController";
+import { shouldNodDuringTrack } from "./headNodPolicy";
+import { shouldBeginEarlyCinematic } from "./earlyCinematicPolicy";
 import { choosePerformancePose, performancePoseHoldMs, type PerformancePose } from "./performanceLoopPolicy";
 import type { BeatTiming } from "./beatClock";
 import type { HeldRecordSide } from "./heldRecordCalibration";
@@ -96,6 +98,11 @@ export class DjController {
   private lastPlayingLoop: PerformancePose | null = null;
   private lastTrackId: string | null = null;
   private cinematicFiredForTrack = false;
+  private earlyCinematicSourceId: string | null = null;
+  private earlyCinematicTarget: NormalizedTrack | null = null;
+  private earlyCinematicLoopIndex = 0;
+  private earlyCinematicAttemptedFor: string | null = null;
+  private latestPlayback: NormalizedTrack | null = null;
   private cinematicForCurrentTrack = 0;
   private nextCinematicForNewTrack = 0;
   private lastStatus = "";
@@ -123,7 +130,14 @@ export class DjController {
     this.paint();
   }
 
-  update(playback: NormalizedTrack, now = Date.now(), songChangeCinematicReady = true): DjMode {
+  update(
+    playback: NormalizedTrack,
+    now = Date.now(),
+    songChangeCinematicReady = true,
+    upcoming: NormalizedTrack | null = null,
+    upcomingArtworkDecoded = false,
+  ): DjMode {
+    this.latestPlayback = playback;
     const nextMode = this.resolveMode(playback);
 
     // Spotify AI DJ commentary looks like "no track" in the normalized playback.
@@ -150,7 +164,10 @@ export class DjController {
       this.startNormalLoop(nextMode, now);
     }
 
-    this.handleTrackTiming(playback, nextMode, now, songChangeCinematicReady);
+    this.handleTrackTiming(
+      playback, nextMode, now, songChangeCinematicReady,
+      upcoming, upcomingArtworkDecoded,
+    );
 
     if (this.controlMode !== "normal") {
       this.mode = nextMode;
@@ -210,7 +227,14 @@ export class DjController {
     this.beatTiming = timing;
   }
 
+  /** The queued album, only while pre-rolling the ending track's cinematic. */
+  getEarlyCinematicArtworkTrack(track: NormalizedTrack): NormalizedTrack | null {
+    return track.trackId === this.earlyCinematicSourceId ? this.earlyCinematicTarget : null;
+  }
+
   setVinylPlayback(track: NormalizedTrack): void {
+    const upcoming = this.getEarlyCinematicArtworkTrack(track);
+    if (upcoming) this.headBob?.prepareUpcomingVinyl(upcoming);
     // DJ cinematic state, not album decode or song elapsed time, determines
     // when the newly assigned vinyl can actually appear on the platter.
     // During Spotify DJ commentary, handleTrackTiming intentionally waits
@@ -282,12 +306,30 @@ export class DjController {
     return "playing";
   }
 
-  private handleTrackTiming(playback: NormalizedTrack, nextMode: DjMode, now: number, songChangeCinematicReady: boolean): void {
+  private handleTrackTiming(
+    playback: NormalizedTrack,
+    nextMode: DjMode,
+    now: number,
+    songChangeCinematicReady: boolean,
+    upcoming: NormalizedTrack | null,
+    upcomingArtworkDecoded: boolean,
+  ): void {
     const isActive = nextMode === "playing" || nextMode === "demo";
     const trackId = playback.trackId;
 
     if (trackId && trackId !== this.lastTrackId) {
       const hadPreviousTrack = Boolean(this.lastTrackId);
+      const matchedEarly = Boolean(
+        this.earlyCinematicTarget?.trackId === trackId &&
+        this.earlyCinematicSourceId === this.lastTrackId
+      );
+      const earlyLoopIndex = this.earlyCinematicLoopIndex;
+      // A skip can replace the predicted next queue item. If so, the early
+      // cinematic was about the wrong track and must not suppress the real one.
+      if (this.earlyCinematicSourceId && !matchedEarly) this.cinematicOnce = false;
+      this.earlyCinematicSourceId = null;
+      this.earlyCinematicTarget = null;
+      this.earlyCinematicAttemptedFor = null;
       // If the page was hidden/throttled and we only discover the new track well into playback,
       // do not play a late song-change cinematic in the middle of the song.
       const discoveredNearTrackStart = playback.progressMs < 12_000 || playback.source === "demo";
@@ -296,12 +338,12 @@ export class DjController {
         isActive &&
         discoveredNearTrackStart &&
         this.controlMode === "normal" &&
-        !this.cinematicOnce;
+        !this.cinematicOnce && !matchedEarly;
 
       this.lastTrackId = trackId;
-      this.cinematicFiredForTrack = false;
-      this.cinematicForCurrentTrack = this.nextCinematicForNewTrack;
-      this.nextCinematicForNewTrack = 1 - this.nextCinematicForNewTrack;
+      this.cinematicFiredForTrack = matchedEarly;
+      this.cinematicForCurrentTrack = matchedEarly ? earlyLoopIndex : this.nextCinematicForNewTrack;
+      this.nextCinematicForNewTrack = 1 - this.cinematicForCurrentTrack;
       this.pendingSongChangeCinematic = shouldQueueSongChangeCinematic;
     }
 
@@ -322,10 +364,25 @@ export class DjController {
     if (!trackId || !isActive) {
       this.pendingSongChangeCinematic = false;
     }
+
+    // The next-up queue gives us the actual next album early enough to pick
+    // up/place it during the current song's final five seconds.
+    if (isActive && this.controlMode === "normal" &&
+        !this.cinematicOnce && !this.pendingSongChangeCinematic &&
+        !this.speakingRequested && trackId &&
+        this.earlyCinematicAttemptedFor !== trackId &&
+        shouldBeginEarlyCinematic(playback, upcoming, upcomingArtworkDecoded) &&
+        upcoming) {
+      this.earlyCinematicSourceId = trackId;
+      this.earlyCinematicTarget = upcoming;
+      this.earlyCinematicAttemptedFor = trackId;
+      this.earlyCinematicLoopIndex = this.nextCinematicForNewTrack;
+      this.triggerCinematicOnce(now, this.earlyCinematicLoopIndex);
+    }
   }
 
-  private triggerCinematicOnce(now: number): void {
-    const loop = cinematicLoops[this.cinematicForCurrentTrack % cinematicLoops.length] || cinematicLoops[0];
+  private triggerCinematicOnce(now: number, index = this.cinematicForCurrentTrack): void {
+    const loop = cinematicLoops[index % cinematicLoops.length] || cinematicLoops[0];
     if (!loop) return;
     this.cinematicFiredForTrack = true;
     this.cinematicOnce = true;
@@ -528,6 +585,17 @@ export class DjController {
       (this.mode === "playing" || this.mode === "demo") &&
       !this.cinematicOnce && !this.pendingSongChangeCinematic &&
       !this.speakingRequested && !this.speakingVisualActive;
+    const nodPlayback = this.latestPlayback;
+    // Quiet first/last 15 s plus a reproducible 65% duty cycle across the
+    // middle of the track; no random toggle on every animation frame.
+    const nodAllowed = Boolean(
+      nodPlayback?.isPlaying && this.beatTiming &&
+      shouldNodDuringTrack(
+        this.beatTiming.trackKey,
+        this.beatTiming.trackProgressMs,
+        nodPlayback.durationMs,
+      )
+    );
     this.headBob?.update(
       this.currentFrame,
       this.headNodsEnabled,
@@ -535,6 +603,7 @@ export class DjController {
       this.beatTiming,
       now,
       Math.max(0, this.nextFrameAt - now),
+      nodAllowed,
     );
     if (this.poseElement instanceof HTMLImageElement) {
       // Hold the outgoing image during the record-change cinematic until the
