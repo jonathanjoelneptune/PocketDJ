@@ -1,12 +1,10 @@
 /**
  * Family-specific detached arm animation, sharing the head-bob controller's
- * full-sprite coordinates, performance beat grid, and 2D canvas compositor.
+ * full-sprite coordinates and 2D canvas compositor.
  *
  * Failed/missing rig assets never replace the original pose animation.
  * All bitmaps decode before a family becomes available.
  */
-import type { BeatTiming } from './beatClock';
-
 export type ScratchArmTransform = { x: number; y: number; tilt: number };
 export type ScratchArmSide = 'left' | 'right';
 export type ScratchRigJson = {
@@ -37,11 +35,9 @@ export const SCRATCH_FAMILIES: Record<string, readonly string[]> = {
   a47: ['a47.png', 'a47-2.png', 'a47-3.png'],
   a48: ['a48.png', 'a48-2.png', 'a48-3.png'],
 };
-export const SCRATCH_SEQUENCE = [0, 1, 0, 2, 0, 3, 0] as const;
 const W = 582;
 const H = 652;
 const ROOT = './assets/DJ%20NES%20Pose%20Library/Scratch%20Rig%20lab/';
-const MOVE_PORTION_OF_STEP = 0.42; // Arrive on the next beat, like head nods.
 const rest = (): ScratchArmTransform => ({ x: 0, y: 0, tilt: 0 });
 const clamp = (n: number): number => Math.max(0, Math.min(1, n));
 const ease = (t: number): number => (1 - Math.cos(Math.PI * clamp(t))) / 2;
@@ -61,53 +57,96 @@ export function validateScratchRig(value: ScratchRigJson, family: string): boole
 }
 
 /**
- * Pure playback-timed motion. We hold each pose, then glide during the last
- * 42% before the next beat. The node's head nod lands on the same boundary.
- * Every family owns its own calibrated 4-state arm transforms.
+ * Follow the existing DjController scratch loops. They already choose
+ * unpredictable frame holds, alternate quick motions with pauses, and make
+ * only some durations tempo-aware. Unlike head nods, arms do not beat-lock.
  */
-export function scratchMotionAt(
-  rig: ScratchRigJson,
-  trackProgressMs: number,
-  bpm: number,
-  beatOffsetMs = 0,
-  beatTimesMs: readonly number[] | null = null,
-): ScratchRigMotion {
-  const safeBpm = Number.isFinite(bpm) && bpm > 0 ? bpm : 96;
-  const interval = 60_000 / safeBpm;
-  let beat = 0;
-  let phase = 0;
-  if (beatTimesMs && beatTimesMs.length >= 2 &&
-      trackProgressMs >= beatTimesMs[0] && trackProgressMs < beatTimesMs[beatTimesMs.length - 1]) {
-    // Binary search keeps this inexpensive even with a full song's beat map.
-    let low = 0;
-    let high = beatTimesMs.length - 1;
-    while (low + 1 < high) {
-      const mid = (low + high) >>> 1;
-      if (beatTimesMs[mid] <= trackProgressMs) low = mid;
-      else high = mid;
+export function scratchPositionForFrame(
+  family: string, frame: string, random: () => number = Math.random,
+): number {
+  if (frame === family + '.png') return 0;
+  if (frame === family + '-2.png') {
+    // Two-pose loops gain occasional calibrated accents beyond Scratch 1.
+    if (SCRATCH_FAMILIES[family]?.length === 2) {
+      const choice = random();
+      return choice < 0.78 ? 1 : choice < 0.93 ? 2 : 3;
     }
-    beat = low;
-    phase = (trackProgressMs - beatTimesMs[low]) /
-      Math.max(1, beatTimesMs[low + 1] - beatTimesMs[low]);
-  } else {
-    const position = (Number.isFinite(trackProgressMs) ? trackProgressMs : 0) -
-      (Number.isFinite(beatOffsetMs) ? beatOffsetMs : 0);
-    beat = Math.floor(position / interval);
-    phase = ((position % interval) + interval) % interval / interval;
+    return random() < 0.13 ? 3 : 1;
   }
-  const sequenceLength = SCRATCH_SEQUENCE.length - 1;
-  const index = ((beat % sequenceLength) + sequenceLength) % sequenceLength;
-  const from = SCRATCH_SEQUENCE[index];
-  const to = SCRATCH_SEQUENCE[index + 1];
-  const progress = ease((phase - (1 - MOVE_PORTION_OF_STEP)) / MOVE_PORTION_OF_STEP);
-  const interpolate = (side: ScratchArmSide): ScratchArmTransform => {
-    const a = rig.scratchFrames[side][from] ?? rest();
-    const b = rig.scratchFrames[side][to] ?? rest();
-    return { x: mix(a.x, b.x, progress), y: mix(a.y, b.y, progress),
-      tilt: mix(a.tilt, b.tilt, progress) };
-  };
-  return { left: interpolate('left'), right: interpolate('right'),
-    moving: progress > 0 && progress < 1 };
+  if (frame === family + '-3.png') return random() < 0.13 ? 3 : 2;
+  return 0;
+}
+
+type ArmPair = Pick<ScratchRigMotion, 'left' | 'right'>;
+const copy = (transform: ScratchArmTransform): ScratchArmTransform => ({ ...transform });
+const restPair = (): ArmPair => ({ left: rest(), right: rest() });
+
+/** Smooth arm transforms triggered by legacy scratch-frame changes, not beats. */
+export class ScratchGrooveController {
+  private family = '';
+  private frame = '';
+  private from: ArmPair = restPair();
+  private to: ArmPair = restPair();
+  private startedAt = 0;
+  private durationMs = 0;
+  constructor(private readonly random: () => number = Math.random) {}
+
+  reset(): void {
+    this.family = '';
+    this.frame = '';
+    this.from = restPair();
+    this.to = restPair();
+    this.startedAt = 0;
+    this.durationMs = 0;
+  }
+
+  update(rig: ScratchRigJson, frame: string, now: number, remainingHoldMs: number): ScratchRigMotion {
+    const time = Number.isFinite(now) ? now : 0;
+    if (rig.family !== this.family || time < this.startedAt) {
+      this.reset();
+      this.family = rig.family;
+    }
+    if (frame !== this.frame) {
+      // New gestures begin from the actual current arm position. A fast
+      // scratch can interrupt another without snapping or ghosting.
+      const current = this.sample(time);
+      const index = scratchPositionForFrame(rig.family, frame, this.random);
+      const target: ArmPair = {
+        left: copy(rig.scratchFrames.left[index] ?? rig.scratchFrames.left[0]),
+        right: copy(rig.scratchFrames.right[index] ?? rig.scratchFrames.right[0]),
+      };
+      const first = this.frame === '';
+      this.frame = frame;
+      this.from = first ? target : { left: copy(current.left), right: copy(current.right) };
+      this.to = target;
+      this.startedAt = time;
+      // The source loop chooses random 120–640ms holds with a loose BPM
+      // influence. Vary the travel portion without scheduling to beat edges.
+      const hold = Number.isFinite(remainingHoldMs) ? Math.max(0, remainingHoldMs) : 260;
+      this.durationMs = first ? 0 : Math.min(230,
+        Math.max(75, hold * (0.48 + this.random() * 0.19)));
+    }
+    return this.sample(time);
+  }
+
+  private sample(now: number): ScratchRigMotion {
+    const t = this.durationMs <= 0 ? 1 : clamp((now - this.startedAt) / this.durationMs);
+    const progress = ease(t);
+    const interpolate = (side: ScratchArmSide): ScratchArmTransform => {
+      const a = this.from[side], b = this.to[side];
+      return { x: mix(a.x, b.x, progress), y: mix(a.y, b.y, progress),
+        tilt: mix(a.tilt, b.tilt, progress) };
+    };
+    return {
+      left: interpolate('left'),
+      right: interpolate('right'),
+      moving: t < 1 && (['left', 'right'] as const).some(side => (
+        this.from[side].x !== this.to[side].x ||
+        this.from[side].y !== this.to[side].y ||
+        this.from[side].tilt !== this.to[side].tilt
+      )),
+    };
+  }
 }
 
 async function decodeImage(url: string): Promise<HTMLImageElement> {
@@ -167,13 +206,4 @@ export class ScratchRigLibrary {
       if (first) this.ready.delete(first);
     }
   }
-}
-
-export function scratchMotionForPlayback(
-  rig: ScratchRigJson,
-  timing: BeatTiming | null,
-  now: number,
-): ScratchRigMotion {
-  return scratchMotionAt(rig, timing?.trackProgressMs ?? now,
-    timing?.bpm ?? 96, timing?.beatOffsetMs ?? 0, timing?.beatTimesMs ?? null);
 }
