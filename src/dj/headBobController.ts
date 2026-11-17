@@ -6,6 +6,7 @@
 import { createBeatEvents, nextBeatEvent, type BeatTiming } from "./beatClock";
 import { blendSpritePixels, changedPixelBounds, scratchEase, scratchTransitionDuration, type PixelBounds } from "./scratchBlend";
 import { VinylDeckStage } from "./vinylDecks";
+import { ScratchRigLibrary, SCRATCH_FAMILIES, scratchMotionForPlayback, type DecodedScratchRig, type ScratchRigMotion } from "./scratchRig";
 import type { VinylCinematicPhase } from "./vinylMath";
 import type { NormalizedTrack } from "../state/types";
 type BobFrame = { enabled: boolean; x: number; y: number; tilt: number };
@@ -23,7 +24,7 @@ type ScratchBlend = {
   to: Uint8ClampedArray;
   working: ImageData;
 };
-type SpriteRenderMode = "detached-head" | "original";
+type SpriteRenderMode = "detached-head" | "original" | "scratch-rig";
 type BobPair = readonly [number, number];
 type HeadMotion = { x: number; y: number; tilt: number };
 const REST_POSE: Readonly<HeadMotion> = { x: 0, y: 0, tilt: 0 };
@@ -93,6 +94,7 @@ export class HeadBobController {
   private readonly staticPending = new Set<string>();
   private readonly staticFailed = new Set<string>();
   private readonly vinyl = new VinylDeckStage();
+  private readonly scratchRigs = new ScratchRigLibrary();
   private lastVinylRevision = -1;
   private readonly readCanvas: HTMLCanvasElement;
   private readonly readCtx: CanvasRenderingContext2D;
@@ -195,10 +197,17 @@ export class HeadBobController {
 
     const useHead = headEnabled && timing !== null;
     const rig = this.ready.get(family) ?? null;
-    if (useHead && !rig) this.ensureFamily(family);
-    if (!useHead && !this.rawReady.has(family)) this.ensureOriginalFamily(family);
-    const renderMode: SpriteRenderMode = useHead ? "detached-head" : "original";
-    const spriteFrames = useHead ? rig?.bodies : this.rawReady.get(family);
+    // Scratch rigs and nod rigs share one 582x652 compositing surface.
+    // Only enable scratch layers when the canonical vinyl table, both arms,
+    // repaired body, and approved independent head are all decoded.
+    const wantsScratch = !!SCRATCH_FAMILIES[family] && this.vinyl.ready;
+    if ((useHead || wantsScratch) && !rig) this.ensureFamily(family);
+    if (wantsScratch) this.scratchRigs.ensure(family);
+    const scratchRig = wantsScratch && rig ? this.scratchRigs.get(family) : null;
+    if (!useHead && !scratchRig && !this.rawReady.has(family)) this.ensureOriginalFamily(family);
+    const renderMode: SpriteRenderMode = scratchRig ? "scratch-rig" :
+      useHead ? "detached-head" : "original";
+    const spriteFrames = scratchRig?.bodies ?? (useHead ? rig?.bodies : this.rawReady.get(family));
     if (!spriteFrames?.has(frame)) {
       // Keep the original `#djSprite` visible until every needed bitmap
       // is decoded; no partially rendered / floating-head frames.
@@ -217,7 +226,12 @@ export class HeadBobController {
       this.hide();
     }
 
-    if (frame !== this.lastScratchFrame) {
+    if (scratchRig) {
+      // A scratch rig never crossfades complete sprites. The same arm pixels
+      // interpolate between the calibrated keyframes, with a fixed torso.
+      this.scratchBlend = null;
+      this.lastScratchFrame = frame;
+    } else if (frame !== this.lastScratchFrame) {
       // Skip cross-family and first-frame changes. In-family variations are
       // already small: this is where a short eased dissolve is useful.
       const previous = spriteFrames.get(this.lastScratchFrame);
@@ -248,16 +262,22 @@ export class HeadBobController {
     }
     const scratchMoving = this.scratchBlend !== null &&
       now < this.scratchStartedAt + this.scratchDurationMs;
+    const independentArms = scratchRig && rig ? {
+      rig: scratchRig,
+      motion: scratchMotionForPlayback(scratchRig.rig, timing, now),
+      head: rig.head,
+    } : null;
 
     // Disabled nodding must not stop the body scratch interpolation.
     if (!useHead || !rig || !timing) {
       const previouslyMoving = this.lastRenderWasMoving;
       this.resetHeadEligibility();
-      if (frame !== this.lastDrawn || scratchMoving || previouslyMoving || !this.visible ||
-          this.vinyl.moving || this.lastVinylRevision !== this.vinyl.revision) {
-        this.paintComposed(spriteFrames, frame, scratchMoving, null, now);
+      if (frame !== this.lastDrawn || scratchMoving || independentArms?.motion.moving ||
+          previouslyMoving || !this.visible || this.vinyl.moving ||
+          this.lastVinylRevision !== this.vinyl.revision) {
+        this.paintComposed(spriteFrames, frame, scratchMoving, null, now, independentArms);
       }
-      this.lastRenderWasMoving = scratchMoving;
+      this.lastRenderWasMoving = scratchMoving || !!independentArms?.motion.moving;
       if (!this.visible) this.show();
       return;
     }
@@ -308,12 +328,14 @@ export class HeadBobController {
     const moving = progress >= this.motionStartedProgress &&
       progress < this.motionStartedProgress + this.motionDurationMs;
     if (frame !== this.lastDrawn || this.position !== this.lastDrawnPosition ||
-        moving || scratchMoving || this.lastRenderWasMoving || !this.visible ||
+        moving || scratchMoving || independentArms?.motion.moving ||
+        this.lastRenderWasMoving || !this.visible ||
         this.vinyl.moving || this.lastVinylRevision !== this.vinyl.revision) {
-      this.paintComposed(spriteFrames, frame, scratchMoving, { rig, motion: this.motionAt(progress) }, now);
+      this.paintComposed(spriteFrames, frame, scratchMoving,
+        { rig, motion: this.motionAt(progress) }, now, independentArms);
     }
     // One final redraw lands both the scratch and nod at their exact target.
-    this.lastRenderWasMoving = moving || scratchMoving;
+    this.lastRenderWasMoving = moving || scratchMoving || !!independentArms?.motion.moving;
     if (!this.visible) this.show();
   }
 
@@ -381,22 +403,48 @@ export class HeadBobController {
     scratchMoving: boolean,
     detached: { rig: DecodedRig; motion: HeadMotion } | null,
     now: number,
+    independentArms: {
+      rig: DecodedScratchRig;
+      motion: ScratchRigMotion;
+      head: HTMLImageElement;
+    } | null = null,
   ): void {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.imageSmoothingEnabled = false;
     if (this.vinyl.ready) this.vinyl.paintBackground(ctx, now);
-    const foreground = this.vinyl.foreground(sprites.get(frame)!);
-    if (scratchMoving && this.scratchBlend) {
-      const progress = scratchEase((now - this.scratchStartedAt) / this.scratchDurationMs);
-      const { from, to, bounds, working } = this.scratchBlend;
-      blendSpritePixels(from, to, working.data, progress);
-      this.scratchCtx.clearRect(0, 0, this.scratchCanvas.width, this.scratchCanvas.height);
-      this.scratchCtx.drawImage(foreground, 0, 0);
-      this.scratchCtx.putImageData(working, bounds.x, bounds.y);
-      ctx.drawImage(this.scratchCanvas, 0, 0);
+    if (independentArms) {
+      // Fixed torso → movable arms → existing independent nodding head.
+      // The vinyl layer below is always the canonical a8 static table with
+      // spinning album-art textures, never the i10 calibration table.
+      const { rig: armRig, motion } = independentArms;
+      ctx.drawImage(this.vinyl.foreground(armRig.body), 0, 0);
+      for (const side of ["left", "right"] as const) {
+        const pivot = armRig.rig.pivots[side];
+        const arm = motion[side];
+        ctx.save();
+        ctx.translate(pivot.x + arm.x, pivot.y + arm.y);
+        ctx.rotate(arm.tilt * Math.PI / 180);
+        ctx.translate(-pivot.x, -pivot.y);
+        ctx.drawImage(this.vinyl.foreground(armRig[side]), 0, 0);
+        ctx.restore();
+      }
+      // With nodding disabled, the same approved head remains on the body,
+      // but stays in its original resting position.
+      if (!detached) ctx.drawImage(independentArms.head, 0, 0);
     } else {
-      ctx.drawImage(foreground, 0, 0);
+      const foreground = this.vinyl.foreground(sprites.get(frame)!);
+      if (scratchMoving && this.scratchBlend) {
+        const progress = scratchEase((now - this.scratchStartedAt) / this.scratchDurationMs);
+        const { from, to, bounds, working } = this.scratchBlend;
+        blendSpritePixels(from, to, working.data, progress);
+        this.scratchCtx.clearRect(0, 0, this.scratchCanvas.width, this.scratchCanvas.height);
+        this.scratchCtx.drawImage(foreground, 0, 0);
+        this.scratchCtx.putImageData(working, bounds.x, bounds.y);
+        ctx.drawImage(this.scratchCanvas, 0, 0);
+      } else {
+        ctx.drawImage(foreground, 0, 0);
+      }
     }
     if (detached) {
       const { rig, motion } = detached;
