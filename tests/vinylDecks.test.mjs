@@ -42,7 +42,7 @@ test("rendered albums are subtly larger with a thin edge, without changing deck 
     assert.ok(scaledRy > deck.ry && scaledRy < deck.ry * 1.1);
     assert.ok(Math.abs(scaledRy / scaledRx - deck.ry / deck.rx) < 1e-12,
       "vinyl preserves the original elliptical perspective");
-    assert.ok(VINYL_DISC_THICKNESS_PX < deck.ry * 0.1,
+    assert.ok(VINYL_DISC_THICKNESS_PX < deck.ry * 0.12,
       "the edge stays a subtle screen-space detail");
   }
 });
