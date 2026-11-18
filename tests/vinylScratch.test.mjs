@@ -78,7 +78,7 @@ test('approved forward orders and canvas angular signs match all six families',(
  const wanted={
   a10:{left:[1,2,0,3],right:null,signs:[-1,0]},
   a4:{left:[1,2,0,3],right:null,signs:[-1,0]},
-  a14:{left:null,right:[1,2,0,3],signs:[0,-1]},
+  a14:{left:null,right:[1,2,0,3],signs:[0,1]},
   a44:{left:[2,3,0],right:[1,3,0],signs:[-1,1]},
   a47:{left:[2,3,0],right:[1,3,0],signs:[-1,1]},
   a48:{left:[1,3,0],right:[2,3,0],signs:[-1,1]},
@@ -89,13 +89,13 @@ test('approved forward orders and canvas angular signs match all six families',(
   assert.deepEqual([SCRATCH_VINYL_DIRECTION[family].left,SCRATCH_VINYL_DIRECTION[family].right],entry.signs);
  }
 });
-test('A14 forward right-hand scratching rotates COUNTERclockwise, unlike A44 right',()=>{
+test('A14 forward right-hand scratching rotates clockwise, matching the corrected calibration',()=>{
  const a14=new ScratchVinylTransport(4),a44=new ScratchVinylTransport(4);
  a14.setGesture('a14',{left:0,right:0});a44.setGesture('a44',{left:0,right:0});
  a14.step('right',0,100,true,16.2);a44.step('right',0,100,true,16.2);
  a14.setGesture('a14',{left:0,right:10});a44.setGesture('a44',{left:0,right:10});
  const aa=a14.step('right',0,100,true,16.2),bb=a44.step('right',0,100,true,16.2);
- assert.ok(degrees(aa)>300);assert.ok(Math.abs(degrees(bb)-40)<0.001);
+ assert.ok(Math.abs(degrees(aa)-40)<0.001);assert.ok(Math.abs(degrees(bb)-40)<0.001);
 });
 test('geometry preserves all four rig travel distances but uses explicit forward ordering',()=>{
  const base={x:0,y:0,tilt:0};
