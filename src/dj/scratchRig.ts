@@ -20,6 +20,12 @@ export type ScratchRigMotion = {
   left: ScratchArmTransform;
   right: ScratchArmTransform;
   moving: boolean;
+  /** The currently selected original Scratch Rig keyframe (0=Base, 1–3). */
+  targetIndex: number;
+  /** Unique per-gesture transition number, including interrupted strokes. */
+  transitionId: number;
+  /** The SAME eased 0–1 fraction used to render both arms. */
+  progress: number;
 };
 export type DecodedScratchRig = {
   rig: ScratchRigJson;
@@ -122,6 +128,8 @@ export class ScratchGrooveController {
   private to: ArmPair = restPair();
   private startedAt = 0;
   private durationMs = 0;
+  private targetIndex = 0;
+  private transitionId = 0;
   private readonly random: () => number;
   constructor(random: () => number = Math.random) {
     this.random = random;
@@ -134,6 +142,9 @@ export class ScratchGrooveController {
     this.to = restPair();
     this.startedAt = 0;
     this.durationMs = 0;
+    this.targetIndex = 0;
+    // Keep transitionId monotonic across resets for consumers of the
+    // synchronized animation timeline.
   }
 
   update(rig: ScratchRigJson, frame: string, now: number, remainingHoldMs: number): ScratchRigMotion {
@@ -147,6 +158,8 @@ export class ScratchGrooveController {
       // scratch can interrupt another without snapping or ghosting.
       const current = this.sample(time);
       const index = scratchPositionForFrame(rig.family, frame, this.random);
+      this.targetIndex = index;
+      this.transitionId++;
       const target: ArmPair = {
         left: copy(rig.scratchFrames.left[index] ?? rig.scratchFrames.left[0]),
         right: copy(rig.scratchFrames.right[index] ?? rig.scratchFrames.right[0]),
@@ -181,6 +194,9 @@ export class ScratchGrooveController {
         this.from[side].y !== this.to[side].y ||
         this.from[side].tilt !== this.to[side].tilt
       )),
+      targetIndex: this.targetIndex,
+      transitionId: this.transitionId,
+      progress,
     };
   }
 }
