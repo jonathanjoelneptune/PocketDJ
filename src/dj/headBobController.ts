@@ -6,6 +6,7 @@
 import { createBeatEvents, nextBeatEvent, type BeatTiming } from "./beatClock";
 import { blendSpritePixels, changedPixelBounds, scratchEase, scratchTransitionDuration, type PixelBounds } from "./scratchBlend";
 import { VinylDeckStage } from "./vinylDecks";
+import { scratchOffsetsFromArms, scratchOffsetsFromLegacy, EMPTY_SCRATCH } from "./vinylScratch";
 import { ScratchGrooveController, ScratchRigLibrary, SCRATCH_FAMILIES, type DecodedScratchRig, type ScratchRigMotion } from "./scratchRig";
 import type { VinylCinematicPhase } from "./vinylMath";
 import type { NormalizedTrack } from "../state/types";
@@ -112,6 +113,7 @@ export class HeadBobController {
   private activeFamily = '';
   private activeRenderMode: SpriteRenderMode = "detached-head";
   private lastScratchFrame = '';
+  private scratchVinylFromFrame = '';
   private scratchBlend: ScratchBlend | null = null;
   // Decode/crop each recurring scratch pair once. Repeated getImageData
   // readbacks were causing avoidable main-thread stalls during performances.
@@ -256,10 +258,12 @@ export class HeadBobController {
     nextScratchFrameHoldMs: number,
     nodAllowed = true,
   ): void {
-    // Vinyl continues independently while the next pose decodes.
-    this.paintVinyl(now);
+    // Compute hand movement before advancing the vinyl plane, so the hand
+    // and album use one animation timestamp with no one-frame latency.
     const family = FAMILY_BY_FRAME[frame];
     if (!performanceEligible || !family) {
+      this.vinyl.setScratchMotion(null);
+      this.paintVinyl(now);
       this.scratchGroove.reset();
       this.resetHeadEligibility();
       this.resetScratchTransition();
@@ -283,6 +287,8 @@ export class HeadBobController {
       useHead ? "detached-head" : "original";
     const spriteFrames = scratchRig?.bodies ?? (useHead ? rig?.bodies : this.rawReady.get(family));
     if (!spriteFrames?.has(frame)) {
+      this.vinyl.setScratchMotion(null);
+      this.paintVinyl(now);
       // Retain the last complete DJ pose rather than switching back to the
       // original PNG (which can cover or flash the spinning vinyl).
       this.resetHeadEligibility();
@@ -333,6 +339,7 @@ export class HeadBobController {
       }
       this.scratchStartedAt = now;
       this.scratchDurationMs = scratchTransitionDuration(Math.max(0, nextScratchFrameHoldMs));
+      this.scratchVinylFromFrame = this.lastScratchFrame || frame;
       this.lastScratchFrame = frame;
     }
     const scratchMoving = this.scratchBlend !== null &&
@@ -342,6 +349,25 @@ export class HeadBobController {
       motion: this.scratchGroove.update(scratchRig.rig, frame, now, nextScratchFrameHoldMs),
       head: rig.head,
     } : null;
+
+    if (SCRATCH_FAMILIES[family]) {
+      // Follow actual isolated-arm transforms whenever the approved rig exists.
+      // The published legacy sprites use starter hand-position estimates,
+      // sampled at the exact same interpolation fraction as the body blend.
+      const scratchOffsets = independentArms
+        ? scratchOffsetsFromArms(family, independentArms.motion, independentArms.rig.rig.pivots)
+        : this.scratchBlend
+          ? scratchOffsetsFromLegacy(
+              family, this.scratchVinylFromFrame, frame,
+              this.scratchDurationMs > 0
+                ? scratchEase((now - this.scratchStartedAt) / this.scratchDurationMs) : 1,
+            )
+          : EMPTY_SCRATCH;
+      this.vinyl.setScratchMotion(family, scratchOffsets);
+    } else {
+      this.vinyl.setScratchMotion(null);
+    }
+    this.paintVinyl(now);
 
     // Disabled nodding must not stop the body scratch interpolation.
     if (!useHead || !rig || !timing) {
@@ -665,6 +691,7 @@ export class HeadBobController {
 
   private resetScratchTransition(): void {
     this.lastScratchFrame = "";
+    this.scratchVinylFromFrame = "";
     this.scratchBlend = null;
     this.scratchStartedAt = 0;
     this.scratchDurationMs = 0;
