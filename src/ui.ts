@@ -4085,6 +4085,116 @@ function finishCanvasLyricShadowProjection(
   context.restore();
 }
 
+/**
+ * Bake a shallow recessed relief into the already-fitted Canvas lyric.
+ *
+ * A clean, separate glyph mask isolates all four inset passes from the
+ * penumbra surrounding the letters. Reusing one work canvas keeps memory
+ * bounded and never changes the production perspective, clipping or timing.
+ * No GPU filters, SVG filters, getImageData or per-frame work.
+ */
+function addCanvasLyricInsetRelief(
+  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D,
+  text: string,
+  textY: number,
+  fontSize: number,
+  pixelScale: number,
+  rowIndex: number,
+  rowCount: number,
+): void {
+  const mask = document.createElement("canvas");
+  const relief = document.createElement("canvas");
+  mask.width = relief.width = canvas.width;
+  mask.height = relief.height = canvas.height;
+  const maskCtx = mask.getContext("2d");
+  const reliefCtx = relief.getContext("2d");
+  if (!maskCtx || !reliefCtx) return;
+
+  // Match the original fitted text, including the SVG textLength horizontal
+  // scale already held in the canvas transform. This is glyph-only, not the
+  // wider shadow silhouette, so the bevel remains INSIDE the characters.
+  const textTransform = context.getTransform();
+  maskCtx.setTransform(textTransform);
+  maskCtx.font = context.font;
+  maskCtx.textAlign = context.textAlign;
+  maskCtx.textBaseline = context.textBaseline;
+  const originalSpacing = context as CanvasRenderingContext2D & { letterSpacing?: string };
+  const maskSpacing = maskCtx as CanvasRenderingContext2D & { letterSpacing?: string };
+  if (typeof originalSpacing.letterSpacing === "string" && typeof maskSpacing.letterSpacing === "string") {
+    maskSpacing.letterSpacing = originalSpacing.letterSpacing;
+  }
+  maskCtx.fillStyle = "#ffffff";
+  maskCtx.fillText(text, 0, textY);
+
+  // All remaining operations run in bitmap-pixel coordinates; the ceiling
+  // matrix3d is applied later, to the complete flat bitmap as before.
+  reliefCtx.setTransform(1, 0, 0, 1, 0, 0);
+  const lowerRow = rowCount > 1 && rowIndex === rowCount - 1;
+  const rimPx = Math.max(1.2, Math.min(5.5, fontSize * 0.021)) * pixelScale;
+
+  const compositeRelief = () => {
+    context.save();
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.globalAlpha = 1;
+    context.globalCompositeOperation = "source-over";
+    context.drawImage(relief, 0, 0);
+    context.restore();
+  };
+
+  // 4. Ambient occlusion: a soft dark ring just INSIDE the glyph contour.
+  // Stroke is clipped against the original filled glyph mask; the exterior
+  // half never escapes to become a bold outline.
+  reliefCtx.setTransform(textTransform);
+  reliefCtx.font = context.font;
+  reliefCtx.textAlign = context.textAlign;
+  reliefCtx.textBaseline = context.textBaseline;
+  const reliefSpacing = reliefCtx as CanvasRenderingContext2D & { letterSpacing?: string };
+  if (typeof originalSpacing.letterSpacing === "string" && typeof reliefSpacing.letterSpacing === "string") {
+    reliefSpacing.letterSpacing = originalSpacing.letterSpacing;
+  }
+  reliefCtx.lineJoin = "round";
+  reliefCtx.lineWidth = Math.max(2.5, fontSize * 0.064);
+  reliefCtx.strokeStyle = lowerRow ? "rgba(5, 4, 10, 0.31)" : "rgba(6, 5, 12, 0.25)";
+  reliefCtx.strokeText(text, 0, textY);
+  reliefCtx.setTransform(1, 0, 0, 1, 0, 0);
+  reliefCtx.globalCompositeOperation = "destination-in";
+  reliefCtx.drawImage(mask, 0, 0);
+  reliefCtx.globalCompositeOperation = "source-over";
+  compositeRelief();
+
+  // The difference between the fitted glyph and a shifted copy of that
+  // glyph yields a directional INTERNAL rim. This gives an inset bevel, not
+  // an external drop shadow, and preserves letter interiors and counters.
+  const paintInsetRim = (shiftX: number, shiftY: number, color: string) => {
+    reliefCtx.clearRect(0, 0, canvas.width, canvas.height);
+    reliefCtx.globalCompositeOperation = "source-over";
+    reliefCtx.drawImage(mask, 0, 0);
+    reliefCtx.globalCompositeOperation = "destination-out";
+    reliefCtx.drawImage(mask, shiftX, shiftY);
+    reliefCtx.globalCompositeOperation = "source-in";
+    reliefCtx.fillStyle = color;
+    reliefCtx.fillRect(0, 0, canvas.width, canvas.height);
+    reliefCtx.globalCompositeOperation = "source-over";
+    compositeRelief();
+  };
+
+  // 2. Interior lower-right shadow: the small rim reads as a cavity wall.
+  paintInsetRim(
+    -rimPx * 0.85,
+    -rimPx,
+    lowerRow ? "rgba(3, 3, 9, 0.42)" : "rgba(4, 3, 10, 0.35)",
+  );
+
+  // 1 + 3. Faint upper-left rim light with a recessed bevel. It remains
+  // desaturated, so lyrics still read as shadows rather than illuminated text.
+  paintInsetRim(
+    rimPx * 0.70,
+    rimPx * 0.90,
+    lowerRow ? "rgba(172, 157, 150, 0.29)" : "rgba(191, 174, 163, 0.33)",
+  );
+}
+
 function rasterizeFittedLyricRows(renderRoot: HTMLElement, layout: CeilingPosterLayout): void {
   const texts = Array.from(renderRoot.querySelectorAll<SVGTextElement>(".lyric-poster-row-text"));
   const pixelScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
@@ -4094,6 +4204,10 @@ function rasterizeFittedLyricRows(renderRoot: HTMLElement, layout: CeilingPoster
   const shadowPolishEnabled = shadowMode !== "0";
   // ?lyricShadow=soft preserves the former subtle treatment for A/B testing.
   const pronouncedShadow = shadowMode !== "soft";
+  // Recessed relief is on by default; turn it off for an exact comparison
+  // against the previously verified shadow-only Canvas appearance.
+  const insetReliefEnabled = shadowPolishEnabled &&
+    new URLSearchParams(window.location.search).get("lyricInset") !== "0";
   texts.forEach((textNode) => {
     const rowIndex = Number(textNode.dataset.lyricRowIndex || 0);
     const row = layout.rows[rowIndex];
@@ -4186,8 +4300,16 @@ function rasterizeFittedLyricRows(renderRoot: HTMLElement, layout: CeilingPoster
       }
       context.fillText(text, 0, canvasTextY);
       if (shadowPolishEnabled) {
-        // 2 + 4) Glyph-only tonal variation and subtle ceiling integration.
+        // Preserve the current projection shadow, tint, and falloff first.
         finishCanvasLyricShadowProjection(canvas, context, rowIndex, layout.rows.length, pronouncedShadow);
+      }
+      if (insetReliefEnabled) {
+        // The four recessed cues are clipped to the clean fitted glyph.
+        // No new live styles, DOM layers, geometry or audio-timing changes.
+        addCanvasLyricInsetRelief(
+          canvas, context, text, canvasTextY, fontSize, pixelScale,
+          rowIndex, layout.rows.length,
+        );
       }
       sourceSvg.replaceWith(canvas);
     } catch {
