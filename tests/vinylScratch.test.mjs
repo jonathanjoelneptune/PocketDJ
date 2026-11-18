@@ -165,5 +165,5 @@ test('subpixel hand jitter does not cause vinyl to freeze between actual scratch
  let angle=v.step('left',0,100,true,16.2);
  v.setGesture('a10',{left:10.0000001,right:0});
  angle=v.step('left',angle,100,true,16.2);
- assert.ok(Math.abs(degrees(angle)-9.72)<0.01);
+ assert.ok(Math.abs(degrees(angle)-19.44)<0.01);
 });
