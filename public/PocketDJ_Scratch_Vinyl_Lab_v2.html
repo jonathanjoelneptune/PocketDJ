@@ -81,12 +81,12 @@ function validFamily(key){return Object.hasOwn(PRESETS,key)}
 function stateFromRaw(v){return {x:Number(v.x??v[0]),y:Number(v.y??v[1]),tilt:Number(v.tilt??v[2])}}
 function normalizeRig(raw){if(!raw||raw.schema!=='pocketdj-scratch-rig.v1'||!validFamily(raw.family)||raw.sourceCanvas?.width!==W||raw.sourceCanvas?.height!==H)throw Error('Expected a valid pocketdj-scratch-rig.v1 with a 582 × 652 canvas');
  const arms={};for(const side of sides){const src=raw.arms?.[side];const states=src?.states||raw.scratchFrames?.[side];if(!Array.isArray(states)||states.length!==4)throw Error('Missing 4 '+side+' arm states');
- const pivot=src?.pivot||raw.pivots?.[side];const guess=PRESETS[raw.family][side].hand;const hand=src?.handAnchor||{x:guess[0],y:guess[1]};
+ const pivot=src?.pivot||raw.pivots?.[side];const guess=PRESETS[raw.family][side].hand;const hand=src?.handAnchor||raw.handAnchors?.[side]||{x:guess[0],y:guess[1]};
  if(!pivot||!Number.isFinite(pivot.x)||!Number.isFinite(pivot.y))throw Error('Bad '+side+' pivot');
  const parsed=states.map(stateFromRaw);if(parsed.some(s=>Object.values(s).some(v=>!Number.isFinite(v))))throw Error('Invalid arm offsets');
  if(!Number.isFinite(hand.x)||!Number.isFinite(hand.y))throw Error('Invalid hand anchor');
  arms[side]={pivot:{x:pivot.x,y:pivot.y},handAnchor:{x:hand.x,y:hand.y},states:parsed,maskRuns:src?.maskRuns||[],provenance:src?.states?.map(s=>s.provenance)||[]};}
- return {schema:raw.schema,family:raw.family,arms,bodyRepairPixels:raw.bodyRepairPixels||[],hasMaskData:sides.some(side=>arms[side].maskRuns.length>0),usesEstimatedHands:!raw.arms};}
+ return {schema:raw.schema,family:raw.family,arms,bodyRepairPixels:raw.bodyRepairPixels||[],hasMaskData:sides.some(side=>arms[side].maskRuns.length>0),usesEstimatedHands:!raw.arms&&!raw.handAnchors};}
 function fromStarter(f){const out={schema:'pocketdj-scratch-rig.v1',family:f,sourceCanvas:{width:W,height:H},arms:{},bodyRepairPixels:[]};for(const side of sides){const a=PRESETS[f][side];out.arms[side]={pivot:{x:a.pivot[0],y:a.pivot[1]},handAnchor:{x:a.hand[0],y:a.hand[1]},maskRuns:[],states:a.states.map(([x,y,tilt],i)=>({x,y,tilt,provenance:i?'starter':'base'}))}}return out}
 function storageKey(f){return 'pocketdj.scratchstudio.v1.'+f}
 function getSaved(f){try{const text=localStorage.getItem(storageKey(f));if(text){const project=JSON.parse(text);if(project.family===f)return project}}catch(e){}return null}
