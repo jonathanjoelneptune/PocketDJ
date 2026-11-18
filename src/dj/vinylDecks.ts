@@ -1,6 +1,6 @@
 import type { NormalizedTrack } from "../state/types";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
-import { canReleaseStagedVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, VINYL_DISC_SCALE, VINYL_DISC_THICKNESS_PX, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
+import { canReleaseStagedVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, VINYL_DISC_SCALE, VINYL_ALBUM_ART_RADIUS, VINYL_DISC_THICKNESS_PX, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
 import { ScratchVinylTransport, type ScratchOffsets } from "./vinylScratch";
 
 const W = VINYL_SPRITE_WIDTH;
@@ -301,14 +301,15 @@ export class VinylDeckStage {
     ctx.save();
     ctx.translate(deck.x, deck.y);
     ctx.imageSmoothingEnabled = true;
-    // A two-pixel underside peeks out only at the lower edge of the record.
-    // Render it BEFORE the artwork, without rotating the rim itself.
+    // The three-pixel underside is part of THIS rotating record, not the
+    // fixed platter. Render its lower wall before painting the top surface.
+    // A slightly lighter edge remains visible against the dark turntable.
     ctx.beginPath();
     ctx.ellipse(0, VINYL_DISC_THICKNESS_PX, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(13, 18, 23, 0.88)";
+    ctx.fillStyle = "rgba(43, 51, 59, 0.97)";
     ctx.fill();
-    ctx.strokeStyle = "rgba(147, 165, 175, 0.22)";
-    ctx.lineWidth = 0.75;
+    ctx.strokeStyle = "rgba(167, 179, 188, 0.32)";
+    ctx.lineWidth = 0.8;
     ctx.stroke();
     // The album is an image of a round vinyl; squashing only its Y axis
     // keeps its artwork aligned with the perspective of the actual platter.
@@ -417,15 +418,21 @@ export class VinylDeckStage {
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(center, center, 132 - i * 4, 0, Math.PI * 2); ctx.stroke();
     }
+    // Crop the cover nearly to the vinyl edge, not to an undersized center
+    // label. Previously 114px left 25px of black inside the rotating texture.
+    // A 128px cover leaves a narrow 11px physical vinyl rim instead.
+    const artRadius = VINYL_ALBUM_ART_RADIUS;
+    const artDiameter = artRadius * 2;
+    const artInset = center - artRadius;
     ctx.save();
-    ctx.beginPath(); ctx.arc(center, center, 114, 0, Math.PI * 2); ctx.clip();
+    ctx.beginPath(); ctx.arc(center, center, artRadius, 0, Math.PI * 2); ctx.clip();
     const square = Math.min(img.naturalWidth, img.naturalHeight);
     const sx = (img.naturalWidth - square) / 2;
     const sy = (img.naturalHeight - square) / 2;
-    ctx.drawImage(img, sx, sy, square, square, 26, 26, 228, 228);
+    ctx.drawImage(img, sx, sy, square, square, artInset, artInset, artDiameter, artDiameter);
     ctx.restore();
-    ctx.strokeStyle = "#22292d"; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.arc(center, center, 114, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = "rgba(38, 46, 52, 0.85)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(center, center, artRadius, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = "#121921";
     ctx.beginPath(); ctx.arc(center, center, 10, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#afbabd";
