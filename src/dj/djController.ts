@@ -1,6 +1,6 @@
 import type { DjMode, NormalizedTrack } from "../state/types";
 import { HeadBobController } from "./headBobController";
-import { shouldNodDuringTrack } from "./headNodPolicy";
+import { headNodIntensityDuringTrack } from "./headNodPolicy";
 import { shouldBeginEarlyCinematic } from "./earlyCinematicPolicy";
 import { choosePerformancePose, performancePoseHoldMs, type PerformancePose } from "./performanceLoopPolicy";
 import type { BeatTiming } from "./beatClock";
@@ -592,16 +592,16 @@ export class DjController {
       !this.cinematicOnce && !this.pendingSongChangeCinematic &&
       !this.speakingRequested && !this.speakingVisualActive;
     const nodPlayback = this.latestPlayback;
-    // Quiet first/last 15 s plus a reproducible 65% duty cycle across the
-    // middle of the track; no random toggle on every animation frame.
-    const nodAllowed = Boolean(
-      nodPlayback?.isPlaying && this.beatTiming &&
-      shouldNodDuringTrack(
-        this.beatTiming.trackKey,
-        this.beatTiming.trackProgressMs,
-        nodPlayback.durationMs,
-      )
-    );
+    // Head bobbing stays active for the full middle of the song. Around 35%
+    // of 12-second phrases use a smooth 25–100% amplitude dip instead of
+    // disabling nodding. First and last 15 seconds remain head-nod free.
+    const nodIntensity = nodPlayback?.isPlaying && this.beatTiming
+      ? headNodIntensityDuringTrack(
+          this.beatTiming.trackKey,
+          this.beatTiming.trackProgressMs,
+          nodPlayback.durationMs,
+        )
+      : 0;
     this.headBob?.update(
       this.currentFrame,
       this.headNodsEnabled,
@@ -609,7 +609,7 @@ export class DjController {
       this.beatTiming,
       now,
       Math.max(0, this.nextFrameAt - now),
-      nodAllowed,
+      nodIntensity,
     );
     if (this.poseElement instanceof HTMLImageElement) {
       // Hold the outgoing image during the record-change cinematic until the
