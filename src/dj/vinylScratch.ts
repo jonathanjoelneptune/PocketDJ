@@ -104,11 +104,6 @@ export function scratchOffsetsFromArms(
  * distances between adjacent positions determine how far the vinyl travels.
  * It is identical in principle to Scratch Rig + Vinyl Studio v3.
  */
-function handPosition(arm: ScratchArm, pivot: { x:number; y:number }, hand: { x:number; y:number }) {
-  const a=rad(arm.tilt),dx=hand.x-pivot.x,dy=hand.y-pivot.y;
-  return { x:pivot.x+arm.x+dx*Math.cos(a)-dy*Math.sin(a),
-           y:pivot.y+arm.y+dx*Math.sin(a)+dy*Math.cos(a) };
-}
 export function scratchRigSignedLevels(
   family:string,
   rig: {pivots: ScratchPivotPair; scratchFrames: Record<ScratchSide, readonly ScratchArm[]>;
