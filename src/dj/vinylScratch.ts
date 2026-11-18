@@ -172,9 +172,8 @@ export class RigScratchVinylSampler {
   }
 }
 
-/** Angle stays continuous: actual hand travel scratches the record; when the
- * hand finishes a stroke (even at a non-Base pose), the platter resumes RPM.
- * A held sprite must not pin the album in place for the whole pose hold. */
+/** Angle stays continuous: hand motion displaces record, holding locks it,
+ * returning to neutral releases it to the normal RPM without reset. */
 export class ScratchVinylTransport{
   private family:string|null=null;
   private target:ScratchOffsets={...EMPTY_SCRATCH};
@@ -194,17 +193,12 @@ export class ScratchVinylTransport{
   step(side:ScratchSide,angle:number,elapsedMs:number,playing:boolean,rpm:number):number{
     if(!playing||!Number.isFinite(elapsedMs)||elapsedMs<=0)return angle;
     const current=this.family?this.target[side]:0,prev=this.family?this.previous[side]:0;
+    const held=this.family!==null&&(Math.abs(current)>0.06||Math.abs(prev)>0.06);
     const sign=this.family?SCRATCH_VINYL_DIRECTION[this.family]?.[side]??0:0;
-    const handTravel=current-prev;
-    // Scratch only while the hand is actually traveling between rig frames.
-    // Once it reaches Scratch 1/2/3 (or Base), the motor spins again even if
-    // the DJ holds that pose for a second. The same per-frame hand delta
-    // remains the sole source of scratch direction and travel distance.
-    const handMoving=sign!==0&&Number.isFinite(handTravel)&&Math.abs(handTravel)>0.001;
-    const delta=handMoving
-      ? rad(handTravel*this.sensitivity*sign)
-      : rpm*Math.PI*2*elapsedMs/60000;
+    const delta=held?rad((current-prev)*this.sensitivity*sign):rpm*Math.PI*2*elapsedMs/60000;
     this.previous[side]=current;
+    // A held platter must retain the exact angle; modulo wrapping 0 drifted
+    // by a floating-point ulp and needlessly redrew a stopped record.
     return delta===0?angle:wrap(angle+delta);
   }
   reset():void{this.family=null;this.target={...EMPTY_SCRATCH};this.previous={...EMPTY_SCRATCH};}
