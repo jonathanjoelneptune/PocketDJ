@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_WIDTH, VINYL_SPRITE_HEIGHT } from "../src/dj/tableRegion.ts";
-import { canPlaceIncomingVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM } from "../src/dj/vinylMath.ts";
+import { canPlaceIncomingVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, VINYL_DISC_SCALE, VINYL_DISC_THICKNESS_PX } from "../src/dj/vinylMath.ts";
 
 test("exported a8 table region retains the exact approved pixels", () => {
   const mask = decodeTableRegion();
@@ -19,6 +19,22 @@ test("calibration uses the user's independent left/right platter centers", () =>
   assert.deepEqual(DECK_CALIBRATION.left, { x: 170, y: 399, rx: 55, ry: 28 });
   assert.deepEqual(DECK_CALIBRATION.right, { x: 425, y: 397, rx: 55, ry: 28 });
   assert.equal(VINYL_RPM, 16.2);
+});
+
+test("rendered albums are subtly larger with a thin edge, without changing deck calibration", () => {
+  assert.equal(VINYL_DISC_SCALE, 1.07);
+  assert.equal(VINYL_DISC_THICKNESS_PX, 2);
+  for (const side of ["left", "right"]) {
+    const deck = DECK_CALIBRATION[side];
+    const scaledRx = deck.rx * VINYL_DISC_SCALE;
+    const scaledRy = deck.ry * VINYL_DISC_SCALE;
+    assert.ok(scaledRx > deck.rx && scaledRx < deck.rx * 1.1);
+    assert.ok(scaledRy > deck.ry && scaledRy < deck.ry * 1.1);
+    assert.ok(Math.abs(scaledRy / scaledRx - deck.ry / deck.rx) < 1e-12,
+      "vinyl preserves the original elliptical perspective");
+    assert.ok(VINYL_DISC_THICKNESS_PX < deck.ry * 0.1,
+      "the edge stays a subtle screen-space detail");
+  }
 });
 
 test("decks alternate on new song IDs but never on pause, resume, seek or speech", () => {
