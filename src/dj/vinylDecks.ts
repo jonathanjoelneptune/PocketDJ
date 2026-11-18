@@ -1,6 +1,7 @@
 import type { NormalizedTrack } from "../state/types";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
-import { canReleaseStagedVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
+import { canReleaseStagedVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
+import { ScratchVinylTransport, type ScratchOffsets } from "./vinylScratch";
 
 const W = VINYL_SPRITE_WIDTH;
 const H = VINYL_SPRITE_HEIGHT;
@@ -43,6 +44,10 @@ export class VinylDeckStage {
   private readonly deckKeys: Record<DeckSide, string | null> = { left: null, right: null };
   private readonly requestVersions: Record<DeckSide, number> = { left: 0, right: 0 };
   private readonly angles: Record<DeckSide, number> = { left: 0, right: 0 };
+  private readonly scratchVinyl = new ScratchVinylTransport();
+  // Enabled for normal playback. Emergency visual rollback: ?scratchVinyl=0.
+  // Changes only the rendered record angle, never Spotify playback or DJ sprites.
+  private readonly scratchVinylEnabled = new URLSearchParams(window.location.search).get("scratchVinyl") !== "0";
   // Keep the outgoing record on its platter while a cinematic is queued.
   // During the actual cinematic, render the bare destination platter under
   // the calibrated held-record artwork. Place the incoming disc when done.
@@ -65,6 +70,12 @@ export class VinylDeckStage {
 
   get ready(): boolean { return this.table !== null && this.pixels !== null; }
   get revision(): number { return this.generation; }
+
+  /** Called once per visual animation frame, before the vinyl plane repaints. */
+  setScratchMotion(family: string | null, offsets: ScratchOffsets | null = null): void {
+    if (!this.scratchVinylEnabled) return;
+    this.scratchVinyl.setGesture(this.playing ? family : null, offsets);
+  }
   get moving(): boolean { return this.playing && this.ready; }
   get status(): string {
     return this.disabled ? "disabled" : !this.ready ? "loading/table fallback" :
@@ -271,7 +282,9 @@ export class VinylDeckStage {
     this.lastFrameTime = now;
     for (const side of ["left", "right"] as const) {
       if (side === this.hiddenDeckDuringCinematic) continue;
-      this.angles[side] = stepVinylAngle(this.angles[side], elapsed, this.playing);
+      this.angles[side] = this.scratchVinylEnabled
+        ? this.scratchVinyl.step(side, this.angles[side], elapsed, this.playing, VINYL_RPM)
+        : stepVinylAngle(this.angles[side], elapsed, this.playing);
     }
   }
 

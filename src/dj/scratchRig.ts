@@ -13,11 +13,19 @@ export type ScratchRigJson = {
   sourceCanvas: { width: number; height: number };
   pivots: Record<ScratchArmSide, { x: number; y: number }>;
   scratchFrames: Record<ScratchArmSide, ScratchArmTransform[]>;
+  /** Exact hand calibration from the Scratch Rig Studio ZIP when available. */
+  handAnchors?: Record<ScratchArmSide, { x: number; y: number }>;
 };
 export type ScratchRigMotion = {
   left: ScratchArmTransform;
   right: ScratchArmTransform;
   moving: boolean;
+  /** The currently selected original Scratch Rig keyframe (0=Base, 1–3). */
+  targetIndex: number;
+  /** Unique per-gesture transition number, including interrupted strokes. */
+  transitionId: number;
+  /** The SAME eased 0–1 fraction used to render both arms. */
+  progress: number;
 };
 export type DecodedScratchRig = {
   rig: ScratchRigJson;
@@ -56,6 +64,37 @@ export function validateScratchRig(value: ScratchRigJson, family: string): boole
   });
 }
 
+/** The Scratch Rig Studio exports artist-edited rigs as arms[].states,
+ * while runtime rigs use pivots/scratchFrames. Convert without changing the
+ * four approved transforms, shoulder pivots or hand contact anchors.
+ */
+export function normalizeScratchRig(input: unknown, family: string): ScratchRigJson | null {
+  if (!input || typeof input !== "object") return null;
+  const raw = input as Partial<ScratchRigJson> & {
+    arms?: Partial<Record<ScratchArmSide, {
+      pivot: { x: number; y: number };
+      handAnchor: { x: number; y: number };
+      states: ScratchArmTransform[];
+    }>>;
+  };
+  if (validateScratchRig(raw as ScratchRigJson, family)) return raw as ScratchRigJson;
+  if (!raw.arms?.left || !raw.arms?.right) return null;
+  const left = raw.arms.left, right = raw.arms.right;
+  const normalized: ScratchRigJson = {
+    schema: raw.schema ?? "",
+    family: raw.family ?? "",
+    sourceCanvas: raw.sourceCanvas ?? { width: 0, height: 0 },
+    pivots: { left: left.pivot, right: right.pivot },
+    scratchFrames: { left: left.states, right: right.states },
+    handAnchors: { left: left.handAnchor, right: right.handAnchor },
+  };
+  return validateScratchRig(normalized, family) &&
+    (['left','right'] as const).every(side => {
+      const h = normalized.handAnchors?.[side];
+      return h && Number.isFinite(h.x) && Number.isFinite(h.y);
+    }) ? normalized : null;
+}
+
 /**
  * Follow the existing DjController scratch loops. They already choose
  * unpredictable frame holds, alternate quick motions with pauses, and make
@@ -89,6 +128,8 @@ export class ScratchGrooveController {
   private to: ArmPair = restPair();
   private startedAt = 0;
   private durationMs = 0;
+  private targetIndex = 0;
+  private transitionId = 0;
   private readonly random: () => number;
   constructor(random: () => number = Math.random) {
     this.random = random;
@@ -101,6 +142,9 @@ export class ScratchGrooveController {
     this.to = restPair();
     this.startedAt = 0;
     this.durationMs = 0;
+    this.targetIndex = 0;
+    // Keep transitionId monotonic across resets for consumers of the
+    // synchronized animation timeline.
   }
 
   update(rig: ScratchRigJson, frame: string, now: number, remainingHoldMs: number): ScratchRigMotion {
@@ -114,6 +158,8 @@ export class ScratchGrooveController {
       // scratch can interrupt another without snapping or ghosting.
       const current = this.sample(time);
       const index = scratchPositionForFrame(rig.family, frame, this.random);
+      this.targetIndex = index;
+      this.transitionId++;
       const target: ArmPair = {
         left: copy(rig.scratchFrames.left[index] ?? rig.scratchFrames.left[0]),
         right: copy(rig.scratchFrames.right[index] ?? rig.scratchFrames.right[0]),
@@ -148,6 +194,9 @@ export class ScratchGrooveController {
         this.from[side].y !== this.to[side].y ||
         this.from[side].tilt !== this.to[side].tilt
       )),
+      targetIndex: this.targetIndex,
+      transitionId: this.transitionId,
+      progress,
     };
   }
 }
@@ -194,8 +243,9 @@ export class ScratchRigLibrary {
     const root = ROOT + family + '/';
     const response = await fetch(root + 'scratch_rig.json', { cache: 'force-cache' });
     if (!response.ok) throw new Error(`Scratch rig ${family}: HTTP ${response.status}`);
-    const rig = await response.json() as ScratchRigJson;
-    if (!validateScratchRig(rig, family)) throw new Error('Malformed scratch rig ' + family);
+    const rawRig = await response.json() as unknown;
+    const rig = normalizeScratchRig(rawRig, family);
+    if (!rig) throw new Error('Malformed scratch rig ' + family);
     const [body, left, right] = await Promise.all([
       decodeImage(root + family + '_body.png'),
       decodeImage(root + family + '_arm_left.png'),

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   ScratchGrooveController, scratchPositionForFrame,
-  SCRATCH_FAMILIES, validateScratchRig,
+  SCRATCH_FAMILIES, validateScratchRig, normalizeScratchRig,
 } from '../src/dj/scratchRig.ts';
 
 const states = [
@@ -83,4 +83,25 @@ test('controller reset returns to rest and holds without generating beat-driven 
   groove.reset();
   assert.equal(groove.update(rig, 'a44.png', 1000, 400).left.x, 0);
   assert.equal(groove.update(rig, 'a44.png', 1400, 400).left.x, 0);
+});
+
+test('accepts the exported Scratch Rig Studio format preserving all four exact arm poses', () => {
+ const artist = {
+  schema: 'pocketdj-scratch-rig.v1',
+  family: 'a44', sourceCanvas: { width: 582, height: 652 },
+  arms: {
+   left: {pivot:{x:225,y:211},handAnchor:{x:165,y:374},
+    states:[{x:0,y:0,tilt:0},{x:0,y:0,tilt:0},{x:-1,y:10,tilt:-3},{x:2,y:4,tilt:2}]},
+   right: {pivot:{x:371,y:211},handAnchor:{x:439,y:373},
+    states:[{x:0,y:0,tilt:0},{x:9,y:12,tilt:4},{x:0,y:0,tilt:0},{x:5,y:7,tilt:2}]},
+  },
+ };
+ const converted = normalizeScratchRig(artist, 'a44');
+ assert.ok(converted);
+ assert.deepEqual(converted.scratchFrames.left, artist.arms.left.states);
+ assert.deepEqual(converted.scratchFrames.right, artist.arms.right.states);
+ assert.deepEqual(converted.handAnchors.right, {x:439,y:373});
+ assert.deepEqual(converted.pivots.left, {x:225,y:211});
+ assert.equal(normalizeScratchRig(artist, 'a14'),null);
+ assert.ok(validateScratchRig(converted,'a44'));
 });
