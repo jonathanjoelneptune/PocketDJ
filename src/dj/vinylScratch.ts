@@ -38,16 +38,41 @@ export function scratchOffsetsFromLegacy(family:string, fromFrame:string, toFram
     right:entry.right ? mix(entry.right.frames[a]??0,entry.right.frames[b]??0,t):0,
   };
 }
-/** Compute hand displacement from a real shoulder-pivot arm transform. */
-export function scratchOffsetsFromArms(family:string, motion:ScratchArmPair, pivots:ScratchPivotPair):ScratchOffsets{
-  const entry=SCRATCH_VINYL_HANDS[family];
-  if(!entry)return {...EMPTY_SCRATCH};
+/**
+ * Drive record rotation from the real four-state Scratch Rig hand path.
+ * The reference axis is the longest of Base → Scratch 1/2/3, transformed
+ * around the same shoulder pivot used by the rendered hand.
+ * This samples the interpolated arm transform; it creates NO separate motion.
+ */
+export type ScratchRigStates = Record<ScratchSide, readonly ScratchArm[]>;
+export type ScratchHandAnchors = Partial<Record<ScratchSide, { x: number; y: number }>>;
+function handPosition(arm: ScratchArm, pivot:{x:number;y:number}, hand:{x:number;y:number}):{x:number;y:number}{
+  const angle=rad(arm.tilt),dx=hand.x-pivot.x,dy=hand.y-pivot.y;
+  return {x:pivot.x+arm.x+dx*Math.cos(angle)-dy*Math.sin(angle),
+          y:pivot.y+arm.y+dx*Math.sin(angle)+dy*Math.cos(angle)};
+}
+export function scratchOffsetsFromArms(
+  family:string, motion:ScratchArmPair, pivots:ScratchPivotPair,
+  states?:ScratchRigStates, anchors?:ScratchHandAnchors,
+):ScratchOffsets{
+  const entry=SCRATCH_VINYL_HANDS[family];if(!entry)return {...EMPTY_SCRATCH};
   const offsets={...EMPTY_SCRATCH};
   for(const side of ['left','right'] as const){
     const contact=entry[side],arm=motion[side],pivot=pivots[side];
-    if(!contact||!arm||!pivot||!Number.isFinite(arm.y)||!Number.isFinite(arm.tilt))continue;
-    const angle=rad(arm.tilt),dx=contact.hand[0]-pivot.x,dy=contact.hand[1]-pivot.y;
-    offsets[side]=arm.y+dx*Math.sin(angle)+dy*(Math.cos(angle)-1);
+    if(!contact||!arm||!pivot||![arm.x,arm.y,arm.tilt,pivot.x,pivot.y].every(Number.isFinite))continue;
+    const hand=anchors?.[side]??{x:contact.hand[0],y:contact.hand[1]};
+    const base=states?.[side]?.[0]??{x:0,y:0,tilt:0};
+    const rest=handPosition(base,pivot,hand),current=handPosition(arm,pivot,hand);
+    let axisX=0,axisY=1,longest=0;
+    if(states?.[side]?.length===4){
+      for(const pose of states[side].slice(1)){
+        if(![pose.x,pose.y,pose.tilt].every(Number.isFinite))continue;
+        const at=handPosition(pose,pivot,hand),dx=at.x-rest.x,dy=at.y-rest.y;
+        const length=Math.hypot(dx,dy);
+        if(length>longest){longest=length;axisX=dx/length;axisY=dy/length;}
+      }
+    }
+    offsets[side]=(current.x-rest.x)*axisX+(current.y-rest.y)*axisY;
   }
   return offsets;
 }
