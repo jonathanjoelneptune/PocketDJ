@@ -358,6 +358,7 @@ export class HeadBobController {
         ? scratchOffsetsFromArms(
             family, independentArms.motion, independentArms.rig.rig.pivots,
             independentArms.rig.rig.scratchFrames,
+            independentArms.rig.rig.handAnchors,
           )
         : this.scratchBlend
           ? scratchOffsetsFromLegacy(
