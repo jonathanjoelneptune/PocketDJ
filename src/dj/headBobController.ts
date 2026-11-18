@@ -6,7 +6,7 @@
 import { createBeatEvents, nextBeatEvent, type BeatTiming } from "./beatClock";
 import { blendSpritePixels, changedPixelBounds, scratchEase, scratchTransitionDuration, type PixelBounds } from "./scratchBlend";
 import { VinylDeckStage } from "./vinylDecks";
-import { scratchOffsetsFromArms, scratchOffsetsFromLegacy, EMPTY_SCRATCH } from "./vinylScratch";
+import { RigScratchVinylSampler, scratchOffsetsFromLegacy, EMPTY_SCRATCH } from "./vinylScratch";
 import { ScratchGrooveController, ScratchRigLibrary, SCRATCH_FAMILIES, type DecodedScratchRig, type ScratchRigMotion } from "./scratchRig";
 import type { VinylCinematicPhase } from "./vinylMath";
 import type { NormalizedTrack } from "../state/types";
@@ -105,6 +105,7 @@ export class HeadBobController {
   private vinylLastRevision = -1;
   private readonly scratchRigs = new ScratchRigLibrary();
   private readonly scratchGroove = new ScratchGrooveController();
+  private readonly scratchVinylRig = new RigScratchVinylSampler();
   private lastVinylRevision = -1;
   private readonly readCanvas: HTMLCanvasElement;
   private readonly readCtx: CanvasRenderingContext2D;
@@ -262,6 +263,7 @@ export class HeadBobController {
     // and album use one animation timestamp with no one-frame latency.
     const family = FAMILY_BY_FRAME[frame];
     if (!performanceEligible || !family) {
+      this.scratchVinylRig.reset();
       this.vinyl.setScratchMotion(null);
       this.paintVinyl(now);
       this.scratchGroove.reset();
@@ -287,6 +289,7 @@ export class HeadBobController {
       useHead ? "detached-head" : "original";
     const spriteFrames = scratchRig?.bodies ?? (useHead ? rig?.bodies : this.rawReady.get(family));
     if (!spriteFrames?.has(frame)) {
+      this.scratchVinylRig.reset();
       this.vinyl.setScratchMotion(null);
       this.paintVinyl(now);
       // Retain the last complete DJ pose rather than switching back to the
@@ -354,12 +357,9 @@ export class HeadBobController {
       // Follow actual isolated-arm transforms whenever the approved rig exists.
       // The published legacy sprites use starter hand-position estimates,
       // sampled at the exact same interpolation fraction as the body blend.
+      if (!independentArms) this.scratchVinylRig.reset();
       const scratchOffsets = independentArms
-        ? scratchOffsetsFromArms(
-            family, independentArms.motion, independentArms.rig.rig.pivots,
-            independentArms.rig.rig.scratchFrames,
-            independentArms.rig.rig.handAnchors,
-          )
+        ? this.scratchVinylRig.sample(family, independentArms.motion, independentArms.rig.rig)
         : this.scratchBlend
           ? scratchOffsetsFromLegacy(
               family, this.scratchVinylFromFrame, frame,
@@ -369,6 +369,7 @@ export class HeadBobController {
           : EMPTY_SCRATCH;
       this.vinyl.setScratchMotion(family, scratchOffsets);
     } else {
+      this.scratchVinylRig.reset();
       this.vinyl.setScratchMotion(null);
     }
     this.paintVinyl(now);
