@@ -197,7 +197,9 @@ export class ScratchVinylTransport{
     const sign=this.family?SCRATCH_VINYL_DIRECTION[this.family]?.[side]??0:0;
     const delta=held?rad((current-prev)*this.sensitivity*sign):rpm*Math.PI*2*elapsedMs/60000;
     this.previous[side]=current;
-    return wrap(angle+delta);
+    // A held platter must retain the exact angle; modulo wrapping 0 drifted
+    // by a floating-point ulp and needlessly redrew a stopped record.
+    return delta===0?angle:wrap(angle+delta);
   }
   reset():void{this.family=null;this.target={...EMPTY_SCRATCH};this.previous={...EMPTY_SCRATCH};}
 }
