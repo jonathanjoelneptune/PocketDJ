@@ -1,6 +1,6 @@
 import type { NormalizedTrack } from "../state/types";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
-import { canReleaseStagedVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, VINYL_DISC_SCALE, VINYL_ALBUM_ART_RADIUS, VINYL_DISC_THICKNESS_PX, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
+import { canReleaseStagedVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, VINYL_DISC_SCALE, VINYL_ALBUM_ART_RADIUS, VINYL_DISC_THICKNESS_PX, VINYL_DISC_BRIGHTNESS, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
 import { ScratchVinylTransport, type ScratchOffsets } from "./vinylScratch";
 
 const W = VINYL_SPRITE_WIDTH;
@@ -363,6 +363,19 @@ export class VinylDeckStage {
       });
   }
 
+  /** Darken an already-rendered disc once when its texture is created.
+   * source-atop multiplies existing pixel RGB by the chosen brightness while
+   * preserving the transparent corners, avoiding tainted-canvas readback
+   * and per-frame filtering costs. The DJ, table and 3px rim are untouched.
+   */
+  private dimDiscTexture(ctx: CanvasRenderingContext2D, size: number): void {
+    ctx.save();
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.fillStyle = `rgba(0, 0, 0, ${1 - VINYL_DISC_BRIGHTNESS})`;
+    ctx.fillRect(0, 0, size, size);
+    ctx.restore();
+  }
+
   /** Stylized PocketDJ album used on decks with no loaded song.
    * It has a visible label and grooves, so a newly opened session always
    * displays two records instead of an empty platter beside the first song.
@@ -398,6 +411,7 @@ export class VinylDeckStage {
     ctx.fillText("DJ", mid, mid + 13);
     ctx.fillStyle = "#050b11";
     ctx.beginPath(); ctx.arc(mid, mid, 4, 0, Math.PI * 2); ctx.fill();
+    this.dimDiscTexture(ctx, c.width);
     return c;
   }
 
@@ -437,6 +451,7 @@ export class VinylDeckStage {
     ctx.beginPath(); ctx.arc(center, center, 10, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#afbabd";
     ctx.beginPath(); ctx.arc(center, center, 3, 0, Math.PI * 2); ctx.fill();
+    this.dimDiscTexture(ctx, size);
     return c;
   }
 

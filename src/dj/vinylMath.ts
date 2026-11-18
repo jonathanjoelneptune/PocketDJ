@@ -12,6 +12,8 @@ export const VINYL_DISC_SCALE = 1.07;
  */
 export const VINYL_ALBUM_ART_RADIUS = 128;
 export const VINYL_DISC_THICKNESS_PX = 3;
+/** Dim only the pre-rendered rotating vinyl textures to match the room lighting. */
+export const VINYL_DISC_BRIGHTNESS = 0.9;
 export const VINYL_RPM = 16.2;
 
 export type DeckTrack = {
