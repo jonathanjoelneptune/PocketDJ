@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PocketDJ • Scratch Vinyl Sync Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#0a1019;--panel:#131c2a;--panel2:#182538;--edge:#314057;--fg:#eff5ff;--muted:#94a8c2;--mint:#4ce2c4;--amber:#f7b66d;--blue:#7bbcff}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 20% 0%,#152438 0,#0a1019 52%);color:var(--fg);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:23px 30px 14px;border-bottom:1px solid var(--edge)}header .brand{border:1px solid #416861;color:var(--mint);padding:6px 10px;border-radius:8px;font-size:11px;font-weight:800;letter-spacing:.1em}h1{font-size:22px;margin:0;font-weight:750;letter-spacing:-.02em}h2{font-size:15px;margin:0 0 12px}p{margin:5px 0;color:var(--muted)}small,.hint{color:var(--muted);font-size:12px}main{padding:20px;display:grid;grid-template-columns:minmax(340px, 1.4fr) minmax(310px,1fr);gap:16px;max-width:1540px;margin:auto}.panel{border:1px solid var(--edge);background:linear-gradient(155deg,#142032,#111927);border-radius:16px;padding:17px;min-width:0}.full{grid-column:1/-1}.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.between{justify-content:space-between}.stack{display:grid;gap:12px}.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:8px 4px 2px}.stage canvas{width:min(100%,470px);height:auto;aspect-ratio:582/652;image-rendering:pixelated;filter:drop-shadow(0 15px 36px #0007)}.stage .status{font-size:12px;color:var(--muted);max-width:470px;text-align:center}.tag{color:var(--mint);font-size:11px;border:1px solid #315c55;border-radius:100px;padding:3px 9px}label{display:block;color:#c7d6ea;font-size:12px;font-weight:650}select,button,input[type=number]{color:var(--fg);background:var(--panel2);border:1px solid #40506a;border-radius:9px;padding:9px 10px;font:inherit}button{cursor:pointer;font-weight:700}button:hover{border-color:var(--mint)}button.primary{background:#176759;border-color:#36ae96;color:white}button.on{background:#235c6a;border-color:#58d6ee}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--mint)}button:disabled{opacity:.45;cursor:default}input[type=range]{width:100%;accent-color:var(--mint);cursor:pointer}.field{display:grid;gap:5px;min-width:0}.line{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}.value{font-variant-numeric:tabular-nums;color:var(--mint);font-weight:750;min-width:70px;text-align:right}.cols2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.controls{display:flex;gap:8px;flex-wrap:wrap}.controls>*{flex:1}.controls button{min-width:90px}.divider{border-top:1px solid var(--edge);margin:3px 0}.metricgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.metric{background:#0a1522;border:1px solid #263a4b;padding:11px;border-radius:10px}.metric span{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;color:white;font-size:20px;font-variant-numeric:tabular-nums}.legend{display:flex;gap:16px;color:var(--muted);font-size:12px;flex-wrap:wrap}.dot{display:inline-block;width:9px;height:9px;border-radius:10px;margin-right:5px}.chart{width:100%;height:152px;background:#0b1521;border:1px solid #304156;border-radius:10px}textarea{width:100%;background:#0b1421;color:var(--fg);border:1px solid var(--edge);border-radius:8px;padding:10px;font:11px/1.5 ui-monospace,Consolas,monospace;resize:vertical;min-height:70px}input[type=file]{max-width:100%;font-size:11px;color:var(--muted)}.note{padding:12px;border-left:3px solid var(--amber);background:#342b2018;color:#cdd8e6;border-radius:4px;font-size:12px}footer{padding:16px 24px;color:var(--muted);text-align:center;font-size:11px}@media(max-width:900px){main{grid-template-columns:1fr;padding:12px}.metricgrid{grid-template-columns:repeat(2,1fr)}header{padding:16px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header><div class="brand">POCKET DJ • EXPERIMENT</div><div><h1>Scratch → Vinyl Sync Lab</h1><p>Calibrate a forward / reverse hand stroke against the spinning record. No changes to the music audio.</p></div></header>
+<main>
+<section class="panel stack">
+ <div class="row between"><h2>Live turntable preview</h2><span class="tag" id="modeBadge">NORMAL ROTATION</span></div>
+ <div class="stage"><canvas id="stage" width="582" height="652"></canvas><div class="status" id="assetStatus">Loading PocketDJ pose artwork…</div></div>
+ <div class="metricgrid"><div class="metric"><span>Left disc angle</span><strong id="leftAngle">0°</strong></div><div class="metric"><span>Right disc angle</span><strong id="rightAngle">0°</strong></div><div class="metric"><span>Hand stroke</span><strong id="handPx">0 px</strong></div><div class="metric"><span>Active direction</span><strong id="direction">FREE</strong></div></div>
+ <canvas class="chart" id="chart" width="1000" height="180"></canvas>
+ <div class="legend"><span><i class="dot" style="background:#4ce2c4"></i>Hand travel</span><span><i class="dot" style="background:#f7b66d"></i>Vinyl angular speed</span><span><i class="dot" style="background:#7790ad"></i>Free spin reference</span></div>
+</section>
+<section class="panel stack">
+ <h2>Performance calibration</h2>
+ <div class="cols2"><div class="field"><label for="pose">Scratch family</label><select id="pose"><option value="a10">A10 • left scratch</option><option value="a4">A4 • record touch</option><option value="a14">A14 • right scratch</option><option value="a44" selected>A44 • two hands</option><option value="a47">A47 • both decks, head low</option><option value="a48">A48 • two hands alternate</option></select></div><div class="field"><label for="deck">Driven platter</label><select id="deck"><option value="auto">Auto from pose</option><option value="left">Left only</option><option value="right">Right only</option><option value="both">Both decks</option></select></div></div>
+ <div class="field"><label>Transport</label><div class="controls"><button id="play" class="primary">⏸ Pause preview</button><button id="reset">↺ Reset records</button><button id="slower">½×</button><button id="faster">2×</button></div></div>
+ <div class="field"><label for="pattern">Scratch sequence</label><select id="pattern"><option value="alternate">Forward → back → repeat</option><option value="forward">Forward only</option><option value="reverse">Back only</option><option value="leftRight">Alternate left / right deck</option><option value="seed">Pose keyframe seed pattern</option></select></div>
+ <div class="field"><label>Try a hand stroke (press, hold, release)</label><div class="controls"><button id="push">↻ Forward scratch</button><button id="pull">↺ Back scratch</button><button id="release">Release / free spin</button></div><small>Use a mouse or touch. The platter pauses while the hand holds the vinyl and resumes at rest.</small></div>
+ <div class="divider"></div>
+ <div class="field"><div class="line"><label for="distance">Hand travel distance</label><span class="value" id="distanceV"></span></div><input id="distance" type="range" min="2" max="40" step="1" value="16"></div>
+ <div class="field"><div class="line"><label for="sensitivity">Vinyl rotation per pixel</label><span class="value" id="sensitivityV"></span></div><input id="sensitivity" type="range" min="0.5" max="12" step="0.25" value="4.5"></div>
+ <div class="field"><div class="line"><label for="travel">One-way stroke duration</label><span class="value" id="travelV"></span></div><input id="travel" type="range" min="70" max="650" step="10" value="200"></div>
+ <div class="field"><div class="line"><label for="hold">Hold at end of stroke</label><span class="value" id="holdV"></span></div><input id="hold" type="range" min="0" max="600" step="10" value="60"></div>
+ <div class="field"><div class="line"><label for="rest">Free-spin gap between strokes</label><span class="value" id="restV"></span></div><input id="rest" type="range" min="0" max="1200" step="20" value="380"></div>
+ <div class="field"><div class="line"><label for="rpm">Unheld platter speed</label><span class="value" id="rpmV"></span></div><input id="rpm" type="range" min="2" max="45" step=".2" value="16.2"></div>
+ <div class="cols2"><div class="field"><label for="polarityL">Left deck orientation</label><select id="polarityL"><option value="1">Stroke + → clockwise</option><option value="-1">Stroke + → counterclockwise</option></select></div><div class="field"><label for="polarityR">Right deck orientation</label><select id="polarityR"><option value="1">Stroke + → clockwise</option><option value="-1">Stroke + → counterclockwise</option></select></div></div>
+ <div class="divider"></div>
+ <div class="cols2"><div class="field"><label for="album">Custom record art</label><input id="album" type="file" accept="image/*"></div><div class="field"><label for="sprite">Override pose PNG</label><input id="sprite" type="file" accept="image/png"></div></div>
+ <div class="row"><label><input id="showMarkers" type="checkbox" checked> Show hand travel markers</label><label><input id="showMasks" type="checkbox" checked> Keep hands in front of record</label></div>
+ <div class="note"><strong>Physical rule:</strong> At the base pose, the record spins at its normal RPM. During a stroke, the platter follows hand displacement, in either direction. At the endpoint it holds still; on the return stroke it reverses. Once the hand releases at base, normal spin resumes without an angle jump.</div>
+</section>
+<section class="panel full stack">
+ <div class="row between"><h2>Exportable calibration</h2><div class="row"><button id="export" class="primary">Export JSON calibration</button><button id="importBtn">Import calibration</button><input id="import" type="file" accept=".json,application/json" hidden></div></div>
+ <p>One profile per scratch family. Import a previously exported file to recover adjustments. This is a calibration experiment; live PocketDJ has not been modified.</p>
+ <textarea id="jsonPreview" rows="7" readonly></textarea>
+ <div class="row"><button id="copy">Copy calibration JSON</button><span class="hint" id="copyStatus"></span></div>
+ <div class="note">Artwork loading uses the published PocketDJ repository. If you are offline, upload a local 582×652 source sprite with the override control. The studio's arm movement is a <strong>visual approximation</strong> based on the current starter rig hand anchors, not a production detached-arm rig; the final six arm-mask exports are not in the published repository yet.</div>
+</section>
+</main>
+<footer>PocketDJ scratch-vinyl experiment • isolated calibration / review only • original Spotify audio transport unchanged</footer>
+<script>
+(()=>{'use strict';
+ const W=582,H=652,TAU=Math.PI*2;
+ const ROOT='https://raw.githubusercontent.com/jonathanjoelneptune/PocketDJ/main/public/assets/poses/final/';
+ const sides=['left','right'];
+ const D={left:{x:170,y:399,rx:55,ry:28},right:{x:425,y:397,rx:55,ry:28}};
+ const seeds={
+  a10:{left:{hand:[164,374],states:[0,12,7,-2]},right:{hand:[336,371],states:[0,0,0,0]}},
+  a4:{left:{hand:[148,373],states:[0,12,8,-3]},right:{hand:[336,367],states:[0,0,0,0]}},
+  a14:{left:{hand:[249,382],states:[0,0,0,0]},right:{hand:[435,377],states:[0,10,5,-3]}},
+  a44:{left:{hand:[165,374],states:[0,0,10,4]},right:{hand:[439,373],states:[0,12,0,7]}},
+  a47:{left:{hand:[165,374],states:[0,0,10,4]},right:{hand:[440,373],states:[0,12,0,7]}},
+  a48:{left:{hand:[160,373],states:[0,11,0,6]},right:{hand:[434,373],states:[0,0,13,7]}}
+ };
+ const $=id=>document.getElementById(id), ctx=$('stage').getContext('2d'),plot=$('chart').getContext('2d');
+ ctx.imageSmoothingEnabled=false;
+ const parameters=['distance','sensitivity','travel','hold','rest','rpm'];
+ const profiles={};for(const family of Object.keys(seeds)) profiles[family]={distance:16,sensitivity:4.5,travel:200,hold:60,rest:380,rpm:16.2,deck:'auto',pattern:'alternate',polarityL:1,polarityR:1};
+ let pose='a44',simNow=0,autoEpoch=0,lastReal=0,playing=true,rate=1,manual=null,manualFrom=0,manualTo=0,manualStartedAt=0,manualHeld=false,manualDir=1,album=null,images={},spriteOverride=null,stageMessage='',currentHand={left:0,right:0},previousHand={left:0,right:0},latched={left:false,right:false},angles={left:0,right:0},velocities={left:0,right:0},chartData=[],currentPhase='rest',currentStroke=0,selectedStrokeSide='right',patternCycle=0,oldMode='',cleanSlate=true;
+ const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),ease=t=>(1-Math.cos(Math.PI*clamp(t,0,1)))/2,lerp=(a,b,t)=>a+(b-a)*t;
+ const rad=deg=>deg*Math.PI/180,deg=rad=>rad*180/Math.PI;
+ function profile(){return profiles[pose]}
+ function activeDecks(){const mode=profile().deck;return mode==='auto'?(pose==='a10'||pose==='a4'?['left']:pose==='a14'?['right']:sides):mode==='both'?sides:[mode]}
+ function hasScratch(side){return activeDecks().includes(side) && (profile().pattern!=='seed'||seeds[pose][side].states.some(v=>v!==0))}
+ function forceRelease(){autoEpoch=simNow;manual=null;manualHeld=false;manualFrom=0;manualTo=0;manualStartedAt=simNow;previousHand={left:0,right:0};latched={left:false,right:false};currentHand={left:0,right:0};cleanSlate=true}
+ function loading(f){stageMessage=f;$('assetStatus').textContent=f}
+ function loadPose(name){spriteOverride=null;const needed=[name+'.png',name+'-2.png',name+'-3.png'];images={};loading('Loading published '+name.toUpperCase()+' sprite images…');let done=0;needed.forEach((file,i)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{images[i]=img;if(i===0)loading(name.toUpperCase()+' artwork loaded. The hand motion is a starter-rig approximation.');done++};img.onerror=()=>{done++;if(i===0)loading('Could not reach GitHub artwork; upload your own 582×652 pose PNG below.')};img.src=ROOT+file});}
+ function syncForm(){const p=profile();for(const k of parameters){$(k).value=p[k];$(k+'V').textContent=(k==='travel'||k==='hold'||k==='rest')?p[k]+' ms':k==='rpm'?p[k].toFixed(1)+' rpm':k==='sensitivity'?p[k].toFixed(2)+' °/px':p[k]+' px'}for(const k of ['deck','pattern','polarityL','polarityR'])$(k).value=p[k].toString();previewJson()}
+ function serialize(){return {schema:'pocketdj.scratch-vinyl-calibration.v1',source:'Scratch Vinyl Sync Lab',canvas:[582,652],deckCenters:D,notes:'Art-driven scratches: motor idle when held; hand movement directly drives platter delta; release restores free spin with no angle reset.',families:profiles}}
+ function previewJson(){$('jsonPreview').value=JSON.stringify(serialize(),null,2)}
+ function download(name,text){const blob=new Blob([text],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+ for(const k of parameters){$(k).addEventListener('input',()=>{profile()[k]=+$(k).value;syncForm()})}
+ for(const k of ['deck','pattern','polarityL','polarityR']){$(k).addEventListener('change',()=>{profile()[k]=k.startsWith('polarity')?+$(k).value:$(k).value;forceRelease();syncForm()})}
+ $('pose').addEventListener('change',()=>{pose=$('pose').value;loadPose(pose);forceRelease();patternCycle=0;simNow=0;chartData=[];syncForm()});
+ $('play').addEventListener('click',()=>{playing=!playing;$('play').textContent=playing?'⏸ Pause preview':'▶ Resume preview';lastReal=0});
+ $('reset').addEventListener('click',()=>{angles={left:0,right:0};velocities={left:0,right:0};simNow=0;chartData=[];patternCycle=0;forceRelease()});
+ $('slower').addEventListener('click',()=>{rate=rate===0.25?1:rate/2;$('slower').textContent=rate.toFixed(2)+'×';$('faster').textContent='2×'});
+ $('faster').addEventListener('click',()=>{rate=rate===2?1:rate*2;$('faster').textContent=rate.toFixed(2)+'×';$('slower').textContent='½×'});
+ function setManual(dir){if(!playing){playing=true;$('play').textContent='⏸ Pause preview'} manualFrom=manual===null?currentHand[activeDecks()[0]]:manualValue();manualTo=dir*profile().distance;manualStartedAt=simNow;manualDir=dir;manualHeld=true;manual='in';cleanSlate=true}
+ function manualValue(){const t=ease((simNow-manualStartedAt)/profile().travel);return lerp(manualFrom,manualTo,t)}
+ function releaseManual(){if(manual===null)return;manualFrom=manualValue();manualTo=0;manualStartedAt=simNow;manualHeld=false;manual='out'}
+ for(const [id,dir] of [['push',1],['pull',-1]]){const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture?.(e.pointerId);setManual(dir);b.classList.add('on')});b.addEventListener('pointerup',()=>{releaseManual();b.classList.remove('on')});b.addEventListener('pointercancel',()=>{releaseManual();b.classList.remove('on')});b.addEventListener('lostpointercapture',()=>{releaseManual();b.classList.remove('on')})}
+ $('release').addEventListener('click',()=>{if(manual)releaseManual();else forceRelease()});
+ $('album').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{album=im;URL.revokeObjectURL(u)};im.src=u});
+ $('sprite').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{if(im.width!==582||im.height!==652){loading('Please use a 582×652 PNG');URL.revokeObjectURL(u);return}spriteOverride=im;loading('Using local source pose PNG.');URL.revokeObjectURL(u)};im.src=u});
+ $('export').addEventListener('click',()=>download('pocketdj-scratch-vinyl-calibration.json',JSON.stringify(serialize(),null,2)));
+ $('copy').addEventListener('click',()=>navigator.clipboard?.writeText($('jsonPreview').value).then(()=>$('copyStatus').textContent='Copied to clipboard',()=>$('copyStatus').textContent='Clipboard unavailable; select text manually'));
+ $('importBtn').addEventListener('click',()=>$('import').click());
+ $('import').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{const json=JSON.parse(await file.text());if(json.schema!=='pocketdj.scratch-vinyl-calibration.v1'||!json.families)throw Error('Unsupported calibration schema');for(const family of Object.keys(seeds)){const incoming=json.families[family];if(!incoming)continue;for(const k of parameters){const n=Number(incoming[k]);if(Number.isFinite(n)&&n>0)profiles[family][k]=n}for(const k of ['deck','pattern'])if(typeof incoming[k]==='string')profiles[family][k]=incoming[k];for(const k of ['polarityL','polarityR'])if(Math.abs(+incoming[k])===1)profiles[family][k]=+incoming[k]}syncForm();forceRelease();loading('Calibration imported successfully.')}catch(error){loading('Import failed: '+error.message)}});
+ function strokeTrajectory(t){const p=profile(),tr=p.travel,ho=p.hold,re=p.rest,cycle=re+tr+ho+tr;const seq=Math.floor(t/cycle),pos=t%cycle;patternCycle=seq;let direction=p.pattern==='reverse'?-1:p.pattern==='forward'?1:seq%2===0?1:-1;
+ const activeSide=p.pattern==='leftRight'?(seq%2===0?'left':'right'):'both';
+ let phase='rest',d=0;
+ if(pos>=re&&pos<re+tr){phase='forward';d=direction*p.distance*ease((pos-re)/tr)}
+ else if(pos>=re+tr&&pos<re+tr+ho){phase='held';d=direction*p.distance}
+ else if(pos>=re+tr+ho){phase='back';d=direction*p.distance*(1-ease((pos-re-tr-ho)/tr))}
+ return {phase,delta:d,activeSide,seq};}
+ function seedTrajectory(t){const p=profile(),frameSpan=p.rest+p.travel+p.hold+p.travel;const index=Math.floor(t/frameSpan)%4,prev=Math.max(0,index-1),next=(index+1)%4,loc=t%frameSpan,tr=p.travel;
+ const progress=loc<p.rest?0:loc<p.rest+tr?ease((loc-p.rest)/tr):1;
+ const get=(side)=>lerp(seeds[pose][side].states[prev],seeds[pose][side].states[index],progress)/12*p.distance;
+ return {phase:progress===0?'rest':progress===1?'held':'forward',delta:get('left'),secondary:get('right'),activeSide:'both',seq:index};}
+ function gestureAt(t){const p=profile();const auto=p.pattern==='seed'?seedTrajectory(t-autoEpoch):strokeTrajectory(t-autoEpoch);currentPhase=auto.phase;
+ if(manual!==null){const value=manualValue();if(manual==='out'&&Math.abs(value)<.06){manual=null;autoEpoch=t;return {left:0,right:0}}currentPhase=(manual==='in'&&Math.abs(value-manualTo)<.05)?'held':manual==='out'?'back':'forward';auto.delta=value;auto.secondary=value;auto.activeSide='both'}
+ const result={left:0,right:0};for(const side of sides){if(!hasScratch(side)||(!manual&&auto.activeSide!=='both'&&auto.activeSide!==side))continue;result[side]=(p.pattern==='seed'&&side==='right'&&!manual)?auto.secondary:auto.delta}
+ return result;}
+ function drawDisc(c,side,angle){const d=D[side];c.save();c.translate(d.x,d.y);c.scale(1,d.ry/d.rx);c.rotate(angle);c.beginPath();c.arc(0,0,d.rx,0,TAU);c.clip();c.fillStyle='#121821';c.fillRect(-d.rx,-d.rx,d.rx*2,d.rx*2);
+ c.strokeStyle='#647786';c.lineWidth=1;for(let r=d.rx-1;r>8;r-=4){c.beginPath();c.arc(0,0,r,0,TAU);c.stroke()}
+ if(album){c.save();c.beginPath();c.arc(0,0,d.rx*.82,0,TAU);c.clip();const size=Math.min(album.width,album.height),sx=(album.width-size)/2,sy=(album.height-size)/2;c.drawImage(album,sx,sy,size,size,-d.rx*.82,-d.rx*.82,d.rx*1.64,d.rx*1.64);c.restore()}
+ else{c.fillStyle=side==='left'?'#256b72':'#7a4d89';c.beginPath();c.arc(0,0,d.rx*.68,0,TAU);c.fill();c.fillStyle='rgba(255,255,255,.26)';c.fillRect(-d.rx*.68,-5,d.rx*1.36,11);c.fillStyle='#f8dfa5';c.font='bold 12px monospace';c.textAlign='center';c.fillText('POCKET',0,-13);c.font='bold 15px monospace';c.fillText('DJ',0,20)}
+ c.strokeStyle='#f4debd';c.lineWidth=3;c.beginPath();c.moveTo(0,-d.rx*.76);c.lineTo(0,-d.rx*.29);c.stroke();c.fillStyle='#dae7eb';c.beginPath();c.arc(0,0,3,0,TAU);c.fill();c.restore()}
+ function drawHandOverRecord(image,side,offset){if(!image||!$('showMasks').checked)return;const h=seeds[pose][side].hand,d=D[side];if(Math.abs(h[0]-d.x)>65)return;
+ // Clip only skin and wrist near the intended platter contact. The full pose
+ // remains intact underneath; this is a calibration overlay, not a new arm rig.
+ ctx.save();ctx.beginPath();ctx.ellipse(h[0],h[1]+offset,26,16,0,0,TAU);ctx.clip();ctx.drawImage(image,0,offset);ctx.restore();}
+ function drawMarkers(){if(!$('showMarkers').checked)return;for(const side of sides){if(!hasScratch(side))continue;const h=seeds[pose][side].hand,d=D[side],v=currentHand[side];ctx.save();ctx.strokeStyle='rgba(79,226,197,.32)';ctx.setLineDash([4,4]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(h[0],h[1]-profile().distance);ctx.lineTo(h[0],h[1]+profile().distance);ctx.stroke();ctx.setLineDash([]);ctx.strokeStyle='#efffff';ctx.fillStyle=side==='left'?'#4ce2c4':'#f7b66d';ctx.lineWidth=2;ctx.beginPath();ctx.arc(h[0],h[1]+v,5,0,TAU);ctx.fill();ctx.stroke();ctx.restore()}}
+ function draw(t){ctx.clearRect(0,0,W,H);const base=spriteOverride||images[0];if(base){ctx.drawImage(base,0,0,W,H)}else{ctx.fillStyle='#0f1724';ctx.fillRect(0,0,W,H);ctx.fillStyle='#879ab6';ctx.font='20px system-ui';ctx.fillText('Load a PocketDJ sprite',170,280)}
+ for(const side of sides)drawDisc(ctx,side,angles[side]);for(const side of sides)drawHandOverRecord(base,side,currentHand[side]);drawMarkers();}
+ function drawPlot(){const c=$('chart'),w=c.width,h=c.height;plot.clearRect(0,0,w,h);plot.fillStyle='#0b1521';plot.fillRect(0,0,w,h);plot.strokeStyle='#1e3449';plot.lineWidth=1;for(let k=1;k<5;k++){const y=k*h/5;plot.beginPath();plot.moveTo(0,y);plot.lineTo(w,y);plot.stroke()}
+ plot.strokeStyle='#3c5877';plot.beginPath();plot.moveTo(0,h/2);plot.lineTo(w,h/2);plot.stroke();const n=chartData.length;if(n<2)return;const maxHand=Math.max(1,profile().distance),maxAngular=Math.max(.3,Math.abs(rad(profile().rpm*6)),Math.abs(rad(profile().distance*profile().sensitivity)/Math.max(1,profile().travel)*1000));
+ const series=[{color:'#4ce2c4',value:v=>v.hand/maxHand},{color:'#f7b66d',value:v=>v.speed/maxAngular},{color:'#7790ad',value:v=>rad(profile().rpm*6)/maxAngular}];for(const s of series){plot.strokeStyle=s.color;plot.lineWidth=3;plot.beginPath();chartData.forEach((p,i)=>{const x=i/(Math.max(1,n-1))*w,y=h/2-s.value(p)*h*.4;if(!i)plot.moveTo(x,y);else plot.lineTo(x,y)});plot.stroke()}}
+ function tick(now){if(!lastReal)lastReal=now;const dt=playing?clamp(now-lastReal,0,65)*rate:0;lastReal=now;simNow+=dt;
+ const next=gestureAt(simNow),p=profile();let motor=false,speed=0;
+ for(const side of sides){const d=next[side],previous=previousHand[side],engaged=hasScratch(side)&&(Math.abs(d)>.04||Math.abs(previous)>.04||currentPhase==='held');const deltaDeg=(d-previous)*p.sensitivity*p[side==='left'?'polarityL':'polarityR'];
+ if(playing&&dt>0){const change=engaged?rad(deltaDeg):rad(p.rpm*6)*dt/1000;angles[side]=((angles[side]+change)%TAU+TAU)%TAU;velocities[side]=change/dt*1000;}else velocities[side]=0;
+ previousHand[side]=d;currentHand[side]=d;if(engaged){motor=true;speed=velocities[side]}}
+ $('modeBadge').textContent=motor?'HAND-LOCKED':'NORMAL ROTATION';$('modeBadge').style.color=motor?'var(--amber)':'var(--mint)';
+ $('leftAngle').textContent=(deg(angles.left)%360).toFixed(0)+'°';$('rightAngle').textContent=(deg(angles.right)%360).toFixed(0)+'°';$('handPx').textContent=(Math.max(Math.abs(next.left),Math.abs(next.right))).toFixed(1)+' px';$('direction').textContent=motor?(speed>0.02?'FORWARD':speed<-0.02?'BACK':'HOLD'):'FREE';
+ if(playing&&dt>0){chartData.push({hand:Math.abs(next.left)>Math.abs(next.right)?next.left:next.right,speed:Math.abs(velocities.left)>Math.abs(velocities.right)?velocities.left:velocities.right});if(chartData.length>160)chartData.shift()}
+ draw(now);drawPlot();requestAnimationFrame(tick)}
+ syncForm();loadPose(pose);requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
