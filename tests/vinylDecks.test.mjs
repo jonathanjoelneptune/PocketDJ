@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_WIDTH, VINYL_SPRITE_HEIGHT } from "../src/dj/tableRegion.ts";
-import { canPlaceIncomingVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, VINYL_DISC_SCALE, VINYL_ALBUM_ART_RADIUS, VINYL_DISC_THICKNESS_PX } from "../src/dj/vinylMath.ts";
+import { canPlaceIncomingVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, VINYL_DISC_SCALE, VINYL_ALBUM_ART_RADIUS, VINYL_DISC_THICKNESS_PX, VINYL_DISC_BRIGHTNESS } from "../src/dj/vinylMath.ts";
 
 test("exported a8 table region retains the exact approved pixels", () => {
   const mask = decodeTableRegion();
@@ -45,6 +45,16 @@ test("rendered albums are subtly larger with a thin edge, without changing deck 
     assert.ok(VINYL_DISC_THICKNESS_PX < deck.ry * 0.12,
       "the edge stays a subtle screen-space detail");
   }
+});
+
+test("spinning vinyl textures use 90% brightness without altering the DJ or platter", () => {
+  assert.equal(VINYL_DISC_BRIGHTNESS, 0.9);
+  const originalChannel = 200;
+  const compositeAlpha = 1 - VINYL_DISC_BRIGHTNESS;
+  const dimmedChannel = originalChannel * (1 - compositeAlpha);
+  assert.equal(Math.round(dimmedChannel), 180);
+  assert.equal(VINYL_DISC_THICKNESS_PX, 3, "record depth remains intact");
+  assert.equal(VINYL_DISC_SCALE, 1.07, "album footprint remains intact");
 });
 
 test("decks alternate on new song IDs but never on pause, resume, seek or speech", () => {
