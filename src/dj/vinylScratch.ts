@@ -7,6 +7,28 @@ export type ScratchOffsets = Record<ScratchSide, number>;
 export const EMPTY_SCRATCH: ScratchOffsets = Object.freeze({ left: 0, right: 0 });
 export const SCRATCH_VINYL_DEGREES_PER_PX = 4.5;
 
+/** Most forward → least forward. Unlisted states stay at Base for that arm.
+ * Browser canvas positive rotation is clockwise; -1 means CCW.
+ * A14's RIGHT hand intentionally rotates CCW on a forward stroke.
+ */
+export const SCRATCH_VINYL_DIRECTION: Readonly<Record<string, Readonly<Record<ScratchSide, -1 | 0 | 1>>>> = {
+  a10: { left: -1, right: 0 },
+  a4:  { left: -1, right: 0 },
+  a14: { left: 0, right: -1 },
+  a44: { left: -1, right: 1 },
+  a47: { left: -1, right: 1 },
+  a48: { left: -1, right: 1 },
+};
+export const SCRATCH_FORWARD_ORDER: Readonly<Record<string, Readonly<Record<ScratchSide, readonly number[] | null>>>> = {
+  a10: { left: [1, 2, 0, 3], right: null },
+  a4:  { left: [1, 2, 0, 3], right: null },
+  a14: { left: null, right: [1, 2, 0, 3] },
+  a44: { left: [2, 3, 0], right: [1, 3, 0] },
+  a47: { left: [2, 3, 0], right: [1, 3, 0] },
+  a48: { left: [1, 3, 0], right: [2, 3, 0] },
+};
+
+
 export const SCRATCH_VINYL_HANDS: Record<string, {
   left: { hand: readonly [number, number]; frames: readonly number[] } | null;
   right: { hand: readonly [number, number]; frames: readonly number[] } | null;
@@ -76,6 +98,85 @@ export function scratchOffsetsFromArms(
   }
   return offsets;
 }
+/**
+ * Scratch-rig amplitudes, measured from the SAME four calibrated hand poses
+ * that animate the sprite. The order only determines forward/back sign;
+ * distances between adjacent positions determine how far the vinyl travels.
+ * It is identical in principle to Scratch Rig + Vinyl Studio v3.
+ */
+function handPosition(arm: ScratchArm, pivot: { x:number; y:number }, hand: { x:number; y:number }) {
+  const a=rad(arm.tilt),dx=hand.x-pivot.x,dy=hand.y-pivot.y;
+  return { x:pivot.x+arm.x+dx*Math.cos(a)-dy*Math.sin(a),
+           y:pivot.y+arm.y+dx*Math.sin(a)+dy*Math.cos(a) };
+}
+export function scratchRigSignedLevels(
+  family:string,
+  rig: {pivots: ScratchPivotPair; scratchFrames: Record<ScratchSide, readonly ScratchArm[]>;
+    handAnchors?: Partial<Record<ScratchSide, {x:number;y:number}>>},
+): Record<ScratchSide, number[]> {
+  const levels:Record<ScratchSide,number[]>={left:[0,0,0,0],right:[0,0,0,0]};
+  for(const side of ['left','right'] as const) {
+    const order=SCRATCH_FORWARD_ORDER[family]?.[side];
+    const states=rig.scratchFrames[side];
+    const pivot=rig.pivots[side];
+    const fallback=SCRATCH_VINYL_HANDS[family]?.[side];
+    if(!order||!pivot||!states||states.length!==4||!fallback)continue;
+    const hand=rig.handAnchors?.[side]??{x:fallback.hand[0],y:fallback.hand[1]};
+    const distance=(a:number,b:number):number=>{
+      const p=handPosition(states[a],pivot,hand),q=handPosition(states[b],pivot,hand);
+      return Math.hypot(p.x-q.x,p.y-q.y);
+    };
+    const base=order.indexOf(0);
+    if(base<0)continue;
+    for(let i=base-1;i>=0;i--)levels[side][order[i]]=levels[side][order[i+1]]+distance(order[i],order[i+1]);
+    for(let i=base+1;i<order.length;i++)levels[side][order[i]]=levels[side][order[i-1]]-distance(order[i-1],order[i]);
+  }
+  return levels;
+}
+
+/** The arm rig supplies target keyframe AND eased interpolation progress.
+ * This sampler never starts a second scratch timer or moves an arm. When a
+ * new gesture interrupts another, its start is the last sampled record
+ * position, so neither the hand nor the disc snaps back to Base.
+ */
+export class RigScratchVinylSampler {
+  private family:string|null=null;
+  private rigIdentity:object|null=null;
+  private transitionId=-1;
+  private levels:Record<ScratchSide,number[]>={left:[0,0,0,0],right:[0,0,0,0]};
+  private from:ScratchOffsets={...EMPTY_SCRATCH};
+  private to:ScratchOffsets={...EMPTY_SCRATCH};
+  private current:ScratchOffsets={...EMPTY_SCRATCH};
+
+  sample(family:string,
+    motion:{targetIndex:number;transitionId:number;progress:number},
+    rig:{pivots:ScratchPivotPair;scratchFrames:Record<ScratchSide,readonly ScratchArm[]>;
+      handAnchors?:Partial<Record<ScratchSide,{x:number;y:number}>>},
+  ):ScratchOffsets{
+    if(this.family!==family||this.rigIdentity!==rig) {
+      this.family=family;
+      this.rigIdentity=rig;
+      this.levels=scratchRigSignedLevels(family,rig);
+      this.transitionId=motion.transitionId;
+      const i=Math.max(0,Math.min(3,motion.targetIndex));
+      this.current={left:this.levels.left[i],right:this.levels.right[i]};
+      this.from={...this.current};this.to={...this.current};
+    } else if(this.transitionId!==motion.transitionId) {
+      this.transitionId=motion.transitionId;
+      this.from={...this.current};
+      const i=Math.max(0,Math.min(3,motion.targetIndex));
+      this.to={left:this.levels.left[i],right:this.levels.right[i]};
+    }
+    const t=clamp(motion.progress);
+    this.current={left:mix(this.from.left,this.to.left,t),right:mix(this.from.right,this.to.right,t)};
+    return {...this.current};
+  }
+  reset():void{
+    this.family=null;this.rigIdentity=null;this.transitionId=-1;
+    this.from={...EMPTY_SCRATCH};this.to={...EMPTY_SCRATCH};this.current={...EMPTY_SCRATCH};
+  }
+}
+
 /** Angle stays continuous: hand motion displaces record, holding locks it,
  * returning to neutral releases it to the normal RPM without reset. */
 export class ScratchVinylTransport{
@@ -98,7 +199,8 @@ export class ScratchVinylTransport{
     if(!playing||!Number.isFinite(elapsedMs)||elapsedMs<=0)return angle;
     const current=this.family?this.target[side]:0,prev=this.family?this.previous[side]:0;
     const held=this.family!==null&&(Math.abs(current)>0.06||Math.abs(prev)>0.06);
-    const delta=held?rad((current-prev)*this.sensitivity):rpm*Math.PI*2*elapsedMs/60000;
+    const sign=this.family?SCRATCH_VINYL_DIRECTION[this.family]?.[side]??0:0;
+    const delta=held?rad((current-prev)*this.sensitivity*sign):rpm*Math.PI*2*elapsedMs/60000;
     this.previous[side]=current;
     return wrap(angle+delta);
   }
