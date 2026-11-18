@@ -13,6 +13,8 @@ export type ScratchRigJson = {
   sourceCanvas: { width: number; height: number };
   pivots: Record<ScratchArmSide, { x: number; y: number }>;
   scratchFrames: Record<ScratchArmSide, ScratchArmTransform[]>;
+  /** Exact hand calibration from the Scratch Rig Studio ZIP when available. */
+  handAnchors?: Record<ScratchArmSide, { x: number; y: number }>;
 };
 export type ScratchRigMotion = {
   left: ScratchArmTransform;
@@ -54,6 +56,37 @@ export function validateScratchRig(value: ScratchRigJson, family: string): boole
       frames.every(f => f && Number.isFinite(f.x) && Number.isFinite(f.y) &&
         Number.isFinite(f.tilt) && Math.abs(f.tilt) <= 90);
   });
+}
+
+/** The Scratch Rig Studio exports artist-edited rigs as arms[].states,
+ * while runtime rigs use pivots/scratchFrames. Convert without changing the
+ * four approved transforms, shoulder pivots or hand contact anchors.
+ */
+export function normalizeScratchRig(input: unknown, family: string): ScratchRigJson | null {
+  if (!input || typeof input !== "object") return null;
+  const raw = input as Partial<ScratchRigJson> & {
+    arms?: Partial<Record<ScratchArmSide, {
+      pivot: { x: number; y: number };
+      handAnchor: { x: number; y: number };
+      states: ScratchArmTransform[];
+    }>>;
+  };
+  if (validateScratchRig(raw as ScratchRigJson, family)) return raw as ScratchRigJson;
+  if (!raw.arms?.left || !raw.arms?.right) return null;
+  const left = raw.arms.left, right = raw.arms.right;
+  const normalized: ScratchRigJson = {
+    schema: raw.schema ?? "",
+    family: raw.family ?? "",
+    sourceCanvas: raw.sourceCanvas ?? { width: 0, height: 0 },
+    pivots: { left: left.pivot, right: right.pivot },
+    scratchFrames: { left: left.states, right: right.states },
+    handAnchors: { left: left.handAnchor, right: right.handAnchor },
+  };
+  return validateScratchRig(normalized, family) &&
+    (['left','right'] as const).every(side => {
+      const h = normalized.handAnchors?.[side];
+      return h && Number.isFinite(h.x) && Number.isFinite(h.y);
+    }) ? normalized : null;
 }
 
 /**
@@ -194,8 +227,9 @@ export class ScratchRigLibrary {
     const root = ROOT + family + '/';
     const response = await fetch(root + 'scratch_rig.json', { cache: 'force-cache' });
     if (!response.ok) throw new Error(`Scratch rig ${family}: HTTP ${response.status}`);
-    const rig = await response.json() as ScratchRigJson;
-    if (!validateScratchRig(rig, family)) throw new Error('Malformed scratch rig ' + family);
+    const rawRig = await response.json() as unknown;
+    const rig = normalizeScratchRig(rawRig, family);
+    if (!rig) throw new Error('Malformed scratch rig ' + family);
     const [body, left, right] = await Promise.all([
       decodeImage(root + family + '_body.png'),
       decodeImage(root + family + '_arm_left.png'),
