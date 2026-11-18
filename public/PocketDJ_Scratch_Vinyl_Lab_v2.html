@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PocketDJ · Scratch Rig / Vinyl Sync Lab v2</title>
+<style>
+:root{color-scheme:dark;--bg:#0a1019;--panel:#131e2e;--border:#304158;--fg:#eaf1fa;--muted:#96a9c2;--accent:#4bdac1;--amber:#efb66e;--blue:#7cb6ef;--bad:#f08e8e}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 25% 0,#183047,#0a1019 55%);color:var(--fg);font:14px/1.43 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:21px max(16px,calc((100vw - 1400px)/2));border-bottom:1px solid var(--border);display:flex;gap:16px;align-items:center}.brand{border:1px solid #467269;color:var(--accent);padding:6px 9px;border-radius:7px;white-space:nowrap;font-size:11px;letter-spacing:.12em;font-weight:800}h1{margin:0;font-size:22px}p{margin:4px 0;color:var(--muted)}small,.sub{font-size:12px;color:var(--muted)}h2{font-size:15px;margin:0}main{padding:16px;max-width:1432px;margin:auto;display:grid;grid-template-columns:minmax(370px,1.35fr) minmax(340px,1fr);gap:16px}.panel{border:1px solid var(--border);background:linear-gradient(160deg,#162438,#111925);border-radius:14px;padding:16px;min-width:0}.wide{grid-column:1/-1}.stack{display:grid;gap:13px}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.stage{display:grid;place-items:center;background:#0b1623;border:1px solid #304055;border-radius:12px;min-height:200px;padding:6px}.stage canvas{width:min(100%,530px);height:auto;image-rendering:pixelated;aspect-ratio:582/652}button,select,input[type=number]{background:#1b2b3f;border:1px solid #435773;color:var(--fg);border-radius:8px;padding:9px 10px;font:inherit}button{cursor:pointer;font-weight:650}button:hover{border-color:var(--accent)}button.primary{background:#17685d;border-color:#319f90}button.active{background:#26576a;border-color:#72dbdd}button:disabled{opacity:.4;cursor:not-allowed}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent)}input[type=range]{width:100%;accent-color:var(--accent)}input[type=file]{font-size:12px;max-width:100%}label{font-size:12px;color:#c3d2e5;font-weight:700}.field{display:grid;gap:5px}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px}.controls{display:flex;gap:7px;flex-wrap:wrap}.controls button{flex:1;min-width:80px}.status{border:1px solid #476073;border-radius:7px;padding:10px;font-size:12px;color:#d9e8f7;background:#122538}.status.good{border-color:#317969;background:#102e28}.status.warn{border-color:#846742;background:#332717}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.metric{border:1px solid #30435b;background:#0e1928;border-radius:9px;padding:9px}.metric span{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;font-variant-numeric:tabular-nums;font-size:17px}.row label{display:inline-flex;align-items:center;gap:5px}.line{display:flex;justify-content:space-between;gap:8px}.val{font-variant-numeric:tabular-nums;color:var(--accent)}.divider{border-top:1px solid var(--border)}.pill{padding:3px 8px;border:1px solid #476e69;color:var(--accent);font-size:11px;border-radius:16px}.chart{width:100%;height:148px;background:#0b1827;border:1px solid #304156;border-radius:10px}.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:12px}.swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}.stateval{font:11px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:#bbd0eb}textarea{width:100%;min-height:105px;padding:10px;background:#0c1725;border:1px solid var(--border);border-radius:8px;color:#dceaff;font:11px/1.5 ui-monospace,Consolas,monospace}footer{padding:16px;text-align:center;color:var(--muted);font-size:12px}a{color:#85d8fb;text-decoration:none}a:hover{text-decoration:underline}@media(max-width:900px){main{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}header{padding:14px}}@media(max-width:460px){.twocol{grid-template-columns:1fr}.panel{padding:12px}}
+</style>
+</head>
+<body>
+<header><span class="brand">POCKET DJ · V2</span><div><h1>Scratch Rig → Vinyl Sync Lab</h1><p>One animation clock for the actual Base / Scratch 1 / Scratch 2 / Scratch 3 arm poses and the vinyl. No invented hand strokes.</p></div></header>
+<main>
+<section class="panel stack">
+ <div class="row between"><h2>Live rig and record preview</h2><span id="phaseTag" class="pill">FREE SPIN</span></div>
+ <div class="stage"><canvas id="stage" width="582" height="652" aria-label="PocketDJ scratch-rig animation and spinning vinyl records"></canvas></div>
+ <div class="metrics"><div class="metric"><span>Rig state</span><strong id="stateMetric">Base</strong></div><div class="metric"><span>Left record</span><strong id="leftMetric">FREE</strong></div><div class="metric"><span>Right record</span><strong id="rightMetric">FREE</strong></div><div class="metric"><span>Stroke time</span><strong id="timeMetric">0 ms</strong></div></div>
+ <canvas id="chart" class="chart" width="1000" height="188" aria-label="Time series of hand position and record spin"></canvas>
+ <div class="legend"><span><i class="swatch" style="background:#4bdac1"></i>Left hand travel</span><span><i class="swatch" style="background:#f0b66c"></i>Right hand travel</span><span><i class="swatch" style="background:#89a5ce"></i>Vinyl angular velocity</span></div>
+ <div class="status" id="notice" role="status">Searching for saved Scratch Rig calibration…</div>
+</section>
+<section class="panel stack">
+ <h2>1 · Load the actual Scratch Rig</h2>
+ <div class="field"><label for="family">Pose family</label><select id="family"><option value="a10">A10 · Left scratch</option><option value="a4">A4 · Record touch</option><option value="a14">A14 · Right scratch</option><option value="a44" selected>A44 · Both records</option><option value="a47">A47 · Both records, head low</option><option value="a48">A48 · Alternating hands</option></select></div>
+ <div class="status" id="rigStatus">Checking for an exported rig…</div>
+ <div class="field"><label for="rigInput">Import Scratch Rig Studio ZIP or JSON + PNGs</label><input id="rigInput" type="file" accept=".zip,.json,.png,application/zip,application/json,image/png" multiple><small>Import the ZIP produced by <strong>Scratch Rig Studio</strong>, or select <code>scratch_rig.json</code> with its body, left-arm and right-arm PNGs. You can import multiple family ZIPs at once. We also read saved Scratch Rig Studio projects automatically when opened on the same PocketDJ domain.</small></div>
+ <div class="row"><button id="reloadRig">↻ Reload saved rig</button><button id="clearImports">Clear imported rig</button><a href="./Scratch_Rig_Studio.html" target="_blank" rel="noopener">Open Scratch Rig Studio</a></div>
+ <div class="divider"></div>
+ <h2>2 · Replay the actual keyframe positions</h2>
+ <div class="controls" id="stateButtons"><button data-state="0" class="active">Base</button><button data-state="1">Scratch 1</button><button data-state="2">Scratch 2</button><button data-state="3">Scratch 3</button></div>
+ <div class="row"><button id="playCycle" class="primary">▶ Play 1 / 2 / 3 cycle</button><button id="pause">⏸ Pause</button><button id="reset">↺ Reset angles</button></div>
+ <div class="field"><div class="line"><label for="stroke">Travel time (identical for hands and discs)</label><span id="strokeV" class="val">170 ms</span></div><input id="stroke" type="range" min="75" max="400" value="170" step="5"></div>
+ <div class="field"><div class="line"><label for="dwell">Hold at keyframe</label><span id="dwellV" class="val">190 ms</span></div><input id="dwell" type="range" min="0" max="1000" value="190" step="10"></div>
+ <div class="field"><label for="cycle">Reference sequence</label><select id="cycle"><option value="home">Base → 1 → Base → 2 → Base → 3 → Base</option><option value="direct">Base → 1 → 2 → 3 → Base</option><option value="one">Base ↔ Scratch 1</option><option value="two">Base ↔ Scratch 2</option><option value="three">Base ↔ Scratch 3</option></select></div>
+ <div class="divider"></div>
+ <h2>3 · Adjust only the vinyl response</h2>
+ <div class="field"><div class="line"><label for="sensitivity">Vinyl rotation per hand-travel pixel</label><span id="sensitivityV" class="val">4.5° / px</span></div><input id="sensitivity" type="range" min="0.25" max="12" value="4.5" step=".25"></div>
+ <div class="field"><div class="line"><label for="rpm">Normal unheld record speed</label><span id="rpmV" class="val">16.2 RPM</span></div><input id="rpm" type="range" min="0" max="45" value="16.2" step=".2"></div>
+ <div class="twocol"><div class="field"><label for="axis">Hand-travel axis</label><select id="axis"><option value="auto">Auto from actual 1 / 2 / 3 hand paths</option><option value="y">Vertical (+ down)</option><option value="x">Horizontal (+ right)</option></select></div><div class="field"><label for="deck">Record contact</label><select id="deck"><option value="auto">Follow rig’s active arms</option><option value="left">Left only</option><option value="right">Right only</option><option value="both">Both when moving</option></select></div></div>
+ <div class="twocol"><div class="field"><label for="polarityL">Left direction</label><select id="polarityL"><option value="1">Positive motion ↻</option><option value="-1">Positive motion ↺</option></select></div><div class="field"><label for="polarityR">Right direction</label><select id="polarityR"><option value="1">Positive motion ↻</option><option value="-1">Positive motion ↺</option></select></div></div>
+ <div class="row"><label><input id="markers" type="checkbox" checked> Show exact hand anchors</label><label><input id="album" type="file" accept="image/*" style="width:165px"> Album cover</label></div>
+ <div class="status good">At Base, records spin normally. A Scratch 1/2/3 movement rotates the touched record by its actual hand displacement. If that arm stays still, its record keeps spinning. During a held scratch position, the touched record stops. The reverse arm movement reverses the disc, and returning to Base releases it without resetting its angle.</div>
+</section>
+<section class="panel wide stack">
+ <div class="row between"><h2>Source keyframes and export</h2><div class="row"><button id="export" class="primary">Export vinyl calibration JSON</button><button id="copy">Copy JSON</button></div></div>
+ <p id="provenance">No rig loaded yet.</p>
+ <div class="twocol"><div><div class="stateval" id="leftStates"></div></div><div><div class="stateval" id="rightStates"></div></div></div>
+ <textarea id="jsonOut" spellcheck="false" readonly aria-label="Exported calibration"></textarea>
+ <small>Export contains vinyl response settings and the identity of the source rig. It does not modify or replace any Scratch Rig states. This is a visual-only proof of concept: Spotify audio remains unchanged. The production preview remains separately gated.</small>
+</section>
+</main>
+<footer>PocketDJ Scratch Vinyl Lab v2 · Same four-state rigs and shoulder pivots as Scratch Rig Studio · 582 × 652 canvas · 16.2 RPM default</footer>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),W=582,H=652,TAU=2*Math.PI,PI=Math.PI,sides=['left','right'];
+const DECK={left:{x:170,y:399,rx:55,ry:28},right:{x:425,y:397,rx:55,ry:28}};
+const BASE_URL=location.protocol==='file:'?'https://jonathanjoelneptune.github.io/PocketDJ/':'./';
+const HEAD_ROOT=BASE_URL+'assets/DJ%20NES%20Pose%20Library/Head%20Bob%20lab/';
+const POSE_ROOT=BASE_URL+'assets/poses/final/';
+const RIG_ROOT=BASE_URL+'assets/DJ%20NES%20Pose%20Library/Scratch%20Rig%20lab/';
+const LABELS=['Base','Scratch 1','Scratch 2','Scratch 3'];
+const CONTACT={a10:['left'],a4:['left'],a14:['right'],a44:['left','right'],a47:['left','right'],a48:['left','right']};
+const PRESETS={
+ a10:{left:{pivot:[217,226],hand:[164,374],states:[[0,0,0],[-3,12,-4],[-2,7,-2],[1,-2,2]]},right:{pivot:[372,226],hand:[336,371],states:[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]}},
+ a4:{left:{pivot:[217,236],hand:[148,373],states:[[0,0,0],[11,12,-4],[6,8,-2],[-2,-3,3]]},right:{pivot:[372,248],hand:[336,367],states:[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]}},
+ a14:{left:{pivot:[222,246],hand:[249,382],states:[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]},right:{pivot:[376,234],hand:[435,377],states:[[0,0,0],[-2,10,3],[-1,5,2],[1,-3,-2]]}},
+ a44:{left:{pivot:[225,211],hand:[165,374],states:[[0,0,0],[0,0,0],[-1,10,-3],[2,4,2]]},right:{pivot:[371,211],hand:[439,373],states:[[0,0,0],[9,12,4],[0,0,0],[5,7,2]]}},
+ a47:{left:{pivot:[225,212],hand:[165,374],states:[[0,0,0],[0,0,0],[-1,10,-3],[2,4,2]]},right:{pivot:[372,211],hand:[440,373],states:[[0,0,0],[9,12,4],[0,0,0],[5,7,2]]}},
+ a48:{left:{pivot:[225,213],hand:[160,373],states:[[0,0,0],[-9,11,-3],[0,0,0],[-5,6,-2]]},right:{pivot:[380,212],hand:[434,373],states:[[0,0,0],[0,0,0],[0,13,3],[0,7,2]]}}
+};
+const DEFAULT={sensitivity:4.5,rpm:16.2,stroke:170,dwell:190,axis:'auto',deck:'auto',polarityL:1,polarityR:1};
+const clone=o=>JSON.parse(JSON.stringify(o)),clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),mix=(a,b,t)=>a+(b-a)*t,rad=d=>d*PI/180,deg=r=>r*180/PI,wrap=a=>((a%TAU)+TAU)%TAU,ease=t=>(1-Math.cos(clamp(t,0,1)*PI))/2;
+const ctx=$('stage').getContext('2d'),chartCtx=$('chart').getContext('2d');ctx.imageSmoothingEnabled=false;
+let family='a44',rig=null,rigSource='',loadedSources={},imported=new Map(),layers=null,images={},albumImage=null;
+let profile={...DEFAULT},motion=null,started=0,duration=170,target=0,currentState=0,sequenceIndex=0,sequenceElapsed=0,cycling=false,playing=true;
+let angles={left:0,right:0},oldTravel={left:0,right:0},travel={left:0,right:0},vel={left:0,right:0},active={left:false,right:false},lastNow=0,series=[],stageReady=false,loadId=0;
+function notice(message,kind=''){const el=$('notice');el.textContent=message;el.className='status '+kind}
+function status(message,kind=''){const el=$('rigStatus');el.textContent=message;el.className='status '+kind}
+function validFamily(key){return Object.hasOwn(PRESETS,key)}
+function stateFromRaw(v){return {x:Number(v.x??v[0]),y:Number(v.y??v[1]),tilt:Number(v.tilt??v[2])}}
+function normalizeRig(raw){if(!raw||raw.schema!=='pocketdj-scratch-rig.v1'||!validFamily(raw.family)||raw.sourceCanvas?.width!==W||raw.sourceCanvas?.height!==H)throw Error('Expected a valid pocketdj-scratch-rig.v1 with a 582 × 652 canvas');
+ const arms={};for(const side of sides){const src=raw.arms?.[side];const states=src?.states||raw.scratchFrames?.[side];if(!Array.isArray(states)||states.length!==4)throw Error('Missing 4 '+side+' arm states');
+ const pivot=src?.pivot||raw.pivots?.[side];const guess=PRESETS[raw.family][side].hand;const hand=src?.handAnchor||{x:guess[0],y:guess[1]};
+ if(!pivot||!Number.isFinite(pivot.x)||!Number.isFinite(pivot.y))throw Error('Bad '+side+' pivot');
+ const parsed=states.map(stateFromRaw);if(parsed.some(s=>Object.values(s).some(v=>!Number.isFinite(v))))throw Error('Invalid arm offsets');
+ if(!Number.isFinite(hand.x)||!Number.isFinite(hand.y))throw Error('Invalid hand anchor');
+ arms[side]={pivot:{x:pivot.x,y:pivot.y},handAnchor:{x:hand.x,y:hand.y},states:parsed,maskRuns:src?.maskRuns||[],provenance:src?.states?.map(s=>s.provenance)||[]};}
+ return {schema:raw.schema,family:raw.family,arms,bodyRepairPixels:raw.bodyRepairPixels||[],hasMaskData:sides.some(side=>arms[side].maskRuns.length>0),usesEstimatedHands:!raw.arms};}
+function fromStarter(f){const out={schema:'pocketdj-scratch-rig.v1',family:f,sourceCanvas:{width:W,height:H},arms:{},bodyRepairPixels:[]};for(const side of sides){const a=PRESETS[f][side];out.arms[side]={pivot:{x:a.pivot[0],y:a.pivot[1]},handAnchor:{x:a.hand[0],y:a.hand[1]},maskRuns:[],states:a.states.map(([x,y,tilt],i)=>({x,y,tilt,provenance:i?'starter':'base'}))}}return out}
+function storageKey(f){return 'pocketdj.scratchstudio.v1.'+f}
+function getSaved(f){try{const text=localStorage.getItem(storageKey(f));if(text){const project=JSON.parse(text);if(project.family===f)return project}}catch(e){}return null}
+function asset(path){return new URL(path,BASE_URL).href}
+function loadImageUrl(url){return new Promise((resolve,reject)=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>img.decode?img.decode().then(()=>resolve(img),()=>resolve(img)):resolve(img);img.onerror=()=>reject(Error('Cannot load '+url));img.src=url})}
+function loadBlobImage(blob){return new Promise((resolve,reject)=>{const uri=URL.createObjectURL(blob),img=new Image();img.onload=()=>{URL.revokeObjectURL(uri);if(img.naturalWidth!==W||img.naturalHeight!==H){reject(Error('Rig layer must be 582 × 652: '+img.naturalWidth+' × '+img.naturalHeight));return}resolve(img)};img.onerror=()=>{URL.revokeObjectURL(uri);reject(Error('Invalid layer PNG'))};img.src=uri})}
+function blank(){const c=document.createElement('canvas');c.width=W;c.height=H;return c}
+function imagePixels(image){const c=blank(),cc=c.getContext('2d',{willReadFrequently:true});cc.drawImage(image,0,0);return cc.getImageData(0,0,W,H)}
+function reconstruct(p,base,headless,head){if(!base||!p.hasMaskData)return null;const original=imagePixels(base),bodyData=headless?imagePixels(headless):imagePixels(base),arms={};const body=blank();
+ const masks={};for(const side of sides){const mask=new Uint8Array(W*H);for(const run of p.arms[side].maskRuns){const x=clamp(run[0],0,W*H-1),end=clamp(run[1],0,W*H-1);if(x<=end)mask.fill(1,x,end+1)}masks[side]=mask;const ar=blank(),ac=ar.getContext('2d'),pixels=ac.createImageData(W,H);for(let i=0;i<mask.length;i++)if(mask[i])pixels.data.set(original.data.slice(i*4,i*4+4),i*4);ac.putImageData(pixels,0,0);arms[side]=ar}
+ const pixels=bodyData.data;for(let i=0;i<W*H;i++)if(masks.left[i]||masks.right[i])pixels[i*4+3]=0;
+ for(const [index,color] of p.bodyRepairPixels){if(!Number.isInteger(index)||index<0||index>=W*H||!Array.isArray(color))continue;pixels.set(color,index*4)}
+ body.getContext('2d').putImageData(bodyData,0,0);return {body,left:arms.left,right:arms.right,head,kind:'reconstructed from exact saved arm masks'} }
+function validateLayerPack(pack){return pack&&sides.every(side=>pack[side])&&pack.body&&pack.head}
+async function acquireLayers(f,p,collection){const local=collection||{};let body=local[f+'_body.png']||null,left=local[f+'_arm_left.png']||null,right=local[f+'_arm_right.png']||null;
+ let head=local[f+'_head_shared.png']||null;
+ if(body&&left&&right){if(!head)head=await loadImageUrl(HEAD_ROOT+f+'/'+f+'_head_shared.png').catch(()=>null);return {body,left,right,head,kind:head?'exported rig PNGs':'exported rig PNGs (shared head still loading / unavailable)'};}
+ // The original Scratch Rig Studio exports headless + arms, while its saved
+ // JSON includes pixel masks and repaired body pixels, enough to recreate them.
+ const [base,headless,sharedHead]=await Promise.all([
+ loadImageUrl(POSE_ROOT+f+'.png').catch(()=>null),loadImageUrl(HEAD_ROOT+f+'/'+f+'_body.png').catch(()=>null),
+ loadImageUrl(HEAD_ROOT+f+'/'+f+'_head_shared.png').catch(()=>null)]);
+ images.base=base;
+ if(p.hasMaskData){const assembled=reconstruct(p,base,headless,head||sharedHead);if(assembled?.head)return assembled}
+ return {body:base,kind:'reference markers only',head:null,left:null,right:null};}
+async function maybeFetchLive(f){try{const r=await fetch(RIG_ROOT+f+'/scratch_rig.json',{cache:'no-store'});if(!r.ok)return null;const json=await r.json();normalizeRig(json);return json}catch(e){return null}}
+async function loadFamily(f){family=f;loadId++;const id=loadId;stageReady=false;const selection=imported.get(f),saved=getSaved(f);let raw=selection?.json||saved,source=selection?'Imported Scratch Rig':saved?'Saved Scratch Rig Studio project':null;
+ if(!raw){const remote=await maybeFetchLive(f);if(remote){raw=remote;source='Live deployed Scratch Rig'}}
+ if(!raw){raw=fromStarter(f);source='Scratch Rig Studio starter coordinates (not final calibration)'}
+ if(id!==loadId)return;
+ try{const normalized=normalizeRig(raw),available=await acquireLayers(f,normalized,selection?.layers);if(id!==loadId)return;
+ rig=normalized;layers=available;rigSource=source;motion=null;currentState=0;target=0;cycling=false;playing=true;sequenceElapsed=0;sequenceIndex=0;started=0;active={left:false,right:false};oldTravel={left:0,right:0};travel={left:0,right:0};
+ const hasArt=Boolean(available.body&&available.left&&available.right);
+ if(hasArt)status(source+' · '+available.kind+' · exact Base / Scratch 1 / Scratch 2 / Scratch 3 transforms loaded.','good');
+ else status(source+' · arm-layer art unavailable. Hand markers and vinyl follow the rig’s stored positions; import the exported ZIP for actual moving-arm art.','warn');
+ if(source.startsWith('Scratch Rig Studio starter'))notice('Using Scratch Rig Studio first-pass values only. Import your approved Scratch Rig ZIP or open this tool on the same browser/domain where the project was saved to use final calibration. No separate gestures are generated.','warn');
+ else notice('Hand and record are driven by the same interpolated Scratch Rig transform. Scratch 1 / 2 / 3 values below come directly from '+source+'.','good');
+ $('playCycle').textContent='▶ Play 1 / 2 / 3 cycle';$('pause').textContent='⏸ Pause';updateMetadata();stageReady=true;
+ }catch(e){status('Could not read '+source+': '+e.message,'warn');notice('Import a Scratch Rig Studio ZIP containing its scratch_rig.json and PNG layers.','warn')}}
+function handAt(side,state){const a=rig.arms[side],p=a.pivot,h=a.handAnchor,an=rad(state.tilt),dx=h.x-p.x,dy=h.y-p.y;return {x:p.x+state.x+dx*Math.cos(an)-dy*Math.sin(an),y:p.y+state.y+dx*Math.sin(an)+dy*Math.cos(an)}}
+function baseHand(side){return handAt(side,rig.arms[side].states[0])}
+function displacement(side,state){const b=baseHand(side),v=handAt(side,state);return {x:v.x-b.x,y:v.y-b.y}}
+function getAxis(side){if(profile.axis==='x')return {x:1,y:0};if(profile.axis==='y')return {x:0,y:1};let v={x:0,y:1},best=0;
+ for(let i=1;i<4;i++){const d=displacement(side,rig.arms[side].states[i]),n=Math.hypot(d.x,d.y);if(n>best){best=n;v={x:d.x/n,y:d.y/n}}}return v}
+function signedTravel(side,state){const d=displacement(side,state),axis=getAxis(side);return d.x*axis.x+d.y*axis.y}
+function stateGrip(side,state){const a=rig.arms[side].states,base=a[0];const dist=Math.hypot(displacement(side,state).x,displacement(side,state).y);
+ return dist>.25||Math.abs(state.tilt-base.tilt)>.12}
+function sideEnabled(side){return profile.deck==='auto'||profile.deck==='both'||profile.deck===side}
+function sample(now){if(!motion)return {left:{...rig.arms.left.states[0]},right:{...rig.arms.right.states[0]}};
+ const t=ease((now-started)/duration);return {left:interp(motion.from.left,motion.to.left,t),right:interp(motion.from.right,motion.to.right,t)}}
+function interp(a,b,t){return {x:mix(a.x,b.x,t),y:mix(a.y,b.y,t),tilt:mix(a.tilt,b.tilt,t)}}
+function setState(i,now){if(!rig)return;const current=sample(now),to={left:{...rig.arms.left.states[i]},right:{...rig.arms.right.states[i]}};motion={from:current,to};started=now;duration=profile.stroke;target=i;sequenceElapsed=0;updateActiveButtons();}
+function updateActiveButtons(){for(const b of $('stateButtons').querySelectorAll('button'))b.classList.toggle('active',Number(b.dataset.state)===target)}
+function seq(){switch($('cycle').value){case'direct':return [0,1,2,3,0];case'one':return [0,1,0];case'two':return [0,2,0];case'three':return [0,3,0];default:return [0,1,0,2,0,3,0]}}
+function startCycle(){if(!rig)return;cycling=true;playing=true;sequenceIndex=0;setState(0,clock);$('playCycle').textContent='■ Stop cycle';$('pause').textContent='⏸ Pause'}
+function stopCycle(){cycling=false;$('playCycle').textContent='▶ Play 1 / 2 / 3 cycle'}
+function changeFamily(){profile={...DEFAULT};syncControls();stopCycle();void loadFamily($('family').value)}
+function syncControls(){for(const name of ['sensitivity','rpm','stroke','dwell','axis','deck','polarityL','polarityR'])$(name).value=profile[name];$('sensitivityV').textContent=profile.sensitivity.toFixed(2)+'° / px';$('rpmV').textContent=profile.rpm.toFixed(1)+' RPM';$('strokeV').textContent=profile.stroke+' ms';$('dwellV').textContent=profile.dwell+' ms';updateMetadata()}
+function updateMetadata(){if(!rig)return;
+ $('leftStates').textContent=describe('left');$('rightStates').textContent=describe('right');
+ $('provenance').textContent=rigSource+'. The exact x/y/rotation and shoulder pivots from this rig are immutable in the Vinyl Lab. Only the record response is adjustable.';
+ const payload={schema:'pocketdj.scratch-vinyl-rig-sync.v2',source:{rigSchema:rig.schema,family,origin:rigSource,handAnchorSource:rig.usesEstimatedHands?'starter anchor':'calibrated rig anchor'},vinyl:{sensitivityDegreesPerPixel:profile.sensitivity,normalRpm:profile.rpm,handTravelAxis:profile.axis,deckContact:profile.deck,direction:{left:profile.polarityL,right:profile.polarityR}},preview:{strokeMs:profile.stroke,dwellMs:profile.dwell,pattern:$('cycle').value}};
+ $('jsonOut').value=JSON.stringify(payload,null,2)}
+function describe(side){const a=rig.arms[side],lines=[side.toUpperCase()+' ARM  ·  pivot '+Math.round(a.pivot.x)+','+Math.round(a.pivot.y)+'  ·  hand '+a.handAnchor.x.toFixed(1)+','+a.handAnchor.y.toFixed(1)];
+ a.states.forEach((s,i)=>{const d=displacement(side,s);lines.push(`${LABELS[i].padEnd(10)} x ${String(s.x.toFixed(1)).padStart(6)}, y ${String(s.y.toFixed(1)).padStart(6)}, tilt ${String(s.tilt.toFixed(1)).padStart(6)}° | hand Δx ${d.x.toFixed(1)}, Δy ${d.y.toFixed(1)}${a.provenance[i]?' · '+a.provenance[i]:''}`)});return lines.join('\n')}
+function download(filename,data,type='application/json'){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+// Reader for the original Scratch Rig Studio ZIP files (stored entries) and
+// ordinary DEFLATE ZIP exports. No CDN or external JS library required.
+async function unpackZip(file){const buf=await file.arrayBuffer(),d=new DataView(buf),u=new Uint8Array(buf),items={};let end=-1;for(let p=buf.byteLength-22;p>=Math.max(0,buf.byteLength-65557);p--){if(d.getUint32(p,true)===0x06054b50){end=p;break}}if(end<0)throw Error('ZIP central directory not found');
+ const count=d.getUint16(end+10,true),start=d.getUint32(end+16,true);let pos=start;
+ for(let i=0;i<count;i++){if(d.getUint32(pos,true)!==0x02014b50)throw Error('Invalid ZIP directory');const method=d.getUint16(pos+10,true),size=d.getUint32(pos+20,true),length=d.getUint16(pos+28,true),extra=d.getUint16(pos+30,true),comment=d.getUint16(pos+32,true),offset=d.getUint32(pos+42,true);const name=new TextDecoder().decode(u.slice(pos+46,pos+46+length));pos+=46+length+extra+comment;if(name.endsWith('/'))continue;
+ const lName=d.getUint16(offset+26,true),lExtra=d.getUint16(offset+28,true),dataStart=offset+30+lName+lExtra,data=u.slice(dataStart,dataStart+size);let bytes;
+ if(method===0)bytes=data;else if(method===8&&typeof DecompressionStream!=='undefined'){const stream=new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));bytes=new Uint8Array(await new Response(stream).arrayBuffer())}else throw Error('ZIP compression method '+method+' unavailable');items[name.split('/').pop().toLowerCase()]={name,bytes}}
+ return items}
+async function imports(files){const groups={};for(const file of files){try{const candidates=file.name.toLowerCase().endsWith('.zip')?await unpackZip(file):{[file.name.toLowerCase()]:{name:file.name,bytes:new Uint8Array(await file.arrayBuffer())}};
+ for(const [key,obj] of Object.entries(candidates)){let f=null;if(key==='scratch_rig.json'||key.endsWith('_scratch_rig.json')){try{const parsed=JSON.parse(new TextDecoder().decode(obj.bytes));f=parsed.family;if(!validFamily(f))throw Error('Unknown rig family');normalizeRig(parsed);(groups[f]??={layers:{}}).json=parsed}catch(e){throw Error(file.name+': '+e.message)}}
+ else{const match=key.match(/^(a10|a4|a14|a44|a47|a48)_(body|arm_left|arm_right|head_shared)\.png$/);if(match){f=match[1];(groups[f]??={layers:{}}).layers[key]=new Blob([obj.bytes],{type:'image/png'})}}
+ }}catch(e){notice('Import error: '+e.message,'warn');return}}
+ const loaded=[];for(const [f,pack] of Object.entries(groups)){const prior=imported.get(f)||{json:null,layers:{}};const parts={...prior.layers};for(const [key,blob] of Object.entries(pack.layers)){parts[key]=await loadBlobImage(blob)}
+ imported.set(f,{json:pack.json||prior.json,layers:parts});loaded.push(f.toUpperCase())}
+ if(!loaded.length){notice('Select an exported Scratch Rig Studio ZIP, or scratch_rig.json with its matching PNGs.','warn');return}
+ $('family').value=Object.keys(groups)[0];notice('Imported '+loaded.join(', ')+'. Reading exact keyframes and separate arm sprites…','good');changeFamily()}
+function drawDisc(side,angle){const d=DECK[side];ctx.save();ctx.translate(d.x,d.y);ctx.scale(1,d.ry/d.rx);ctx.rotate(angle);ctx.beginPath();ctx.arc(0,0,d.rx,0,TAU);ctx.clip();ctx.fillStyle='#101821';ctx.fillRect(-d.rx,-d.rx,2*d.rx,2*d.rx);
+ for(let r=d.rx-2;r>8;r-=5){ctx.strokeStyle='rgba(174,193,215,.25)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.stroke()}
+ if(albumImage){const s=Math.min(albumImage.naturalWidth,albumImage.naturalHeight),sx=(albumImage.naturalWidth-s)/2,sy=(albumImage.naturalHeight-s)/2;ctx.save();ctx.beginPath();ctx.arc(0,0,d.rx*.81,0,TAU);ctx.clip();ctx.drawImage(albumImage,sx,sy,s,s,-d.rx*.81,-d.rx*.81,d.rx*1.62,d.rx*1.62);ctx.restore()}else{ctx.fillStyle=side==='left'?'#236b71':'#714e86';ctx.beginPath();ctx.arc(0,0,d.rx*.73,0,TAU);ctx.fill();ctx.fillStyle='#e6d9b0';ctx.font='bold 10px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('POCKET',0,-6);ctx.font='bold 19px ui-monospace,monospace';ctx.fillText('DJ',0,16)}
+ ctx.strokeStyle='#f8e3bd';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-d.rx*.67);ctx.lineTo(0,-d.rx*.3);ctx.stroke();ctx.fillStyle='#cbd6d9';ctx.beginPath();ctx.arc(0,0,3,0,TAU);ctx.fill();ctx.restore()}
+function drawArm(side,state){if(!layers?.[side])return;const p=rig.arms[side].pivot;ctx.save();ctx.translate(p.x+state.x,p.y+state.y);ctx.rotate(rad(state.tilt));ctx.translate(-p.x,-p.y);ctx.drawImage(layers[side],0,0);ctx.restore()}
+function render(now){ctx.clearRect(0,0,W,H);if(!stageReady||!rig)return;
+ const states=sample(now);if(layers?.body)ctx.drawImage(layers.body,0,0);else{ctx.fillStyle='#101a27';ctx.fillRect(0,0,W,H)}
+ // The record must be between the fixed body/table and movable hand layers.
+ drawDisc('left',angles.left);drawDisc('right',angles.right);
+ drawArm('left',states.left);drawArm('right',states.right);if(layers?.head)ctx.drawImage(layers.head,0,0);
+ if($('markers').checked){for(const side of sides){const h=handAt(side,states[side]),base=baseHand(side),axis=getAxis(side),on=active[side];ctx.save();ctx.strokeStyle=side==='left'?'#4bdac1':'#f0b66c';ctx.lineWidth=2;ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(base.x-40*axis.x,base.y-40*axis.y);ctx.lineTo(base.x+40*axis.x,base.y+40*axis.y);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(h.x,h.y,on?5.5:3,0,TAU);ctx.fill();ctx.strokeStyle='#06131c';ctx.lineWidth=1.5;ctx.stroke();ctx.restore()}}
+ }
+function drawChart(){const c=$('chart'),w=c.width,h=c.height;chartCtx.fillStyle='#0b1827';chartCtx.fillRect(0,0,w,h);chartCtx.strokeStyle='#273e55';chartCtx.lineWidth=1;for(let i=1;i<5;i++){chartCtx.beginPath();chartCtx.moveTo(0,i*h/5);chartCtx.lineTo(w,i*h/5);chartCtx.stroke()}chartCtx.strokeStyle='#55728b';chartCtx.beginPath();chartCtx.moveTo(0,h/2);chartCtx.lineTo(w,h/2);chartCtx.stroke();if(series.length<2)return;
+ const scaleHand=Math.max(4,...series.flatMap(p=>[Math.abs(p.left),Math.abs(p.right)]));const scaleSpeed=Math.max(2,profile.rpm*.1,...series.flatMap(p=>[Math.abs(p.speedL),Math.abs(p.speedR)]));
+ for(const [color,fn] of [['#4bdac1',p=>p.left/scaleHand],['#f0b66c',p=>p.right/scaleHand],['#89a5ce',p=>(p.speedL+p.speedR)*.5/scaleSpeed]]){chartCtx.strokeStyle=color;chartCtx.lineWidth=2.5;chartCtx.beginPath();series.forEach((p,i)=>{const x=i/(series.length-1)*w,y=h/2-fn(p)*h*.43;i?chartCtx.lineTo(x,y):chartCtx.moveTo(x,y)});chartCtx.stroke()}}
+let clock=0;
+function tick(now){if(!lastNow)lastNow=now;const dt=playing?clamp(now-lastNow,0,65):0;lastNow=now;clock+=dt;
+ if(stageReady&&rig){
+  if(cycling&&dt>0){sequenceElapsed+=dt;const sequence=seq();if(sequenceElapsed>=profile.stroke+profile.dwell){sequenceElapsed=0;sequenceIndex=(sequenceIndex+1)%sequence.length;setState(sequence[sequenceIndex],clock)}}
+  const states=sample(clock);let holding=false;
+  for(const side of sides){const next=signedTravel(side,states[side]);const from=motion?.from[side]||rig.arms[side].states[0],to=motion?.to[side]||rig.arms[side].states[0];const moving=clock<started+duration;
+   const grip=CONTACT[family].includes(side)&&sideEnabled(side)&&(stateGrip(side,states[side])||moving&&(stateGrip(side,from)||stateGrip(side,to)));
+   const delta=next-oldTravel[side];let rate=0;
+   if(dt>0){const turning=grip?rad(delta*profile.sensitivity*profile[side==='left'?'polarityL':'polarityR']):profile.rpm*TAU*dt/60000;angles[side]=wrap(angles[side]+turning);rate=turning/dt*60000/TAU}
+   travel[side]=next;oldTravel[side]=next;active[side]=grip;vel[side]=rate;if(grip)holding=true;
+  }
+  $('stateMetric').textContent=LABELS[target];$('leftMetric').textContent=active.left?(Math.abs(vel.left)<.01?'HOLD':vel.left>0?'FORWARD':'BACK'):'FREE';$('rightMetric').textContent=active.right?(Math.abs(vel.right)<.01?'HOLD':vel.right>0?'FORWARD':'BACK'):'FREE';$('timeMetric').textContent=Math.max(0,clock-started).toFixed(0)+' ms';$('phaseTag').textContent=holding?'HAND LOCK':'FREE SPIN';$('phaseTag').style.color=holding?'#f0b66c':'#4bdac1';
+  if(dt>0){series.push({left:travel.left,right:travel.right,speedL:vel.left,speedR:vel.right});if(series.length>180)series.shift()}
+ }
+ render(clock);drawChart();requestAnimationFrame(tick)}
+ $('family').addEventListener('change',changeFamily);
+ $('rigInput').addEventListener('change',e=>{void imports([...e.target.files]);e.target.value=''});
+ $('reloadRig').addEventListener('click',()=>loadFamily(family));
+ $('clearImports').addEventListener('click',()=>{imported.delete(family);loadFamily(family)});
+ for(const b of $('stateButtons').querySelectorAll('button'))b.addEventListener('click',()=>{stopCycle();playing=true;$('pause').textContent='⏸ Pause';setState(Number(b.dataset.state),clock)});
+ $('playCycle').addEventListener('click',()=>cycling?stopCycle():startCycle());
+ $('pause').addEventListener('click',()=>{playing=!playing;$('pause').textContent=playing?'⏸ Pause':'▶ Resume'});
+ $('reset').addEventListener('click',()=>{if(!rig)return;angles={left:0,right:0};vel={left:0,right:0};series=[];stopCycle();setState(0,clock);const poses=sample(clock);oldTravel={left:signedTravel('left',poses.left),right:signedTravel('right',poses.right)};travel={...oldTravel}});
+ for(const name of ['sensitivity','rpm','stroke','dwell','axis','deck','polarityL','polarityR'])$(name).addEventListener('input',()=>{profile[name]=['axis','deck'].includes(name)?$(name).value:Number($(name).value);syncControls()});
+ $('cycle').addEventListener('change',()=>{sequenceIndex=0;sequenceElapsed=0;updateMetadata()});
+ $('album').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;const uri=URL.createObjectURL(file),img=new Image();img.onload=()=>{albumImage=img;URL.revokeObjectURL(uri)};img.onerror=()=>URL.revokeObjectURL(uri);img.src=uri});
+ $('export').addEventListener('click',()=>download('pocketdj_'+family+'_vinyl_sync_v2.json',$('jsonOut').value));
+ $('copy').addEventListener('click',()=>navigator.clipboard?.writeText($('jsonOut').value).then(()=>notice('Calibration JSON copied.','good'),()=>notice('Clipboard unavailable. Select and copy the JSON manually.','warn')));
+ syncControls();void loadFamily(family);requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
