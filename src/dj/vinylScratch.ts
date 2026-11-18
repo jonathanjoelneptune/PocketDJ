@@ -9,12 +9,12 @@ export const SCRATCH_VINYL_DEGREES_PER_PX = 4.5;
 
 /** Most forward → least forward. Unlisted states stay at Base for that arm.
  * Browser canvas positive rotation is clockwise; -1 means CCW.
- * A14's RIGHT hand intentionally rotates CCW on a forward stroke.
+ * A14's RIGHT hand rotates CW on a forward stroke (calibrated correction).
  */
 export const SCRATCH_VINYL_DIRECTION: Readonly<Record<string, Readonly<Record<ScratchSide, -1 | 0 | 1>>>> = {
   a10: { left: -1, right: 0 },
   a4:  { left: -1, right: 0 },
-  a14: { left: 0, right: -1 },
+  a14: { left: 0, right: 1 },
   a44: { left: -1, right: 1 },
   a47: { left: -1, right: 1 },
   a48: { left: -1, right: 1 },
