@@ -4,6 +4,7 @@
  * The original full PNG remains visible until the new assets are decoded.
  */
 import { createBeatEvents, nextBeatEvent, type BeatTiming } from "./beatClock";
+import { scaleHeadNodMotion } from "./headNodPolicy";
 import { blendSpritePixels, changedPixelBounds, scratchEase, scratchTransitionDuration, type PixelBounds } from "./scratchBlend";
 import { VinylDeckStage } from "./vinylDecks";
 import { RigScratchVinylSampler, scratchOffsetsFromLegacy, EMPTY_SCRATCH } from "./vinylScratch";
@@ -148,6 +149,7 @@ export class HeadBobController {
   private readonly maxCachedFamilies = 2;
   private visible = false;
   private nodWasAllowed = false;
+  private lastNodIntensity = 0;
   private nodReleaseFrom: HeadMotion = { ...REST_POSE };
   private nodReleaseStartedAt = 0;
   private readonly nodReleaseDurationMs = 260;
@@ -257,7 +259,7 @@ export class HeadBobController {
     timing: BeatTiming | null,
     now: number,
     nextScratchFrameHoldMs: number,
-    nodAllowed = true,
+    nodIntensity = 1,
   ): void {
     // Compute hand movement before advancing the vinyl plane, so the hand
     // and album use one animation timestamp with no one-frame latency.
@@ -405,15 +407,20 @@ export class HeadBobController {
     this.timingDiscontinuity = timing.discontinuity;
     this.lastProgress = progress;
 
-    // Music intros/outros and 35% of mid-song phrases keep the nodding head
-    // resting naturally. Ease the current motion back to neutral rather than
-    // snapping the face while scratching arms keep moving independently.
-    if (!nodAllowed) {
+    // The first/last 15 seconds are quiet. Mid-song nodding is continuous;
+    // some phrases scale the existing motion down instead of going idle.
+    const intensity = Number.isFinite(nodIntensity) ? clamp01(nodIntensity) : 0;
+    if (intensity <= 0) {
       if (this.nodWasAllowed) {
-        this.nodReleaseFrom = this.motionAt(progress);
+        // Begin the release from what was actually rendered, not the
+        // underlying full-intensity pose (which could otherwise jump).
+        this.nodReleaseFrom = scaleHeadNodMotion(
+          this.motionAt(progress), this.lastNodIntensity,
+        );
         this.nodReleaseStartedAt = now;
       }
       this.nodWasAllowed = false;
+      this.lastNodIntensity = 0;
       const fraction = this.nodReleaseStartedAt
         ? clamp01((now - this.nodReleaseStartedAt) / this.nodReleaseDurationMs)
         : 1;
@@ -471,15 +478,19 @@ export class HeadBobController {
 
     const moving = progress >= this.motionStartedProgress &&
       progress < this.motionStartedProgress + this.motionDurationMs;
+    const intensityChanging = Math.abs(intensity - this.lastNodIntensity) > 0.0005;
+    this.lastNodIntensity = intensity;
     if (frame !== this.lastDrawn || this.position !== this.lastDrawnPosition ||
-        moving || scratchMoving || independentArms?.motion.moving ||
+        moving || intensityChanging || scratchMoving || independentArms?.motion.moving ||
         this.lastRenderWasMoving || !this.visible ||
         this.vinyl.moving || this.lastVinylRevision !== this.vinyl.revision) {
       this.paintComposed(spriteFrames, frame, scratchMoving,
-        { rig, motion: this.motionAt(progress) }, now, independentArms);
+        { rig, motion: scaleHeadNodMotion(this.motionAt(progress), intensity) },
+        now, independentArms);
     }
     // One final redraw lands both the scratch and nod at their exact target.
-    this.lastRenderWasMoving = moving || scratchMoving || !!independentArms?.motion.moving;
+    this.lastRenderWasMoving = moving || intensityChanging || scratchMoving ||
+      !!independentArms?.motion.moving;
     if (!this.visible) this.show();
   }
 
@@ -496,6 +507,7 @@ export class HeadBobController {
     this.motionStartedProgress = Number.NEGATIVE_INFINITY;
     this.motionDurationMs = 1;
     this.nodWasAllowed = false;
+    this.lastNodIntensity = 0;
     this.nodReleaseFrom = { ...REST_POSE };
     this.nodReleaseStartedAt = 0;
     this.lastRenderWasMoving = false;
@@ -687,6 +699,7 @@ export class HeadBobController {
 
   private resetHeadEligibility(): void {
     this.nodWasAllowed = false;
+    this.lastNodIntensity = 0;
     this.nodReleaseFrom = { ...REST_POSE };
     this.nodReleaseStartedAt = 0;
     this.eligibleLastTick = false;
