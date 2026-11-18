@@ -4021,6 +4021,7 @@ function finishCanvasLyricShadowProjection(
   context: CanvasRenderingContext2D,
   rowIndex: number,
   rowCount: number,
+  pronounced: boolean,
 ): void {
   const width = canvas.width;
   const height = canvas.height;
@@ -4031,30 +4032,55 @@ function finishCanvasLyricShadowProjection(
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.globalAlpha = 1;
 
-  // Shadowed ceiling ink: a very small center-weighted charcoal tone shift.
-  // source-atop makes the wash transparent outside existing glyphs and halos.
+  // Shadow ink with a subdued warm/plum cast. Even at maximum strength this
+  // tint ONLY touches existing glyph/penumbra pixels, never the ceiling behind.
   context.globalCompositeOperation = "source-atop";
   const shadowTint = context.createRadialGradient(
-    width * 0.48, height * 0.51, height * 0.10,
-    width * 0.48, height * 0.51, width * 0.52,
+    width * 0.48, height * 0.50, height * 0.09,
+    width * 0.48, height * 0.50, width * 0.54,
   );
-  shadowTint.addColorStop(0, isBottomRow ? "rgba(7, 6, 12, 0.115)" : "rgba(7, 6, 12, 0.095)");
-  shadowTint.addColorStop(0.65, "rgba(10, 8, 15, 0.045)");
-  shadowTint.addColorStop(1, "rgba(10, 8, 15, 0.012)");
+  if (pronounced) {
+    shadowTint.addColorStop(0, isBottomRow ? "rgba(7, 5, 14, 0.32)" : "rgba(8, 6, 15, 0.25)");
+    shadowTint.addColorStop(0.54, "rgba(25, 16, 25, 0.13)");
+    shadowTint.addColorStop(1, "rgba(54, 34, 39, 0.22)");
+  } else {
+    shadowTint.addColorStop(0, isBottomRow ? "rgba(7, 6, 12, 0.115)" : "rgba(7, 6, 12, 0.095)");
+    shadowTint.addColorStop(0.65, "rgba(10, 8, 15, 0.045)");
+    shadowTint.addColorStop(1, "rgba(10, 8, 15, 0.012)");
+  }
   context.fillStyle = shadowTint;
   context.fillRect(0, 0, width, height);
 
-  // Gentle opacity falloff prevents the projection reading as a flat sticker.
-  // Keep the center fully opaque and retain at least 94% at the row edges.
+  // Stronger but controlled falloff at the outside ends of long lyric lines.
+  // This simulates imperfect projection focus without fading whole words out.
   context.globalCompositeOperation = "destination-in";
   const edgeOpacity = context.createLinearGradient(0, 0, width, 0);
-  edgeOpacity.addColorStop(0, isBottomRow ? "rgba(0, 0, 0, 0.95)" : "rgba(0, 0, 0, 0.94)");
-  edgeOpacity.addColorStop(0.22, "rgba(0, 0, 0, 0.985)");
-  edgeOpacity.addColorStop(0.5, "rgba(0, 0, 0, 1)");
-  edgeOpacity.addColorStop(0.78, "rgba(0, 0, 0, 0.985)");
-  edgeOpacity.addColorStop(1, "rgba(0, 0, 0, 0.94)");
+  if (pronounced) {
+    edgeOpacity.addColorStop(0, isBottomRow ? "rgba(0, 0, 0, 0.89)" : "rgba(0, 0, 0, 0.85)");
+    edgeOpacity.addColorStop(0.20, "rgba(0, 0, 0, 0.97)");
+    edgeOpacity.addColorStop(0.5, "rgba(0, 0, 0, 1)");
+    edgeOpacity.addColorStop(0.80, "rgba(0, 0, 0, 0.97)");
+    edgeOpacity.addColorStop(1, "rgba(0, 0, 0, 0.86)");
+  } else {
+    edgeOpacity.addColorStop(0, isBottomRow ? "rgba(0, 0, 0, 0.95)" : "rgba(0, 0, 0, 0.94)");
+    edgeOpacity.addColorStop(0.22, "rgba(0, 0, 0, 0.985)");
+    edgeOpacity.addColorStop(0.5, "rgba(0, 0, 0, 1)");
+    edgeOpacity.addColorStop(0.78, "rgba(0, 0, 0, 0.985)");
+    edgeOpacity.addColorStop(1, "rgba(0, 0, 0, 0.94)");
+  }
   context.fillStyle = edgeOpacity;
   context.fillRect(0, 0, width, height);
+
+  if (pronounced) {
+    // A small vertical focus falloff gives upper/lower glyph contours depth.
+    const verticalFalloff = context.createLinearGradient(0, 0, 0, height);
+    verticalFalloff.addColorStop(0, "rgba(0, 0, 0, 0.95)");
+    verticalFalloff.addColorStop(0.35, "rgba(0, 0, 0, 1)");
+    verticalFalloff.addColorStop(0.65, "rgba(0, 0, 0, 1)");
+    verticalFalloff.addColorStop(1, "rgba(0, 0, 0, 0.96)");
+    context.fillStyle = verticalFalloff;
+    context.fillRect(0, 0, width, height);
+  }
 
   context.restore();
 }
@@ -4064,7 +4090,10 @@ function rasterizeFittedLyricRows(renderRoot: HTMLElement, layout: CeilingPoster
   const pixelScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
   // Rollback switch for visual A/B testing; the stable unstyled Canvas 2D
   // renderer remains in place either way. The production default is enabled.
-  const shadowPolishEnabled = new URLSearchParams(window.location.search).get("lyricShadow") !== "0";
+  const shadowMode = new URLSearchParams(window.location.search).get("lyricShadow");
+  const shadowPolishEnabled = shadowMode !== "0";
+  // ?lyricShadow=soft preserves the former subtle treatment for A/B testing.
+  const pronouncedShadow = shadowMode !== "soft";
   texts.forEach((textNode) => {
     const rowIndex = Number(textNode.dataset.lyricRowIndex || 0);
     const row = layout.rows[rowIndex];
@@ -4106,26 +4135,46 @@ function rasterizeFittedLyricRows(renderRoot: HTMLElement, layout: CeilingPoster
       const strokeWidth = Number.parseFloat(style.strokeWidth);
 
       if (shadowPolishEnabled) {
-        // 1) Soft, feathered penumbra behind the original glyphs.
-        // The upper of two rows receives a slightly wider, lighter penumbra;
-        // the lower row a slightly denser, tighter one. This gives long lyrics
-        // restrained row-by-row depth without touching their calibrated quads.
+        // A wide, dark penumbra establishes the cast-shadow silhouette. The
+        // source is still rendered only once per lyric, into the existing canvas.
         const isBottomRow = layout.rows.length > 1 && rowIndex === layout.rows.length - 1;
         context.save();
-        context.globalAlpha *= isBottomRow ? 0.18 : 0.21;
-        context.shadowColor = "rgba(9, 7, 14, 0.68)";
-        context.shadowBlur = Math.min(9, fontSize * (isBottomRow ? 0.027 : 0.033) * pixelScale);
-        context.shadowOffsetX = fontSize * 0.006 * pixelScale;
-        context.shadowOffsetY = fontSize * 0.009 * pixelScale;
+        context.globalAlpha *= pronouncedShadow
+          ? (isBottomRow ? 0.56 : 0.66)
+          : (isBottomRow ? 0.18 : 0.21);
+        context.fillStyle = pronouncedShadow ? "rgba(13, 10, 19, 0.52)" : style.fill || "#171319";
+        context.shadowColor = pronouncedShadow ? "rgba(10, 7, 17, 0.94)" : "rgba(9, 7, 14, 0.68)";
+        context.shadowBlur = pronouncedShadow
+          ? Math.min(29 * pixelScale, fontSize * (isBottomRow ? 0.105 : 0.14) * pixelScale)
+          : Math.min(9, fontSize * (isBottomRow ? 0.027 : 0.033) * pixelScale);
+        context.shadowOffsetX = fontSize * (pronouncedShadow ? 0.030 : 0.006) * pixelScale;
+        context.shadowOffsetY = fontSize * (pronouncedShadow ? 0.038 : 0.009) * pixelScale;
         context.fillText(text, 0, canvasTextY);
         context.restore();
 
-        // 3) A tiny directional secondary impression suggests a cast shadow.
-        // This is baked into the bitmap, not a live CSS filter or animation.
+        if (pronouncedShadow) {
+          // A tighter secondary penumbra separates the shadow from the solid
+          // letter edge without giving the projection a neon outline.
+          context.save();
+          context.globalAlpha *= isBottomRow ? 0.41 : 0.37;
+          context.fillStyle = "rgba(11, 8, 18, 0.32)";
+          context.shadowColor = "rgba(9, 7, 16, 0.88)";
+          context.shadowBlur = Math.min(13 * pixelScale, fontSize * 0.050 * pixelScale);
+          context.shadowOffsetX = fontSize * 0.020 * pixelScale;
+          context.shadowOffsetY = fontSize * 0.028 * pixelScale;
+          context.fillText(text, 0, canvasTextY);
+          context.restore();
+        }
+
+        // A noticeable, still restrained directional ghost adds depth. This
+        // and every blur are baked, never animated or filtered by CSS.
         context.save();
-        context.globalAlpha *= isBottomRow ? 0.105 : 0.09;
-        context.fillStyle = "rgba(13, 10, 18, 0.68)";
-        context.fillText(text, fontSize * 0.009, canvasTextY + fontSize * 0.009);
+        context.globalAlpha *= pronouncedShadow
+          ? (isBottomRow ? 0.32 : 0.27)
+          : (isBottomRow ? 0.105 : 0.09);
+        context.fillStyle = pronouncedShadow ? "rgba(13, 10, 19, 0.85)" : "rgba(13, 10, 18, 0.68)";
+        const ghostOffset = fontSize * (pronouncedShadow ? 0.027 : 0.009);
+        context.fillText(text, ghostOffset, canvasTextY + ghostOffset * (pronouncedShadow ? 1.15 : 1));
         context.restore();
       }
 
@@ -4138,7 +4187,7 @@ function rasterizeFittedLyricRows(renderRoot: HTMLElement, layout: CeilingPoster
       context.fillText(text, 0, canvasTextY);
       if (shadowPolishEnabled) {
         // 2 + 4) Glyph-only tonal variation and subtle ceiling integration.
-        finishCanvasLyricShadowProjection(canvas, context, rowIndex, layout.rows.length);
+        finishCanvasLyricShadowProjection(canvas, context, rowIndex, layout.rows.length, pronouncedShadow);
       }
       sourceSvg.replaceWith(canvas);
     } catch {
