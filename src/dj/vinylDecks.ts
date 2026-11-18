@@ -45,8 +45,9 @@ export class VinylDeckStage {
   private readonly requestVersions: Record<DeckSide, number> = { left: 0, right: 0 };
   private readonly angles: Record<DeckSide, number> = { left: 0, right: 0 };
   private readonly scratchVinyl = new ScratchVinylTransport();
-  // Off by default until visual calibration is approved. ?scratchVinyl=1 enables preview.
-  private readonly scratchVinylEnabled = new URLSearchParams(window.location.search).get("scratchVinyl") === "1";
+  // Enabled for normal playback. Emergency visual rollback: ?scratchVinyl=0.
+  // Changes only the rendered record angle, never Spotify playback or DJ sprites.
+  private readonly scratchVinylEnabled = new URLSearchParams(window.location.search).get("scratchVinyl") !== "0";
   // Keep the outgoing record on its platter while a cinematic is queued.
   // During the actual cinematic, render the bare destination platter under
   // the calibrated held-record artwork. Place the incoming disc when done.
