@@ -355,7 +355,10 @@ export class HeadBobController {
       // The published legacy sprites use starter hand-position estimates,
       // sampled at the exact same interpolation fraction as the body blend.
       const scratchOffsets = independentArms
-        ? scratchOffsetsFromArms(family, independentArms.motion, independentArms.rig.rig.pivots)
+        ? scratchOffsetsFromArms(
+            family, independentArms.motion, independentArms.rig.rig.pivots,
+            independentArms.rig.rig.scratchFrames,
+          )
         : this.scratchBlend
           ? scratchOffsetsFromLegacy(
               family, this.scratchVinylFromFrame, frame,
