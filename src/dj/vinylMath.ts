@@ -6,7 +6,12 @@ export const DECK_CALIBRATION = Object.freeze({
 });
 /** Visual-only adjustment. Deck centers, elliptical perspective and RPM stay calibrated. */
 export const VINYL_DISC_SCALE = 1.07;
-export const VINYL_DISC_THICKNESS_PX = 2;
+/** Artwork used to occupy just 114/139 of the rotating disc's radius.
+ * Fill most of the vinyl top while keeping an ~11px source-texture rim.
+ * This changes the actual spinning album, not its fixed black platter.
+ */
+export const VINYL_ALBUM_ART_RADIUS = 128;
+export const VINYL_DISC_THICKNESS_PX = 3;
 export const VINYL_RPM = 16.2;
 
 export type DeckTrack = {

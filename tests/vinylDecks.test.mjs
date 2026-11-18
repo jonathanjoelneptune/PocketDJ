@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_WIDTH, VINYL_SPRITE_HEIGHT } from "../src/dj/tableRegion.ts";
-import { canPlaceIncomingVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, VINYL_DISC_SCALE, VINYL_DISC_THICKNESS_PX } from "../src/dj/vinylMath.ts";
+import { canPlaceIncomingVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, VINYL_DISC_SCALE, VINYL_ALBUM_ART_RADIUS, VINYL_DISC_THICKNESS_PX } from "../src/dj/vinylMath.ts";
 
 test("exported a8 table region retains the exact approved pixels", () => {
   const mask = decodeTableRegion();
@@ -23,7 +23,17 @@ test("calibration uses the user's independent left/right platter centers", () =>
 
 test("rendered albums are subtly larger with a thin edge, without changing deck calibration", () => {
   assert.equal(VINYL_DISC_SCALE, 1.07);
-  assert.equal(VINYL_DISC_THICKNESS_PX, 2);
+  assert.equal(VINYL_DISC_THICKNESS_PX, 3);
+  assert.equal(VINYL_ALBUM_ART_RADIUS, 128);
+  // The real cover was only 114px inside a 139px rotating disc, leaving a
+  // visibly thick black ring. It now covers over 90% of the disc radius.
+  const outerTextureRadius = 139;
+  assert.ok(VINYL_ALBUM_ART_RADIUS / outerTextureRadius > 0.9);
+  assert.ok(VINYL_ALBUM_ART_RADIUS < outerTextureRadius);
+  const oldCoverScreenRadius = 55 * VINYL_DISC_SCALE * 114 / 140;
+  const newCoverScreenRadius = 55 * VINYL_DISC_SCALE * VINYL_ALBUM_ART_RADIUS / 140;
+  assert.ok(newCoverScreenRadius > oldCoverScreenRadius * 1.1,
+    "the visible album artwork itself must be larger, not just its black surround");
   for (const side of ["left", "right"]) {
     const deck = DECK_CALIBRATION[side];
     const scaledRx = deck.rx * VINYL_DISC_SCALE;
@@ -32,7 +42,7 @@ test("rendered albums are subtly larger with a thin edge, without changing deck 
     assert.ok(scaledRy > deck.ry && scaledRy < deck.ry * 1.1);
     assert.ok(Math.abs(scaledRy / scaledRx - deck.ry / deck.rx) < 1e-12,
       "vinyl preserves the original elliptical perspective");
-    assert.ok(VINYL_DISC_THICKNESS_PX < deck.ry * 0.1,
+    assert.ok(VINYL_DISC_THICKNESS_PX < deck.ry * 0.12,
       "the edge stays a subtle screen-space detail");
   }
 });
