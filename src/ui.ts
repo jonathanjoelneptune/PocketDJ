@@ -4186,13 +4186,6 @@ function addCanvasLyricInsetRelief(
     lowerRow ? "rgba(3, 3, 9, 0.42)" : "rgba(4, 3, 10, 0.35)",
   );
 
-  // 1 + 3. Faint upper-left rim light with a recessed bevel. It remains
-  // desaturated, so lyrics still read as shadows rather than illuminated text.
-  paintInsetRim(
-    rimPx * 0.70,
-    rimPx * 0.90,
-    lowerRow ? "rgba(172, 157, 150, 0.29)" : "rgba(191, 174, 163, 0.33)",
-  );
 }
 
 function rasterizeFittedLyricRows(renderRoot: HTMLElement, layout: CeilingPosterLayout): void {
