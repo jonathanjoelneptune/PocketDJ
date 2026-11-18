@@ -57,7 +57,10 @@ export class ScratchVinylTransport{
   private family:string|null=null;
   private target:ScratchOffsets={...EMPTY_SCRATCH};
   private previous:ScratchOffsets={...EMPTY_SCRATCH};
-  constructor(private readonly sensitivity=SCRATCH_VINYL_DEGREES_PER_PX){}
+  private readonly sensitivity:number;
+  constructor(degreesPerPixel=SCRATCH_VINYL_DEGREES_PER_PX){
+    this.sensitivity=Number.isFinite(degreesPerPixel)&&degreesPerPixel>0?degreesPerPixel:SCRATCH_VINYL_DEGREES_PER_PX;
+  }
   setGesture(family:string|null, offsets:ScratchOffsets|null):void{
     const valid=family && SCRATCH_VINYL_HANDS[family]?family:null;
     if(valid!==this.family){
