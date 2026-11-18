@@ -4009,9 +4009,62 @@ function formatQuad(quad: PosterQuad): string {
  * The original HTML row and its matrix3d remain unchanged. If Canvas 2D is
  * unavailable, keep the SVG intact as the safe fallback.
  */
+/**
+ * Finish an already-rasterized lyric with a shadow-projection look.
+ *
+ * Both passes operate on existing Canvas 2D pixels during a lyric change.
+ * source-atop confines shading to painted glyphs; destination-in only
+ * attenuates those pixels. No opaque row-sized gradients are introduced.
+ */
+function finishCanvasLyricShadowProjection(
+  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D,
+  rowIndex: number,
+  rowCount: number,
+): void {
+  const width = canvas.width;
+  const height = canvas.height;
+  const twoRows = rowCount > 1;
+  const isBottomRow = twoRows && rowIndex === rowCount - 1;
+
+  context.save();
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.globalAlpha = 1;
+
+  // Shadowed ceiling ink: a very small center-weighted charcoal tone shift.
+  // source-atop makes the wash transparent outside existing glyphs and halos.
+  context.globalCompositeOperation = "source-atop";
+  const shadowTint = context.createRadialGradient(
+    width * 0.48, height * 0.51, height * 0.10,
+    width * 0.48, height * 0.51, width * 0.52,
+  );
+  shadowTint.addColorStop(0, isBottomRow ? "rgba(7, 6, 12, 0.115)" : "rgba(7, 6, 12, 0.095)");
+  shadowTint.addColorStop(0.65, "rgba(10, 8, 15, 0.045)");
+  shadowTint.addColorStop(1, "rgba(10, 8, 15, 0.012)");
+  context.fillStyle = shadowTint;
+  context.fillRect(0, 0, width, height);
+
+  // Gentle opacity falloff prevents the projection reading as a flat sticker.
+  // Keep the center fully opaque and retain at least 94% at the row edges.
+  context.globalCompositeOperation = "destination-in";
+  const edgeOpacity = context.createLinearGradient(0, 0, width, 0);
+  edgeOpacity.addColorStop(0, isBottomRow ? "rgba(0, 0, 0, 0.95)" : "rgba(0, 0, 0, 0.94)");
+  edgeOpacity.addColorStop(0.22, "rgba(0, 0, 0, 0.985)");
+  edgeOpacity.addColorStop(0.5, "rgba(0, 0, 0, 1)");
+  edgeOpacity.addColorStop(0.78, "rgba(0, 0, 0, 0.985)");
+  edgeOpacity.addColorStop(1, "rgba(0, 0, 0, 0.94)");
+  context.fillStyle = edgeOpacity;
+  context.fillRect(0, 0, width, height);
+
+  context.restore();
+}
+
 function rasterizeFittedLyricRows(renderRoot: HTMLElement, layout: CeilingPosterLayout): void {
   const texts = Array.from(renderRoot.querySelectorAll<SVGTextElement>(".lyric-poster-row-text"));
   const pixelScale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  // Rollback switch for visual A/B testing; the stable unstyled Canvas 2D
+  // renderer remains in place either way. The production default is enabled.
+  const shadowPolishEnabled = new URLSearchParams(window.location.search).get("lyricShadow") !== "0";
   texts.forEach((textNode) => {
     const rowIndex = Number(textNode.dataset.lyricRowIndex || 0);
     const row = layout.rows[rowIndex];
@@ -4051,12 +4104,42 @@ function rasterizeFittedLyricRows(renderRoot: HTMLElement, layout: CeilingPoster
       // ~0.07em for the heavy italic display font. Verified in Chromium.
       const canvasTextY = textY + fontSize * 0.07;
       const strokeWidth = Number.parseFloat(style.strokeWidth);
+
+      if (shadowPolishEnabled) {
+        // 1) Soft, feathered penumbra behind the original glyphs.
+        // The upper of two rows receives a slightly wider, lighter penumbra;
+        // the lower row a slightly denser, tighter one. This gives long lyrics
+        // restrained row-by-row depth without touching their calibrated quads.
+        const isBottomRow = layout.rows.length > 1 && rowIndex === layout.rows.length - 1;
+        context.save();
+        context.globalAlpha *= isBottomRow ? 0.18 : 0.21;
+        context.shadowColor = "rgba(9, 7, 14, 0.68)";
+        context.shadowBlur = Math.min(9, fontSize * (isBottomRow ? 0.027 : 0.033) * pixelScale);
+        context.shadowOffsetX = fontSize * 0.006 * pixelScale;
+        context.shadowOffsetY = fontSize * 0.009 * pixelScale;
+        context.fillText(text, 0, canvasTextY);
+        context.restore();
+
+        // 3) A tiny directional secondary impression suggests a cast shadow.
+        // This is baked into the bitmap, not a live CSS filter or animation.
+        context.save();
+        context.globalAlpha *= isBottomRow ? 0.105 : 0.09;
+        context.fillStyle = "rgba(13, 10, 18, 0.68)";
+        context.fillText(text, fontSize * 0.009, canvasTextY + fontSize * 0.009);
+        context.restore();
+      }
+
+      // Keep the original fitted ink, textLength, font and baseline untouched.
       if (strokeWidth > 0 && style.stroke && style.stroke !== "none") {
         context.strokeStyle = style.stroke;
         context.lineWidth = strokeWidth;
         context.strokeText(text, 0, canvasTextY);
       }
       context.fillText(text, 0, canvasTextY);
+      if (shadowPolishEnabled) {
+        // 2 + 4) Glyph-only tonal variation and subtle ceiling integration.
+        finishCanvasLyricShadowProjection(canvas, context, rowIndex, layout.rows.length);
+      }
       sourceSvg.replaceWith(canvas);
     } catch {
       // SVG remains visible if the device rejects a rasterization operation.
