@@ -1,6 +1,6 @@
 import type { NormalizedTrack } from "../state/types";
 import { decodeTableRegion, removeMatchingTablePixels, VINYL_SPRITE_HEIGHT, VINYL_SPRITE_WIDTH } from "./tableRegion";
-import { canReleaseStagedVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
+import { canReleaseStagedVinyl, shouldHideCinematicPlatter, DECK_CALIBRATION, DeckAssignment, stepVinylAngle, VINYL_RPM, VINYL_DISC_SCALE, VINYL_DISC_THICKNESS_PX, type DeckSide, type VinylCinematicPhase } from "./vinylMath";
 import { ScratchVinylTransport, type ScratchOffsets } from "./vinylScratch";
 
 const W = VINYL_SPRITE_WIDTH;
@@ -294,12 +294,27 @@ export class VinylDeckStage {
     if (side === this.hiddenDeckDuringCinematic) return;
     const texture = this.textures[side] ?? this.placeholderTexture;
     const deck = DECK_CALIBRATION[side];
+    // Enlarge just the moving record, not the fixed turntable or the deck
+    // centers. The original elliptical perspective and hand occlusion stay.
+    const rx = deck.rx * VINYL_DISC_SCALE;
+    const ry = deck.ry * VINYL_DISC_SCALE;
     ctx.save();
     ctx.translate(deck.x, deck.y);
-    ctx.scale(1, deck.ry / deck.rx);
-    ctx.rotate(this.angles[side]);
     ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(texture, -deck.rx, -deck.rx, deck.rx * 2, deck.rx * 2);
+    // A two-pixel underside peeks out only at the lower edge of the record.
+    // Render it BEFORE the artwork, without rotating the rim itself.
+    ctx.beginPath();
+    ctx.ellipse(0, VINYL_DISC_THICKNESS_PX, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(13, 18, 23, 0.88)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(147, 165, 175, 0.22)";
+    ctx.lineWidth = 0.75;
+    ctx.stroke();
+    // The album is an image of a round vinyl; squashing only its Y axis
+    // keeps its artwork aligned with the perspective of the actual platter.
+    ctx.scale(1, ry / rx);
+    ctx.rotate(this.angles[side]);
+    ctx.drawImage(texture, -rx, -rx, rx * 2, rx * 2);
     ctx.restore();
     ctx.imageSmoothingEnabled = false;
   }
