@@ -4,6 +4,9 @@ export const DECK_CALIBRATION = Object.freeze({
   left: Object.freeze({ x: 170, y: 399, rx: 55, ry: 28 }),
   right: Object.freeze({ x: 425, y: 397, rx: 55, ry: 28 }),
 });
+/** Visual-only adjustment. Deck centers, elliptical perspective and RPM stay calibrated. */
+export const VINYL_DISC_SCALE = 1.07;
+export const VINYL_DISC_THICKNESS_PX = 2;
 export const VINYL_RPM = 16.2;
 
 export type DeckTrack = {
