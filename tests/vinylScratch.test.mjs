@@ -7,25 +7,27 @@ test('resting hand follows regular RPM',()=>{
  const v=new ScratchVinylTransport();v.setGesture('a10',{left:0,right:0});
  assert.ok(Math.abs(degrees(v.step('left',0,100,true,16.2))-9.72)<0.01);
 });
-test('forward hand stroke, hold and reverse share one angle',()=>{
+test('forward stroke scratches, held pose resumes RPM, and reverse scratches without an angle reset',()=>{
  const v=new ScratchVinylTransport(4);v.setGesture('a10',{left:0,right:0});
  let angle=v.step('left',0,100,true,16.2);
  v.setGesture('a10',{left:10,right:0});angle=v.step('left',angle,100,true,16.2);
  assert.ok(Math.abs(degrees(angle)-329.72)<0.01); // Left deck forward is CCW
- v.setGesture('a10',{left:10,right:0});assert.equal(v.step('left',angle,100,true,16.2),angle);
+ v.setGesture('a10',{left:10,right:0});angle=v.step('left',angle,100,true,16.2);
+ assert.ok(Math.abs(degrees(angle)-339.44)<0.01); // The hand has stopped; the platter resumes RPM.
  v.setGesture('a10',{left:0,right:0});angle=v.step('left',angle,100,true,16.2);
- assert.ok(Math.abs(degrees(angle)-9.72)<0.01);
- angle=v.step('left',angle,100,true,16.2);assert.ok(Math.abs(degrees(angle)-19.44)<0.01);
+ assert.ok(Math.abs(degrees(angle)-19.44)<0.01); // Returning hand scratches backward.
+ angle=v.step('left',angle,100,true,16.2);assert.ok(Math.abs(degrees(angle)-29.16)<0.01);
 });
 test('the other platter remains motor-driven during a one-hand scratch',()=>{
  const v=new ScratchVinylTransport();v.setGesture('a10',{left:0,right:0});
  v.step('left',0,100,true,16.2);v.setGesture('a10',{left:12,right:0});
  assert.ok(Math.abs(degrees(v.step('right',0,100,true,16.2))-9.72)<0.01);
 });
-test('pose-family swaps cannot instantly spin a disc',()=>{
+test('pose-family swaps never create a scratch-angle jump; platter resumes ordinary RPM',()=>{
  const v=new ScratchVinylTransport();v.setGesture('a10',{left:0,right:0});
  const angle=v.step('left',0,100,true,16.2);
- v.setGesture('a44',{left:12,right:0});assert.equal(v.step('left',angle,100,true,16.2),angle);
+ v.setGesture('a44',{left:12,right:0});
+ assert.ok(Math.abs(degrees(v.step('left',angle,100,true,16.2))-19.44)<0.01);
 });
 test('pause freezes the angle',()=>{
  const v=new ScratchVinylTransport();v.setGesture('a14',{left:0,right:7});
@@ -61,9 +63,10 @@ test('Scratch Rig 1 and 2 drive only the hand that actually moves',()=>{
  const forward=transport.step('right',angle,100,true,16.2);
  assert.notEqual(forward,angle);
  transport.setGesture('a44',scratch1);
- assert.equal(transport.step('right',forward,100,true,16.2),forward);
+ const held=transport.step('right',forward,100,true,16.2);
+ assert.ok(Math.abs(degrees(held-forward)-9.72)<0.01); // No hand motion means normal spin.
  transport.setGesture('a44',base);
- const backward=transport.step('right',forward,100,true,16.2);
+ const backward=transport.step('right',held,100,true,16.2);
  assert.ok(backward<forward);
 });
 test('Scratch Rig arm rotation and calibrated anchor move the record without adding a new animation',()=>{
@@ -125,4 +128,42 @@ test('rig sampler uses exactly the arm timeline including direct skips and inter
  assert.deepEqual(x,{left:10,right:0});
  sampler.reset();
  assert.deepEqual(sampler.sample('a44',{targetIndex:0,transitionId:5,progress:1},rig),{left:0,right:0});
+});
+
+test('a non-Base scratch pose held for one second free-spins instead of pinning the album',()=>{
+ const v=new ScratchVinylTransport();
+ v.setGesture('a14',{left:0,right:0});
+ let angle=v.step('right',0,100,true,16.2);
+ v.setGesture('a14',{left:0,right:10});
+ angle=v.step('right',angle,100,true,16.2);
+ const afterStroke=angle;
+ v.setGesture('a14',{left:0,right:10});
+ angle=v.step('right',angle,1000,true,16.2);
+ assert.ok(Math.abs(degrees(((angle-afterStroke+Math.PI*2)%(Math.PI*2)))-97.2)<0.01);
+ // A14 remains at Scratch 1, not Base. Its direction calibration is unchanged.
+ assert.equal(SCRATCH_VINYL_DIRECTION.a14.right,1);
+});
+test('both active decks resume motor rotation independently on a dual-arm scratch hold',()=>{
+ const v=new ScratchVinylTransport();
+ v.setGesture('a44',{left:0,right:0});
+ let l=v.step('left',0,100,true,16.2),r=v.step('right',0,100,true,16.2);
+ v.setGesture('a44',{left:10,right:12});
+ l=v.step('left',l,100,true,16.2);r=v.step('right',r,100,true,16.2);
+ const beforeHold={left:l,right:r};
+ v.setGesture('a44',{left:10,right:12});
+ l=v.step('left',l,300,true,16.2);r=v.step('right',r,300,true,16.2);
+ const motorDelta=300*16.2*360/60000;
+ for(const side of ['left','right']){
+  const next=side==='left'?l:r;
+  const previous=beforeHold[side];
+  assert.ok(Math.abs(degrees(((next-previous+Math.PI*2)%(Math.PI*2)))-motorDelta)<0.01);
+ }
+});
+test('subpixel hand jitter does not cause vinyl to freeze between actual scratch strokes',()=>{
+ const v=new ScratchVinylTransport();
+ v.setGesture('a10',{left:10,right:0});
+ let angle=v.step('left',0,100,true,16.2);
+ v.setGesture('a10',{left:10.0000001,right:0});
+ angle=v.step('left',angle,100,true,16.2);
+ assert.ok(Math.abs(degrees(angle)-19.44)<0.01);
 });
