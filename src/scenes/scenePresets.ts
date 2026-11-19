@@ -102,9 +102,9 @@ export function resolveSceneId(): SceneId {
   const requested = new URLSearchParams(location.search).get("scene");
   if (requested === "festival" || requested === "record-room") return requested;
   try {
-    return localStorage.getItem(SCENE_SELECTION_KEY) === "festival" ? "festival" : "record-room";
+    return localStorage.getItem(SCENE_SELECTION_KEY) === "record-room" ? "record-room" : "festival";
   } catch {
-    return "record-room";
+    return "festival";
   }
 }
 
