@@ -178,6 +178,10 @@ function changeScene(id: SceneId): void {
   selectedScene = id;
   saveSceneSelection(id);
   document.documentElement.dataset.pocketScene = id;
+  const backdrop = element<HTMLElement>("#roomBg");
+  if (backdrop) backdrop.style.backgroundImage = id === "festival"
+    ? 'url("./assets/scenes/festival-dusk.svg")'
+    : 'url("./assets/room/pocket-dj-room-offline-v1.png")';
   const selector = element<HTMLSelectElement>("#festivalSceneSelect");
   if (selector) selector.value = id;
   element<HTMLButtonElement>("#festivalEditButton")?.toggleAttribute("disabled", id !== "festival");
