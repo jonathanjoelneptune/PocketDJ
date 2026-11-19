@@ -1,0 +1,458 @@
+/* Festival location. Scoped under data-pocket-scene: record-room styling is untouched.
+ * Depth: static perspective SVG -> volumetric light -> speakers -> performer
+ * -> stage lip / album displays -> near-field animated silhouettes -> controls.
+ */
+html[data-pocket-scene="festival"] .room {
+  background: #0c172b;
+}
+html[data-pocket-scene="festival"] .room-bg {
+  background-image: url("./assets/scenes/festival-dusk.svg") !important;
+  background-size: calc(100% * var(--festival-scale, 1)) auto !important;
+  background-position: var(--festival-x, 50%) var(--festival-y, 50%) !important;
+  opacity: var(--festival-opacity, 1) !important;
+}
+html[data-pocket-scene="festival"] .room-bg::before,
+html[data-pocket-scene="festival"] .room-bg::after {
+  display: none !important;
+}
+/* Room-only installations are hidden, not destroyed. Playback and DJ runtimes keep state. */
+html[data-pocket-scene="festival"] .room-spotlight-wall,
+html[data-pocket-scene="festival"] .room-spotlight-zone,
+html[data-pocket-scene="festival"] .room-spotlight-full,
+html[data-pocket-scene="festival"] .room-filter-overlay,
+html[data-pocket-scene="festival"] .room-lighting-overlay,
+html[data-pocket-scene="festival"] .room-light-bars,
+html[data-pocket-scene="festival"] .room-party-canvas,
+html[data-pocket-scene="festival"] .room-particles,
+html[data-pocket-scene="festival"] .string-light-overlay,
+html[data-pocket-scene="festival"] .ambient-twinkle-overlay,
+html[data-pocket-scene="festival"] .ambient-music-glow,
+html[data-pocket-scene="festival"] .room-performance-wash,
+html[data-pocket-scene="festival"] .session-album-frame-overlay,
+html[data-pocket-scene="festival"] .session-album-warp-canvas,
+html[data-pocket-scene="festival"] .session-album-guide-overlay,
+html[data-pocket-scene="festival"] .tall-lyric-guide-overlay,
+html[data-pocket-scene="festival"] .no-lyrics-focus-layer,
+html[data-pocket-scene="festival"] .lyrics-ceiling,
+html[data-pocket-scene="festival"] .marquee,
+html[data-pocket-scene="festival"] .placed-active-album-layer,
+html[data-pocket-scene="festival"] .next-up-album-layer,
+html[data-pocket-scene="festival"] .room-playback-dimmer {
+  display: none !important;
+}
+html:not([data-pocket-scene="festival"]) .festival-atmosphere,
+html:not([data-pocket-scene="festival"]) .festival-scene-object,
+html:not([data-pocket-scene="festival"]) .festival-side-sign {
+  display: none !important;
+}
+/* Stage backdrop maintains open sky; keep its 16:9 plane in the original room frame. */
+html[data-pocket-scene="festival"] {
+  --dynamic-ceiling-reveal-px: 0px !important;
+  --dynamic-ceiling-reveal-coord: 0 !important;
+}
+html[data-pocket-scene="festival"] .room-base-layer {
+  isolation: isolate;
+}
+html[data-pocket-scene="festival"] .dj-wrap {
+  left: var(--festival-x, 50.6%) !important;
+  bottom: calc(100% - var(--festival-y, 89%)) !important;
+  transform: translateX(-50%) scale(var(--festival-scale, 1.1)) !important;
+  transform-origin: 50% 100% !important;
+  opacity: var(--festival-opacity, 1) !important;
+  z-index: 55 !important;
+  transition: left 180ms ease, bottom 180ms ease, opacity 150ms ease;
+}
+html[data-pocket-scene="festival"] .room-speaker {
+  top: var(--festival-y, 73%) !important;
+  opacity: var(--festival-opacity, 1) !important;
+  transform: translate(-50%, -50%) scale(var(--festival-scale, 1.28)) !important;
+  z-index: 38 !important;
+  transition: left 180ms ease, top 180ms ease, opacity 150ms ease;
+}
+html[data-pocket-scene="festival"] .room-speaker-left {
+  left: var(--festival-x, 28.4%) !important;
+}
+html[data-pocket-scene="festival"] .room-speaker-right {
+  left: var(--festival-x, 71.6%) !important;
+}
+html[data-pocket-scene="festival"] .table-floor-shadow {
+  left: var(--festival-dj-x, 50.6%) !important;
+  bottom: 9% !important;
+  z-index: 32 !important;
+}
+html[data-pocket-scene="festival"] .dj-feet-shadow {
+  left: var(--festival-dj-x, 50.6%) !important;
+  bottom: 10.5% !important;
+  z-index: 32 !important;
+}
+html[data-pocket-scene="festival"] .album-wash {
+  opacity: .025;
+  mix-blend-mode: soft-light;
+}
+.festival-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none !important;
+  overflow: hidden;
+}
+.festival-sky-glow {
+  position: absolute;
+  inset: 0;
+  opacity: calc(var(--festival-light-strength, .7) * .32);
+  background:
+    radial-gradient(ellipse 22% 37% at 19% 58%, rgba(201, 109, 252, .28), transparent 96%),
+    radial-gradient(ellipse 27% 40% at 81% 60%, rgba(251, 170, 105, .35), transparent 95%),
+    radial-gradient(ellipse 34% 24% at 50% 72%, rgba(161, 105, 254, .24), transparent 99%);
+}
+.festival-beam {
+  position: absolute;
+  width: 34%;
+  height: 74%;
+  top: 16%;
+  transform-origin: 50% 0;
+  mix-blend-mode: screen;
+  opacity: calc(var(--festival-light-strength, .72) * .45);
+  animation: festivalBeamBreath 7s ease-in-out infinite alternate;
+}
+.festival-beam-left {
+  left: 10%;
+  background: linear-gradient(180deg, rgba(220,168,255,.28),rgba(168,107,255,.1) 45%,transparent 100%);
+  clip-path: polygon(42% 0,51% 0,100% 100%,0 100%);
+  transform: rotate(-8deg);
+}
+.festival-beam-middle {
+  left: 37%;
+  width: 26%;
+  background: linear-gradient(180deg, rgba(255,213,148,.22),rgba(255,180,114,.06) 60%,transparent);
+  clip-path: polygon(40% 0,58% 0,100% 100%,0 100%);
+  animation-delay: -3.5s;
+}
+.festival-beam-right {
+  left: 59%;
+  background: linear-gradient(180deg,rgba(123,153,255,.32),rgba(155,101,244,.1) 45%,transparent);
+  clip-path: polygon(47% 0,56% 0,100% 100%,0 100%);
+  transform: rotate(9deg);
+  animation-delay: -5s;
+}
+.festival-footlights {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 83%;
+  height: 10%;
+  background: radial-gradient(ellipse at center, rgba(248,153,114,.26),transparent 70%);
+  opacity: calc(var(--festival-light-strength,.72) * .48);
+  filter: blur(9px);
+}
+@keyframes festivalBeamBreath {
+  from { opacity: calc(var(--festival-light-strength, .72) * .23); }
+  to { opacity: calc(var(--festival-light-strength, .72) * .52); }
+}
+/* Every scene object uses normalized 16:9 positions; no sprite-local calibration changes. */
+.festival-scene-object {
+  position: absolute;
+  left: var(--festival-x, 50%);
+  top: var(--festival-y, 50%);
+  transform: translate(-50%, -50%) scale(var(--festival-scale, 1));
+  opacity: var(--festival-opacity, 1);
+  transform-origin: center center;
+  pointer-events: none !important;
+  transition: left 180ms ease, top 180ms ease, opacity 180ms ease;
+}
+.festival-lyric-display {
+  z-index: 65;
+  width: 53%;
+  min-height: 7.6%;
+  padding: 1.05% 2.5%;
+  text-align: center;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  color: #f6deca;
+  background: linear-gradient(180deg,rgba(11,17,40,.93),rgba(22,17,39,.90));
+  border: calc(var(--room-w) * .0017) solid rgba(229,168,236,.7);
+  border-radius: 30px;
+  box-shadow: 0 9px 32px rgba(0,0,0,.55),0 0 40px rgba(146,102,240,.22),inset 0 0 20px rgba(140,94,188,.23);
+}
+.festival-lyric-label {
+  font-size: clamp(7px, calc(var(--room-w) * .0075), 13px);
+  letter-spacing: .24em;
+  font-weight: 800;
+  color: #deaeef;
+}
+.festival-lyric-text {
+  font-size: clamp(12px,calc(var(--room-w) * .020),36px);
+  line-height: 1.1;
+  font-weight: 900;
+  font-family: "Arial Narrow", Impact, system-ui, sans-serif;
+  font-stretch: condensed;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(229,165,255,.7),0 2px 3px rgba(0,0,0,.9);
+  overflow-wrap: anywhere;
+}
+.festival-lyric-text:empty::before {
+  content: "FEEL THE MUSIC";
+  opacity: .42;
+}
+.festival-lyric-entry { animation: festivalLyricEntrance 440ms ease-out; }
+@keyframes festivalLyricEntrance {
+  0% { opacity: 0; transform: translateY(6px); filter: blur(2px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.festival-song-display {
+  z-index: 64;
+  width: 36.5%;
+  min-height: 9.5%;
+  padding: .8% 1.3%;
+  text-align: center;
+  display: grid;
+  place-content: center;
+  background: linear-gradient(160deg,rgba(5,12,29,.93),rgba(22,16,35,.88));
+  border: 2px solid #d8a77b;
+  border-radius: 8px;
+  box-shadow: 0 13px 30px rgba(0,0,0,.6),0 0 23px rgba(232,161,107,.14),inset 0 0 23px rgba(241,166,119,.11);
+  color: #f6ecdf;
+}
+.festival-display-eyebrow {
+  font-size: clamp(6px,calc(var(--room-w)*.007),12px);
+  font-weight: 800;
+  letter-spacing: .24em;
+  color: #e3ad78;
+}
+.festival-song-title {
+  font-size: clamp(12px,calc(var(--room-w)*.020),36px);
+  font-weight: 900;
+  letter-spacing: .01em;
+  line-height: 1.14;
+  text-shadow: 0 0 16px rgba(254,194,145,.29);
+  overflow-wrap: anywhere;
+}
+.festival-song-artist {
+  font-size: clamp(9px,calc(var(--room-w)*.012),20px);
+  font-weight: 750;
+  color: #eac4de;
+  overflow-wrap: anywhere;
+}
+.festival-song-album {
+  padding-top: 4px;
+  margin-top: 2px;
+  border-top: 1px solid rgba(247,198,156,.3);
+  font-size: clamp(7px,calc(var(--room-w)*.008),14px);
+  color: #eab779;
+  letter-spacing: .05em;
+  overflow-wrap: anywhere;
+}
+.festival-album-display {
+  z-index: 62;
+  width: 13%;
+  padding: .8% .7% 1%;
+  background: linear-gradient(138deg,rgba(15,23,48,.94),rgba(18,16,39,.91));
+  border: 2px solid rgba(230,176,167,.88);
+  box-shadow: 0 15px 38px rgba(0,0,0,.55),0 0 24px rgba(222,131,221,.25),inset 0 0 14px rgba(242,167,140,.12);
+  border-radius: 7px;
+  text-align: center;
+  transform: translate(-50%,-50%) perspective(900px) rotateY(-9deg) scale(var(--festival-scale,1));
+}
+.festival-album-label,.festival-album-foot {
+  font-weight: 900;
+  font-size: clamp(6px,calc(var(--room-w) * .007),13px);
+  color: #f6cdab;
+  letter-spacing: .1em;
+  margin: .5em 0 .8em;
+}
+.festival-album-foot {
+  font-size: clamp(5px,calc(var(--room-w) * .0057),10px);
+  color: #c1b0d1;
+  margin: .75em 0 .3em;
+}
+.festival-album-glass {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: radial-gradient(circle at 60% 34%,rgba(223,153,220,.45),rgba(45,30,70,.8) 60%,#141526);
+  border: 2px solid rgba(255,220,189,.72);
+  box-shadow: 0 0 19px rgba(239,183,192,.25),inset 0 0 12px rgba(255,255,255,.14);
+}
+#festivalAlbumImage {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+#festivalAlbumImage[hidden],#festivalAlbumPlaceholder[hidden] {display:none !important;}
+.festival-album-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: clamp(11px,calc(var(--room-w)*.014),25px);
+  letter-spacing: .2em;
+  font-weight: 900;
+  color: #ecc79d;
+  text-shadow: 0 0 17px rgba(232,138,255,.6);
+  background: linear-gradient(120deg,rgba(79,36,106,.6),rgba(20,29,75,.62));
+}
+.festival-side-sign {
+  position: absolute;
+  left: 13%;
+  top: 39%;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(6px,calc(var(--room-w)*.008),13px);
+  color: #d8a5d7;
+  text-shadow: 0 0 15px rgba(241,136,230,.6);
+  z-index: 26;
+  pointer-events: none;
+}
+.festival-stage-lip {
+  z-index: 61;
+  width: 92%;
+  height: 6%;
+  transform: translate(-50%,-3%) scale(var(--festival-scale,1));
+  border-top: calc(var(--room-w)*.005) solid rgba(245,176,137,.78);
+  border-radius: 18% 18% 8px 8px;
+  background: linear-gradient(180deg,rgba(15,19,32,.94),rgba(6,11,20,.98));
+  box-shadow: 0 -7px 19px rgba(242,169,150,.15),0 10px 26px rgba(0,0,0,.4),inset 0 3px 2px rgba(255,220,185,.15);
+}
+.festival-stage-lip::before {
+  content: "";
+  position: absolute;
+  inset: -13% 0 auto;
+  height: 5px;
+  border-radius: 50%;
+  background: linear-gradient(90deg,transparent,#b986ed 20%,#ffd7a4 50%,#aa83e6 80%,transparent);
+  box-shadow: 0 0 13px rgba(255,185,141,.65);
+}
+.festival-audience {
+  z-index: 69;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%,-100%) scale(var(--festival-scale,1));
+  transform-origin: 50% 100%;
+  overflow: hidden;
+}
+.festival-person {
+  position: absolute;
+  bottom: -1.5%;
+  width: auto;
+  aspect-ratio: 76/185;
+  transform-origin: 50% 100%;
+  opacity: .9;
+  filter: drop-shadow(0 0 8px rgba(179,110,171,.09));
+  animation: festivalCrowdSway 2500ms ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+.festival-person:nth-child(3n) { animation-duration: 3100ms; opacity: .81; }
+.festival-person:nth-child(4n) { animation-duration: 2100ms; opacity: .94; }
+.festival-person[hidden] {display:none !important;}
+.festival-person svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+html.festival-is-playing[data-pocket-scene="festival"] .festival-person {
+  animation-play-state: running;
+}
+@keyframes festivalCrowdSway {
+  from {transform:rotate(-2.1deg) translateX(-3%);}
+  to {transform:rotate(2.7deg) translateX(3%);}
+}
+/* Location / calibration controls live outside room-scene camera transform. */
+.festival-scene-toolbar {
+  position: absolute;
+  z-index: 110;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  background: rgba(7,13,25,.87);
+  color: #f7e6d0;
+  border: 1px solid rgba(226,167,139,.5);
+  border-radius: 7px;
+  box-shadow: 0 7px 21px rgba(0,0,0,.33);
+  font-family: ui-sans-serif,system-ui,sans-serif;
+  pointer-events: auto;
+}
+.festival-scene-toolbar label {font-size: 10px; letter-spacing: .12em; font-weight: 900;}
+.festival-scene-toolbar select,.festival-scene-toolbar button {
+  min-height: 27px;
+  border: 1px solid rgba(239,179,133,.3);
+  background: #182037;
+  color: #f9ddb1;
+  font-size: 11px;
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+.festival-scene-toolbar button:disabled {opacity:.45;cursor:not-allowed;}
+.festival-scene-toolbar button[aria-pressed="true"] {background:#63375c;}
+.festival-studio {
+  position: absolute;
+  top: 58px;
+  left: 12px;
+  z-index: 120;
+  width: min(340px, 36vw);
+  max-height: min(74vh, 700px);
+  overflow-y: auto;
+  background: rgba(8,12,27,.97);
+  border: 1px solid rgba(243,176,138,.6);
+  color: #f3e6de;
+  box-shadow: 0 13px 35px rgba(0,0,0,.7);
+  border-radius: 9px;
+  padding: 14px;
+  pointer-events: auto;
+  font-family: ui-sans-serif,system-ui,sans-serif;
+}
+.festival-studio[hidden] {display:none !important;}
+.festival-studio-title {display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:12px;}
+.festival-studio-title button {font-size:22px;border:0;background:none;color:#ffca92;}
+.festival-studio label {display:block;font-size:10px;font-weight:800;letter-spacing:.08em;margin:10px 0;}
+.festival-studio input[type=range] {display:block;width:100%;margin-top:6px;accent-color:#ecb88b;}
+.festival-studio output {float:right;color:#efbe94;font-variant-numeric:tabular-nums;}
+.festival-studio select,.festival-studio textarea {
+  display:block;width:100%;padding:7px;margin-top:6px;
+  color:#f1e4ec;background:#181b32;border:1px solid #6c5676;border-radius:4px;
+}
+.festival-studio textarea {height:90px;min-height:60px;resize:vertical;font-family:monospace;font-size:10px;line-height:1.4;}
+.festival-studio-sub {font-size:11px;line-height:1.5;color:#cabdcc;}
+.festival-studio-buttons {display:flex;gap:5px;flex-wrap:wrap;}
+.festival-studio-buttons button {
+  flex:1;min-height:30px;font-size:10px;font-weight:800;
+  border:1px solid #80648b;border-radius:4px;background:#282238;color:#f6d8b2;
+}
+.festival-studio-status {min-height:18px;color:#eec58e;font-size:10px;margin-top:6px;}
+html.festival-editing[data-pocket-scene="festival"] .festival-scene-object,
+html.festival-editing[data-pocket-scene="festival"] .dj-wrap,
+html.festival-editing[data-pocket-scene="festival"] .room-speaker {
+  pointer-events: auto !important;
+  cursor: move;
+  outline: 2px dashed rgba(244,202,135,.55);
+}
+html.festival-editing[data-pocket-scene="festival"] .festival-object-selected {
+  outline: 3px dashed #ffe49f !important;
+  outline-offset: 4px;
+}
+html.festival-editing[data-pocket-scene="festival"] .festival-scene-object *,
+html.festival-editing[data-pocket-scene="festival"] .dj-wrap *,
+html.festival-editing[data-pocket-scene="festival"] .room-speaker * { pointer-events:none !important; }
+html.festival-editing[data-pocket-scene="festival"] .room-bg.festival-object-selected {
+  outline: 3px dashed rgba(244,211,148,.8);
+  outline-offset: -5px;
+}
+@media (max-width: 700px) {
+  .festival-scene-toolbar {top:4px;left:4px;padding:3px;gap:4px;}
+  .festival-scene-toolbar label {display:none;}
+  .festival-scene-toolbar select,.festival-scene-toolbar button {font-size:9px;min-height:24px;}
+  .festival-studio {top:36px;left:4px;width:min(290px,80vw);max-height:78vh;}
+  .festival-lyric-display {border-radius:9px;}
+  .festival-lyric-label,.festival-display-eyebrow {display:none;}
+}
+@media (prefers-reduced-motion: reduce) {
+  .festival-person,.festival-beam,.festival-lyric-entry {animation:none !important;}
+}
