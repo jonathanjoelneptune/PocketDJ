@@ -38,23 +38,3 @@ jobs:
 
       - name: Build site
         run: pnpm run build
-
-      - name: Visual QA - headless festival screenshot
-        run: |
-          set -e
-          pnpm exec vite preview --host 127.0.0.1 --port 4173 > /tmp/festival-vite.log 2>&1 &
-          sleep 4
-          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
-          test -n "$CHROME"
-          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --hide-scrollbars --window-size=1764,992 --virtual-time-budget=8000 --screenshot=/tmp/festival-stage.png 'http://127.0.0.1:4173/?scene=festival'
-          python - <<'PY'
-          from PIL import Image
-          import base64,io
-          image=Image.open('/tmp/festival-stage.png').convert('RGB')
-          image.thumbnail((1080,608))
-          out=io.BytesIO()
-          image.save(out,format='JPEG',quality=58,optimize=True)
-          print('FESTIVAL_SCREENSHOT_BEGIN')
-          print(base64.b64encode(out.getvalue()).decode())
-          print('FESTIVAL_SCREENSHOT_END')
-          PY
