@@ -345,14 +345,31 @@ export function syncFestivalPlayback(track: NormalizedTrack): void {
   const placeholder = element("#festivalAlbumPlaceholder");
   if (cover) {
     if (track.albumArtUrl && hasTrack) {
+      // Keep a stage placeholder until the new artwork actually decodes.
+      if (placeholder) placeholder.hidden = false;
+      cover.hidden = true;
+      cover.onload = () => {
+        if (placeholder) placeholder.hidden = true;
+        cover.hidden = false;
+        cover.classList.remove("festival-album-appearing");
+        void cover.offsetWidth;
+        cover.classList.add("festival-album-appearing");
+      };
+      cover.onerror = () => {
+        cover.hidden = true;
+        if (placeholder) placeholder.hidden = false;
+      };
       cover.src = track.albumArtUrl;
-      cover.hidden = false;
     } else {
       cover.removeAttribute("src");
       cover.hidden = true;
+      if (placeholder) placeholder.hidden = false;
     }
   }
-  if (placeholder) placeholder.hidden = Boolean(track.albumArtUrl && hasTrack);
+  // Long titles remain readable within the stage's fixed metadata display.
+  if (title) title.style.setProperty("--festival-title-fit", String(
+    track.title.length > 65 ? 0.59 : track.title.length > 45 ? 0.74 : track.title.length > 30 ? 0.88 : 1,
+  ));
 }
 
 export function syncFestivalLyrics(text: string): void {
