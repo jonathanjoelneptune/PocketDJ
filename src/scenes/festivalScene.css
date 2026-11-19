@@ -6,7 +6,6 @@ html[data-pocket-scene="festival"] .room {
   background: #0c172b;
 }
 html[data-pocket-scene="festival"] .room-bg {
-  background-image: url("./assets/scenes/festival-dusk.svg") !important;
   background-size: calc(100% * var(--festival-scale, 1)) auto !important;
   background-position: var(--festival-x, 50%) var(--festival-y, 50%) !important;
   opacity: var(--festival-opacity, 1) !important;
