@@ -132,6 +132,9 @@ function applyLayout(): void {
   }
   const root = document.documentElement;
   root.style.setProperty("--festival-light-strength", String(layout.lightingStrength));
+  root.style.setProperty("--festival-dj-x", `${layout.objects.performer.x}%`);
+  root.style.setProperty("--festival-dj-y", `${layout.objects.performer.y}%`);
+  root.style.setProperty("--festival-dj-scale", String(layout.objects.performer.scale));
   const count = Math.round(layout.audienceDensity * crowdModels.length);
   document.querySelectorAll<HTMLElement>(".festival-person").forEach((person, i) => {
     person.hidden = i >= count;
@@ -178,6 +181,12 @@ function changeScene(id: SceneId): void {
   selectedScene = id;
   saveSceneSelection(id);
   document.documentElement.dataset.pocketScene = id;
+  // Keep an explicit ?scene= preview URL consistent with the scene picker.
+  const currentUrl = new URL(window.location.href);
+  if (currentUrl.searchParams.has("scene") && currentUrl.searchParams.get("scene") !== id) {
+    currentUrl.searchParams.set("scene", id);
+    window.history.replaceState(window.history.state, "", currentUrl.toString());
+  }
   const backdrop = element<HTMLElement>("#roomBg");
   if (backdrop) backdrop.style.backgroundImage = id === "festival"
     ? 'url("./assets/scenes/festival-dusk.svg")'
