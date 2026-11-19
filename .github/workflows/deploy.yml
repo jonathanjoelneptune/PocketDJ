@@ -4,8 +4,16 @@ on:
   push:
     branches:
       - main
-      - feature/festival-stage-scenes-wp1-5
   workflow_dispatch:
+  # Deployment events run in the main-branch workflow context, satisfying
+  # GitHub Pages' protected github-pages environment branch restrictions.
+  workflow_run:
+    workflows:
+      - Validate PocketDJ Pull Request
+    types:
+      - completed
+    branches:
+      - feature/festival-stage-scenes-wp1-5
 
 permissions:
   contents: read
@@ -23,6 +31,7 @@ env:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
