@@ -1,4 +1,6 @@
 import "./styles.css";
+import "./scenes/festivalScene.css";
+import { initializeFestivalScenes, syncFestivalPlayback } from "./scenes/festivalScene";
 import { installSpotifyDesktopBridge, isSpotifyDesktopEmbed, type DesktopAlbumColors } from "./spotify/desktopBridge";
 import { initializeSpotifyEmbed, updateSpotifyEmbedArtwork } from "./spotify/embedMode";
 import { initializeRoomSpotlights, deriveSpotlightAlbumColors, updateSpotlightAlbumColors, type AlbumLightColors } from "./roomSpotlights";
@@ -3880,6 +3882,8 @@ async function boot(): Promise<void> {
   updateDynamicCeilingReveal();
   window.addEventListener("resize", updateDynamicCeilingReveal, { passive: true });
   renderShell(state);
+  initializeFestivalScenes();
+  syncFestivalPlayback(state.playback);
   // Register the Spicetify bridge before graphics/room setup. If a later
   // optional visual initializer throws or stalls, playback can still connect.
   // This is intentionally Spotify metadata only, with no OAuth token exchange.
