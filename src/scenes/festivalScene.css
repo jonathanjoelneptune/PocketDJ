@@ -76,12 +76,12 @@ html[data-pocket-scene="festival"] .room-speaker-right {
 }
 html[data-pocket-scene="festival"] .table-floor-shadow {
   left: var(--festival-dj-x, 50.6%) !important;
-  bottom: 9% !important;
+  bottom: calc(100% - var(--festival-dj-y, 89%) - 2%) !important;
   z-index: 32 !important;
 }
 html[data-pocket-scene="festival"] .dj-feet-shadow {
   left: var(--festival-dj-x, 50.6%) !important;
-  bottom: 10.5% !important;
+  bottom: calc(100% - var(--festival-dj-y, 89%) - .5%) !important;
   z-index: 32 !important;
 }
 html[data-pocket-scene="festival"] .album-wash {
@@ -100,8 +100,8 @@ html[data-pocket-scene="festival"] .album-wash {
   inset: 0;
   opacity: calc(var(--festival-light-strength, .7) * .32);
   background:
-    radial-gradient(ellipse 22% 37% at 19% 58%, rgba(201, 109, 252, .28), transparent 96%),
-    radial-gradient(ellipse 27% 40% at 81% 60%, rgba(251, 170, 105, .35), transparent 95%),
+    radial-gradient(ellipse 22% 37% at 19% 58%, rgba(var(--room-spotlight-album-primary-rgb, 201, 109, 252), .28), transparent 96%),
+    radial-gradient(ellipse 27% 40% at 81% 60%, rgba(var(--room-spotlight-album-secondary-rgb, 251, 170, 105), .35), transparent 95%),
     radial-gradient(ellipse 34% 24% at 50% 72%, rgba(161, 105, 254, .24), transparent 99%);
 }
 .festival-beam {
@@ -343,7 +343,8 @@ html[data-pocket-scene="festival"] .album-wash {
   transform-origin: 50% 100%;
   opacity: .9;
   filter: drop-shadow(0 0 8px rgba(179,110,171,.09));
-  animation: festivalCrowdSway 2500ms ease-in-out infinite alternate;
+  --festival-person-beats: 4.8;
+  animation: festivalCrowdSway calc(var(--music-beat-ms, 520ms) * var(--festival-person-beats)) ease-in-out infinite alternate;
   animation-play-state: paused;
 }
 .festival-person:nth-child(3n) { animation-duration: 3100ms; opacity: .81; }
