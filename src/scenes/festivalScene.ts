@@ -189,7 +189,7 @@ function changeScene(id: SceneId): void {
   }
   const backdrop = element<HTMLElement>("#roomBg");
   if (backdrop) backdrop.style.backgroundImage = id === "festival"
-    ? 'url("./assets/scenes/festival-dusk.svg")'
+    ? 'url("./assets/scenes/festival-stage-illustrated-v1.png")'
     : 'url("./assets/room/pocket-dj-room-offline-v1.png")';
   const selector = element<HTMLSelectElement>("#festivalSceneSelect");
   if (selector) selector.value = id;

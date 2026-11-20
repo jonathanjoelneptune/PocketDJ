@@ -1,5 +1,5 @@
 /* Festival location. Scoped under data-pocket-scene: record-room styling is untouched.
- * Depth: static perspective SVG -> volumetric light -> speakers -> performer
+ * Depth: static illustrated PNG -> volumetric light -> speakers -> performer
  * -> stage lip / album displays -> near-field animated silhouettes -> controls.
  */
 html[data-pocket-scene="festival"] .room {
@@ -463,3 +463,6 @@ html.festival-editing[data-pocket-scene="festival"] .room-bg.festival-object-sel
   from { opacity: 0; filter: brightness(1.35) saturate(0.78); transform: scale(1.045); }
   to { opacity: 1; filter: brightness(1) saturate(1); transform: scale(1); }
 }
+
+/* The new illustrated backdrop already contains its own physical stage front. */
+html[data-pocket-scene="festival"] #festivalStageLip { display: none !important; }

@@ -17,7 +17,7 @@ The top-left **LOCATION** selector switches scenes without interrupting Spotify 
 
 ## Architecture
 
-- `public/assets/scenes/festival-dusk.svg`: 1764×992 open-sky festival base with perspective floor, distant landscape, truss and side-stage banners. No live artist text, album art, speakers, DJ or foreground crowd is baked into it.
+- `public/assets/scenes/festival-stage-illustrated-v1.png`: 1672×941 illustrated open-air backdrop with truss, stage, sunset and scenery, scaled to the original 16:9 room plane. The existing SVG remains as an earlier reference. No live artist text, album art, speakers, DJ or foreground crowd is baked into it.
 - `src/scenes/scenePresets.ts`: layout schema, normalized percentage coordinates, safe parsing, default placement, and local storage.
 - `src/scenes/festivalScene.ts`: isolated scene runtime. Performs only visual DOM initialization and lightweight updates from the existing playback and lyric streams.
 - `src/scenes/festivalScene.css`: per-location rendering, layered 2.5D effects, performer/speaker transforms, animated audience and lighting.
@@ -58,7 +58,7 @@ There are no additional timing loops for the crowd. Each silhouette animates via
 
 ## Known design constraints
 
-The initial festival art is an **editable procedural SVG**, not a final hand-painted raster backdrop. That keeps it lightweight and precise for the first layout pass. A future high-detail background can replace the SVG without changing the stage object calibrations or playback code.
+The festival scene now uses the second illustrated high-detail PNG backdrop, replacing the initial procedural SVG. The PNG contains its own stage facade and lighting architecture, so the procedural front-stage lip is hidden. Existing interactive DJ, records, speakers, lyric display, song metadata, album-art showcase, and crowd remain independently rendered.
 
 The current Record Room-only utilities remain accessible in their original mode. The festival intentionally hides wall-mounted album slots, ceiling projection, string lights and related room-only overlays rather than reimplementing them.
 
