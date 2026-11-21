@@ -97,3 +97,43 @@ roof gaps, the horizon, and stage footing.
 
 Do not move this work onto `main` before the final illustrated layers and
 the time-of-day transitions have been approved.
+
+## WP7A / WP7B: neutral scene artwork and unified lighting
+
+**Status:** Experimental festival branch, not merged into production.
+
+The old five-PNG color-threshold extraction has been superseded by authored
+transparent SVG object geometry, stored under public/assets/scenes/festival-environment/.
+
+| Static material layer | Asset |
+| --- | --- |
+| Mountains and landscape | mountains.svg |
+| City skyline | city.svg |
+| Foreground and side trees | trees.svg |
+| Canopy, trusses and banners | canopy.svg |
+| Stage floor and railings | stage-floor.svg |
+
+The sky is procedural (CSS gradients, stars, sun, drifting clouds).
+Two independent light-emission assets, city-lights.svg and
+practical-lights.svg, gradually illuminate at dusk and night. Every image
+shares the same transparent 1764 x 992 coordinate system. Unlike the previous
+single-image segmentation, there is no sunset or sky printed onto the stage art.
+
+The central material-specific lighting model lives in
+src/scenes/festivalLighting.ts and interpolates ambient color, sky, sun,
+mountain/city/tree/canopy/floor brightness, stage bulbs and city windows.
+The existing SKY panel controls manual time, saturation, cloud density
+and stars. Defaults and presets: 07:00, 12:00, 18:00 and 23:00.
+
+Build no longer runs the old segmentation script.
+Tests: npm run test:festival and the existing test:animation.
+
+Visual acceptance criteria:
+1. Noon: bright neutral sky, naturally colored scenery, no city window glow.
+2. Sunset: warm horizon, more pronounced stage bulbs, atmospheric shadows.
+3. Night: deep blue sky, stars, shaded neutral scenery and glowing city windows.
+4. No rectangular sky keying artifacts or sun rendering across the rafters.
+5. Existing DJ sprite/scratch/vinyl, speaker, lyric and production room intact.
+
+The new authored vector artwork needs final human review at full display
+resolution before the draft experimental scene is considered final.
