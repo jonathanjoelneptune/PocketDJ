@@ -137,3 +137,56 @@ Visual acceptance criteria:
 
 The new authored vector artwork needs final human review at full display
 resolution before the draft experimental scene is considered final.
+
+
+## WP7E: Textured art fidelity (Nov 20, 2026)
+
+The festival now uses **five detailed RGBA PNG art layers** generated with
+`scripts/build_festival_textures.py` before the Vite build. The neutral
+WP7A SVG artwork is retained as an exact-position fallback and, where needed,
+as a shape/light mask.
+
+| Material | PNG | Improvement |
+| --- | --- | --- |
+| Trees | `festival-textures/trees-detail.png` | Irregular clusters, small organic leaves, varied branches and shading |
+| Mountains | `festival-textures/mountains-detail.png` | Multi-depth jagged ridgelines, strata and textured distance haze |
+| Stage floor | `festival-textures/stage-floor-detail.png` | Varied perspective planks, knots, scratches, fascia timber and rivets |
+| Canopy/rafters | `festival-textures/canopy-detail.png` | Fabric weave, stitching, metal scratches, rivets and structural wear |
+| Distant city | `festival-textures/city-detail.png` | Fine window and facade texture, rooftop detail |
+
+All five textures are **1764 × 992 RGBA** and intentionally have transparent
+non-art regions. They contain only neutral material information: artificial
+light remains separate (`practical-lights.svg`, `city-lights.svg`) and scene
+color still comes from `festivalLighting.ts`.
+
+The generator is deterministic; it uses Pillow and NumPy already installed
+by the project's GitHub Actions environment. It is run by `pnpm build` and
+`pnpm dev` (`predev`). The new `tests/festivalTextures.test.mjs` checks
+generation, exact PNG format, dimensions and nonempty content. The art is
+generated during CI for the experimental `/festival/` preview; no manual
+binary upload is required.
+
+### Visual QA toggle
+
+A new toolbar **ART: DETAIL** button switches to **ART: VECTOR** to A/B the
+new raster surfaces against the previous WP7A vectors in exactly the same
+lighting and layout. Choices are saved locally. The query parameter
+`?festivalArt=vector` also selects vector mode. Detailed art is the default.
+
+The scene progressively loads PNGs: the original SVG surfaces stay visible
+until detail assets have decoded, and missing files retain the SVG fallback.
+No DJ pose, scratching, album, lyric, or Spotify playback logic changes.
+
+### Acceptance checks
+
+- Compare noon, sunrise, sunset and night with ART: DETAIL enabled.
+- Confirm the floor no longer reads as a flat checkerboard/grid.
+- Check new natural foliage silhouettes don't obscure the DJ and metadata.
+- Confirm the canopy remains clean under day/night tint, with bulbs
+  illuminating independently and without embedded warm sunset colors.
+- Use ART: VECTOR to verify the exact same camera and object placement.
+- Confirm Record Room and normal DJ animation are unaffected.
+
+This is a deterministic procedural detail pass, **not yet a fully hand-painted
+high-resolution backdrop**. Evaluate it at actual desktop and Spotify sizes
+before treating WP7E as visually approved or merging the experimental branch.
