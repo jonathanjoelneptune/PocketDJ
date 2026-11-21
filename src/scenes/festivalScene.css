@@ -597,3 +597,19 @@ html[data-pocket-scene="festival"] .room-bg {
     transition:none !important;
   }
 }
+
+/* Register sky colors so browsers interpolate them instead of snapping between presets. */
+@property --festival-sky-top {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #4b4371;
+}
+@property --festival-sky-horizon {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ef9167;
+}
+html[data-pocket-scene="festival"] {
+  transition: --festival-sky-top 1.5s linear,
+    --festival-sky-horizon 1.5s linear;
+}
