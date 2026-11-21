@@ -28,6 +28,19 @@ const DEFAULT_ATMOSPHERE: FestivalAtmosphereSettings = {
 };
 let atmosphere: FestivalAtmosphereSettings = { ...DEFAULT_ATMOSPHERE };
 let atmospherePanelOpen = false;
+let classicFestivalArt = false;
+const FESTIVAL_ART_KEY = "pocketdj-festival-detailed-art-v1";
+function setFestivalArt(classic: boolean): void {
+  classicFestivalArt = classic;
+  document.documentElement.classList.toggle("festival-art-classic", classic);
+  const button = document.querySelector<HTMLButtonElement>("#festivalArtButton");
+  if (button) {
+    button.textContent = classic ? "ART: VECTOR" : "ART: DETAIL";
+    button.setAttribute("aria-pressed",String(!classic));
+  }
+  try { localStorage.setItem(FESTIVAL_ART_KEY, classic ? "vector" : "detail"); } catch { /* optional */ }
+}
+
 
 const clamp = (value: number, min: number, max: number): number =>
   Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : min;
@@ -231,6 +244,7 @@ function toolbarMarkup(): string {
     </select>
     <button id="festivalEditButton" type="button" title="Configure festival scene positions">LAYOUT</button>
     <button id="festivalAtmosphereButton" type="button" aria-expanded="false" aria-controls="festivalAtmospherePanel" title="Adjust sky and festival atmosphere">SKY</button>
+    <button id="festivalArtButton" type="button" aria-pressed="true" title="Compare detailed PNG artwork against the original vector artwork">ART: DETAIL</button>
   </div>
   <div id="festivalAtmospherePanel" class="festival-atmosphere-panel" hidden role="region" aria-label="Festival Atmosphere Lab">
     <header><strong>FESTIVAL ATMOSPHERE</strong><button type="button" id="festivalAtmosphereClose" aria-label="Close atmosphere controls">×</button></header>
@@ -360,6 +374,7 @@ function changeScene(id: SceneId): void {
     toggleAtmospherePanel(false);
   }
   element<HTMLButtonElement>("#festivalAtmosphereButton")?.toggleAttribute("disabled", id !== "festival");
+  element<HTMLButtonElement>("#festivalArtButton")?.toggleAttribute("disabled", id !== "festival");
   applyLayout();
 }
 
@@ -373,6 +388,8 @@ function changeObjectValue(key: keyof FestivalSceneLayout["objects"]["performer"
 }
 
 function bindStudio(): void {
+  element<HTMLButtonElement>("#festivalArtButton")?.addEventListener("click", () =>
+    setFestivalArt(!classicFestivalArt));
   element<HTMLSelectElement>("#festivalSceneSelect")?.addEventListener("change", event => {
     changeScene((event.currentTarget as HTMLSelectElement).value === "festival" ? "festival" : "record-room");
   });
@@ -489,6 +506,10 @@ export function initializeFestivalScenes(): void {
     element(selector)?.setAttribute("data-festival-object", id);
   }
   bindStudio();
+  try {
+    const requested = new URLSearchParams(window.location.search).get("festivalArt");
+    setFestivalArt(requested === "vector" || (requested === null && localStorage.getItem(FESTIVAL_ART_KEY) === "vector"));
+  } catch { setFestivalArt(false); }
   bindAtmosphere();
   renderAtmosphere();
   changeScene(resolveSceneId());
