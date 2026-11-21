@@ -908,3 +908,16 @@ html[data-pocket-scene="festival"] #festivalArtButton[aria-pressed="true"] {
   color: #fff2d6;
   border-color: #dbb897;
 }
+
+
+/* Decode-safe progressive enhancement: base SVGs stay legible on slow/offline loads. */
+html[data-pocket-scene="festival"] .festival-env-plane .festival-env-art { opacity:0; }
+html[data-pocket-scene="festival"] .festival-env-plane .festival-env-base { opacity:1; }
+html[data-pocket-scene="festival"] .festival-env-plane.festival-art-ready .festival-env-art { opacity:1; }
+html[data-pocket-scene="festival"] .festival-env-trees.festival-art-ready .festival-env-base,
+html[data-pocket-scene="festival"] .festival-env-mountains.festival-art-ready .festival-env-base,
+html[data-pocket-scene="festival"] .festival-env-floor.festival-art-ready .festival-env-base { opacity:.04; }
+html[data-pocket-scene="festival"] .festival-env-city.festival-art-ready .festival-env-art {opacity:.78;}
+html[data-pocket-scene="festival"] .festival-env-canopy.festival-art-ready .festival-env-art {opacity:.96;}
+html.festival-art-classic[data-pocket-scene="festival"] .festival-env-plane.festival-art-ready .festival-env-base {opacity:1 !important;}
+html.festival-art-classic[data-pocket-scene="festival"] .festival-env-plane.festival-art-ready .festival-env-art {display:none !important;}
