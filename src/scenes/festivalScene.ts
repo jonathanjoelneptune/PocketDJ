@@ -181,7 +181,7 @@ function sceneMarkup(): string {
   const plane = (id: string, name: string): string =>
     `<div class="festival-env-plane festival-env-${id}" style="--festival-material-mask:url('${assets}${name}.svg')">
       <img class="festival-env-base" alt="" draggable="false" decoding="async" src="${assets}${name}.svg" />
-      <img class="festival-env-art" alt="" draggable="false" decoding="async" src="./assets/scenes/festival-textures/${name}-detail.png" />
+      <img class="festival-env-art" alt="" draggable="false" decoding="async" src="./assets/scenes/festival-textures/${name}-detail.png?v=7f" />
     </div>`;
   return `
     <div id="festivalBackgroundLayers" class="festival-background-layers festival-scene-object" data-festival-object="backdrop" aria-hidden="true">
