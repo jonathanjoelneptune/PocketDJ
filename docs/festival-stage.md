@@ -63,3 +63,37 @@ The festival scene now uses the second illustrated high-detail PNG backdrop, rep
 The current Record Room-only utilities remain accessible in their original mode. The festival intentionally hides wall-mounted album slots, ceiling projection, string lights and related room-only overlays rather than reimplementing them.
 
 **Status:** Experimental. Branch-only until the perspective, DJ scale, crowd placement and responsive layouts are visually approved.
+
+## Five-layer environment (Atmosphere Lab v2)
+
+The festival now renders **five aligned RGBA PNGs**, generated at build time in
+`public/assets/scenes/festival-layers/` when authored PNGs are not present:
+
+1. `festival-sky.png`: transparent neutral cloud detail on top of a CSS-controlled sky.
+2. `festival-landscape.png`: trees, distant mountains, and scenery.
+3. `festival-city.png`: distant city, independently tintable from the mountains.
+4. `festival-rafters.png`: roof canopy, trusses, banners, and support pillars.
+5. `festival-floor.png`: wooden stage deck and fascia.
+
+**All five images have identical dimensions and aligned full-canvas coordinates.**
+The sun, stars, and drifting CSS clouds render behind landscape/rafters, fixing
+the prior foreground-sun problem. The original DJ, vinyl, lyrics, speakers,
+performance beams, and toolbar still render independently.
+
+`scripts/build_festival_layers.py` generates provisional transparent PNGs from
+the committed illustrated master art. It depends on Python, Pillow, and NumPy
+(already available in CI). `pnpm run build` runs it on the festival branch.
+
+**Replacing provisional art with new authored PNGs:** commit all five PNGs to
+`public/assets/scenes/festival-layers/` on the festival branch. The builder
+detects a complete authored set and does not overwrite it. To deliberately
+regenerate masks from the source master, set `FESTIVAL_FORCE_REBUILD=1` when building.
+
+The current generated masks are automatic and **not precision hand-retouched**.
+The previous single-image source can leave edge seams and static coloration in
+the rafters or mountain silhouettes. Follow-up visual QA should inspect all
+five layers at sunrise, noon, sunset, and night, particularly canopy edges,
+roof gaps, the horizon, and stage footing.
+
+Do not move this work onto `main` before the final illustrated layers and
+the time-of-day transitions have been approved.
