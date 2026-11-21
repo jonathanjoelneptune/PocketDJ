@@ -839,3 +839,56 @@ html[data-pocket-scene="festival"] .festival-beam {
     transition: none !important;
   }
 }
+
+
+/* WP7E — Detail passes. PNG art supplies surface fidelity; SVG shapes still
+ * define exact alignment / ambient-tint masks and remain fallback during load.
+ * All texture coordinates match the 1764 x 992 artwork plane exactly.
+ */
+html[data-pocket-scene="festival"] .festival-env-plane .festival-env-base,
+html[data-pocket-scene="festival"] .festival-env-plane .festival-env-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: fill;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  filter: brightness(var(--festival-brightness))
+          saturate(var(--festival-backdrop-saturation,.85));
+  transition: filter 1.1s linear;
+}
+/* Organic geometry takes over completely in the trees, ridges and decking;
+ * the flat SVGs remain loaded underneath as known-good loading fallbacks. */
+html[data-pocket-scene="festival"] .festival-env-trees .festival-env-base,
+html[data-pocket-scene="festival"] .festival-env-mountains .festival-env-base,
+html[data-pocket-scene="festival"] .festival-env-floor .festival-env-base {
+  opacity: .04;
+}
+html[data-pocket-scene="festival"] .festival-env-trees .festival-env-art,
+html[data-pocket-scene="festival"] .festival-env-mountains .festival-env-art,
+html[data-pocket-scene="festival"] .festival-env-floor .festival-env-art {
+  opacity: 1;
+}
+/* Canopy and city keep accurate truss/building silhouettes from their SVGs,
+ * with translucent woven fabric, rivets, scratches and facade detail above. */
+html[data-pocket-scene="festival"] .festival-env-canopy .festival-env-art {
+  mix-blend-mode: soft-light;
+  opacity: .96;
+}
+html[data-pocket-scene="festival"] .festival-env-city .festival-env-art {
+  mix-blend-mode: multiply;
+  opacity: .78;
+}
+/* The new organic foliage silhouette is wider than the original SVG mask.
+ * Its material brightness still responds to day/night; don't draw an old,
+ * inaccurate ambient mask across the new foliage. */
+html[data-pocket-scene="festival"] .festival-env-trees::after,
+html[data-pocket-scene="festival"] .festival-env-mountains::after,
+html[data-pocket-scene="festival"] .festival-env-floor::after {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-pocket-scene="festival"] .festival-env-plane .festival-env-art {transition:none !important;}
+}
