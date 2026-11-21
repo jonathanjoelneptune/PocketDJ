@@ -96,7 +96,9 @@ function renderAtmosphere(): void {
   // A sun/moon guide moves across the upper sky without changing the artwork's perspective.
   const daylight = atmosphere.hour >= 5 && atmosphere.hour <= 20;
   root.style.setProperty("--festival-sun-opacity", daylight ? String(Math.min(1, sky.glow * 1.3)) : "0");
-  root.style.setProperty("--festival-sun-x", `${(12 + ((atmosphere.hour - 5) / 15) * 76).toFixed(2)}%`);
+  const daylightArc = clamp((atmosphere.hour - 5) / 15, 0, 1);
+  root.style.setProperty("--festival-sun-x", `${(12 + daylightArc * 76).toFixed(2)}%`);
+  root.style.setProperty("--festival-sun-y", `${(48 - 22 * Math.sin(Math.PI * daylightArc)).toFixed(2)}%`);
   const label = document.querySelector<HTMLOutputElement>("#festivalAtmosphereTimeValue");
   if (label) {
     const hour = Math.floor(atmosphere.hour);
@@ -193,7 +195,7 @@ const crowdModels = [
 
 function sceneMarkup(): string {
   return `
-    <div id="festivalAtmosphere" class="festival-atmosphere" aria-hidden="true">
+    <div id="festivalBackgroundLayers" class="festival-background-layers festival-scene-object" data-festival-object="backdrop" aria-hidden="true">
       <div class="festival-sky-gradient"></div>
       <div class="festival-stars">
         ${Array.from({length: 42}, (_, i) => {
@@ -207,6 +209,13 @@ function sceneMarkup(): string {
       <div class="festival-cloud-field">
         ${Array.from({length: 9}, (_, i) => `<span class="festival-cloud" style="--cloud-y:${(i * 17 + 6) % 43}%;--cloud-width:${8 + i % 4 * 3}%;--cloud-duration:${74 + i * 13}s;--cloud-delay:-${i * 19}s;--cloud-alpha:${.45 + (i % 3) * .18}"></span>`).join("")}
       </div>
+      <img class="festival-background-img festival-background-sky" src="./assets/scenes/festival-layers/festival-sky.png" alt="" decoding="async" />
+      <img class="festival-background-img festival-background-landscape" src="./assets/scenes/festival-layers/festival-landscape.png" alt="" decoding="async" />
+      <img class="festival-background-img festival-background-city" src="./assets/scenes/festival-layers/festival-city.png" alt="" decoding="async" />
+      <img class="festival-background-img festival-background-rafters" src="./assets/scenes/festival-layers/festival-rafters.png" alt="" decoding="async" />
+      <img class="festival-background-img festival-background-floor" src="./assets/scenes/festival-layers/festival-floor.png" alt="" decoding="async" />
+    </div>
+    <div id="festivalAtmosphere" class="festival-atmosphere" aria-hidden="true">
       <div class="festival-sky-glow"></div>
       <div class="festival-beam festival-beam-left"></div>
       <div class="festival-beam festival-beam-middle"></div>
@@ -282,7 +291,7 @@ function toolbarMarkup(): string {
 
 function getObjectElement(id: SceneObjectId): HTMLElement | null {
   switch (id) {
-    case "backdrop": return element("#roomBg");
+    case "backdrop": return element("#festivalBackgroundLayers");
     case "performer": return element(".dj-wrap");
     case "speakerLeft": return element("#leftSpeaker");
     case "speakerRight": return element("#rightSpeaker");
@@ -339,7 +348,7 @@ function updateStudioControls(): void {
   document.querySelectorAll<HTMLElement>("[data-festival-object]").forEach(node => {
     node.classList.toggle("festival-object-selected", node.dataset.festivalObject === studioObject);
   });
-  element("#roomBg")?.classList.toggle("festival-object-selected", studioObject === "backdrop");
+  element("#festivalBackgroundLayers")?.classList.toggle("festival-object-selected", studioObject === "backdrop");
 }
 
 function toggleStudio(open: boolean): void {
