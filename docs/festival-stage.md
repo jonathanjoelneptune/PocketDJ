@@ -190,3 +190,37 @@ No DJ pose, scratching, album, lyric, or Spotify playback logic changes.
 This is a deterministic procedural detail pass, **not yet a fully hand-painted
 high-resolution backdrop**. Evaluate it at actual desktop and Spotify sizes
 before treating WP7E as visually approved or merging the experimental branch.
+
+
+## WP7F: Cinematic environment detail pass
+
+This pass adds depth while retaining the WP7B lighting model and all DJ functionality.
+
+- Reworked stage-floor-detail.png with cleaner perspective planks, longitudinal
+  wood fibers, small knots and subtler seams. Removed the visually noisy,
+  repeating horizontal grid from the prior texture pass.
+- Expanded canopy-detail.png with directional woven textile folds, fine seam
+  stitching, weathered bolts and subdued metal scuffs.
+- Added authored transparent rigging-detail.svg: suspension hardware,
+  reinforcement bars, clamps, cable runs, cross braces and structural rivets.
+- Masked canopy and city details against their proper SVG silhouettes so
+  texture can't spill into open sky or beside the buildings.
+- Added a low-opacity atmospheric depth band behind the city, physically
+  localized pools of stage light on the floor, and a restrained stage lip edge.
+- Softened the existing nightclub-style concert beams. Their opacity and
+  the new reflective light still follow the shared practical-light intensity
+  from the Festival Lighting controller.
+- Kept the ART: VECTOR fallback, which suppresses the new decorative rig,
+  and updated the PNG URLs to avoid stale browser-cached material textures.
+
+The SKY day/sunset/night controls, lyric banner, speakers, albums, scratching,
+crowd placement, and production Record Room are unchanged.
+
+**QA:** Compare 07:00, 12:00, 18:00 and 23:00 with ART: DETAIL. Pay attention
+to whether the floor reads as actual decking, whether the truss looks sturdier
+and less flat, and whether night lights illuminate only physical surfaces.
+The goal is a more cohesive illustrated game aesthetic, not more saturation or
+unbounded particle complexity. The renderer should remain performant in
+Spotify embedded mode.
+
+**Status:** Experimental branch; visual acceptance still required.
