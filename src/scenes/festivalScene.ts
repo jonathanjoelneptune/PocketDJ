@@ -14,6 +14,148 @@ let previousTrackKey = "";
 let previousLyric = "";
 let initialized = false;
 
+// Festival-only appearance state. Kept separate from DJ playback and layout calibration.
+const FESTIVAL_ATMOSPHERE_KEY = "pocketdj-festival-atmosphere-v1";
+type FestivalAtmosphereSettings = {
+  hour: number;
+  saturation: number;
+  clouds: number;
+  stars: boolean;
+};
+const DEFAULT_ATMOSPHERE: FestivalAtmosphereSettings = {
+  hour: 18, saturation: 85, clouds: 35, stars: true,
+};
+let atmosphere: FestivalAtmosphereSettings = { ...DEFAULT_ATMOSPHERE };
+let atmospherePanelOpen = false;
+
+const clamp = (value: number, min: number, max: number): number =>
+  Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : min;
+const mix = (a: number, b: number, t: number): number => a + (b - a) * t;
+const rgb = (color: readonly number[]): string =>
+  `rgb(${color.map(v => Math.round(v)).join(",")})`;
+const blend = (a: readonly number[], b: readonly number[], t: number): number[] =>
+  a.map((v, i) => mix(v, b[i], t));
+
+type SkyKeyframe = {
+  hour: number;
+  top: readonly number[];
+  horizon: readonly number[];
+  brightness: number;
+  glow: number;
+  stars: number;
+};
+const SKY_KEYFRAMES: readonly SkyKeyframe[] = [
+  { hour: 0, top: [7, 17, 42], horizon: [39, 43, 79], brightness: .48, glow: .05, stars: 1 },
+  { hour: 5, top: [18, 30, 58], horizon: [89, 66, 96], brightness: .58, glow: .18, stars: .60 },
+  { hour: 7, top: [64, 89, 133], horizon: [236, 158, 129], brightness: .88, glow: .80, stars: 0 },
+  { hour: 10, top: [75, 137, 175], horizon: [178, 205, 214], brightness: 1, glow: .43, stars: 0 },
+  { hour: 15, top: [70, 128, 171], horizon: [170, 198, 214], brightness: 1, glow: .40, stars: 0 },
+  { hour: 18, top: [75, 67, 113], horizon: [239, 145, 103], brightness: .83, glow: 1, stars: 0 },
+  { hour: 20, top: [20, 34, 68], horizon: [116, 78, 112], brightness: .57, glow: .27, stars: .38 },
+  { hour: 22, top: [7, 17, 42], horizon: [39, 43, 79], brightness: .48, glow: .05, stars: 1 },
+  { hour: 24, top: [7, 17, 42], horizon: [39, 43, 79], brightness: .48, glow: .05, stars: 1 },
+];
+function getSky(hour: number) {
+  const h = clamp(hour, 0, 24);
+  const end = SKY_KEYFRAMES.findIndex(frame => frame.hour >= h);
+  const next = SKY_KEYFRAMES[Math.max(1, end)];
+  const previous = SKY_KEYFRAMES[Math.max(0, end - 1)];
+  const t = clamp((h - previous.hour) / (next.hour - previous.hour), 0, 1);
+  return {
+    top: rgb(blend(previous.top, next.top, t)),
+    horizon: rgb(blend(previous.horizon, next.horizon, t)),
+    brightness: mix(previous.brightness, next.brightness, t),
+    glow: mix(previous.glow, next.glow, t),
+    stars: mix(previous.stars, next.stars, t),
+  };
+}
+function loadAtmosphere(): FestivalAtmosphereSettings {
+  try {
+    const saved = JSON.parse(localStorage.getItem(FESTIVAL_ATMOSPHERE_KEY) || "null");
+    if (!saved || typeof saved !== "object") return { ...DEFAULT_ATMOSPHERE };
+    return {
+      hour: clamp(Number(saved.hour), 0, 24),
+      saturation: clamp(Number(saved.saturation), 50, 120),
+      clouds: clamp(Number(saved.clouds), 0, 100),
+      stars: saved.stars !== false,
+    };
+  } catch {
+    return { ...DEFAULT_ATMOSPHERE };
+  }
+}
+function renderAtmosphere(): void {
+  const root = document.documentElement;
+  const sky = getSky(atmosphere.hour);
+  root.style.setProperty("--festival-sky-top", sky.top);
+  root.style.setProperty("--festival-sky-horizon", sky.horizon);
+  root.style.setProperty("--festival-backdrop-brightness", sky.brightness.toFixed(3));
+  root.style.setProperty("--festival-backdrop-saturation", (atmosphere.saturation / 100).toFixed(3));
+  root.style.setProperty("--festival-sun-glow", sky.glow.toFixed(3));
+  root.style.setProperty("--festival-star-opacity", (atmosphere.stars ? sky.stars : 0).toFixed(3));
+  root.style.setProperty("--festival-cloud-opacity", (atmosphere.clouds / 100).toFixed(3));
+  // A sun/moon guide moves across the upper sky without changing the artwork's perspective.
+  const daylight = atmosphere.hour >= 5 && atmosphere.hour <= 20;
+  root.style.setProperty("--festival-sun-opacity", daylight ? String(Math.min(1, sky.glow * 1.3)) : "0");
+  root.style.setProperty("--festival-sun-x", `${(12 + ((atmosphere.hour - 5) / 15) * 76).toFixed(2)}%`);
+  const label = document.querySelector<HTMLOutputElement>("#festivalAtmosphereTimeValue");
+  if (label) {
+    const hour = Math.floor(atmosphere.hour);
+    const minute = Math.round((atmosphere.hour % 1) * 60);
+    label.textContent = `${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`;
+  }
+  const saturation = document.querySelector<HTMLOutputElement>("#festivalAtmosphereSaturationValue");
+  if (saturation) saturation.textContent = `${atmosphere.saturation}%`;
+  const clouds = document.querySelector<HTMLOutputElement>("#festivalAtmosphereCloudValue");
+  if (clouds) clouds.textContent = `${atmosphere.clouds}%`;
+}
+function setAtmosphere(update: Partial<FestivalAtmosphereSettings>): void {
+  atmosphere = { ...atmosphere, ...update };
+  try { localStorage.setItem(FESTIVAL_ATMOSPHERE_KEY, JSON.stringify(atmosphere)); } catch { /* private browsing */ }
+  renderAtmosphere();
+}
+function bindAtmosphere(): void {
+  document.querySelector<HTMLInputElement>("#festivalAtmosphereTime")?.addEventListener("input", e =>
+    setAtmosphere({ hour: Number((e.currentTarget as HTMLInputElement).value) }));
+  document.querySelector<HTMLInputElement>("#festivalAtmosphereSaturation")?.addEventListener("input", e =>
+    setAtmosphere({ saturation: Number((e.currentTarget as HTMLInputElement).value) }));
+  document.querySelector<HTMLInputElement>("#festivalAtmosphereCloud")?.addEventListener("input", e =>
+    setAtmosphere({ clouds: Number((e.currentTarget as HTMLInputElement).value) }));
+  document.querySelector<HTMLInputElement>("#festivalAtmosphereStars")?.addEventListener("change", e =>
+    setAtmosphere({ stars: (e.currentTarget as HTMLInputElement).checked }));
+  document.querySelectorAll<HTMLButtonElement>("[data-festival-hour]").forEach(button =>
+    button.addEventListener("click", () => {
+      const hour = Number(button.dataset.festivalHour);
+      const slider = document.querySelector<HTMLInputElement>("#festivalAtmosphereTime");
+      if (slider) slider.value = String(hour);
+      setAtmosphere({ hour });
+    }));
+  document.querySelector("#festivalAtmosphereButton")?.addEventListener("click", () =>
+    toggleAtmospherePanel(!atmospherePanelOpen));
+  document.querySelector("#festivalAtmosphereClose")?.addEventListener("click", () =>
+    toggleAtmospherePanel(false));
+  document.querySelector("#festivalAtmosphereReset")?.addEventListener("click", () => {
+    atmosphere = { ...DEFAULT_ATMOSPHERE };
+    for (const [id, value] of [
+      ["festivalAtmosphereTime", atmosphere.hour],
+      ["festivalAtmosphereSaturation", atmosphere.saturation],
+      ["festivalAtmosphereCloud", atmosphere.clouds],
+    ] as const) {
+      const input = document.querySelector<HTMLInputElement>(`#${id}`);
+      if (input) input.value = String(value);
+    }
+    const stars = document.querySelector<HTMLInputElement>("#festivalAtmosphereStars");
+    if (stars) stars.checked = atmosphere.stars;
+    setAtmosphere({});
+  });
+}
+function toggleAtmospherePanel(open: boolean): void {
+  atmospherePanelOpen = selectedScene === "festival" && open;
+  const panel = document.querySelector<HTMLElement>("#festivalAtmospherePanel");
+  if (panel) panel.hidden = !atmospherePanelOpen;
+  document.querySelector("#festivalAtmosphereButton")?.setAttribute("aria-expanded", String(atmospherePanelOpen));
+}
+
+
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T | null =>
   document.querySelector<T>(selector);
 
@@ -52,6 +194,19 @@ const crowdModels = [
 function sceneMarkup(): string {
   return `
     <div id="festivalAtmosphere" class="festival-atmosphere" aria-hidden="true">
+      <div class="festival-sky-gradient"></div>
+      <div class="festival-stars">
+        ${Array.from({length: 42}, (_, i) => {
+          const x = ((i * 73 + 11) % 97) + 1;
+          const y = ((i * 41 + 17) % 45) + 1;
+          const size = i % 5 === 0 ? 2 : 1;
+          return `<i style="--star-x:${x}%;--star-y:${y}%;--star-size:${size}px"></i>`;
+        }).join("")}
+      </div>
+      <div class="festival-sun-disc"></div>
+      <div class="festival-cloud-field">
+        ${Array.from({length: 9}, (_, i) => `<span class="festival-cloud" style="--cloud-y:${(i * 17 + 6) % 43}%;--cloud-width:${8 + i % 4 * 3}%;--cloud-duration:${74 + i * 13}s;--cloud-delay:-${i * 19}s;--cloud-alpha:${.45 + (i % 3) * .18}"></span>`).join("")}
+      </div>
       <div class="festival-sky-glow"></div>
       <div class="festival-beam festival-beam-left"></div>
       <div class="festival-beam festival-beam-middle"></div>
@@ -88,6 +243,25 @@ function toolbarMarkup(): string {
       <option value="record-room">Record Room</option><option value="festival">Festival Stage</option>
     </select>
     <button id="festivalEditButton" type="button" title="Configure festival scene positions">LAYOUT</button>
+    <button id="festivalAtmosphereButton" type="button" aria-expanded="false" aria-controls="festivalAtmospherePanel" title="Adjust sky and festival atmosphere">SKY</button>
+  </div>
+  <div id="festivalAtmospherePanel" class="festival-atmosphere-panel" hidden role="region" aria-label="Festival Atmosphere Lab">
+    <header><strong>FESTIVAL ATMOSPHERE</strong><button type="button" id="festivalAtmosphereClose" aria-label="Close atmosphere controls">×</button></header>
+    <p>Manual sky and lighting controls. Live clock and weather will be added separately.</p>
+    <label for="festivalAtmosphereTime">TIME OF DAY <output id="festivalAtmosphereTimeValue">18:00</output></label>
+    <input id="festivalAtmosphereTime" type="range" min="0" max="24" step=".25" value="${atmosphere.hour}"/>
+    <div class="festival-atmosphere-presets">
+      <button type="button" data-festival-hour="7">SUNRISE</button>
+      <button type="button" data-festival-hour="12">DAY</button>
+      <button type="button" data-festival-hour="18">SUNSET</button>
+      <button type="button" data-festival-hour="23">NIGHT</button>
+    </div>
+    <label for="festivalAtmosphereSaturation">SATURATION <output id="festivalAtmosphereSaturationValue">85%</output></label>
+    <input id="festivalAtmosphereSaturation" type="range" min="50" max="120" step="1" value="${atmosphere.saturation}"/>
+    <label for="festivalAtmosphereCloud">CLOUD COVERAGE <output id="festivalAtmosphereCloudValue">35%</output></label>
+    <input id="festivalAtmosphereCloud" type="range" min="0" max="100" step="1" value="${atmosphere.clouds}"/>
+    <label class="festival-atmosphere-check"><input id="festivalAtmosphereStars" type="checkbox" ${atmosphere.stars ? "checked" : ""}/> SHOW STARS AT NIGHT</label>
+    <button type="button" id="festivalAtmosphereReset">RESET ATMOSPHERE</button>
   </div>
   <div id="festivalStudio" class="festival-studio" hidden role="region" aria-label="Festival Scene Layout Studio">
     <div class="festival-studio-title"><strong>SCENE LAYOUT STUDIO</strong><button id="festivalCloseStudio" type="button" aria-label="Close studio">×</button></div>
@@ -194,7 +368,11 @@ function changeScene(id: SceneId): void {
   const selector = element<HTMLSelectElement>("#festivalSceneSelect");
   if (selector) selector.value = id;
   element<HTMLButtonElement>("#festivalEditButton")?.toggleAttribute("disabled", id !== "festival");
-  if (id !== "festival") toggleStudio(false);
+  if (id !== "festival") {
+    toggleStudio(false);
+    toggleAtmospherePanel(false);
+  }
+  element<HTMLButtonElement>("#festivalAtmosphereButton")?.toggleAttribute("disabled", id !== "festival");
   applyLayout();
 }
 
@@ -315,6 +493,7 @@ export function initializeFestivalScenes(): void {
   if (!base || !room) return;
   initialized = true;
   layout = loadFestivalLayout();
+  atmosphere = loadAtmosphere();
   base.insertAdjacentHTML("beforeend", sceneMarkup());
   room.insertAdjacentHTML("beforeend", toolbarMarkup());
   for (const [id, selector] of [
@@ -323,6 +502,8 @@ export function initializeFestivalScenes(): void {
     element(selector)?.setAttribute("data-festival-object", id);
   }
   bindStudio();
+  bindAtmosphere();
+  renderAtmosphere();
   changeScene(resolveSceneId());
 }
 
