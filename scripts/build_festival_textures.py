@@ -143,97 +143,125 @@ def mountain_art():
     return im
 
 def stage_wood_art():
+    """Fine-grain decking, intentionally lower contrast than the former busy grid."""
     im=rgba();d=ImageDraw.Draw(im,"RGBA");rng=rnd(33)
-    # Long planks run towards a shared vanishing point, with rough individual grain.
-    d.rectangle((0,754,W,902),fill=(119,103,88,255))
-    front_width=78
-    for plank in range(-14,39):
-        x0=882+plank*front_width
-        x1=882+(x0-882)*.52
-        xnext=882+(plank+1)*front_width
-        xnext1=882+(xnext-882)*.52
-        base=(120+rng.randint(-15,17),103+rng.randint(-13,14),87+rng.randint(-12,14))
-        poly(d,[(x1,754),(xnext1,754),(xnext,902),(x0,902)],(*base,255))
-        d.line([(x1,754),(x0,902)],fill=(39,39,38,117),width=2)
-        d.line([(x1+2,755),(x0+3,901)],fill=(204,190,163,45),width=1)
-    # Non-regular, staggered end-grain joints and gaps.
-    for i in range(160):
-        y=rng.randint(760,895)
-        x=rng.randint(0,W-20)
-        ww=rng.randint(9,60)
-        if i%8==0:
-            d.line((x,y,x+ww,y),fill=(40,38,37,90),width=2)
-            d.line((x,y+2,x+ww-2,y+2),fill=(217,195,160,44),width=1)
-    for i in range(3200):
-        x=rng.randrange(W);y=rng.randint(755,899)
-        length=rng.randint(7,90)
-        # Grain becomes wider and more legible toward the front.
-        intensity=rng.randint(12,61)
-        shade=(43,44,40,intensity) if i%3 else (229,206,171,intensity//2)
-        d.line((x,y,min(W,x+length),y+rng.choice([-1,0,0,1])),fill=shade,width=1)
-    for i in range(52):
-        x=rng.randint(10,W-10);y=rng.randint(763,892)
-        rr=rng.randint(3,9)
-        d.arc((x-rr*3,y-rr,x+rr*3,y+rr),180,355,fill=(48,43,41,90),width=1)
-        d.ellipse((x-rr,y-rr*.35,x+rr,y+rr*.35),outline=(48,43,41,92),width=1)
-    # Stage fascia: weathered vertical timber and metal fasteners.
-    d.rectangle((0,901,W,991),fill=(62,55,52,255))
-    d.rectangle((0,900,W,908),fill=(149,130,111,255))
-    d.line((0,898,W,898),fill=(214,192,156,93),width=2)
-    for x in range(0,W,51):
-        base=rng.randint(-12,10)
-        d.rectangle((x,910,min(W,x+50),991),fill=(65+base,57+base,54+base,255))
-        d.line((x,908,x,991),fill=(25,29,32,153),width=3)
-        d.line((x+3,908,x+3,990),fill=(166,146,120,45),width=1)
-        for j in range(rng.randint(4,11)):
-            sx=x+rng.randint(5,44)
-            ys=rng.randint(911,974)
-            d.line((sx,ys,sx+rng.randint(-2,2),min(990,ys+rng.randint(11,47))),
-                    fill=(19,23,23,rng.randint(8,38)),width=1)
-        d.ellipse((x+22,907,x+26,911),fill=(31,38,37,255))
-    # Rail remains physically behind floor; represent exposed horizontal and posts.
-    d.line((0,720,W,720),fill=(96,108,110,255),width=5)
-    d.line((0,757,W,757),fill=(81,93,99,255),width=4)
-    for x in range(6,W,77):
-        d.line((x,721,x,757),fill=(111,128,130,255),width=4)
-        d.ellipse((x-4,716,x+4,725),fill=(184,191,188,255))
+    # Perspective is shared with the stage. Planks broaden naturally towards
+    # the near lip instead of forming the old, distracting checkerboard.
+    d.rectangle((0,754,W,902),fill=(120,103,88,255))
+    for plank in range(-17,37):
+        back_step=38.0
+        front_step=73.0
+        xl=882+(plank-11)*back_step
+        xr=882+(plank-10)*back_step
+        frontl=882+(plank-11)*front_step
+        frontr=882+(plank-10)*front_step
+        v=rng.randint(-9,10)
+        grain=(117+v,100+v,86+v)
+        poly(d,[(xl,754),(xr,754),(frontr,902),(frontl,902)],(*grain,255))
+        # One real recess at each seam; edge catches only ambient light.
+        d.line([(xl,754),(frontl,902)],fill=(41,39,40,105),width=2)
+        d.line([(xl+2,754),(frontl+3,901)],fill=(209,184,155,52),width=1)
+        # Grain fibers follow the plank direction and end at a distance-dependent Y.
+        for i in range(43):
+            y=rng.uniform(761,893)
+            t=(y-754)/148
+            left=xl+(frontl-xl)*t
+            right=xr+(frontr-xr)*t
+            if right-left<5:continue
+            x=rng.uniform(left+2,right-2)
+            length=rng.uniform(10,47) * (.44+.56*t)
+            endy=min(899,y+length)
+            # Preserve the vanishing point instead of scattering horizontal noise.
+            xend=x+(x-882)*.0017*length+rng.uniform(-.35,.35)
+            alpha=rng.randint(10,45)
+            ink=(42,39,39,alpha) if i%3 else (228,203,164,max(5,alpha//2))
+            d.line([(x,y),(xend,endy)],fill=ink,width=1)
+        # Knots are infrequent and follow the plank's long axis.
+        if rng.random()<.43:
+            yy=rng.uniform(790,881)
+            t=(yy-754)/148
+            xx=rng.uniform(xl+(frontl-xl)*t+4,xr+(frontr-xr)*t-4)
+            r=rng.uniform(1.4,3.4)
+            d.ellipse((xx-r,yy-r*2,xx+r,yy+r*2),outline=(53,44,40,79),width=1)
+            d.arc((xx-r*2,yy-r*4,xx+r*2,yy+r*4),300,180,fill=(53,44,40,34),width=1)
+    # Staggered transverse cuts, dark enough to read but not form a repeating grid.
+    for i in range(27):
+        y=rng.uniform(773,886)
+        x=rng.uniform(40,W-40)
+        gap=rng.uniform(22,50)
+        d.line((x,y,x+gap,y),fill=(37,37,39,62),width=1)
+    # Occasional shallow wear patches; stage remains a neutral unlit material.
+    for i in range(56):
+        x=rng.randrange(W);y=rng.randrange(770,897)
+        width=rng.uniform(7,21)
+        d.arc((x-width/2,y-3,x+width/2,y+3),185,355,fill=(207,185,156,27),width=1)
+    # Front lip and vertical fascia panels have a different material texture.
+    d.rectangle((0,902,W,991),fill=(65,55,53,255))
+    d.rectangle((0,897,W,906),fill=(147,129,110,255))
+    d.line((0,899,W,899),fill=(213,190,160,93),width=2)
+    for x in range(0,W,59):
+        variation=rng.randint(-6,7)
+        d.rectangle((x,910,min(W,x+58),991),fill=(66+variation,56+variation,54+variation,255))
+        d.line((x,908,x,991),fill=(29,31,33,152),width=2)
+        d.line((x+3,911,x+3,989),fill=(186,161,134,31),width=1)
+        for j in range(6):
+            sx=x+rng.randint(7,51);sy=rng.randint(915,977)
+            d.line((sx,sy,sx+rng.randint(-2,2),min(990,sy+rng.randint(8,28))),
+                   fill=(25,29,28,rng.randint(10,37)),width=1)
+        d.ellipse((x+25,906,x+28,909),fill=(37,42,39,180))
+    # Balcony rails, with separate highlights; lighting comes later.
+    d.line((0,720,W,720),fill=(95,109,110,255),width=4)
+    d.line((0,758,W,758),fill=(83,97,100,255),width=4)
+    for x in range(7,W,77):
+        d.line((x,721,x,757),fill=(108,124,126,255),width=4)
+        d.ellipse((x-3,717,x+3,724),fill=(176,185,185,255))
     return im
 
 def fabric_and_metal_details():
+    """Canopy textile folds and truss distress: RGB-neutral, no baked spotlights."""
     im=rgba();d=ImageDraw.Draw(im,"RGBA");rng=rnd(44)
-    # Transparent textile micrograin; precisely masked by canopy.svg in CSS.
-    for i in range(8800):
-        x=rng.randint(50,1711);y=rng.randint(25,275)
-        # cloth weave with fine soft neutral threads
-        alpha=rng.randint(6,31)
-        light=i%3==0
-        c=(222,228,222,alpha) if light else (32,49,59,alpha)
-        length=rng.randint(2,10)
-        d.line((x,y,x+length,y+rng.randint(-1,1)),fill=c,width=1)
-    # Fabric seam stitching: convergence from ridge poles towards edges.
-    for x,y,x2,y2 in [
-        (882,32,882,217),(591,50,461,217),(1173,50,1311,218),
-        (348,80,215,220),(1418,80,1549,220),
-        (178,135,104,215),(1587,135,1664,218)
-    ]:
-        noisy_line(d,rng,x,y,x2,y2,[(29,45,56,38)],1,1.5)
-        length=math.hypot(x2-x,y2-y)
-        for t in np.arange(0,1,6/max(1,length)):
-            sx=x+(x2-x)*t;sy=y+(y2-y)*t
-            d.line((sx,sy,sx+2,sy+2),fill=(239,234,217,110),width=1)
-    # Structural rivets, rust flecks, and metallic scuffs.
-    for y in (175,208,239):
-        for x in range(160,1620,35):
-            d.ellipse((x-2,y-2,x+2,y+2),fill=(40,53,58,150))
-            d.ellipse((x-1,y-2,x,y-1),fill=(219,219,207,105))
+    # Broad canopy cloth folds: smooth tonal undulations, with no hard rings.
+    # This whole surface is shape-clipped by canopy.svg in the scene renderer.
+    for i in range(29):
+        t=(i+.5)/29
+        x=62+1640*t
+        height=190-86*math.sin(t*math.pi)
+        stroke=(232,231,224,24) if i%3 else (39,57,65,21)
+        noisy_line(d,rng,x,height*.5+5,x+21,height+22,[stroke],width=rng.choice((3,4,5)),drift=9)
+    # Weave microthreads form directional texture, avoiding perfectly smooth fills.
+    for i in range(5700):
+        x=rng.randint(55,1707)
+        y=rng.randint(24,266)
+        alpha=rng.randint(6,21)
+        tone=(231,232,225,alpha) if i%2 else (31,51,64,alpha)
+        length=rng.randint(3,8)
+        d.line((x,y,x+length,y),fill=tone,width=1)
+    # Stitched canvas seams and little seam folds; no glowing light is baked in.
+    seams=[(178,135,85,216),(348,77,222,213),(588,49,455,207),
+           (882,25,882,209),(1170,49,1310,207),
+           (1422,78,1543,218),(1588,135,1681,217)]
+    for x,y,xe,ye in seams:
+        noisy_line(d,rng,x,y,xe,ye,[(42,58,65,48)],1,1.1)
+        distance=math.hypot(xe-x,ye-y)
+        for step in range(int(distance//6)):
+            t=step/(distance/6)
+            xx=x+(xe-x)*t; yy=y+(ye-y)*t
+            d.line((xx,yy,xx+1,yy+2),fill=(231,230,216,80),width=1)
+    # Cross-braces, rivets, scuffs and small fasteners become visible at full size.
+    for y in (174,212,240):
+        for x in range(159,1620,32):
+            d.ellipse((x-2,y-2,x+2,y+2),fill=(41,58,63,167))
+            d.ellipse((x-1,y-2,x,y-1),fill=(229,228,213,116))
+            if x%3==0:
+                d.line((x+4,y+3,x+14,y+3),fill=(224,223,210,55),width=1)
     for x in (139,1626):
-        for y in range(260,761,24):
-            d.line((x-23,y,x-10,y-1),fill=(219,220,209,79),width=1)
-            d.line((x+19,y+2,x+26,y+3),fill=(40,50,55,90),width=1)
-            d.ellipse((x-3,y-2,x+1,y+2),fill=(49,61,64,120))
+        for y in range(259,759,23):
+            d.line((x-24,y,x-7,y-1),fill=(212,212,199,79),width=1)
+            d.line((x+9,y+2,x+26,y+3),fill=(35,50,59,97),width=1)
+            d.ellipse((x-3,y-2,x+1,y+2),fill=(47,60,67,122))
         for i in range(190):
-            xx=x+rng.randint(-28,28);yy=rng.randint(238,764)
-            d.point((xx,yy),fill=(49,65,68,rng.randint(12,56)))
+            xx=x+rng.randint(-28,28);yy=rng.randint(239,762)
+            d.point((xx,yy),fill=(40,61,68,rng.randint(10,49)))
     return im
 
 def skyline_details():
