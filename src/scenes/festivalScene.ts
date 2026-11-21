@@ -1,4 +1,5 @@
 import type { NormalizedTrack } from "../state/types";
+import { getFestivalLighting } from "./festivalLighting";
 import {
   FESTIVAL_DEFAULT_LAYOUT, FESTIVAL_LAYOUT_KEY, FESTIVAL_OBJECT_LABELS,
   loadFestivalLayout, normalizeFestivalLayout, resolveSceneId,
@@ -30,45 +31,6 @@ let atmospherePanelOpen = false;
 
 const clamp = (value: number, min: number, max: number): number =>
   Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : min;
-const mix = (a: number, b: number, t: number): number => a + (b - a) * t;
-const rgb = (color: readonly number[]): string =>
-  `rgb(${color.map(v => Math.round(v)).join(",")})`;
-const blend = (a: readonly number[], b: readonly number[], t: number): number[] =>
-  a.map((v, i) => mix(v, b[i], t));
-
-type SkyKeyframe = {
-  hour: number;
-  top: readonly number[];
-  horizon: readonly number[];
-  brightness: number;
-  glow: number;
-  stars: number;
-};
-const SKY_KEYFRAMES: readonly SkyKeyframe[] = [
-  { hour: 0, top: [7, 17, 42], horizon: [39, 43, 79], brightness: .48, glow: .05, stars: 1 },
-  { hour: 5, top: [18, 30, 58], horizon: [89, 66, 96], brightness: .58, glow: .18, stars: .60 },
-  { hour: 7, top: [64, 89, 133], horizon: [236, 158, 129], brightness: .88, glow: .80, stars: 0 },
-  { hour: 10, top: [75, 137, 175], horizon: [178, 205, 214], brightness: 1, glow: .43, stars: 0 },
-  { hour: 15, top: [70, 128, 171], horizon: [170, 198, 214], brightness: 1, glow: .40, stars: 0 },
-  { hour: 18, top: [75, 67, 113], horizon: [239, 145, 103], brightness: .83, glow: 1, stars: 0 },
-  { hour: 20, top: [20, 34, 68], horizon: [116, 78, 112], brightness: .57, glow: .27, stars: .38 },
-  { hour: 22, top: [7, 17, 42], horizon: [39, 43, 79], brightness: .48, glow: .05, stars: 1 },
-  { hour: 24, top: [7, 17, 42], horizon: [39, 43, 79], brightness: .48, glow: .05, stars: 1 },
-];
-function getSky(hour: number) {
-  const h = clamp(hour, 0, 24);
-  const end = SKY_KEYFRAMES.findIndex(frame => frame.hour >= h);
-  const next = SKY_KEYFRAMES[Math.max(1, end)];
-  const previous = SKY_KEYFRAMES[Math.max(0, end - 1)];
-  const t = clamp((h - previous.hour) / (next.hour - previous.hour), 0, 1);
-  return {
-    top: rgb(blend(previous.top, next.top, t)),
-    horizon: rgb(blend(previous.horizon, next.horizon, t)),
-    brightness: mix(previous.brightness, next.brightness, t),
-    glow: mix(previous.glow, next.glow, t),
-    stars: mix(previous.stars, next.stars, t),
-  };
-}
 function loadAtmosphere(): FestivalAtmosphereSettings {
   try {
     const saved = JSON.parse(localStorage.getItem(FESTIVAL_ATMOSPHERE_KEY) || "null");
@@ -85,20 +47,28 @@ function loadAtmosphere(): FestivalAtmosphereSettings {
 }
 function renderAtmosphere(): void {
   const root = document.documentElement;
-  const sky = getSky(atmosphere.hour);
-  root.style.setProperty("--festival-sky-top", sky.top);
-  root.style.setProperty("--festival-sky-horizon", sky.horizon);
-  root.style.setProperty("--festival-backdrop-brightness", sky.brightness.toFixed(3));
-  root.style.setProperty("--festival-backdrop-saturation", (atmosphere.saturation / 100).toFixed(3));
-  root.style.setProperty("--festival-sun-glow", sky.glow.toFixed(3));
-  root.style.setProperty("--festival-star-opacity", (atmosphere.stars ? sky.stars : 0).toFixed(3));
-  root.style.setProperty("--festival-cloud-opacity", (atmosphere.clouds / 100).toFixed(3));
-  // A sun/moon guide moves across the upper sky without changing the artwork's perspective.
-  const daylight = atmosphere.hour >= 5 && atmosphere.hour <= 20;
-  root.style.setProperty("--festival-sun-opacity", daylight ? String(Math.min(1, sky.glow * 1.3)) : "0");
-  const daylightArc = clamp((atmosphere.hour - 5) / 15, 0, 1);
-  root.style.setProperty("--festival-sun-x", `${(12 + daylightArc * 76).toFixed(2)}%`);
-  root.style.setProperty("--festival-sun-y", `${(48 - 22 * Math.sin(Math.PI * daylightArc)).toFixed(2)}%`);
+  const light = getFestivalLighting(atmosphere.hour);
+  const variables: Record<string, string> = {
+    "--festival-sky-top": light.top,
+    "--festival-sky-middle": light.middle,
+    "--festival-sky-horizon": light.horizon,
+    "--festival-ambient-color": light.ambient,
+    "--festival-ambient-strength": light.ambientStrength.toFixed(3),
+    "--festival-material-mountains": light.mountains.toFixed(3),
+    "--festival-material-city": light.city.toFixed(3),
+    "--festival-material-trees": light.trees.toFixed(3),
+    "--festival-material-canopy": light.canopy.toFixed(3),
+    "--festival-material-floor": light.floor.toFixed(3),
+    "--festival-practical-opacity": light.practicals.toFixed(3),
+    "--festival-window-opacity": light.windows.toFixed(3),
+    "--festival-backdrop-saturation": (atmosphere.saturation / 100).toFixed(3),
+    "--festival-star-opacity": (atmosphere.stars ? light.stars : 0).toFixed(3),
+    "--festival-cloud-opacity": (atmosphere.clouds / 100).toFixed(3),
+    "--festival-sun-opacity": light.sun.toFixed(3),
+    "--festival-sun-x": light.sunX.toFixed(2) + "%",
+    "--festival-sun-y": light.sunY.toFixed(2) + "%",
+  };
+  for (const [name,value] of Object.entries(variables)) root.style.setProperty(name,value);
   const label = document.querySelector<HTMLOutputElement>("#festivalAtmosphereTimeValue");
   if (label) {
     const hour = Math.floor(atmosphere.hour);
@@ -194,13 +164,16 @@ const crowdModels = [
 ];
 
 function sceneMarkup(): string {
+  const assets = "./assets/scenes/festival-environment/";
+  const plane = (id: string, name: string): string =>
+    `<div class="festival-env-plane festival-env-${id}" style="--festival-material-mask:url('${assets}${name}.svg')"><img alt="" draggable="false" decoding="async" src="${assets}${name}.svg" /></div>`;
   return `
     <div id="festivalBackgroundLayers" class="festival-background-layers festival-scene-object" data-festival-object="backdrop" aria-hidden="true">
       <div class="festival-sky-gradient"></div>
       <div class="festival-stars">
-        ${Array.from({length: 42}, (_, i) => {
+        ${Array.from({length: 60}, (_, i) => {
           const x = ((i * 73 + 11) % 97) + 1;
-          const y = ((i * 41 + 17) % 45) + 1;
+          const y = ((i * 41 + 17) % 48) + 1;
           const size = i % 5 === 0 ? 2 : 1;
           return `<i style="--star-x:${x}%;--star-y:${y}%;--star-size:${size}px"></i>`;
         }).join("")}
@@ -209,11 +182,13 @@ function sceneMarkup(): string {
       <div class="festival-cloud-field">
         ${Array.from({length: 9}, (_, i) => `<span class="festival-cloud" style="--cloud-y:${(i * 17 + 6) % 43}%;--cloud-width:${8 + i % 4 * 3}%;--cloud-duration:${74 + i * 13}s;--cloud-delay:-${i * 19}s;--cloud-alpha:${.45 + (i % 3) * .18}"></span>`).join("")}
       </div>
-      <img class="festival-background-img festival-background-sky" src="./assets/scenes/festival-layers/festival-sky.png" alt="" decoding="async" />
-      <img class="festival-background-img festival-background-landscape" src="./assets/scenes/festival-layers/festival-landscape.png" alt="" decoding="async" />
-      <img class="festival-background-img festival-background-city" src="./assets/scenes/festival-layers/festival-city.png" alt="" decoding="async" />
-      <img class="festival-background-img festival-background-rafters" src="./assets/scenes/festival-layers/festival-rafters.png" alt="" decoding="async" />
-      <img class="festival-background-img festival-background-floor" src="./assets/scenes/festival-layers/festival-floor.png" alt="" decoding="async" />
+      ${plane("mountains","mountains")}
+      ${plane("city","city")}
+      <img class="festival-env-effect festival-env-windows" src="${assets}city-lights.svg" alt="" draggable="false" decoding="async" />
+      ${plane("trees","trees")}
+      ${plane("canopy","canopy")}
+      ${plane("floor","stage-floor")}
+      <img class="festival-env-effect festival-env-practicals" src="${assets}practical-lights.svg" alt="" draggable="false" decoding="async" />
     </div>
     <div id="festivalAtmosphere" class="festival-atmosphere" aria-hidden="true">
       <div class="festival-sky-glow"></div>
