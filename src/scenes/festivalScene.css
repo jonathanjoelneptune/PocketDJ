@@ -613,3 +613,94 @@ html[data-pocket-scene="festival"] {
   transition: --festival-sky-top 1.5s linear,
     --festival-sky-horizon 1.5s linear;
 }
+
+/* Festival five-plane environment, identical 16:9 coordinates for all PNGs.
+ * Back -> front: live sky, sun/stars, sky highlights, clouds, landscape,
+ * distant city, rafters, stage floor. Dynamic weather lives behind structure.
+ */
+html[data-pocket-scene="festival"] #roomBg {
+  visibility: hidden !important;
+}
+html:not([data-pocket-scene="festival"]) .festival-background-layers {
+  display: none !important;
+}
+html[data-pocket-scene="festival"] .festival-background-layers {
+  position: absolute;
+  left: var(--festival-x, 50%);
+  top: var(--festival-y, 50%);
+  right: auto;
+  bottom: auto;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%) scale(var(--festival-scale, 1));
+  transform-origin: 50% 50%;
+  opacity: var(--festival-opacity, 1);
+  z-index: 3;
+  pointer-events: none !important;
+  overflow: hidden;
+  isolation: isolate;
+}
+.festival-background-layers .festival-sky-gradient,
+.festival-background-layers .festival-stars,
+.festival-background-layers .festival-sun-disc,
+.festival-background-layers .festival-cloud-field,
+.festival-background-layers .festival-background-img {
+  position: absolute;
+  pointer-events: none;
+}
+.festival-background-layers .festival-sky-gradient {
+  inset: 0;
+  z-index: 0;
+  opacity: 1;
+  mask-image: none;
+  background: linear-gradient(
+    180deg,
+    var(--festival-sky-top, #4b4371) 0%,
+    var(--festival-sky-horizon, #ef9167) 73%,
+    var(--festival-sky-horizon, #ef9167) 100%
+  );
+}
+.festival-background-layers .festival-stars {z-index:1}
+.festival-background-layers .festival-sun-disc {
+  z-index: 2;
+  top: var(--festival-sun-y, 35%);
+  left: var(--festival-sun-x, 72%);
+  transform: translate(-50%, -50%);
+  transition: left 1.5s ease, top 1.5s ease, opacity 1.5s ease;
+}
+.festival-background-layers .festival-background-img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.festival-background-layers .festival-background-sky {
+  z-index: 3;
+  opacity: .76;
+  mix-blend-mode: screen;
+}
+.festival-background-layers .festival-cloud-field {z-index:4}
+.festival-background-layers .festival-background-landscape {z-index:5}
+.festival-background-layers .festival-background-city {z-index:6}
+.festival-background-layers .festival-background-rafters {z-index:7}
+.festival-background-layers .festival-background-floor {z-index:8}
+.festival-background-layers .festival-background-landscape,
+.festival-background-layers .festival-background-city,
+.festival-background-layers .festival-background-rafters,
+.festival-background-layers .festival-background-floor {
+  filter: brightness(var(--festival-backdrop-brightness, .83))
+    saturate(var(--festival-backdrop-saturation, .85));
+  transition: filter 1.4s linear;
+}
+html.festival-editing[data-pocket-scene="festival"] .festival-background-layers {
+  pointer-events: auto !important;
+  cursor: move;
+}
+@media (prefers-reduced-motion: reduce) {
+  .festival-background-layers .festival-background-img,
+  .festival-background-layers .festival-sun-disc {
+    transition: none !important;
+  }
+}
