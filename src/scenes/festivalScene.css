@@ -704,3 +704,138 @@ html.festival-editing[data-pocket-scene="festival"] .festival-background-layers 
     transition: none !important;
   }
 }
+
+
+/* WP7A/B: independent authored neutral assets and material-aware lighting.
+ * Supersedes the discarded color-threshold PNG extraction, scoped to festival.
+ * All layers use the same fixed 1764x992 coordinate plane.
+ */
+html[data-pocket-scene="festival"] .festival-background-layers {
+  background: transparent;
+}
+.festival-background-layers .festival-sky-gradient {
+  inset: 0;
+  z-index: 0;
+  opacity: 1;
+  mask-image: none;
+  background: linear-gradient(180deg,
+    var(--festival-sky-top, rgb(66,142,207)) 0%,
+    var(--festival-sky-middle, rgb(132,197,231)) 49%,
+    var(--festival-sky-horizon, rgb(207,225,222)) 83%,
+    var(--festival-sky-horizon, rgb(207,225,222)) 100%);
+}
+@property --festival-sky-middle {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgb(132,197,231);
+}
+html[data-pocket-scene="festival"] {
+  transition: --festival-sky-top 1.1s linear,
+              --festival-sky-middle 1.1s linear,
+              --festival-sky-horizon 1.1s linear;
+}
+/* Sky receives no stage material lighting: no sunset color is baked in. */
+.festival-background-layers .festival-stars { z-index: 1; }
+.festival-background-layers .festival-sun-disc { z-index: 2; }
+.festival-background-layers .festival-cloud-field { z-index: 3; }
+.festival-background-layers .festival-sun-disc {
+  width: 4.4%;
+  filter: blur(.5px);
+  background: #fff3dc;
+  box-shadow: 0 0 30px 8px rgba(255,228,177,.35),
+              0 0 100px 26px rgba(255,224,182,.14);
+}
+.festival-env-plane,
+.festival-env-effect {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+.festival-env-plane img,
+.festival-env-effect {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  -webkit-user-drag: none;
+}
+.festival-env-plane {
+  --festival-brightness: 1;
+  isolation: isolate;
+}
+.festival-env-plane img {
+  filter: brightness(var(--festival-brightness))
+          saturate(var(--festival-backdrop-saturation, .85));
+  transition: filter 1.1s linear;
+}
+.festival-env-plane::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--festival-ambient-color, rgb(255,255,255));
+  opacity: var(--festival-ambient-strength, 0);
+  mix-blend-mode: multiply;
+  -webkit-mask-image: var(--festival-material-mask);
+  mask-image: var(--festival-material-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  mask-mode: alpha;
+  transition: opacity 1.1s linear;
+}
+.festival-env-mountains {
+  z-index: 4;
+  --festival-brightness: var(--festival-material-mountains,1);
+}
+.festival-env-city {
+  z-index: 5;
+  --festival-brightness: var(--festival-material-city,1);
+}
+.festival-env-windows {
+  z-index: 6;
+  opacity: var(--festival-window-opacity,0);
+  mix-blend-mode: screen;
+  transition: opacity 1.1s linear;
+}
+.festival-env-trees {
+  z-index: 7;
+  --festival-brightness: var(--festival-material-trees,1);
+}
+.festival-env-canopy {
+  z-index: 8;
+  --festival-brightness: var(--festival-material-canopy,1);
+}
+.festival-env-floor {
+  z-index: 9;
+  --festival-brightness: var(--festival-material-floor,1);
+}
+.festival-env-practicals {
+  z-index: 10;
+  opacity: var(--festival-practical-opacity,.05);
+  mix-blend-mode: screen;
+  transition: opacity 1.1s linear;
+}
+/* Preserve independent concert beams, but don't show nightclub lighting at noon. */
+html[data-pocket-scene="festival"] .festival-sky-glow,
+html[data-pocket-scene="festival"] .festival-footlights {
+  opacity: calc(var(--festival-light-strength,.72) * var(--festival-practical-opacity,.05) * .32);
+}
+html[data-pocket-scene="festival"] .festival-beam {
+  animation: festivalBeamBreath 7s ease-in-out infinite alternate;
+}
+@keyframes festivalBeamBreath {
+  from { opacity: calc(var(--festival-light-strength,.72) * var(--festival-practical-opacity,.05) * .12); }
+  to   { opacity: calc(var(--festival-light-strength,.72) * var(--festival-practical-opacity,.05) * .42); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-pocket-scene="festival"] .festival-env-plane img,
+  html[data-pocket-scene="festival"] .festival-env-plane::after,
+  html[data-pocket-scene="festival"] .festival-env-effect {
+    transition: none !important;
+  }
+}
