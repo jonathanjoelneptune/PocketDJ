@@ -466,3 +466,134 @@ html.festival-editing[data-pocket-scene="festival"] .room-bg.festival-object-sel
 
 /* The new illustrated backdrop already contains its own physical stage front. */
 html[data-pocket-scene="festival"] #festivalStageLip { display: none !important; }
+
+/* Atmosphere Lab v1: isolated sky/weather-ready rendering; room mode unaffected. */
+html[data-pocket-scene="festival"] .room-bg {
+  filter: brightness(var(--festival-backdrop-brightness, .83))
+    saturate(var(--festival-backdrop-saturation, .85)) !important;
+  transition: filter 1.2s ease;
+}
+.festival-sky-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    var(--festival-sky-top, #4b4371) 0%,
+    var(--festival-sky-horizon, #ef9167) 44%,
+    transparent 64%);
+  opacity: .73;
+  mask-image: linear-gradient(180deg, black 0%, black 39%, transparent 62%);
+  transition: background 1.5s ease, opacity 1.5s ease;
+}
+.festival-sun-disc {
+  position: absolute;
+  top: 10%;
+  left: var(--festival-sun-x, 78%);
+  width: 5.7%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ffe3ae;
+  opacity: var(--festival-sun-opacity, .8);
+  box-shadow: 0 0 30px 12px rgba(255,186,107,.31), 0 0 100px 28px rgba(255,150,91,.23);
+  filter: blur(1.5px);
+  transition: left 1.5s ease, opacity 1.5s ease;
+}
+.festival-stars {
+  position: absolute;
+  inset: 0;
+  opacity: var(--festival-star-opacity, 0);
+  transition: opacity 2s ease;
+}
+.festival-stars i {
+  position: absolute;
+  top: var(--star-y);
+  left: var(--star-x);
+  width: var(--star-size);
+  height: var(--star-size);
+  background: rgba(250,246,226,.9);
+  box-shadow: 0 0 4px rgba(246,239,220,.6);
+  border-radius: 50%;
+}
+.festival-cloud-field {
+  position: absolute;
+  inset: 0 0 40%;
+  opacity: var(--festival-cloud-opacity, .35);
+  transition: opacity 2s ease;
+  overflow: hidden;
+}
+.festival-cloud {
+  position: absolute;
+  left: -30%;
+  top: var(--cloud-y);
+  display: block;
+  width: var(--cloud-width);
+  height: 7%;
+  border-radius: 50%;
+  background: rgba(224,221,229,var(--cloud-alpha));
+  filter: blur(8px);
+  box-shadow: 13px -8px 8px 2px rgba(224,221,229,.45),
+    28px 1px 9px 5px rgba(224,221,229,.38),
+    -12px 5px 7px 0 rgba(224,221,229,.34);
+  animation: festivalCloudDrift var(--cloud-duration) linear infinite;
+  animation-delay: var(--cloud-delay);
+}
+@keyframes festivalCloudDrift {
+  from { transform: translateX(0); }
+  to { transform: translateX(1150%); }
+}
+/* Existing volumetric beams stay on top of the sky; both are behind DJ/equipment. */
+.festival-atmosphere-panel {
+  position: absolute;
+  z-index: 125;
+  left: 12px;
+  top: 58px;
+  width: min(340px, 88vw);
+  max-height: min(78vh, 650px);
+  overflow: auto;
+  padding: 14px;
+  background: rgba(8,12,27,.97);
+  border: 1px solid rgba(243,176,138,.6);
+  color: #f3e6de;
+  border-radius: 9px;
+  box-shadow: 0 13px 35px rgba(0,0,0,.7);
+  pointer-events: auto;
+  font: 11px ui-sans-serif,system-ui,sans-serif;
+}
+.festival-atmosphere-panel[hidden] {display:none !important;}
+.festival-atmosphere-panel header {
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:13px;font-weight:800;
+}
+.festival-atmosphere-panel header button {
+  border:0;background:none;color:#ffca92;font-size:22px;cursor:pointer;
+}
+.festival-atmosphere-panel p {color:#c9bdc9;line-height:1.5;}
+.festival-atmosphere-panel label {
+  display:block;margin:14px 0 5px;
+  font-size:10px;font-weight:800;letter-spacing:.08em;
+}
+.festival-atmosphere-panel label output {
+  float:right;color:#efbe94;font-variant-numeric:tabular-nums;
+}
+.festival-atmosphere-panel input[type="range"] {
+  width:100%;accent-color:#ecb88b;cursor:pointer;
+}
+.festival-atmosphere-presets {display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px;}
+.festival-atmosphere-presets button,.festival-atmosphere-panel #festivalAtmosphereReset {
+  padding:8px 3px;border-radius:4px;border:1px solid #80648b;
+  background:#282238;color:#f6d8b2;font-size:9px;font-weight:800;
+  cursor:pointer;
+}
+.festival-atmosphere-panel #festivalAtmosphereReset {margin-top:12px;width:100%;}
+.festival-atmosphere-panel .festival-atmosphere-check {
+  display:flex;align-items:center;gap:7px;cursor:pointer;
+}
+.festival-atmosphere-check input {accent-color:#ecb88b;}
+@media (max-width:700px) {
+  .festival-atmosphere-panel {left:4px;top:36px;}
+}
+@media (prefers-reduced-motion: reduce) {
+  .festival-cloud {animation:none !important;left:15%;}
+  .festival-sun-disc,.festival-cloud-field,.festival-stars,.festival-sky-gradient {
+    transition:none !important;
+  }
+}
