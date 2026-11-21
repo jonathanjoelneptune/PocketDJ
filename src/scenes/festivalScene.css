@@ -892,3 +892,19 @@ html[data-pocket-scene="festival"] .festival-env-floor::after {
 @media (prefers-reduced-motion: reduce) {
   html[data-pocket-scene="festival"] .festival-env-plane .festival-env-art {transition:none !important;}
 }
+
+
+/* A/B visual QA: the ART button can restore WP7A vectors without reloading. */
+html.festival-art-classic[data-pocket-scene="festival"] .festival-env-plane .festival-env-art {
+  display: none !important;
+}
+html.festival-art-classic[data-pocket-scene="festival"] .festival-env-plane .festival-env-base {
+  opacity: 1 !important;
+}
+html.festival-art-classic[data-pocket-scene="festival"] .festival-env-plane::after {
+  display: block !important;
+}
+html[data-pocket-scene="festival"] #festivalArtButton[aria-pressed="true"] {
+  color: #fff2d6;
+  border-color: #dbb897;
+}
