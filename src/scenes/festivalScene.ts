@@ -199,11 +199,14 @@ function sceneMarkup(): string {
         ${Array.from({length: 9}, (_, i) => `<span class="festival-cloud" style="--cloud-y:${(i * 17 + 6) % 43}%;--cloud-width:${8 + i % 4 * 3}%;--cloud-duration:${74 + i * 13}s;--cloud-delay:-${i * 19}s;--cloud-alpha:${.45 + (i % 3) * .18}"></span>`).join("")}
       </div>
       ${plane("mountains","mountains")}
+      <div class="festival-env-distance-haze" aria-hidden="true"></div>
       ${plane("city","city")}
       <img class="festival-env-effect festival-env-windows" src="${assets}city-lights.svg" alt="" draggable="false" decoding="async" />
       ${plane("trees","trees")}
       ${plane("canopy","canopy")}
+      <img class="festival-env-effect festival-env-rigging" src="${assets}rigging-detail.svg" alt="" draggable="false" decoding="async" />
       ${plane("floor","stage-floor")}
+      <div class="festival-env-floor-reflections" aria-hidden="true"></div>
       <img class="festival-env-effect festival-env-practicals" src="${assets}practical-lights.svg" alt="" draggable="false" decoding="async" />
     </div>
     <div id="festivalAtmosphere" class="festival-atmosphere" aria-hidden="true">
