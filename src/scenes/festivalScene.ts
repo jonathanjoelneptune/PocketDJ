@@ -500,6 +500,14 @@ export function initializeFestivalScenes(): void {
   atmosphere = loadAtmosphere();
   base.insertAdjacentHTML("beforeend", sceneMarkup());
   room.insertAdjacentHTML("beforeend", toolbarMarkup());
+  // The SVG geometry remains visible until each higher-detail texture loads.
+  // Broken PNG URLs therefore cannot leave the festival floor/scenery empty.
+  base.querySelectorAll<HTMLImageElement>(".festival-env-art").forEach(image => {
+    const markReady = () => image.closest(".festival-env-plane")?.classList.add("festival-art-ready");
+    image.addEventListener("load", markReady, { once: true });
+    image.addEventListener("error", () => image.closest(".festival-env-plane")?.classList.add("festival-art-fallback"), { once: true });
+    if (image.complete && image.naturalWidth > 0) markReady();
+  });
   for (const [id, selector] of [
     ["performer", ".dj-wrap"], ["speakerLeft", "#leftSpeaker"], ["speakerRight", "#rightSpeaker"],
   ] as const) {
