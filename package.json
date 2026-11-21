@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "preview": "vite preview",
-    "build": "tsc && vite build",
+    "build": "python scripts/build_festival_textures.py && tsc && vite build",
     "typecheck": "tsc --noEmit",
     "test:beat": "node --experimental-strip-types --test tests/beatClock.test.mjs",
     "test:scratch": "node --experimental-strip-types --test tests/scratchBlend.test.mjs tests/scratchRigs.test.mjs tests/vinylScratch.test.mjs",
