@@ -4,6 +4,7 @@ Run after the generated art has been placed in public/assets/scenes/.
 The sky PNG contains neutral translucent cloud details; CSS supplies day/night color.
 """
 from pathlib import Path
+import os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
@@ -18,6 +19,11 @@ def polygon(size, coords):
     return np.asarray(mask)>0
 
 def generate(source=SOURCE, output=OUTPUT):
+    # Authored PNGs take precedence over generated fallback layers. Upload all
+    # five to the same folder to use a new illustrated scene without changing code.
+    if all((output/name).is_file() for name in NAMES) and os.environ.get("FESTIVAL_FORCE_REBUILD") != "1":
+        print("Using five authored festival PNG layers in", output)
+        return
     image=Image.open(source).convert("RGB")
     w,h=image.size
     rgb=np.asarray(image)
