@@ -1,3 +1,4 @@
+import { syncFestivalPlayback, syncFestivalLyrics } from "./scenes/festivalScene";
 import type { LyricsPayload } from "./lyrics/lyricsClient";
 import type { AppState, NormalizedTrack } from "./state/types";
 import { formatMs, qs } from "./utils/dom";
@@ -2124,6 +2125,7 @@ export function updatePlaybackUi(track: NormalizedTrack, debugOpen: boolean): vo
   const debug = qs<HTMLPreElement>("#debugPanel");
   debug.hidden = !debugOpen;
   if (debugOpen) debug.textContent = JSON.stringify(track, null, 2);
+  syncFestivalPlayback(track);
 }
 
 export function setControlPanelOpen(open: boolean): void {
@@ -2702,6 +2704,7 @@ export function updateLyricsCeiling(
       activeBlock.style.setProperty("--lyric-line-visibility", "1");
     }
     setNoLyricsFocusActive(focusFallback);
+    syncFestivalLyrics("");
   };
 
   if (!shouldShow) {
@@ -2729,6 +2732,7 @@ export function updateLyricsCeiling(
     clearLyrics(false);
     return;
   }
+  syncFestivalLyrics(activeLine.text);
 
   // Fast signature: playback ticks don't require computed styles or ~180
   // lyric-layout CSS variable reads when the same line is still displayed.
