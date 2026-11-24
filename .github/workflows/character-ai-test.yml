@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test character-ai/generate.test.js
+      - run: node --test character-ai/*.test.js
       - name: Check studio script syntax
         run: |
           node --input-type=module -e "import {readFileSync} from 'node:fs'; const source=readFileSync('public/PocketDJ_Character_Studio.html','utf8'); const script=source.split('<script>')[1].split('</script>')[0]; new Function(script); console.log('Studio script compiles');"
