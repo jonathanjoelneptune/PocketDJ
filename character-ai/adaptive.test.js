@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const js=readFileSync(new URL('../public/PocketDJ_Character_Studio.html',import.meta.url),'utf8').split('<script>')[1].split('</script>')[0];
+const sec=(a,b)=>js.slice(js.indexOf(a),js.indexOf(b,js.indexOf(a)));
+const api=new Function(sec('function characterFitScore(','function transformScene(')+'\n'+sec('function pointInside(','function hullFor(')+'\n'+sec('const AD_IDS=','function adaptiveSeed(')+'\nreturn {acceptsSceneFit,adaptiveOwner}')();
+test('reject Goldie regression even when equipment aligns',()=>{const a={coverage:.749,iou:.68,contact:.844,regions:[.87,.925,.716,.734,.312,.257]},b={coverage:.733,iou:.652,contact:.723,regions:[.90,.857,.551,.302,.727,.496]};assert.equal(api.acceptsSceneFit(a,b),false)});
+test('accept improvement but reject hand or regional degradation',()=>{const a={coverage:.75,iou:.68,contact:.84,regions:[.87,.92,.71,.73,.31,.25]},b={coverage:.85,iou:.75,contact:.85,regions:[.90,.93,.80,.81,.60,.50]};assert.ok(api.acceptsSceneFit(a,b));assert.equal(api.acceptsSceneFit(a,{...b,contact:.60}),false);assert.equal(api.acceptsSceneFit(a,{...b,regions:[.90,.93,.80,.50,.60,.50]}),false)});
+test('adaptive ownership is exclusive and never fills absent candidate pixels',()=>{const p=[{x:0,y:0},{x:3,y:0},{x:3,y:3},{x:0,y:3}],fg=Uint8Array.from([1,1,0,1]);assert.deepEqual([...api.adaptiveOwner(fg,{head:[p],right:[p]},2,2)],[2,2,-1,2]);assert.deepEqual([...api.adaptiveOwner(fg,{},2,2)],[-1,-1,-1,-1]);assert.deepEqual([...fg],[1,1,0,1])});
+test('multiple disconnected body polygons retain visible shoes separately',()=>{const box=(x,y)=>[{x,y},{x:x+1,y},{x:x+1,y:y+1},{x,y:y+1}],fg=new Uint8Array(9).fill(1);assert.deepEqual([...api.adaptiveOwner(fg,{body:[box(0,0),box(2,2)]},3,3)],[3,-1,-1,-1,-1,-1,-1,-1,3])});
