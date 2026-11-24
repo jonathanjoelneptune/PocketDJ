@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {validate,makePrompt} from './api/generate.js';
+const p=Buffer.alloc(33);Buffer.from([137,80,78,71,13,10,26,10]).copy(p);p.write('IHDR',12);p.writeUInt32BE(1024,16);p.writeUInt32BE(1024,20);const ref=p.toString('base64');
+test('validate request shape and preserve registered pose',()=>{const x=validate({description:'DJ Nova',reference:ref,mask:ref});assert.equal(x.target,'whole');assert.match(makePrompt(x),/wrist and finger contact/);assert.throws(()=>validate({description:'',reference:ref,mask:ref}));assert.throws(()=>validate({description:'x',reference:'bad',mask:ref}));assert.throws(()=>validate({description:'x',reference:ref,mask:ref,quality:'max'}))});
